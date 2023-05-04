@@ -1,0 +1,14 @@
+pesa.where("experiment",whereIn: ["polluted","clean"]).get().then((value) {
+                      value.docs.forEach((element) {element.reference.collection("egg").where("status",isEqualTo: "intact").get().then((value) => print(element.id+":"+value.docs.length.toString()));});
+                    });
+
+FirebaseFirestore.instance.collectionGroup("changelog").where("responsible",isEqualTo: "Anni Hipp Visla").get().then((value) => value.docs.forEach((element) {element.id.split(" ")[0]=="2022-05-15"?element.reference.update(
+                        {"responsible":"Simo"}):null;}));
+
+num sum=0;
+              var int=0;
+              FirebaseFirestore.instance.collectionGroup("egg").get().then((value) {value.docs.where((element) => element.data().containsKey("mass")).where((element) => element.get("mass")!=null).where((element) => element.get("mass")>=20).forEach((element) {sum=sum+element.get("mass");int=int+1;});print(sum/int);});
+
+              pesa.where("experiment",isEqualTo: "polluted").get().then((value) {
+                              value.docs.forEach((element) {element.reference.collection("egg").where("status",isEqualTo: "intact").get().then((value) => print(value.docs.length==3?element.id:""));});
+                            });
