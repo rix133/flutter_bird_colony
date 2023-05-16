@@ -12,3 +12,7 @@ num sum=0;
               pesa.where("experiment",isEqualTo: "polluted").get().then((value) {
                               value.docs.forEach((element) {element.reference.collection("egg").where("status",isEqualTo: "intact").get().then((value) => print(value.docs.length==3?element.id:""));});
                             });
+
+
+#gettig sha keys
+ C:\Users\rix133\Documents\Kakrarahu\android> ./gradlew signingReport
