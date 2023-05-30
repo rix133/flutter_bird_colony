@@ -150,34 +150,87 @@ class _EggsState extends State<Eggs> {
                   }),
               SizedBox(height: 15),
               buildForm(context, "weight", null, weight, true),
-              ElevatedButton.icon(
-                  onPressed: () {
-                    var status = egg_status.text;
-                    var mass =
+              SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  new ElevatedButton.icon(
+                      style: ButtonStyle(
+                          backgroundColor:
+                          MaterialStateProperty.all(Colors.red[900])),
+                      onPressed: () {
+                        showDialog<String>(
+                          barrierColor: Colors.black,
+                          context: context,
+                          builder: (BuildContext context) => AlertDialog(
+                            contentTextStyle: TextStyle(color: Colors.black),
+                            titleTextStyle: TextStyle(color: Colors.red),
+                            title: const Text("Removing egg"),
+                            content: const Text(
+                                'Are you sure you want to delete this egg?'),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(context, 'Cancel'),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  var time=DateTime.now();
+                                  egg.collection("changelog").get().then(
+                                          (value) => value.docs.forEach((element) {
+                                        element.reference
+                                            .update({"deleted": time});
+                                      }));
+                                  egg.delete();
+
+                                  Navigator.pop(context);
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      icon: Icon(
+                        Icons.delete,
+                        size: 45,
+                      ),
+                      label: Text("delete")),
+                  //save button
+                  ElevatedButton.icon(
+                      onPressed: () {
+                        var status = egg_status.text;
+                        var mass =
                         double.tryParse(weight.text.replaceAll(",", "."));
-                    egg.update({
-                      "mass": mass,
-                      "last_modified": DateTime.now(),
-                      "responsible": username,
-                      "status": status,
-                    });
-                    egg
-                        .collection("changelog")
-                        .doc(DateTime.now().toString())
-                        .set({
-                      "mass": mass,
-                      "last_modified": DateTime.now(),
-                      "responsible": username,
-                      "status": status,
-                    });
-                    Navigator.pop(context);
-                  },
-                  icon: Icon(
-                    Icons.save,
-                    color: Colors.black87,
-                    size: 45,
-                  ),
-                  label: Text("save and check")), //save button),
+                        egg.update({
+                          "mass": mass,
+                          "last_modified": DateTime.now(),
+                          "responsible": username,
+                          "status": status,
+                        });
+                        egg
+                            .collection("changelog")
+                            .doc(DateTime.now().toString())
+                            .set({
+                          "mass": mass,
+                          "last_modified": DateTime.now(),
+                          "responsible": username,
+                          "status": status,
+                        });
+                        Navigator.pop(context);
+                      },
+                      icon: Icon(
+                        Icons.save,
+                        color: Colors.black87,
+                        size: 45,
+                      ),
+                      label: Text("save and check")),
+                ],
+              ),
+               //save button),
             ],
           )));
         });
