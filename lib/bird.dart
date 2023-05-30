@@ -27,10 +27,10 @@ class _IndividualState extends State<Individual> {
 
   @override
   Widget build(BuildContext context) {
-    FirebaseAuth.instance.authStateChanges().listen((User? user) async{
+    FirebaseAuth.instance.authStateChanges().listen((User? user) async {
       if (user != null) {
         username = user.displayName.toString();
-        if(user.uid!=uid) {
+        if (user.uid != uid) {
           print(user.uid);
           setState(() {
             uid = user.uid;
@@ -44,15 +44,16 @@ class _IndividualState extends State<Individual> {
     nestID.text = map["pesa"] ?? "";
     age.text = map["age"] ?? "";
 
-    CollectionReference nest = FirebaseFirestore.instance.collection("Nest");
-    CollectionReference recent_band =
-        FirebaseFirestore.instance.collection("recent").doc("band").collection(uid??"not logged");
+    CollectionReference nest = FirebaseFirestore.instance.collection("2023");
+    CollectionReference recent_band = FirebaseFirestore.instance
+        .collection("recent")
+        .doc("band")
+        .collection(uid ?? "not logged");
     CollectionReference birds = FirebaseFirestore.instance.collection("Birds");
     if (species.text == "Common Gull") {
       band_id_letters.text = "UA";
-        recent_band.doc("UA")
-            .get()
-            .then((value) => band_id_numbers.text = value.exists?(value.get("UA")+1).toString():"");
+      recent_band.doc("UA").get().then((value) => band_id_numbers.text =
+          value.exists ? (value.get("UA") + 1).toString() : "");
     }
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
@@ -79,7 +80,9 @@ class _IndividualState extends State<Individual> {
                     recent_band.doc("UA").get().then((value) {
                       if (selectedString.english == "Common Gull") {
                         band_id_letters.text = "UA";
-                        band_id_numbers.text = value.exists?(value.get("UA") + 1).toString():"";
+                        band_id_numbers.text = value.exists
+                            ? (value.get("UA") + 1).toString()
+                            : "";
                       }
                     });
                   },
@@ -190,6 +193,7 @@ class _IndividualState extends State<Individual> {
                       flex: 3,
                       child: TextFormField(
                         controller: band_id_numbers,
+                        keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.blue,
@@ -300,9 +304,9 @@ class _IndividualState extends State<Individual> {
                   splashRadius: 550,
                   splashColor: Colors.redAccent[700],
                   iconSize: 60,
-                  onPressed: () async{
+                  onPressed: () async {
                     var date = DateTime.now();
-                    bool isok=true;
+                    bool isok = true;
                     var _species = species.text;
                     String bandletter = band_id_letters.text.toUpperCase();
                     int bandnr = int.parse(band_id_numbers.text);
@@ -310,26 +314,47 @@ class _IndividualState extends State<Individual> {
                     var _age = age.text;
                     String _nest = nestID.text;
                     String egg = eggNr.text;
-
-                    if(_nest==""&&egg!=""){
+                    if(bandletter.length < 1){
+                      showDialog(context: context, builder: (_) =>
+                          AlertDialog(
+                            title: Text("$band has no letters!",
+                                style: TextStyle(color: Colors.deepPurpleAccent)
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text("OK"),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              )
+                            ],
+                          ));
                       return;
                     }
-                    if(_nest!=""&&egg!=""){
-                      await nest.doc(_nest).collection("egg").doc("$_nest egg $egg").get().then((value) {
-                        if(value.data()!.containsKey("ring")){
-                          isok=false;
+
+                    if (_nest == "" && egg != "") {
+                      return;
+                    }
+                    if (_nest != "" && egg != "") {
+                      await nest
+                          .doc(_nest)
+                          .collection("egg")
+                          .doc("$_nest egg $egg")
+                          .get()
+                          .then((value) {
+                        if (value.data()!.containsKey("ring")) {
+
+                          isok = false;
                         }
                       });
                     }
-
-
-                    if(isok&&username!=null) {
+                    if (isok && username != null) {
                       Map<String, dynamic> list = {
                         "ringed_date": date,
                         "species": _species,
                         "band": band,
                         "age": _age,
-                        "responsible":username
+                        "responsible": username
                       };
 
                       egg == "" ? null : list.addAll({"egg": egg});
@@ -337,17 +362,38 @@ class _IndividualState extends State<Individual> {
                       birds.doc(band).get().then((value) {
                         if (!value.exists) {
                           birds.doc(band).set(list);
-                          recent_band.doc("UA").set({bandletter: bandnr}).whenComplete(() =>
-                              birds.doc(band).collection("changelog").doc(date.toString())
-                                  .set(list)
-                          ).whenComplete(() => nest.doc(_nest).collection("egg").doc("$_nest egg $egg").update({"ring":band}));
+                          recent_band
+                              .doc("UA")
+                              .set({bandletter: bandnr})
+                              .whenComplete(() => birds
+                                  .doc(band)
+                                  .collection("changelog")
+                                  .doc(date.toString())
+                                  .set(list))
+                              .whenComplete(() => nest
+                                  .doc(_nest)
+                                  .collection("egg")
+                                  .doc("$_nest egg $egg")
+                                  .update({'ring': band, 'status':'hatched'}));
                           Navigator.pop(context);
+                        } else{
+                          showDialog(context: context, builder: (_) =>
+                              AlertDialog(
+                                title: Text("$band already used!",
+                                    style: TextStyle(color: Colors.deepPurpleAccent)
+                                ),
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: const Text("OK"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  )
+                                ],
+                              ));
                         }
                       });
-
                     }
-
-
                   },
                   icon: Icon(
                     Icons.save_outlined,
