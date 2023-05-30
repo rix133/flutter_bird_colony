@@ -37,7 +37,9 @@ class _FindNearbyState extends State<FindNearby> {
                                 }
                       else {
                         AlertDialog(
-                          title: Text("nest does not exist"),
+                          title: Text("nest does not exist",
+                              style: TextStyle(color: Colors.deepPurpleAccent)
+                          ),
                         );
                       }
                   },
