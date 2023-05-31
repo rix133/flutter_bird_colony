@@ -19,7 +19,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   @override
   Widget build(BuildContext context) {
     Future<UserCredential> signInWithGoogle() async {
@@ -128,35 +127,72 @@ class _MyHomePageState extends State<MyHomePage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(
-                      child: GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, "/nestsNearby");
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(3.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                            color: Colors.blue[700],
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(20))),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.near_me,
-                              size: 70,
+                      child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                          child: GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, "/nestsNearby");
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(3.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: Colors.blue[700],
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(20))),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.near_me,
+                                  size: 70,
+                                ),
+                                Text(
+                                  "nearby",
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 30),
+                                )
+                              ],
                             ),
-                            Text(
-                              "nearby",
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 30),
-                            )
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
+                      )),
+                      Expanded(
+                          child: GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, "/statistics");
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(3.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: Colors.amber[700],
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(20))),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.bar_chart,
+                                  size: 70,
+                                ),
+                                Text(
+                                  "stats",
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 30),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      ))
+                    ],
                   )),
                   Expanded(
                       child: GestureDetector(

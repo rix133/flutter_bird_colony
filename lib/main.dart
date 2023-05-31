@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kakrarahu/homepage.dart';
 import 'package:kakrarahu/nestManage.dart';
 import 'package:kakrarahu/nestsNearby.dart';
+import 'package:kakrarahu/statistics.dart';
 import 'findNest.dart';
 import "nestCreate.dart";
 import 'package:geolocator/geolocator.dart';
@@ -75,6 +76,7 @@ class MyApp extends StatelessWidget {
         '/nestsNearby':(context)=> const NestsNearby(),
         '/nestManage':(context)=> const NestManage(),
         '/map':(context)=> Map(),
+        '/statistics':(context)=> Statistics(),
         '/mapforcreate':(context)=>MapForCreate(),
         '/findnest':(context)=>FindNearby(),
         '/individual':(context)=>Individual(),
