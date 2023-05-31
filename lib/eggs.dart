@@ -109,7 +109,9 @@ class _EggsState extends State<Eggs> {
                       "big hole",
                       "destroyed by human",
                       "drowned",
-                      "hatched"
+                      "hatched",
+                      "dead chick",
+                      "dead egg"
                     ].where((element) {
                       print(element
                           .toString()

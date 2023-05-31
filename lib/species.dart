@@ -41,6 +41,8 @@ class Species{
       SpeciesList(english:'Common Ringed Plover',estonian:'liivatüll',latinCode:'chahia'),
       SpeciesList(english:'Mute Swan',estonian:'kühmnokk-luik',latinCode:'cygolo'),
       SpeciesList(english:'Black-Headed Gull',estonian:'naerukajakas',latinCode:'larrid'),
+      SpeciesList(english:'Greylag goose',estonian:'hallhani',latinCode:'ansans'),
+      SpeciesList(english:'Mallard',estonian:'sinikael-part',latinCode:'anapla'),
       SpeciesList(english:'Little Gull',estonian:'väikekajakas',latinCode:'hydmin'),
     ];
 }
