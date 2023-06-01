@@ -6,6 +6,7 @@ import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/models/nest.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'search.dart' as globals;
+import 'species.dart';
 
 class Statistics extends StatefulWidget {
   const Statistics({Key? key}) : super(key: key);
@@ -104,93 +105,14 @@ class _StatisticsState extends State<Statistics> {
                             .toList();
                         nests = nests.where((Nest n) => n.timeSpan(dropdownValue)).toList();
                         nests = nests.where((Nest n) => n.people(dropdownValuePeople, username)).toList();
-
                         return ListView(
                           children: [
                             ListTile(
                                 title: Text("Total nests"),
                                 trailing: Text(nests.length.toString())),
-                            ListTile(
-                                title: Text("Common gull nests"),
-                                trailing: Text(nests
-                                    .where((Nest nest) =>
-                                        nest.species == "Common Gull")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("Arctic tern nests"),
-                                trailing: Text(nests
-                                    .where((Nest nest) =>
-                                nest.species == "Arctic Tern")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("Common tern nests"),
-                                trailing: Text(nests
-                                    .where((Nest nest) =>
-                                nest.species == "Common Tern")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("Mute Swan nests"),
-                                trailing: Text(nests
-                                    .where((Nest nest) =>
-                                nest.species == "Mute Swan")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("Great Black-backed Gull nests"),
-                                trailing: Text(nests
-                                    .where((Nest nest) =>
-                                nest.species == "Great Black-backed Gull")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("Eurasian Oystercatcher nests"),
-                                trailing: Text(nests
-                                    .where((Nest nest) =>
-                                nest.species == "Eurasian Oystercatcher")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("European Herring Gull nests"),
-                                trailing: Text(nests
-                                    .where((Nest nest) =>
-                                nest.species == "European Herring Gull")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("Black-Headed Gull nests"),
-                                trailing: Text(nests
-                                    .where((Nest nest) =>
-                                nest.species == "Black-Headed Gull")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("Mallard nests"),
-                                trailing: Text(nests
-                                    .where((Nest nest) =>
-                                nest.species == "Mallard")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("No species nests"),
-                                subtitle: Text(nests.where((Nest nest) =>nest.species == "").toList().map((Nest n)=> n.id ?? "").toList().join(", ")),
-                                trailing: Text(nests
-                                    .where((Nest nest) =>
-                                nest.species == "")
-                                    .toList()
-                                    .length
-                                    .toString()))
+                            getNestListTile("Common Gull", nests, experimental: true),
+                            ...Species.english.map((SpeciesList sp) => getNestListTile(sp.english, nests)).toList(),
+                            getNestListTile("", nests),
                           ],
                         );
                       } else {
@@ -218,54 +140,7 @@ class _StatisticsState extends State<Statistics> {
                             ListTile(
                                 title: Text("Total ringed"),
                                 trailing: Text(birds.length.toString())),
-                            ListTile(
-                                title: Text("Common gulls ringed"),
-                                trailing: Text(birds
-                                    .where((Bird bird) =>
-                                bird.species == "Common Gull")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("Arctic terns ringed"),
-                                trailing: Text(birds
-                                    .where((Bird bird) =>
-                                bird.species == "Arctic Tern")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("Common tern nests"),
-                                trailing: Text(birds
-                                    .where((Bird bird) =>
-                                bird.species == "Common Tern")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("Great Black-backed Gulls ringed"),
-                                trailing: Text(birds
-                                    .where((Bird bird) =>
-                                bird.species == "Great Black-backed Gull")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("Eurasian Oystercatcher ringed"),
-                                trailing: Text(birds
-                                    .where((Bird bird) =>
-                                bird.species == "Eurasian Oystercatcher")
-                                    .toList()
-                                    .length
-                                    .toString())),
-                            ListTile(
-                                title: Text("European Herring Gull ringed"),
-                                trailing: Text(birds
-                                    .where((Bird bird) =>
-                                bird.species == "European Herring Gull")
-                                    .toList()
-                                    .length
-                                    .toString())),
+                            ...Species.english.map((SpeciesList sp) => getBirdsListTile(sp.english, birds)).toList(),
                           ],
                         );
                       } else {
@@ -280,5 +155,43 @@ class _StatisticsState extends State<Statistics> {
 
   void onChangedTimespan(value) {
     print(value);
+  }
+
+  Widget  getNestListTile(String species, List<Nest> nests,
+      {bool experimental = false}){
+    List<Nest> selectedNests = nests
+        .where((Nest nest) =>
+    nest.species == species)
+        .toList();
+    if(selectedNests.length == 0){return SizedBox.shrink();}
+    if(experimental){
+      selectedNests = selectedNests.where((Nest n) => n.id!.startsWith("e")).toList();
+      species = "Experiment";
+    }
+    ListTile list_tile = ListTile(
+        title: Text(species == "" ? "No species nests" : "$species nests"),
+        //leading: Text(selectedNests.map((Nest e) => e.eggCount()).reduce((a, b) => a + b).toString()),
+        trailing: Text(selectedNests.length.toString()),
+        onTap: () => showNestsonMap(selectedNests));
+
+    return list_tile;
+  }
+  Widget  getBirdsListTile(String species, List<Bird> birds){
+    List<Bird> selectedBirds = birds
+        .where((Bird bird) =>
+    bird.species == species)
+        .toList();
+    if(selectedBirds.length == 0){return SizedBox.shrink();}
+    ListTile list_tile = ListTile(
+        title: Text("$species ringed"),
+        trailing: Text(selectedBirds.length.toString()));
+
+    return list_tile;
+  }
+
+  void showNestsonMap(List<Nest> nests){
+    String nestList = nests.map((Nest n) => n.id).toList().join(",");
+    globals.search = "{$nestList}";
+    Navigator.pushNamed(context, "/map");
   }
 }

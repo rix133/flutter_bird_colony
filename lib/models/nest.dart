@@ -1,4 +1,4 @@
-  import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kakrarahu/models/egg.dart';
 
 class Nest {
@@ -8,9 +8,10 @@ class Nest {
   String? remark;
   String responsible;
   String? species;
+  bool? completed;
   Timestamp discover_date;
   Timestamp last_modified;
-  List<Egg>? eggs;
+  List<Egg>? eggs = [];
   List<Object>? changelogs;
 
   Nest({this.id,
@@ -19,22 +20,34 @@ class Nest {
     required this.accuracy,
     required this.coordinates,
     required this.responsible,
+    this.completed,
     this.species,
     this.remark,
     this.eggs,
     this.changelogs});
 
-  bool timeSpan(String range){
-    if(range == "All"){return(true);}
-    if(range == "Today"){
+  bool timeSpan(String range) {
+    if (range == "All") {
+      return (true);
+    }
+    if (range == "Today") {
       var today = DateTime.now().toIso8601String().split("T")[0];
-      return this.last_modified.toDate().toIso8601String().split("T")[0].toString() == today;
+      return this
+          .last_modified
+          .toDate()
+          .toIso8601String()
+          .split("T")[0]
+          .toString() ==
+          today;
     }
     return false;
   }
-  bool people(String range, String me){
-    if(range == "Everybody"){return(true);}
-    if(range == "Me"){
+
+  bool people(String range, String me) {
+    if (range == "Everybody") {
+      return (true);
+    }
+    if (range == "Me") {
       return this.responsible == me;
     }
     return false;
@@ -51,7 +64,15 @@ class Nest {
         remark: json["remark"],
         responsible: json["responsible"],
         coordinates: json['coordinates'],
-        species: json['species']
-        ));
+        completed: json['completed'],
+        species: json['species']));
+  }
+
+  bool isCompleted() {
+    return completed ?? false;
+  }
+
+  int eggCount() {
+    return this.eggs?.length ?? 0;
   }
 }
