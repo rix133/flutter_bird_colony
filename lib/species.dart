@@ -34,7 +34,7 @@ class Species{
       SpeciesList(english:'European Herring Gull',estonian:'hõbekajakas',latinCode:'lararg'),
       SpeciesList(english:'Lesser Black-backed Gull',estonian:'tõmmukajakas',latinCode:'larfus'),
       SpeciesList(english:'Great Black-backed Gull',estonian:'merikajakas',latinCode:'larmar'),
-      //SpeciesList(english:'Common Tern',estonian:'jõgitiir',latinCode:'stehir'),
+      SpeciesList(english:'Common Tern',estonian:'jõgitiir',latinCode:'stehir'),
       SpeciesList(english:'Arctic Tern',estonian:'randtiir',latinCode:'steaea'),
       SpeciesList(english:'Great Cormorant',estonian:'kormoran',latinCode:'phacar'),
       SpeciesList(english:'Eurasian Oystercatcher',estonian:'merisk',latinCode:'haeost'),
