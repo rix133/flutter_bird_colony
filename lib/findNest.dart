@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakrarahu/buildForm.dart';
 
 class FindNearby extends StatefulWidget {
@@ -11,6 +13,12 @@ class FindNearby extends StatefulWidget {
 }
 
 class _FindNearbyState extends State<FindNearby> {
+
+  Future<void> signOut() async {
+    await FirebaseAuth.instance.signOut();
+    await GoogleSignIn().signOut();
+  }
+
   List list=[];
   final nestID = TextEditingController();
   @override
@@ -22,26 +30,26 @@ class _FindNearbyState extends State<FindNearby> {
         child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-            buildForm(context, "enter nest ID", null, nestID,true),
+              buildForm(context, "enter nest ID", null, nestID,true),
               new ElevatedButton.icon(
                   onPressed: () async {
                     var sihtkoht = nestID.text;
-                      var exists = await pesa.doc(sihtkoht).get();
-                      if (exists.exists==true) {
-                                  Navigator.pushNamed(
-                                      context, "/nestManage",
-                                      arguments: {
-                                        "sihtkoht": sihtkoht,
-                                      });
-                                  nestID.text="";
-                                }
-                      else {
-                        AlertDialog(
-                          title: Text("nest does not exist",
-                              style: TextStyle(color: Colors.deepPurpleAccent)
-                          ),
-                        );
-                      }
+                    var exists = await pesa.doc(sihtkoht).get();
+                    if (exists.exists==true) {
+                      Navigator.pushNamed(
+                          context, "/nestManage",
+                          arguments: {
+                            "sihtkoht": sihtkoht,
+                          });
+                      nestID.text="";
+                    }
+                    else {
+                      AlertDialog(
+                        title: Text("nest does not exist",
+                            style: TextStyle(color: Colors.deepPurpleAccent)
+                        ),
+                      );
+                    }
                   },
                   icon: Icon(
                     Icons.search,
@@ -49,7 +57,7 @@ class _FindNearbyState extends State<FindNearby> {
                     size: 45,
                   ),
                   label: Text("Find nest")),
-        ]
+            ]
         ),
       ),
     );

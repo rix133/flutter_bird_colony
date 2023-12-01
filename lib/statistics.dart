@@ -64,21 +64,29 @@ class _StatisticsState extends State<Statistics> {
         ),
         body: Column(
           children: [
-          Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('Select timeframe:'),
-            Container(width: 8),
-            DropdownButton<String>(
-              value: dropdownValue,
-              items: timespans,
-              onChanged: (String? newValue) {
-                print(newValue);
-                setState(() {
-                  dropdownValue = newValue!;
-                });
-              },
-            )]),
+            Container(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text('Select timeframe:'),
+                  Container(width: 8),
+                  DropdownButton<String>(
+                    value: dropdownValue,
+                    items: timespans,
+                    onChanged: (String? newValue) {
+                      print(newValue);
+                      setState(() {
+                        dropdownValue = newValue!;
+                      });
+                    },
+                  )
+                ],
+              ),
+            ),
+            Container(
+            color: Theme.of(context).scaffoldBackgroundColor,  // Replace with your desired color
+              child:
             Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
@@ -93,7 +101,7 @@ class _StatisticsState extends State<Statistics> {
                         dropdownValuePeople = newValue!;
                       });
                     },
-                  )]),
+                  )])),
             Expanded(
                 child: StreamBuilder(
                     stream: _nestsStream,
@@ -106,6 +114,7 @@ class _StatisticsState extends State<Statistics> {
                         nests = nests.where((Nest n) => n.timeSpan(dropdownValue)).toList();
                         nests = nests.where((Nest n) => n.people(dropdownValuePeople, username)).toList();
                         return ListView(
+
                           children: [
                             ListTile(
                                 title: Text("Total nests"),
@@ -121,9 +130,11 @@ class _StatisticsState extends State<Statistics> {
                             child: Text("loading nests..."));
                       }
                     })),
-            SizedBox(height: 20),
-            Row(children: [Text("Banding data:")]),
-            SizedBox(height: 20),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+            color: Theme.of(context).scaffoldBackgroundColor,  // Replace with your desired color
+                child: Row(children: [Text("Banding data:")]),
+            ),
             Expanded(
                 child: StreamBuilder(
                     stream: _birdsStream,

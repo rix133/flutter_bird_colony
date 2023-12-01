@@ -18,7 +18,8 @@ Widget buildButton(String buttonTitle,BuildContext context,[String? navigateTo,I
         onPressed: () => {
           Navigator.pushNamed(context,navigateTo!,arguments: "T"),
         },
-        child: new Text(buttonTitle, style: new TextStyle(
+        child: new Text(buttonTitle,
+            style: new TextStyle(
           fontSize: 32.0, fontWeight: FontWeight.w700,)),
       ),
       SizedBox(height: 10),

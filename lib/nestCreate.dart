@@ -37,9 +37,11 @@ class _PesaState extends State<Pesa> {
     final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best);
     print(position.accuracy);
-    setState(() {
-      _asukoht = position;
-    });
+    if (mounted) {
+      setState(() {
+        _asukoht = position;
+      });
+    }
   }
 
   @override
@@ -117,6 +119,7 @@ class _PesaState extends State<Pesa> {
               StreamBuilder<QuerySnapshot>(
                   stream: _idStream,
                   builder: (context, snapshot) {
+                    if (!mounted) return SizedBox();
                     return Column(
                       children: [
                         Text(snapshot.data?.docs.where((element) => element.id=="kalakas").first.get("nestid").toString() ??

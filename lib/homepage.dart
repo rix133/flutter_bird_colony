@@ -22,6 +22,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     Future<UserCredential> signInWithGoogle() async {
+      try{
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
@@ -37,7 +38,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
       // Once signed in, return the UserCredential
       return await FirebaseAuth.instance.signInWithCredential(credential);
+    } catch (e) {
+    print('Sign in failed: $e');
+    print('Likely SHA-1 fingerprint is missing from https://console.cloud.google.com/apis/credentials?project=kakrarahu');
+        //sign out from google
+    await GoogleSignIn().signOut();
+    // Reinitialize the sign-in flow
+    return signInWithGoogle();
     }
+  }
 
     GoogleSignIn().isSignedIn().then((value) {
       if (!value) {

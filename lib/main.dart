@@ -3,6 +3,7 @@ import 'package:kakrarahu/homepage.dart';
 import 'package:kakrarahu/nestManage.dart';
 import 'package:kakrarahu/nestsNearby.dart';
 import 'package:kakrarahu/statistics.dart';
+import 'design/styles.dart';
 import 'findNest.dart';
 import "nestCreate.dart";
 import 'package:geolocator/geolocator.dart';
@@ -88,9 +89,17 @@ class MyApp extends StatelessWidget {
         textTheme: Typography.whiteCupertino,
         scaffoldBackgroundColor: const Color.fromARGB(255, 0, 0, 0),
         primarySwatch: Colors.orange,
+        textButtonTheme: TextButtonThemeData(style: flatButtonStyle),
+        elevatedButtonTheme: ElevatedButtonThemeData(style: raisedButtonStyle),
+        outlinedButtonTheme: OutlinedButtonThemeData(style: outlineButtonStyle),
+        listTileTheme: listTileTheme,
       ),
     );
   }
+
+
+
+
 }
 
 
