@@ -58,14 +58,15 @@ class Nest {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     return (Nest(
         id: snapshot.id,
-        discover_date: json['discover_date'],
-        last_modified: json['last_modified'],
-        accuracy: json['accuracy'],
-        remark: json["remark"],
-        responsible: json["responsible"],
-        coordinates: json['coordinates'],
-        completed: json['completed'],
-        species: json['species']));
+        //assign a last century date
+        discover_date: json['discover_date'] as Timestamp? ?? Timestamp.fromDate(DateTime(1900)),
+        last_modified: json['last_modified'] as Timestamp? ?? Timestamp.fromDate(DateTime(1900)),
+        accuracy: json['accuracy'] as String? ?? '',
+        remark: json["remark"] as String? ?? '',
+        responsible: json["responsible"] as String? ?? '',
+        coordinates: json['coordinates'] as GeoPoint? ?? GeoPoint(0, 0),
+        completed: json['completed'] as bool? ?? false,
+        species: json['species'] as String? ?? ''));
   }
 
   bool isCompleted() {

@@ -5,6 +5,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:provider/provider.dart';
 import 'search.dart' as globals;
 
 
@@ -29,6 +31,7 @@ class _MapState extends State<Map> {
   var rest1="";
   var rest2="";
   var rest3="";
+
   CollectionReference pesa = FirebaseFirestore.instance.collection('2023');
   Set<Circle> circle = {
     Circle(
@@ -89,6 +92,7 @@ class _MapState extends State<Map> {
       body: StreamBuilder(
           stream: _nestsStream,
           builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+            final sharedPreferencesService = Provider.of<SharedPreferencesService>(context);
             if (snapshot.hasData) {
               List<DocumentChange<Object?>> delete=snapshot.data!.docChanges;
               var changes=snapshot.data!.docChanges.where((element) => element.newIndex!=-1).toList();

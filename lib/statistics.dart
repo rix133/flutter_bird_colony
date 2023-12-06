@@ -6,6 +6,8 @@ import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/models/nest.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'search.dart' as globals;
+import 'services/sharedPreferencesService.dart';
+import 'package:provider/provider.dart';
 import 'species.dart';
 
 class Statistics extends StatefulWidget {
@@ -18,7 +20,6 @@ class Statistics extends StatefulWidget {
 class _StatisticsState extends State<Statistics> {
   var today = DateTime.now().toIso8601String().split("T")[0];
 
-  CollectionReference pesa = FirebaseFirestore.instance.collection('2023');
   CollectionReference lind = FirebaseFirestore.instance.collection('Birds');
 
   String username = "";
@@ -53,13 +54,24 @@ class _StatisticsState extends State<Statistics> {
       }
     });
 
-    Query birds = lind.where("ringed_date", isGreaterThanOrEqualTo: DateTime(2023));
+    final sharedPreferencesService = Provider.of<SharedPreferencesService>(context);
+    int selectedYear = sharedPreferencesService.selectedYear;
+    String yearString = sharedPreferencesService.selectedYearString;
+    CollectionReference pesa = FirebaseFirestore.instance.collection(yearString);
+
+    DateTime startDate = DateTime(selectedYear);
+    DateTime endDate = DateTime(selectedYear + 1);
+
+    Query birds = lind
+        .where("ringed_date", isGreaterThanOrEqualTo: startDate)
+        .where("ringed_date", isLessThan: endDate);
+
     Stream<QuerySnapshot> _nestsStream = pesa.snapshots();
     Stream<QuerySnapshot> _birdsStream = birds.snapshots();
 
     return Scaffold(
         appBar: AppBar(
-          title: Text("Some statistics"),
+          title: Text("Some statistics", style: TextStyle(color: Colors.black)),
           backgroundColor: Colors.amberAccent,
         ),
         body: Column(
@@ -75,7 +87,7 @@ class _StatisticsState extends State<Statistics> {
                     value: dropdownValue,
                     items: timespans,
                     onChanged: (String? newValue) {
-                      print(newValue);
+                      //print(newValue);
                       setState(() {
                         dropdownValue = newValue!;
                       });
