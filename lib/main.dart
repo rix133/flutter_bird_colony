@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kakrarahu/homepage.dart';
 import 'package:kakrarahu/nestManage.dart';
 import 'package:kakrarahu/nestsNearby.dart';
+import 'package:kakrarahu/settings.dart';
 import 'package:kakrarahu/statistics.dart';
 import 'design/styles.dart';
 import 'findNest.dart';
@@ -76,6 +77,7 @@ class MyApp extends StatelessWidget {
         '/pesa':(context)=>const Pesa(),
         '/nestsNearby':(context)=> const NestsNearby(),
         '/nestManage':(context)=> const NestManage(),
+        '/settings':(context)=>  SettingsPage(),
         '/map':(context)=> Map(),
         '/statistics':(context)=> Statistics(),
         '/mapforcreate':(context)=>MapForCreate(),
@@ -93,6 +95,11 @@ class MyApp extends StatelessWidget {
         elevatedButtonTheme: ElevatedButtonThemeData(style: raisedButtonStyle),
         outlinedButtonTheme: OutlinedButtonThemeData(style: outlineButtonStyle),
         listTileTheme: listTileTheme,
+        appBarTheme: AppBarTheme(
+          color: Colors.black, // This is your AppBar background color
+          titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
+          iconTheme: IconThemeData(color: Colors.white),
+        ),
       ),
     );
   }
