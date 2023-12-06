@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:provider/provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -18,40 +19,18 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    _loadSettings().then((_) {
-      _checkSignInStatus();
-    });
+    final sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
+    _selectedYear = sharedPreferencesService.selectedYear;
+    _isLoggedIn = sharedPreferencesService.isLoggedIn;
+    _userName = sharedPreferencesService.userName;
+    _userEmail = sharedPreferencesService.userEmail;
   }
 
-  _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _selectedYear = prefs.getInt('selectedYear') ?? DateTime.now().year;
-      _isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-      _userName = prefs.getString('userName');
-      _userEmail = prefs.getString('userEmail');
-    });
-  }
 
-  _checkSignInStatus() async {
-    print("cheking)");
-    final user = _googleSignIn.currentUser;
-    if (user != null) {
-      print(user.email);
-      setState(() {
-        _isLoggedIn = true;
-        _userName = user.displayName;
-        _userEmail = user.email;
-      });
-    }
-  }
 
-  _saveSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setInt('selectedYear', _selectedYear);
-    prefs.setBool('isLoggedIn', _isLoggedIn);
-    prefs.setString('userName', _userName ?? '');
-    prefs.setString('userEmail', _userEmail ?? '');
+  _saveSelectedYear() async {
+    final sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
+    sharedPreferencesService.selectedYear = _selectedYear;
   }
 
   Future<User?> signInWithGoogle() async {
@@ -86,26 +65,29 @@ class _SettingsPageState extends State<SettingsPage> {
   _login() async {
     final user = await signInWithGoogle();
     if (user != null) {
-      setState(() {
-        _isLoggedIn = true;
-        _userName = user.displayName;
-        _userEmail = user.email;
-      });
-      _saveSettings();
+      final sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
+      sharedPreferencesService.isLoggedIn = true;
+      sharedPreferencesService.userName = user.displayName ?? '';
+      sharedPreferencesService.userEmail = user.email ?? '';
       Navigator.popAndPushNamed(context, '/');
     }
   }
 
-    _logout() async {
-      await _googleSignIn.signOut().then((value) =>
-          FirebaseAuth.instance.signOut());
-      setState(() {
-        _isLoggedIn = false;
-        _userName = null;
-        _userEmail = null;
-      });
-      _saveSettings();
-    }
+  _logout() async {
+    await _googleSignIn.signOut().then((value) =>
+        FirebaseAuth.instance.signOut());
+    _isLoggedIn = false;
+    _userName = '';
+    _userEmail = '';
+    final sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
+    sharedPreferencesService.isLoggedIn = _isLoggedIn;
+    sharedPreferencesService.userName = _userName ?? '';
+    sharedPreferencesService.userEmail = _userEmail ?? '';
+    setState(() {
+
+    });
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +129,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 setState(() {
                   _selectedYear = value!;
                 });
-                _saveSettings();
+                _saveSelectedYear();
               },
             ),
           ],

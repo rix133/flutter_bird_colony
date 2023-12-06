@@ -4,17 +4,19 @@ import 'package:kakrarahu/nestManage.dart';
 import 'package:kakrarahu/nestsNearby.dart';
 import 'package:kakrarahu/settings.dart';
 import 'package:kakrarahu/statistics.dart';
+import 'services/sharedPreferencesService.dart';
 import 'design/styles.dart';
 import 'findNest.dart';
 import "nestCreate.dart";
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'map.dart';
 import 'eggs.dart';
 import 'bird.dart';
 import 'mapforcreate.dart';
-
+import 'package:provider/provider.dart';
 
 
 void main() async{
@@ -22,7 +24,13 @@ void main() async{
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(MyApp());
+  final sharedPreferences = await SharedPreferences.getInstance();
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => SharedPreferencesService(sharedPreferences),
+      child: MyApp(),
+    ),
+  );
 }
 class MyApp extends StatelessWidget {
 
