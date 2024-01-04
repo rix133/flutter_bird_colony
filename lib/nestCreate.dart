@@ -16,6 +16,7 @@ class Pesa extends StatefulWidget {
 class _PesaState extends State<Pesa> {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
+  String get _year => DateTime.now().year.toString();
 
   final FocusNode _focusNode = FocusNode();
   final nestID = TextEditingController();
@@ -92,7 +93,7 @@ class _PesaState extends State<Pesa> {
       }
     });
 
-    CollectionReference pesa = FirebaseFirestore.instance.collection('2023');
+    CollectionReference pesa = FirebaseFirestore.instance.collection(_year);
     CollectionReference recent =
         FirebaseFirestore.instance.collection('recent');
     final Stream<QuerySnapshot> _idStream =

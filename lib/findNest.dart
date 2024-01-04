@@ -13,7 +13,7 @@ class FindNearby extends StatefulWidget {
 }
 
 class _FindNearbyState extends State<FindNearby> {
-
+  String get _year => DateTime.now().year.toString();
   Future<void> signOut() async {
     await FirebaseAuth.instance.signOut();
     await GoogleSignIn().signOut();
@@ -23,7 +23,7 @@ class _FindNearbyState extends State<FindNearby> {
   final nestID = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    CollectionReference pesa = FirebaseFirestore.instance.collection('2023');
+    CollectionReference pesa = FirebaseFirestore.instance.collection(_year);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Center(

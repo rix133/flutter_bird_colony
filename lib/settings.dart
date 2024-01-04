@@ -13,14 +13,12 @@ class _SettingsPageState extends State<SettingsPage> {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   String? _userName;
   String? _userEmail;
-  int _selectedYear = DateTime.now().year;
   bool _isLoggedIn = false;
 
   @override
   void initState() {
     super.initState();
     final sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
-    _selectedYear = sharedPreferencesService.selectedYear;
     _isLoggedIn = sharedPreferencesService.isLoggedIn;
     _userName = sharedPreferencesService.userName;
     _userEmail = sharedPreferencesService.userEmail;
@@ -28,10 +26,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
 
 
-  _saveSelectedYear() async {
-    final sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
-    sharedPreferencesService.selectedYear = _selectedYear;
-  }
+
 
   Future<User?> signInWithGoogle() async {
     try {
@@ -108,30 +103,6 @@ class _SettingsPageState extends State<SettingsPage> {
               onPressed: _isLoggedIn ? _logout : _login,
             ),
             SizedBox(height: 20),
-            DropdownButtonFormField<int>(
-              decoration: InputDecoration(
-                labelText: "Select breeding year",
-                filled: true,
-                fillColor: Colors.white,
-              ),
-              value: _selectedYear,
-              items: List.generate(DateTime.now().year - 2022 + 1, (index) {
-                final year = 2022 + index;
-                return DropdownMenuItem<int>(
-                  value: year,
-                  child: Text(
-                    year.toString(),
-                    style: TextStyle(color: Colors.black), // Set the text color here
-                  ),
-                );
-              }),
-              onChanged: (value) {
-                setState(() {
-                  _selectedYear = value!;
-                });
-                _saveSelectedYear();
-              },
-            ),
           ],
         ),
       ),

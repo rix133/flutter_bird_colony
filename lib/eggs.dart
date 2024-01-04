@@ -18,6 +18,7 @@ class _EggsState extends State<Eggs> {
   final weight = new TextEditingController();
   final egg_status = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  String get _year => DateTime.now().year.toString();
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +34,7 @@ class _EggsState extends State<Eggs> {
     });
     final data = ModalRoute.of(context)?.settings.arguments as Map;
     final egg = FirebaseFirestore.instance
-        .collection('2023')
+        .collection(_year)
         .doc(data["sihtkoht"])
         .collection("egg")
         .doc(data["egg"]);

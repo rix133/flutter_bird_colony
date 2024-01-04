@@ -13,6 +13,7 @@ class MapForCreate extends StatefulWidget {
 }
 
 class _MapForCreateState extends State<MapForCreate> {
+  String get _year => DateTime.now().year.toString();
   static const kakrarahud = CameraPosition(
     target: LatLng(58.766218, 23.430432),
     bearing: 270,
@@ -25,7 +26,7 @@ class _MapForCreateState extends State<MapForCreate> {
   var visible = "";
   var rest1="";
   var rest2="";
-  CollectionReference pesa = FirebaseFirestore.instance.collection('2023');
+  late CollectionReference pesa;
   Set<Circle> circle = {
     Circle(
       circleId: CircleId("myLocEmpty"),
@@ -36,6 +37,11 @@ class _MapForCreateState extends State<MapForCreate> {
   Set<Marker> markers = {};
 
 
+  @override
+  void initState() {
+    pesa = FirebaseFirestore.instance.collection(_year);
+    super.initState();
+  }
 
   @override
   void dispose() {

@@ -6,8 +6,6 @@ import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/models/nest.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'search.dart' as globals;
-import 'services/sharedPreferencesService.dart';
-import 'package:provider/provider.dart';
 import 'species.dart';
 
 class Statistics extends StatefulWidget {
@@ -19,6 +17,7 @@ class Statistics extends StatefulWidget {
 
 class _StatisticsState extends State<Statistics> {
   var today = DateTime.now().toIso8601String().split("T")[0];
+  int _selectedYear = DateTime.now().year;
 
   CollectionReference lind = FirebaseFirestore.instance.collection('Birds');
 
@@ -54,13 +53,10 @@ class _StatisticsState extends State<Statistics> {
       }
     });
 
-    final sharedPreferencesService = Provider.of<SharedPreferencesService>(context);
-    int selectedYear = sharedPreferencesService.selectedYear;
-    String yearString = sharedPreferencesService.selectedYearString;
-    CollectionReference pesa = FirebaseFirestore.instance.collection(yearString);
+    CollectionReference pesa = FirebaseFirestore.instance.collection(_selectedYear.toString());
 
-    DateTime startDate = DateTime(selectedYear);
-    DateTime endDate = DateTime(selectedYear + 1);
+    DateTime startDate = DateTime(_selectedYear);
+    DateTime endDate = DateTime(_selectedYear + 1);
 
     Query birds = lind
         .where("ringed_date", isGreaterThanOrEqualTo: startDate)
@@ -102,6 +98,30 @@ class _StatisticsState extends State<Statistics> {
             Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
+                  DropdownButtonFormField<int>(
+                    decoration: InputDecoration(
+                      labelText: "Select breeding year",
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    value: _selectedYear,
+                    items: List.generate(DateTime.now().year - 2022 + 1, (index) {
+                      final year = 2022 + index;
+                      return DropdownMenuItem<int>(
+                        value: year,
+                        child: Text(
+                          year.toString(),
+                          style: TextStyle(color: Colors.black), // Set the text color here
+                        ),
+                      );
+                    }),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedYear = value!;
+                        pesa = FirebaseFirestore.instance.collection(value.toString());
+                      });
+                    },
+                  ),
                   Text('Select user:'),
                   Container(width: 8),
                   DropdownButton<String>(

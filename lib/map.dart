@@ -19,6 +19,7 @@ class Map extends StatefulWidget {
 
 class _MapState extends State<Map> {
   var today = DateTime.now().toIso8601String().split("T")[0];
+  String get _year => DateTime.now().year.toString();
   static const kakrarahud = CameraPosition(
     target: LatLng(58.766218, 23.430432),
     bearing: 270,
@@ -32,7 +33,7 @@ class _MapState extends State<Map> {
   var rest2="";
   var rest3="";
 
-  CollectionReference pesa = FirebaseFirestore.instance.collection('2023');
+  late CollectionReference pesa;
   Set<Circle> circle = {
     Circle(
       circleId: CircleId("myLocEmpty"),
@@ -41,6 +42,12 @@ class _MapState extends State<Map> {
   final search = TextEditingController();
   final focus = FocusNode();
   Set<Marker> markers = {};
+
+  @override
+  initState() {
+    super.initState();
+    pesa = FirebaseFirestore.instance.collection(_year);
+  }
 
   @override
   void dispose() {
@@ -78,7 +85,7 @@ class _MapState extends State<Map> {
     List<String> curlymap=curly.split(",");
 
     Query redMarkerFilter=FirebaseFirestore.instance
-        .collection('2023')
+        .collection(_year)
         .where("last_modified",
         isLessThanOrEqualTo: DateTime(
             rest3 == "red" ? DateTime.now().year : DateTime.now().year + 1,

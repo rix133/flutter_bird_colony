@@ -32,6 +32,9 @@ class _NestManageState extends State<NestManage> {
   var username;
   var exists;
   Map<String, dynamic> database = {};
+  late CollectionReference pesa;
+
+  String get _year => DateTime.now().year.toString();
   bool signed = false;
   var map = <String, dynamic>{};
 
@@ -42,6 +45,12 @@ class _NestManageState extends State<NestManage> {
   }
 
   @override
+  void initState() {
+    pesa = FirebaseFirestore.instance.collection(_year);
+    super.initState();
+  }
+
+  @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
     nestID.dispose();
@@ -49,8 +58,6 @@ class _NestManageState extends State<NestManage> {
     remark.dispose();
     super.dispose();
   }
-
-  final pesa = FirebaseFirestore.instance.collection('2023');
 
   Widget build(BuildContext context) {
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
@@ -78,7 +85,7 @@ class _NestManageState extends State<NestManage> {
       remark.text = data["remark"];
     } catch (e) {}
     final Stream<QuerySnapshot> _eggStream = FirebaseFirestore.instance
-        .collection('2023')
+        .collection(_year)
         .doc(data["sihtkoht"])
         .collection("egg")
         .snapshots();
@@ -102,8 +109,7 @@ class _NestManageState extends State<NestManage> {
                 FutureBuilder(
                   future: pesa.doc(data["sihtkoht"]).get(),
                   builder: (BuildContext context,
-                      AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>>
-                          snapshot) {
+                      AsyncSnapshot<DocumentSnapshot<Object?>> snapshot) {
                     if (snapshot.hasError) {
                       return Text('Something went wrong');
                     }
@@ -111,15 +117,18 @@ class _NestManageState extends State<NestManage> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Text("Loading");
                     }
+                    Map<String, dynamic> data =
+                        snapshot.data!.data() as Map<String, dynamic>;
                     return Column(
                       children: [
-                        Text(snapshot.data!.data()!.containsKey("experiment")
-                            ? snapshot.data?.get("experiment")
+                        Text(data.containsKey("experiment")
+                            ? data["experiment"].toString()
                             : ""),
-                        Text(snapshot.data?.get("last_modified").toDate().day ==
-                                DateTime.now().day
-                            ? "CHECKED"
-                            : "")
+                        Text(
+                            (data["last_modified"] as Timestamp).toDate().day ==
+                                    DateTime.now().day
+                                ? "CHECKED"
+                                : "")
                       ],
                     );
                   },
@@ -290,7 +299,9 @@ class _NestManageState extends State<NestManage> {
                                 stream: FirebaseFirestore.instance
                                     .collection("Birds")
                                     .where("nest", isEqualTo: data["sihtkoht"])
-                                    .where("ringed_date", isGreaterThan: DateTime(2023))
+                                    .where("ringed_date",
+                                        isGreaterThan:
+                                            DateTime(DateTime.now().year))
                                     .snapshots(),
                                 builder: (context, snapshot) {
                                   var amount = snapshot.data?.size;
@@ -538,7 +549,8 @@ class _NestManageState extends State<NestManage> {
                                                         ],
                                                       ),
                                                     )
-                                                  }, //ALERTDIALOG
+                                                  },
+                                                //ALERTDIALOG
                                               },
                                           icon: Icon(
                                             Icons.save,

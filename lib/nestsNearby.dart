@@ -18,21 +18,29 @@ class NestsNearby extends StatefulWidget {
   const NestsNearby({Key? key}) : super(key: key);
 
 
+
   @override
   _NestsNearbyState createState() => _NestsNearbyState();
 }
 class _NestsNearbyState extends State<NestsNearby>{
-  CollectionReference pesa = FirebaseFirestore.instance.collection('2023');
-  final Stream<QuerySnapshot> _nestsStream = FirebaseFirestore.instance
-      .collection('2023')
-      .where("last_modified",
-          isLessThanOrEqualTo: DateTime(
-          DateTime.now().year,
-          DateTime.now().month,
-          DateTime.now().day)).snapshots();
-  var today = DateTime.now().day;
+  String  get _year  => DateTime.now().year.toString();
+  final int  _today = DateTime.now().day;
+  late Stream<QuerySnapshot> _nestsStream;
+  late CollectionReference pesa;
 
 
+  @override
+  void initState() {
+    super.initState();
+    pesa = FirebaseFirestore.instance.collection(_year);
+    _nestsStream = FirebaseFirestore.instance
+        .collection(_year)
+        .where("last_modified",
+        isLessThanOrEqualTo: DateTime(
+            DateTime.now().year,
+            DateTime.now().month,
+            DateTime.now().day)).snapshots();
+  }
 
 
 
@@ -91,7 +99,7 @@ class _NestsNearbyState extends State<NestsNearby>{
                           var coords = snapshot.data!.docs[i].get(
                               "coordinates");
                           var isChecked;
-                          if(snapshot.data!.docs[i].get("last_modified").toDate().day == today){
+                          if(snapshot.data!.docs[i].get("last_modified").toDate().day == _today){
                             isChecked=Colors.green;
                           }else{isChecked=Colors.red[900];}
 

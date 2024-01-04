@@ -20,6 +20,7 @@ class _IndividualState extends State<Individual> {
   TextEditingController species = TextEditingController();
   TextEditingController age = TextEditingController();
   FocusNode _focusNode = FocusNode();
+  String get _year => DateTime.now().year.toString();
 
   static String _displayStringForOption(SpeciesList option) => option.english;
   var username;
@@ -44,7 +45,7 @@ class _IndividualState extends State<Individual> {
     nestID.text = map["pesa"] ?? "";
     age.text = map["age"] ?? "";
 
-    CollectionReference nest = FirebaseFirestore.instance.collection("2023");
+    CollectionReference nest = FirebaseFirestore.instance.collection(_year);
     CollectionReference recent_band = FirebaseFirestore.instance
         .collection("recent")
         .doc("band")
