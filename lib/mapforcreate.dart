@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-
+import 'dart:async';
 
 class MapForCreate extends StatefulWidget {
   const MapForCreate({Key? key}) : super(key: key);
@@ -36,42 +36,49 @@ class _MapForCreateState extends State<MapForCreate> {
   final focus = FocusNode();
   Set<Marker> markers = {};
 
+  StreamSubscription<Position>? _positionStreamSubscription;
 
   @override
   void initState() {
     pesa = FirebaseFirestore.instance.collection(_year);
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    _googleMapController.dispose();
-    super.dispose();
-  }
-
-  Widget build(BuildContext context) {
-    Geolocator.getPositionStream(
+    _positionStreamSubscription = Geolocator.getPositionStream(
         locationSettings: LocationSettings(
           accuracy: LocationAccuracy.best,
         )
     ).listen((Position position) {
-      setState(() {
-        circle = {
-          Circle(
-            circleId: CircleId("myLoc"),
-            radius: position.accuracy,
-            center: LatLng(position.latitude, position.longitude),
-            strokeColor: Colors.orange,
-          )
-        };
-      });
-      _googleMapController.animateCamera(
-          CameraUpdate.newCameraPosition(CameraPosition(
-            target: LatLng(position.latitude, position.longitude),
-            bearing: 270,
-            zoom: 18.35,
-          )));
+      if (mounted) {
+        setState(() {
+          circle = {
+            Circle(
+              circleId: CircleId("myLoc"),
+              radius: position.accuracy,
+              center: LatLng(position.latitude, position.longitude),
+              strokeColor: Colors.orange,
+            )
+          };
+        });
+        _googleMapController.animateCamera(
+            CameraUpdate.newCameraPosition(CameraPosition(
+              target: LatLng(position.latitude, position.longitude),
+              bearing: 270,
+              zoom: 18.35,
+            ))
+        );
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    _positionStreamSubscription?.cancel();
+    _googleMapController.dispose();
+    super.dispose();
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body:
         Column(
@@ -96,6 +103,7 @@ class _MapForCreateState extends State<MapForCreate> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           FloatingActionButton(
+            heroTag: "RefreshLocation",
             onPressed: ()  {
               Geolocator.getCurrentPosition(
                   desiredAccuracy: LocationAccuracy.best)
@@ -124,6 +132,7 @@ class _MapForCreateState extends State<MapForCreate> {
 
           SizedBox(height: 10),
           FloatingActionButton(
+            heroTag: "zoomIn",
             onPressed: () {
               _googleMapController
                   .animateCamera(CameraUpdate.newCameraPosition(kakrarahud));
@@ -141,6 +150,7 @@ class _MapForCreateState extends State<MapForCreate> {
                   }));
             },
             child: FloatingActionButton(
+              heroTag: "addNest",
               onPressed: () {
                 Navigator.pushNamed(context, "/pesa");
               },
