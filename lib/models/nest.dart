@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kakrarahu/models/egg.dart';
 
+import 'bird.dart';
+
 class Nest {
   String? id;
   String accuracy;
@@ -13,6 +15,7 @@ class Nest {
   Timestamp last_modified;
   List<Egg>? eggs = [];
   List<Object>? changelogs;
+  List<Bird> parents = [];
 
   Nest({this.id,
     required this.discover_date,
@@ -20,6 +23,7 @@ class Nest {
     required this.accuracy,
     required this.coordinates,
     required this.responsible,
+    required this.parents,
     this.completed,
     this.species,
     this.remark,
@@ -66,6 +70,7 @@ class Nest {
         responsible: json["responsible"] as String? ?? '',
         coordinates: json['coordinates'] as GeoPoint? ?? GeoPoint(0, 0),
         completed: json['completed'] as bool? ?? false,
+        parents: json['parents'] != null ? (json['parents'] as List).map((i) => Bird.fromQuerySnapshot(i)).toList() : [],
         species: json['species'] as String? ?? ''));
   }
 

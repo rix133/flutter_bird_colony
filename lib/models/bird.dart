@@ -1,4 +1,5 @@
   import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:kakrarahu/models/measure.dart';
 
 class Bird {
   String? id;
@@ -9,6 +10,7 @@ class Bird {
   String? species;
   Timestamp ringed_date;
   String? egg;
+  List<Measure> measures = [];
   List<Object>? changelogs;
 
   Bird({this.id,
