@@ -3,8 +3,7 @@ import 'package:flutter/services.dart';
 
 
 //äkki kasutada TextField?
-Widget buildForm(BuildContext context,String kirjeldus,[initialValue,controller,isNumber]){
-  if(isNumber==null){isNumber=false;}
+Widget buildForm(BuildContext context,String kirjeldus,[initialValue,controller, bool isNumber = false]){
   return new Column(
     children: <Widget>[
       TextFormField(
@@ -15,6 +14,7 @@ Widget buildForm(BuildContext context,String kirjeldus,[initialValue,controller,
         initialValue: initialValue,
         decoration: InputDecoration(
           labelText: kirjeldus,
+          labelStyle: TextStyle(color: Colors.yellow),
           hintText: kirjeldus,
           fillColor: Colors.orange,
           focusedBorder: OutlineInputBorder(

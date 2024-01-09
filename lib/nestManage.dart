@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:kakrarahu/buildForm.dart';
 import 'package:kakrarahu/species.dart';
 
+import 'models/bird.dart';
+
 class NestManage extends StatefulWidget {
   const NestManage({Key? key}) : super(key: key);
 
@@ -31,6 +33,7 @@ class _NestManageState extends State<NestManage> {
   var mune;
   var username;
   var exists;
+  List <Bird> parents = [];
   Map<String, dynamic> database = {};
   late CollectionReference pesa;
 
@@ -57,6 +60,35 @@ class _NestManageState extends State<NestManage> {
     species.dispose();
     remark.dispose();
     super.dispose();
+  }
+
+  Row _getParentsRow(){
+    //buttons row for listing available parents and + button to add new
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ...parents.map((Bird e) => ElevatedButton(
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey),
+          child: (Text(e.band)),
+          onPressed: () {
+          },
+        ),).toList(),
+        //add new parent button
+        ElevatedButton.icon(
+            style: ButtonStyle(
+                backgroundColor:
+                MaterialStateProperty.all(Colors.grey)),
+            onPressed: () {
+            },
+            icon: Icon(
+              Icons.add,
+              size: 45,
+            ),
+            label: Text("parent")),
+      ],
+    );
   }
 
   Widget build(BuildContext context) {
@@ -178,6 +210,7 @@ class _NestManageState extends State<NestManage> {
                     controller: textEditingController,
                     decoration: InputDecoration(
                       labelText: "species",
+                      labelStyle: TextStyle(color: Colors.yellow),
                       hintText: "enter species",
                       fillColor: Colors.orange,
                       focusedBorder: OutlineInputBorder(
@@ -213,6 +246,7 @@ class _NestManageState extends State<NestManage> {
               ),
               SizedBox(height: 15),
               buildForm(context, "remark", null, remark),
+              _getParentsRow(),
               StreamBuilder<QuerySnapshot>(
                 stream: _eggStream,
                 builder: (context, snapshot) {

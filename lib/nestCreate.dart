@@ -144,7 +144,7 @@ class _PesaState extends State<Pesa> {
               ),*/
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Flexible(
-                    child: buildForm(context, "enter nest ID", null, nestID)),
+                    child: buildForm(context, "enter nest ID", null, nestID,  true)),
                 //Icon(Icons.check_circle,color: Colors.green,size: 40,)
               ]),
               RawAutocomplete<SpeciesList>(
