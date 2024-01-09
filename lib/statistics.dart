@@ -20,6 +20,7 @@ class _StatisticsState extends State<Statistics> {
   int _selectedYear = DateTime.now().year;
 
   CollectionReference lind = FirebaseFirestore.instance.collection('Birds');
+  late CollectionReference pesa;
 
   String username = "";
 
@@ -52,9 +53,11 @@ class _StatisticsState extends State<Statistics> {
         username = user.displayName.toString();
       }
     });
-
-    CollectionReference pesa = FirebaseFirestore.instance.collection(_selectedYear.toString());
-
+    if(_selectedYear == 2022){
+      pesa = FirebaseFirestore.instance.collection("Nest");
+    } else {
+      pesa = FirebaseFirestore.instance.collection(_selectedYear.toString());
+    }
     DateTime startDate = DateTime(_selectedYear);
     DateTime endDate = DateTime(_selectedYear + 1);
 
@@ -70,11 +73,32 @@ class _StatisticsState extends State<Statistics> {
           title: Text("Some statistics", style: TextStyle(color: Colors.black)),
           backgroundColor: Colors.amberAccent,
         ),
-        body: Column(
+        body: Container(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: Column(
           children: [
-            Container(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              child: Row(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text('Select year:'),
+                Container(width: 8),
+                DropdownButton<int>(
+                  value: _selectedYear,
+                  items: List<int>.generate(DateTime.now().year - 2022 + 1, (int index) => index + 2022)
+                      .map((int year) {
+                    return DropdownMenuItem<int>(
+                      value: year,
+                      child: Text(year.toString(), style: TextStyle(color: Colors.deepPurpleAccent)),
+                    );
+                  }).toList(),
+                  onChanged: (int? newValue) {
+                    setState(() {
+                      _selectedYear = newValue!;
+                    });
+                  },
+                )
+              ]),
+             Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Text('Select timeframe:'),
@@ -91,37 +115,9 @@ class _StatisticsState extends State<Statistics> {
                   )
                 ],
               ),
-            ),
-            Container(
-            color: Theme.of(context).scaffoldBackgroundColor,  // Replace with your desired color
-              child:
             Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  DropdownButtonFormField<int>(
-                    decoration: InputDecoration(
-                      labelText: "Select breeding year",
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    value: _selectedYear,
-                    items: List.generate(DateTime.now().year - 2022 + 1, (index) {
-                      final year = 2022 + index;
-                      return DropdownMenuItem<int>(
-                        value: year,
-                        child: Text(
-                          year.toString(),
-                          style: TextStyle(color: Colors.black), // Set the text color here
-                        ),
-                      );
-                    }),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedYear = value!;
-                        pesa = FirebaseFirestore.instance.collection(value.toString());
-                      });
-                    },
-                  ),
                   Text('Select user:'),
                   Container(width: 8),
                   DropdownButton<String>(
@@ -133,7 +129,7 @@ class _StatisticsState extends State<Statistics> {
                         dropdownValuePeople = newValue!;
                       });
                     },
-                  )])),
+                  )]),
             Expanded(
                 child: StreamBuilder(
                     stream: _nestsStream,
@@ -193,7 +189,7 @@ class _StatisticsState extends State<Statistics> {
                       }
                     }))
           ],
-        ));
+        )));
   }
 
   void onChangedTimespan(value) {
