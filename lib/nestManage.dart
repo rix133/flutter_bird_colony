@@ -62,7 +62,7 @@ class _NestManageState extends State<NestManage> {
     super.dispose();
   }
 
-  Row _getParentsRow(){
+  Row _getParentsRow(data){
     //buttons row for listing available parents and + button to add new
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -81,6 +81,13 @@ class _NestManageState extends State<NestManage> {
                 backgroundColor:
                 MaterialStateProperty.all(Colors.grey)),
             onPressed: () {
+              Navigator.pushNamed(context, "/editparent",
+                  arguments: {
+                    "pesa": (data["sihtkoht"]).toString(),
+                    "species":
+                    database["species"].toString(),
+                    "age": ""
+                  });
             },
             icon: Icon(
               Icons.add,
@@ -91,17 +98,104 @@ class _NestManageState extends State<NestManage> {
     );
   }
 
+  void handleAuthStateChanges(User? user) {
+    if (user == null) {
+      print('User is currently signed out!');
+      signed = false;
+    } else {
+      print('User is signed in as ' + user.displayName.toString());
+      signed = true;
+      username = user.displayName.toString();
+    }
+  }
+
+
+// Function to build RawAutocomplete
+  Widget buildRawAutocomplete(TextEditingController species) {
+    return RawAutocomplete<SpeciesList>(
+      displayStringForOption: _displayStringForOption,
+      focusNode: _focusNode,
+      textEditingController: species,
+      onSelected: (selectedString) {
+        print(selectedString);
+      },
+      optionsViewBuilder: (context, onSelected, options) {
+        return Scaffold(
+          body: ListView.separated(
+              padding: EdgeInsets.zero,
+              itemBuilder: (context, index) {
+                final option = options.elementAt(index);
+                return ListTile(
+                  title: Text(
+                    option.english.toString(),
+                    textAlign: TextAlign.center,
+                  ),
+                  textColor: Colors.black,
+                  contentPadding: EdgeInsets.all(0),
+                  visualDensity: VisualDensity.comfortable,
+                  tileColor: Colors.orange[300],
+                  onTap: () {
+                    onSelected(option);
+                  },
+                );
+              },
+              separatorBuilder: (context, index) => Divider(
+                height: 0,
+              ),
+              itemCount: options.length),
+        );
+      },
+      fieldViewBuilder: (BuildContext context,
+          TextEditingController textEditingController,
+          FocusNode focusNode,
+          VoidCallback onFieldSubmitted) {
+        return TextFormField(
+          textAlign: TextAlign.center,
+          controller: textEditingController,
+          decoration: InputDecoration(
+            labelText: "species",
+            labelStyle: TextStyle(color: Colors.yellow),
+            hintText: "enter species",
+            fillColor: Colors.orange,
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(25),
+                borderSide: (BorderSide(color: Colors.indigo))),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(25.0),
+              borderSide: BorderSide(
+                color: Colors.deepOrange,
+                width: 1.5,
+              ),
+            ),
+          ),
+          focusNode: focusNode,
+          onFieldSubmitted: (String value) {
+            onFieldSubmitted();
+            print('You just typed a new entry  $value');
+            FocusScope.of(context).unfocus();
+          },
+        );
+      },
+      optionsBuilder: (TextEditingValue textEditingValue) {
+        if (textEditingValue.text == '') {
+          return const Iterable<SpeciesList>.empty();
+        }
+        return Species.english.where((SpeciesList option) {
+          return option
+              .toString()
+              .toLowerCase()
+              .contains(textEditingValue.text.toLowerCase());
+        });
+      },
+    );
+  }
+
+
+
+
+
   Widget build(BuildContext context) {
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      if (user == null) {
-        print('User is currently signed out!');
-        signed = false;
-      } else {
-        print('User is signed in as ' + user.displayName.toString());
-        signed = true;
-        username = user.displayName.toString();
-      }
-    });
+    FirebaseAuth.instance.authStateChanges().listen(handleAuthStateChanges);
     final data = ModalRoute.of(context)?.settings.arguments as Map;
     nestID.text = data["sihtkoht"];
 
@@ -168,85 +262,10 @@ class _NestManageState extends State<NestManage> {
                 //Icon(Icons.check_circle,color: Colors.green,size: 40,)
               ]),
               SizedBox(height: 15),
-              RawAutocomplete<SpeciesList>(
-                displayStringForOption: _displayStringForOption,
-                focusNode: _focusNode,
-                textEditingController: species,
-                onSelected: (selectedString) {
-                  print(selectedString);
-                },
-                optionsViewBuilder: (context, onSelected, options) {
-                  return Scaffold(
-                    body: ListView.separated(
-                        padding: EdgeInsets.zero,
-                        itemBuilder: (context, index) {
-                          final option = options.elementAt(index);
-                          return ListTile(
-                            title: Text(
-                              option.english.toString(),
-                              textAlign: TextAlign.center,
-                            ),
-                            textColor: Colors.black,
-                            contentPadding: EdgeInsets.all(0),
-                            visualDensity: VisualDensity.comfortable,
-                            tileColor: Colors.orange[300],
-                            onTap: () {
-                              onSelected(option);
-                            },
-                          );
-                        },
-                        separatorBuilder: (context, index) => Divider(
-                              height: 0,
-                            ),
-                        itemCount: options.length),
-                  );
-                },
-                fieldViewBuilder: (BuildContext context,
-                    TextEditingController textEditingController,
-                    FocusNode focusNode,
-                    VoidCallback onFieldSubmitted) {
-                  return TextFormField(
-                    textAlign: TextAlign.center,
-                    controller: textEditingController,
-                    decoration: InputDecoration(
-                      labelText: "species",
-                      labelStyle: TextStyle(color: Colors.yellow),
-                      hintText: "enter species",
-                      fillColor: Colors.orange,
-                      focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          borderSide: (BorderSide(color: Colors.indigo))),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(25.0),
-                        borderSide: BorderSide(
-                          color: Colors.deepOrange,
-                          width: 1.5,
-                        ),
-                      ),
-                    ),
-                    focusNode: focusNode,
-                    onFieldSubmitted: (String value) {
-                      onFieldSubmitted();
-                      print('You just typed a new entry  $value');
-                      FocusScope.of(context).unfocus();
-                    },
-                  );
-                },
-                optionsBuilder: (TextEditingValue textEditingValue) {
-                  if (textEditingValue.text == '') {
-                    return const Iterable<SpeciesList>.empty();
-                  }
-                  return Species.english.where((SpeciesList option) {
-                    return option
-                        .toString()
-                        .toLowerCase()
-                        .contains(textEditingValue.text.toLowerCase());
-                  });
-                },
-              ),
+              buildRawAutocomplete(species),
               SizedBox(height: 15),
               buildForm(context, "remark", null, remark),
-              _getParentsRow(),
+              _getParentsRow(data),
               StreamBuilder<QuerySnapshot>(
                 stream: _eggStream,
                 builder: (context, snapshot) {
@@ -310,7 +329,7 @@ class _NestManageState extends State<NestManage> {
                                       },
                                       onLongPress: () {
                                         Navigator.pushNamed(
-                                            context, "/individual",
+                                            context, "/editchick",
                                             arguments: {
                                               "pesa":
                                                   (data["sihtkoht"]).toString(),

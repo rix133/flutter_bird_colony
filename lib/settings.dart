@@ -31,7 +31,13 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<User?> signInWithGoogle() async {
     try {
       // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      GoogleSignInAccount? googleUser = await googleSignIn.signInSilently();
+
+      if (googleUser == null) {
+        // Prompt the user to interactively sign in.
+        googleUser = await googleSignIn.signIn();
+      }
 
       // Obtain the auth details from the request
       final GoogleSignInAuthentication? googleAuth =

@@ -5,14 +5,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/species.dart';
 
-class Individual extends StatefulWidget {
-  const Individual({Key? key}) : super(key: key);
+class EditChick extends StatefulWidget {
+  const EditChick({Key? key}) : super(key: key);
 
   @override
-  State<Individual> createState() => _IndividualState();
+  State<EditChick> createState() => _EditChickState();
 }
 
-class _IndividualState extends State<Individual> {
+class _EditChickState extends State<EditChick> {
   TextEditingController band_id_letters = TextEditingController();
   TextEditingController band_id_numbers = TextEditingController();
   TextEditingController nestID = TextEditingController();

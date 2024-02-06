@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kakrarahu/editParent.dart';
 import 'package:kakrarahu/homepage.dart';
 import 'package:kakrarahu/nestManage.dart';
 import 'package:kakrarahu/nestsNearby.dart';
@@ -14,7 +15,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'map.dart';
 import 'eggs.dart';
-import 'bird.dart';
+import 'editChick.dart';
 import 'mapforcreate.dart';
 import 'package:provider/provider.dart';
 
@@ -90,7 +91,8 @@ class MyApp extends StatelessWidget {
         '/statistics':(context)=> Statistics(),
         '/mapforcreate':(context)=>MapForCreate(),
         '/findnest':(context)=>FindNearby(),
-        '/individual':(context)=>Individual(),
+        '/editchick':(context)=>EditChick(),
+        '/editparent':(context)=>EditParent(),
 
       },
       theme: ThemeData(
