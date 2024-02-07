@@ -39,7 +39,18 @@ class _EggsState extends State<Eggs> {
         .collection("egg")
         .doc(data["egg"]);
     egg.get().then((value) {
-      weight.text = value.get("mass").toString();
+      if (value.exists) {
+        if (value.data()!.containsKey('mass')) {
+          var mass = value["mass"];
+          if(mass != null){
+            weight.text = mass.toString();
+          }
+        } else {
+          print('mass field does not exist in the document');
+        }
+      } else {
+        print('Document does not exist');
+      }
     });
     var future = egg.get();
 

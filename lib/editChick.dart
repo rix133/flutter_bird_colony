@@ -3,7 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:kakrarahu/models/bird.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/species.dart';
+import 'package:provider/provider.dart';
 
 class EditChick extends StatefulWidget {
   const EditChick({Key? key}) : super(key: key);
@@ -20,11 +23,23 @@ class _EditChickState extends State<EditChick> {
   TextEditingController species = TextEditingController();
   TextEditingController age = TextEditingController();
   FocusNode _focusNode = FocusNode();
-  String get _year => DateTime.now().year.toString();
+
+  CollectionReference nests = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
+  CollectionReference birds = FirebaseFirestore.instance.collection("Birds");
+
+  String _recentBand = "";
+  late SharedPreferencesService sharedPreferencesService;
 
   static String _displayStringForOption(SpeciesList option) => option.english;
   var username;
   var uid;
+
+  @override
+  void initState() {
+    super.initState();
+    sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
+    _recentBand = sharedPreferencesService.recentBand;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,16 +60,13 @@ class _EditChickState extends State<EditChick> {
     nestID.text = map["pesa"] ?? "";
     age.text = map["age"] ?? "";
 
-    CollectionReference nest = FirebaseFirestore.instance.collection(_year);
-    CollectionReference recent_band = FirebaseFirestore.instance
-        .collection("recent")
-        .doc("band")
-        .collection(uid ?? "not logged");
-    CollectionReference birds = FirebaseFirestore.instance.collection("Birds");
+
     if (species.text == "Common Gull") {
       band_id_letters.text = "UA";
-      recent_band.doc("UA").get().then((value) => band_id_numbers.text =
-          value.exists ? (value.get("UA") + 1).toString() : "");
+      if(_recentBand.length > 2){
+        band_id_numbers.text = _recentBand.substring(2, _recentBand.length);
+      }
+
     }
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
@@ -78,14 +90,10 @@ class _EditChickState extends State<EditChick> {
                   focusNode: _focusNode,
                   textEditingController: species,
                   onSelected: (selectedString) {
-                    recent_band.doc("UA").get().then((value) {
                       if (selectedString.english == "Common Gull") {
                         band_id_letters.text = "UA";
-                        band_id_numbers.text = value.exists
-                            ? (value.get("UA") + 1).toString()
-                            : "";
+                        band_id_numbers.text = _recentBand.substring(2, _recentBand.length);
                       }
-                    });
                   },
                   optionsViewBuilder: (context, onSelected, options) {
                     return Scaffold(
@@ -337,7 +345,7 @@ class _EditChickState extends State<EditChick> {
                       return;
                     }
                     if (_nest != "" && egg != "") {
-                      await nest
+                      await nests
                           .doc(_nest)
                           .collection("egg")
                           .doc("$_nest egg $egg")
@@ -350,50 +358,36 @@ class _EditChickState extends State<EditChick> {
                       });
                     }
                     if (isok && username != null) {
-                      Map<String, dynamic> list = {
-                        "ringed_date": date,
-                        "species": _species,
-                        "band": band,
-                        "age": _age,
-                        "responsible": username
-                      };
-
-                      egg == "" ? null : list.addAll({"egg": egg});
-                      _nest == "" ? null : list.addAll({"nest": _nest});
-                      birds.doc(band).get().then((value) {
-                        if (!value.exists) {
-                          birds.doc(band).set(list);
-                          recent_band
-                              .doc("UA")
-                              .set({bandletter: bandnr})
-                              .whenComplete(() => birds
-                                  .doc(band)
-                                  .collection("changelog")
-                                  .doc(date.toString())
-                                  .set(list))
-                              .whenComplete(() => nest
-                                  .doc(_nest)
-                                  .collection("egg")
-                                  .doc("$_nest egg $egg")
-                                  .update({'ring': band, 'status':'hatched'}));
-                          Navigator.pop(context);
-                        } else{
-                          showDialog(context: context, builder: (_) =>
-                              AlertDialog(
-                                title: Text("$band already used!",
-                                    style: TextStyle(color: Colors.deepPurpleAccent)
-                                ),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: const Text("OK"),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  )
-                                ],
-                              ));
-                        }
-                      });
+                      //make a bird
+                      Bird bird = Bird(
+                          ringed_date: date,
+                          band: band,
+                          species: _species,
+                          age: _age,
+                          responsible: username,
+                          egg: egg,
+                          nest: _nest,
+                          measures: []);
+                      bool saveOK =  await bird.save2Firestore(birds, nests, false, false);
+                      if(saveOK){
+                        sharedPreferencesService.recentBand = band;
+                        Navigator.pop(context);
+                      } else{
+                        showDialog(context: context, builder: (_) =>
+                            AlertDialog(
+                              title: Text("$band already used!",
+                                  style: TextStyle(color: Colors.deepPurpleAccent)
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text("OK"),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                )
+                              ],
+                            ));
+                      }
                     }
                   },
                   icon: Icon(

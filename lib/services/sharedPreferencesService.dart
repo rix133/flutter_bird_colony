@@ -42,4 +42,11 @@ class SharedPreferencesService extends ChangeNotifier {
     _sharedPreferences.setString('userEmail', value);
     notifyListeners();
   }
+
+  String get recentBand => _sharedPreferences.getString('recentBand') ?? '';
+
+  set recentBand(String value) {
+    _sharedPreferences.setString('recentBand', value);
+    notifyListeners();
+  }
 }
