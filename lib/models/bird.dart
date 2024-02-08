@@ -1,7 +1,9 @@
-  import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:kakrarahu/models/measure.dart';
 
-class Bird {
+class Bird implements FirestoreItem{
   String? id;
   String? nest;
   String? age;
@@ -12,7 +14,9 @@ class Bird {
   DateTime ringed_date;
   String? egg;
   List<Measure> measures = [];
-  List<Object>? changelogs;
+
+  @override
+  String get name => color_band ?? band;
 
   Bird({this.id,
     required this.ringed_date,
@@ -23,8 +27,8 @@ class Bird {
     this.age,
     this.nest,
     this.egg,
-    required this.measures,
-    this.changelogs});
+    required this.measures});
+
 
 
 
@@ -72,12 +76,17 @@ class Bird {
       'age': age,
       'egg': egg,
       'measures': measures.map((e) => e.toJson()).toList(),
-      'changelogs': changelogs
     };
   }
 
   Future<bool> _write2Firestore(CollectionReference birds, CollectionReference nests,  bool isParent) async {
-        await birds.doc(band).set(toJson())
+      // take ony those measures where value is not empty
+      measures = measures.where((element) => element.value.isNotEmpty).toList();
+      //cehck if any measurment is called color ring
+      if(measures.any((Measure m) => m.name == "color ring")){
+        color_band = measures.firstWhere((element) => element.name == "color ring").value;
+      }
+      await birds.doc(band).set(toJson())
             .whenComplete(() => birds
             .doc(band)
             .collection("changelog")
@@ -85,11 +94,16 @@ class Bird {
             .set(toJson()))
             .whenComplete(() => nests
             .doc(nest)
-            .collection(isParent ? "parent": "egg")
+            .collection(isParent ? "parents" : "egg")
             .doc(isParent ? band : "$nest egg $egg")
-            .update(isParent ? {'ring': band, 'color_ring': color_band} : {'ring': band, 'status':'hatched'}));
+            .set(isParent ? toJson() : {'ring': band, 'status':'hatched'}));
         return true;
 
+  }
+
+  @override
+  Future <bool> save(CollectionReference<Object?> items, bool allowOverwrite) {
+    throw UnimplementedError();
   }
 
   Future <bool> save2Firestore(CollectionReference birds, CollectionReference nests,  bool isParent, bool allowOverwrite) async {

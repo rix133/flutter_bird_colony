@@ -21,16 +21,16 @@ class Measure {
   TextEditingController valueCntr = TextEditingController();
 
 
-  Widget getMeasureForm(String nameLabel, String unit, bool isNumber){
+  Padding getMeasureForm(){
     valueCntr.text = value;
-    return new Column(
-      children: <Widget>[
-        TextFormField(
+    return Padding(
+        padding: EdgeInsets.all(10),
+        child: TextFormField(
           keyboardType: isNumber?TextInputType.number:TextInputType.text,
           controller: valueCntr,
           textAlign: TextAlign.center,
           decoration: InputDecoration(
-            labelText: nameLabel + " (" + unit + ")",
+            labelText: name +  (unit == "" ? "" : " (" + unit + ")"),
             labelStyle: TextStyle(color: Colors.yellow),
             hintText: unit,
             fillColor: Colors.orange,
@@ -48,10 +48,7 @@ class Measure {
               ),
             ),
           ),
-        ),
-        SizedBox(height: 10)
-      ],
-    );
+        ));
   }
 
 }

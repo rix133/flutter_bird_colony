@@ -1,9 +1,12 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/models/nest.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:kakrarahu/design/modifingButtons.dart';
+import 'package:provider/provider.dart';
 
 
 class EditParent extends StatefulWidget {
@@ -17,6 +20,7 @@ class _EditParentState extends State<EditParent> {
   TextEditingController band_letCntr = TextEditingController();
   TextEditingController band_numCntr = TextEditingController();
   FocusNode _focusNode = FocusNode();
+  bool isButtonClicked = false;
   Bird bird = Bird(
     species: "",
     ringed_date: DateTime.now(),
@@ -24,6 +28,15 @@ class _EditParentState extends State<EditParent> {
     nest: "",
     measures: [],
     // Add other fields as necessary
+  );
+
+  Nest nest = Nest(
+    accuracy: "",
+    coordinates: GeoPoint(0, 0),
+    discover_date: DateTime.now(),
+    last_modified: DateTime.now(),
+    responsible: "",
+    parents: [],
   );
 
   Measure age = Measure(
@@ -44,11 +57,11 @@ class _EditParentState extends State<EditParent> {
     isNumber: true,
     unit: "mm",
   );
-  Measure wing = Measure(
-    name: "wing length",
+  Measure note = Measure(
+    name: "note",
     value: "",
-    isNumber: true,
-    unit: "cm",
+    isNumber: false,
+    unit: "text",
   );
 
   Measure gland = Measure(
@@ -61,22 +74,25 @@ class _EditParentState extends State<EditParent> {
   CollectionReference nests = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
   CollectionReference birds = FirebaseFirestore.instance.collection("Birds");
 
-  var username;
-  var uid;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sps = Provider.of<SharedPreferencesService>(context, listen: false);
       var map = ModalRoute.of(context)?.settings.arguments as Map;
-      bird = Bird(
-        species: map["species"],
-        ringed_date: DateTime.now(),
-        band: "",
-        nest: map["pesa"],
-        measures: [color_band, head, wing, gland, age],
-        // Add other fields as necessary
-      );
+      nest = map["nest"] as Nest;
+      setState(() {
+        bird = Bird(
+          species: nest.species,
+          ringed_date: DateTime.now(),
+          band: "",
+          responsible: sps.userName,
+          nest: nest.name,
+          measures: [color_band, head, note, gland, age],
+          // Add other fields as necessary
+        );
+      });
     });
   }
 
@@ -147,18 +163,6 @@ class _EditParentState extends State<EditParent> {
 
   @override
   Widget build(BuildContext context) {
-    FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-      if (user != null) {
-        username = user.displayName.toString();
-        if (user.uid != uid) {
-          print(user.uid);
-          setState(() {
-            uid = user.uid;
-          });
-        }
-      }
-    });
-
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
@@ -171,10 +175,17 @@ class _EditParentState extends State<EditParent> {
               SizedBox(height: 10),
                 metalBand(),
                 SizedBox(height: 10),
-                ...bird.measures.map((measure) => measure.getMeasureForm(measure.name, measure.unit, measure.isNumber)).toList(),
+                ...bird.measures.map((Measure m) => m.getMeasureForm()).toList(),
                 //add save button
-                ElevatedButton(
-                  onPressed: () async {
+                ElevatedButton.icon(
+                  label: Text("Save"),
+                  icon: Icon(
+                    Icons.save,
+                    color: Colors.black87,
+                    size: 45,
+                  ),
+                  onPressed: isButtonClicked ? null : () async {
+                    isButtonClicked = true;
                     bird.band = band_letCntr.text + band_numCntr.text;
                     bird.measures.forEach((element) {
                       element.value = element.valueCntr.text;
@@ -207,7 +218,6 @@ class _EditParentState extends State<EditParent> {
                           ));
                     }
                   },
-                  child: Text("Save"),
                 )
               ]
             ),

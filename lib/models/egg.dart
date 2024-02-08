@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:kakrarahu/models/firestore_item.dart';
 
-class Egg {
+class Egg implements FirestoreItem{
   String? id;
   Timestamp discover_date;
-  String responsible;
+  String? responsible;
   String? ring;
   String status;
   List<Object>? changelogs;
@@ -13,6 +14,8 @@ class Egg {
     required this.responsible,
     required this.status,
     this.ring});
+
+  String get name => id ?? "New Egg";
 
   @override
   factory Egg.fromQuerySnapshot(QueryDocumentSnapshot<Object?> snapshot) {
@@ -24,5 +27,20 @@ class Egg {
         ring: json['ring'],
         status: json['status']
     ));
+  }
+  @override
+  Future<bool> save(CollectionReference<Object?> items, bool allowOverwrite) {
+    // TODO: implement save
+    throw UnimplementedError();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'discover_date': discover_date,
+      'responsible': responsible,
+      'ring': ring,
+      'status': status
+    };
   }
 }

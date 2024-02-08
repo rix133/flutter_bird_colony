@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/buildForm.dart';
+import 'package:kakrarahu/models/nest.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/species.dart';
+import 'package:provider/provider.dart';
 
 import 'models/bird.dart';
 
@@ -21,7 +23,6 @@ class _NestManageState extends State<NestManage> {
 
   final FocusNode _focusNode = FocusNode();
   final species = new TextEditingController();
-  final nestID = new TextEditingController();
   final remark = new TextEditingController();
 
   static String _displayStringForOption(SpeciesList option) => option.english;
@@ -30,15 +31,17 @@ class _NestManageState extends State<NestManage> {
   Stream<bool> get _checkBoxStream => _checkBoxController.stream;*/
   var new_egg_nr;
   var save;
-  var mune;
-  var username;
+  int _eggCount = 0;
   var exists;
-  List <Bird> parents = [];
+  List<Bird> parents = [];
+  Nest? nest;
   Map<String, dynamic> database = {};
-  late CollectionReference pesa;
+  late CollectionReference nests;
+  late Stream<QuerySnapshot> _eggStream;
+  late Stream<QuerySnapshot> _parentStream;
+
 
   String get _year => DateTime.now().year.toString();
-  bool signed = false;
   var map = <String, dynamic>{};
 
   void addItem(value, String key) {
@@ -48,69 +51,220 @@ class _NestManageState extends State<NestManage> {
   }
 
   @override
-  void initState() {
-    pesa = FirebaseFirestore.instance.collection(_year);
-    super.initState();
-  }
-
-  @override
   void dispose() {
-    // Clean up the controller when the widget is disposed.
-    nestID.dispose();
-    species.dispose();
-    remark.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
-  Row _getParentsRow(data){
-    //buttons row for listing available parents and + button to add new
-    return Row(
+  @override
+  void initState() {
+    super.initState();
+    nests = FirebaseFirestore.instance.collection(_year);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      var data = ModalRoute.of(context)?.settings.arguments as Map;
+
+      nests.doc(data["sihtkoht"]).get().then((value) {
+        setState(() {
+          nest = Nest.fromQuerySnapshot(value);
+          species.text = nest!.species ?? "";
+          remark.text = nest!.remark ?? "";
+        });
+      });
+    });
+  }
+
+  Row modifingButtons(BuildContext context, CollectionReference nests,
+      Nest? nest, SharedPreferencesService sps) {
+    return (Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ...parents.map((Bird e) => ElevatedButton(
-          style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey),
-          child: (Text(e.band)),
-          onPressed: () {
-          },
-        ),).toList(),
-        //add new parent button
-        ElevatedButton.icon(
+        new ElevatedButton.icon(
             style: ButtonStyle(
-                backgroundColor:
-                MaterialStateProperty.all(Colors.grey)),
+                backgroundColor: MaterialStateProperty.all(Colors.red[900])),
             onPressed: () {
-              Navigator.pushNamed(context, "/editparent",
-                  arguments: {
-                    "pesa": (data["sihtkoht"]).toString(),
-                    "species":
-                    database["species"].toString(),
-                    "age": ""
-                  });
+              showDialog<String>(
+                barrierColor: Colors.black,
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                  contentTextStyle: TextStyle(color: Colors.black),
+                  titleTextStyle: TextStyle(color: Colors.red),
+                  title: const Text("Removing nest"),
+                  content:
+                      const Text('Are you sure you want to delete this nest?'),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, 'Cancel'),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        var time = DateTime.now();
+                        var kust = nests.doc(nest!.name);
+                        kust
+                            .collection("changelog")
+                            .get()
+                            .then((value) => value.docs.forEach((element) {
+                                  element.reference.update({"deleted": time});
+                                }));
+                        kust.delete();
+                        kust
+                            .collection("egg")
+                            .get()
+                            .then((value) => value.docs.forEach((element) {
+                                  element.reference
+                                      .collection("changelog")
+                                      .get()
+                                      .then((value2) =>
+                                          value2.docs.forEach((element2) {
+                                            element2.reference
+                                                .update({"deleted": time});
+                                          }));
+                                  element.reference.delete();
+                                }));
+
+                        Navigator.pop(context);
+                        Navigator.pop(context);
+                      },
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              );
             },
             icon: Icon(
-              Icons.add,
+              Icons.delete,
               size: 45,
             ),
-            label: Text("parent")),
+            label: Text("delete")),
+        StreamBuilder<Object>(
+            stream: null,
+            builder: (context, snapshot) {
+              return new ElevatedButton.icon(
+                  onPressed: () async => {
+                        save = nest!.name,
+                        //addItem(coords, "coordinates"),
+                        //addItem(accuracy, "accuracy"),
+                        addItem(sps.userName, "responsible"),
+                        addItem(species.text, "species"),
+                        addItem(remark.text, "remark"),
+                        exists = await nests.doc(save).get(),
+                        if (exists.exists == true)
+                          {
+                            print("ei eksisteeri"),
+                            nests.doc(save).update(map).then((value) => nests
+                                .doc(save)
+                                .update({"last_modified": DateTime.now()})),
+                            map.addAll({"a": "B"}),
+                            nests
+                                .doc(save)
+                                .collection("changelog")
+                                .doc(DateTime.now().toString())
+                                .set(map)
+                                .then((value) => print("Success"))
+                                .catchError((error) => print("Failed: $error")),
+                            Navigator.pop(context),
+                          }
+                        else
+                          {
+                            showDialog<String>(
+                              barrierColor: Colors.black,
+                              context: context,
+                              builder: (BuildContext context) => AlertDialog(
+                                contentTextStyle:
+                                    TextStyle(color: Colors.black),
+                                titleTextStyle: TextStyle(color: Colors.red),
+                                title: const Text("Nest does not yet exist"),
+                                content: const Text(
+                                    'Do you want to declare a new nest?'),
+                                actions: <Widget>[
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, 'Cancel'),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context, 'OK');
+                                      Navigator.popAndPushNamed(
+                                          context, "/pesa",
+                                          arguments: {"sihtkoht": nest!.name});
+                                    },
+                                    child: const Text('OK'),
+                                  ),
+                                ],
+                              ),
+                            )
+                          },
+                        //ALERTDIALOG
+                      },
+                  icon: Icon(
+                    Icons.save,
+                    color: Colors.black87,
+                    size: 45,
+                  ),
+                  label: Text("save and check"));
+            }), //save button
       ],
+    ));
+  }
+
+  StreamBuilder _getParentsRow(Stream<QuerySnapshot> _parentStream) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _parentStream,
+      builder: (context, snapshot) {
+        return Container(
+          height: 50.0, // Adjust this value as needed
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child:ListView.builder(
+                itemCount: snapshot.data?.docs.length ?? 0,
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (BuildContext context, int index) {
+                  if (snapshot.hasError) {
+                    return Text('Something went wrong');
+                  } else if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return Text("Loading");
+                  } else {
+                    Bird b =
+                    Bird.fromQuerySnapshot(snapshot.data!.docs[index]);
+                    return ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey,
+                          padding: EdgeInsets.all(5)),
+                      child: (Text(b.name)),
+                      onPressed: () {},
+                    );
+                  }
+                },
+              )),
+              ElevatedButton.icon(
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(Colors.grey)),
+                  onPressed: () {
+                    Navigator.pushNamed(context, "/editparent", arguments: {
+                      "nest": nest,
+                    });
+                  },
+                  icon: Icon(
+                    Icons.add,
+                    size: 45,
+                  ),
+                  label: Text("parent")),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  void handleAuthStateChanges(User? user) {
-    if (user == null) {
-      print('User is currently signed out!');
-      signed = false;
-    } else {
-      print('User is signed in as ' + user.displayName.toString());
-      signed = true;
-      username = user.displayName.toString();
-    }
-  }
 
 
-// Function to build RawAutocomplete
+  // Function to build RawAutocomplete
   Widget buildRawAutocomplete(TextEditingController species) {
     return RawAutocomplete<SpeciesList>(
       displayStringForOption: _displayStringForOption,
@@ -140,8 +294,8 @@ class _NestManageState extends State<NestManage> {
                 );
               },
               separatorBuilder: (context, index) => Divider(
-                height: 0,
-              ),
+                    height: 0,
+                  ),
               itemCount: options.length),
         );
       },
@@ -190,37 +344,35 @@ class _NestManageState extends State<NestManage> {
     );
   }
 
-
-
-
-
   Widget build(BuildContext context) {
-    FirebaseAuth.instance.authStateChanges().listen(handleAuthStateChanges);
-    final data = ModalRoute.of(context)?.settings.arguments as Map;
-    nestID.text = data["sihtkoht"];
-
-    pesa.doc(data["sihtkoht"]).get().then((value) {
-      database = value.data() as Map<String, dynamic>;
-      species.text = database["species"];
-      remark.text = database["remark"];
-    });
-    try {
-      species.text = data["species"];
-    } catch (e) {}
-    try {
-      remark.text = data["remark"];
-    } catch (e) {}
-    final Stream<QuerySnapshot> _eggStream = FirebaseFirestore.instance
+    if (nest == null) {
+      // Return a CircularProgressIndicator while nest is loading
+      return Scaffold(
+        body: Center(
+          child: Container(
+            padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[CircularProgressIndicator()],
+            ),
+          ),
+        ),
+      );
+    }
+    _eggStream = FirebaseFirestore.instance
         .collection(_year)
-        .doc(data["sihtkoht"])
+        .doc(nest!.id)
         .collection("egg")
         .snapshots();
 
-    pesa
-        .doc(data["sihtkoht"])
-        .collection("egg")
-        .get()
-        .then((value) => mune = value.docs.length);
+    _parentStream = FirebaseFirestore.instance
+        .collection(_year)
+        .doc(nest!.id)
+        .collection("parents")
+        .snapshots();
+
+
+    final sps = Provider.of<SharedPreferencesService>(context, listen: false);
     return Scaffold(
       body: Center(
         child: Container(
@@ -229,11 +381,11 @@ class _NestManageState extends State<NestManage> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                new Text(data["sihtkoht"],
+                new Text(nest!.name,
                     style:
                         TextStyle(fontSize: 30, fontStyle: FontStyle.italic)),
                 FutureBuilder(
-                  future: pesa.doc(data["sihtkoht"]).get(),
+                  future: nests.doc(nest!.id).get(),
                   builder: (BuildContext context,
                       AsyncSnapshot<DocumentSnapshot<Object?>> snapshot) {
                     if (snapshot.hasError) {
@@ -265,7 +417,7 @@ class _NestManageState extends State<NestManage> {
               buildRawAutocomplete(species),
               SizedBox(height: 15),
               buildForm(context, "remark", null, remark),
-              _getParentsRow(data),
+              _getParentsRow(_parentStream),
               StreamBuilder<QuerySnapshot>(
                 stream: _eggStream,
                 builder: (context, snapshot) {
@@ -321,8 +473,8 @@ class _NestManageState extends State<NestManage> {
                                       onPressed: () {
                                         Navigator.pushNamed(context, "/eggs",
                                             arguments: {
-                                              "sihtkoht": data["sihtkoht"],
-                                              "egg": data["sihtkoht"] +
+                                              "sihtkoht": nest!.name,
+                                              "egg": nest!.name +
                                                   " egg " +
                                                   (id).toString()
                                             });
@@ -331,8 +483,7 @@ class _NestManageState extends State<NestManage> {
                                         Navigator.pushNamed(
                                             context, "/editchick",
                                             arguments: {
-                                              "pesa":
-                                                  (data["sihtkoht"]).toString(),
+                                              "pesa": nest!.name,
                                               "muna_nr": (id).toString(),
                                               "species": database["species"]
                                                   .toString(),
@@ -351,7 +502,7 @@ class _NestManageState extends State<NestManage> {
                             StreamBuilder<QuerySnapshot>(
                                 stream: FirebaseFirestore.instance
                                     .collection("Birds")
-                                    .where("nest", isEqualTo: data["sihtkoht"])
+                                    .where("nest", isEqualTo: nest!.name)
                                     .where("ringed_date",
                                         isGreaterThan:
                                             DateTime(DateTime.now().year))
@@ -372,20 +523,20 @@ class _NestManageState extends State<NestManage> {
                                       snapshot.hasError == false) {
                                     new_egg_nr =
                                         ((snapshot.data!.docs.length) + 1);
-                                    pesa
-                                        .doc(data["sihtkoht"])
+                                    nests
+                                        .doc(nest!.name)
                                         .collection("egg")
-                                        .doc(data["sihtkoht"] +
+                                        .doc(nest!.name +
                                             " egg " +
                                             new_egg_nr.toString())
                                         .set({
                                       "discover_date": DateTime.now().toLocal(),
-                                      "responsible": username,
+                                      "responsible": sps.userName,
                                       "status": "intact",
-                                    }).whenComplete(() => pesa
-                                                .doc(data["sihtkoht"])
+                                    }).whenComplete(() => nests
+                                                .doc(nest!.name)
                                                 .collection("egg")
-                                                .doc(data["sihtkoht"] +
+                                                .doc(nest!.name +
                                                     " egg " +
                                                     new_egg_nr.toString())
                                                 .collection("changelog")
@@ -393,13 +544,13 @@ class _NestManageState extends State<NestManage> {
                                                 .set({
                                               "discover_date":
                                                   DateTime.now().toLocal(),
-                                              "responsible": username,
+                                              "responsible": sps.userName,
                                               "status": "intact",
                                             }));
                                     /*Navigator.pushNamed(context, "/eggs",
                                           arguments: {
-                                            "sihtkoht": data["sihtkoht"],
-                                            "egg": data["sihtkoht"] +
+                                            "sihtkoht": nest.name,
+                                            "egg": nest.name +
                                                 " egg " +
                                                 new_egg_nr.toString()
                                           });*/
@@ -410,9 +561,9 @@ class _NestManageState extends State<NestManage> {
                                   size: 45,
                                 ),
                                 onLongPress: () {
-                                  Navigator.pushNamed(context, "/individual",
+                                  Navigator.pushNamed(context, "/editchick",
                                       arguments: {
-                                        "pesa": (data["sihtkoht"]).toString(),
+                                        "pesa": (nest!.name).toString(),
                                         "species":
                                             database["species"].toString(),
                                         "age": "1"
@@ -428,209 +579,8 @@ class _NestManageState extends State<NestManage> {
                                   ],
                                 )),
                             SizedBox(height: 15),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                new ElevatedButton.icon(
-                                    style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStateProperty.all(
-                                                Colors.red[900])),
-                                    onPressed: () {
-                                      showDialog<String>(
-                                        barrierColor: Colors.black,
-                                        context: context,
-                                        builder: (BuildContext context) =>
-                                            AlertDialog(
-                                          contentTextStyle:
-                                              TextStyle(color: Colors.black),
-                                          titleTextStyle:
-                                              TextStyle(color: Colors.red),
-                                          title: const Text("Removing nest"),
-                                          content: const Text(
-                                              'Are you sure you want to delete this nest?'),
-                                          actions: <Widget>[
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(
-                                                  context, 'Cancel'),
-                                              child: const Text('Cancel'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                var time = DateTime.now();
-                                                var kust =
-                                                    pesa.doc(data["sihtkoht"]);
-                                                kust
-                                                    .collection("changelog")
-                                                    .get()
-                                                    .then((value) => value.docs
-                                                            .forEach((element) {
-                                                          element.reference
-                                                              .update({
-                                                            "deleted": time
-                                                          });
-                                                        }));
-                                                kust.delete();
-                                                kust
-                                                    .collection("egg")
-                                                    .get()
-                                                    .then((value) => value.docs
-                                                            .forEach((element) {
-                                                          element.reference
-                                                              .collection(
-                                                                  "changelog")
-                                                              .get()
-                                                              .then((value2) =>
-                                                                  value2.docs
-                                                                      .forEach(
-                                                                          (element2) {
-                                                                    element2
-                                                                        .reference
-                                                                        .update({
-                                                                      "deleted":
-                                                                          time
-                                                                    });
-                                                                  }));
-                                                          element.reference
-                                                              .delete();
-                                                        }));
-
-                                                Navigator.pop(context);
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text('OK'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                    icon: Icon(
-                                      Icons.delete,
-                                      size: 45,
-                                    ),
-                                    label: Text("delete")),
-                                StreamBuilder<Object>(
-                                    stream: null,
-                                    builder: (context, snapshot) {
-                                      return new ElevatedButton.icon(
-                                          onPressed: () async => {
-                                                save = data["sihtkoht"],
-                                                //addItem(coords, "coordinates"),
-                                                //addItem(accuracy, "accuracy"),
-                                                addItem(
-                                                    username, "responsible"),
-                                                addItem(
-                                                    species.text, "species"),
-                                                addItem(remark.text, "remark"),
-                                                exists =
-                                                    await pesa.doc(save).get(),
-                                                if (exists.exists == true)
-                                                  {
-                                                    print("ei eksisteeri"),
-                                                    pesa
-                                                        .doc(save)
-                                                        .update(map)
-                                                        .then((value) => pesa
-                                                                .doc(save)
-                                                                .update({
-                                                              "last_modified":
-                                                                  DateTime.now()
-                                                            })),
-                                                    map.addAll({"a": "B"}),
-                                                    pesa
-                                                        .doc(save)
-                                                        .collection("changelog")
-                                                        .doc(DateTime.now()
-                                                            .toString())
-                                                        .set(map)
-                                                        .then((value) =>
-                                                            print("Success"))
-                                                        .catchError((error) =>
-                                                            print(
-                                                                "Failed: $error")),
-                                                    Navigator.pop(context),
-                                                  }
-                                                else
-                                                  {
-                                                    showDialog<String>(
-                                                      barrierColor:
-                                                          Colors.black,
-                                                      context: context,
-                                                      builder: (BuildContext
-                                                              context) =>
-                                                          AlertDialog(
-                                                        contentTextStyle:
-                                                            TextStyle(
-                                                                color: Colors
-                                                                    .black),
-                                                        titleTextStyle:
-                                                            TextStyle(
-                                                                color:
-                                                                    Colors.red),
-                                                        title: const Text(
-                                                            "Nest does not yet exist"),
-                                                        content: const Text(
-                                                            'Do you want to declare a new nest?'),
-                                                        actions: <Widget>[
-                                                          TextButton(
-                                                            onPressed: () =>
-                                                                Navigator.pop(
-                                                                    context,
-                                                                    'Cancel'),
-                                                            child: const Text(
-                                                                'Cancel'),
-                                                          ),
-                                                          TextButton(
-                                                            onPressed: () {
-                                                              Navigator.pop(
-                                                                  context,
-                                                                  'OK');
-                                                              Navigator
-                                                                  .popAndPushNamed(
-                                                                      context,
-                                                                      "/pesa",
-                                                                      arguments: {
-                                                                    "sihtkoht":
-                                                                        data[
-                                                                            "sihtkoht"]
-                                                                  });
-                                                            },
-                                                            child: const Text(
-                                                                'OK'),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    )
-                                                  },
-                                                //ALERTDIALOG
-                                              },
-                                          icon: Icon(
-                                            Icons.save,
-                                            color: Colors.black87,
-                                            size: 45,
-                                          ),
-                                          label: Text("save and check"));
-                                    }), //save button
-                                /*StreamBuilder(
-                      stream: _checkBoxStream,
-                      initialData: false,
-                      builder: (BuildContext context, AsyncSnapshot<bool> snapshot ){
-                        return Theme(
-                          data: ThemeData(
-                            primarySwatch: Colors.blue,
-                            unselectedWidgetColor: Colors.red, // Your color
-                          ),
-                          child: Checkbox(
-                              value: snapshot.data,
-                              onChanged: (changedValue){
-                                _checkBoxController.sink.add(changedValue!);
-                              }
-                          ),
-                        );
-                      }),*/
-                              ],
-                            ), //asukoht ja save nupp
+                            modifingButtons(context, nests, nest, sps),
+                            //asukoht ja save nupp
                           ],
                         ),
                       ],

@@ -1,21 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kakrarahu/models/egg.dart';
+import 'package:kakrarahu/models/firestore_item.dart';
 
 import 'bird.dart';
 
-class Nest {
+class Nest implements FirestoreItem {
   String? id;
   String accuracy;
   GeoPoint coordinates;
   String? remark;
-  String responsible;
+  String? responsible;
   String? species;
   bool? completed;
-  Timestamp discover_date;
-  Timestamp last_modified;
+  DateTime discover_date;
+  DateTime last_modified;
   List<Egg>? eggs = [];
   List<Object>? changelogs;
   List<Bird> parents = [];
+
+  String get name => id ?? "New Nest";
 
   Nest({this.id,
     required this.discover_date,
@@ -38,7 +41,6 @@ class Nest {
       var today = DateTime.now().toIso8601String().split("T")[0];
       return this
           .last_modified
-          .toDate()
           .toIso8601String()
           .split("T")[0]
           .toString() ==
@@ -58,13 +60,13 @@ class Nest {
   }
 
   @override
-  factory Nest.fromQuerySnapshot(QueryDocumentSnapshot<Object?> snapshot) {
+  factory Nest.fromQuerySnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     return (Nest(
         id: snapshot.id,
         //assign a last century date
-        discover_date: json['discover_date'] as Timestamp? ?? Timestamp.fromDate(DateTime(1900)),
-        last_modified: json['last_modified'] as Timestamp? ?? Timestamp.fromDate(DateTime(1900)),
+        discover_date: (json['discover_date'] as Timestamp? ?? Timestamp(0,0)).toDate(),
+        last_modified: (json['last_modified'] as Timestamp? ?? Timestamp(0,0)).toDate(),
         accuracy: json['accuracy'] as String? ?? '',
         remark: json["remark"] as String? ?? '',
         responsible: json["responsible"] as String? ?? '',
@@ -72,6 +74,26 @@ class Nest {
         completed: json['completed'] as bool? ?? false,
         parents: json['parents'] != null ? (json['parents'] as List).map((i) => Bird.fromQuerySnapshot(i)).toList() : [],
         species: json['species'] as String? ?? ''));
+  }
+
+  @override
+  Future <bool> save(CollectionReference<Object?> items, bool allowOverwrite) {
+    throw UnimplementedError();
+  }
+
+
+  toJson() {
+    return {
+      'discover_date': discover_date,
+      'last_modified': last_modified,
+      'accuracy': accuracy,
+      'remark': remark,
+      'responsible': responsible,
+      'coordinates': coordinates,
+      'completed': completed,
+      'parents': parents.map((e) => e.toJson()).toList(),
+      'species': species,
+    };
   }
 
   bool isCompleted() {

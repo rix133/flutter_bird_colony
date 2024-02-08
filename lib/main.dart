@@ -18,6 +18,18 @@ import 'eggs.dart';
 import 'editChick.dart';
 import 'mapforcreate.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+void handleAuthStateChanges(User? user, SharedPreferences sharedPreferences) {
+  if (user == null) {
+    //print('User is currently signed out!');
+    sharedPreferences.setBool('isLoggedIn', false);
+  } else {
+    //print('User is signed in as ' + user.displayName.toString());
+    sharedPreferences.setBool('isLoggedIn', true);
+    sharedPreferences.setString('userName', user.displayName.toString());
+  }
+}
 
 
 void main() async{
@@ -26,6 +38,12 @@ void main() async{
     options: DefaultFirebaseOptions.currentPlatform,
   );
   final sharedPreferences = await SharedPreferences.getInstance();
+
+
+  FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    handleAuthStateChanges(user, sharedPreferences);
+  });
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => SharedPreferencesService(sharedPreferences),
