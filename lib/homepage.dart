@@ -10,11 +10,19 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+Future<bool> isUserSignedIn() async {
+  // Trigger the authentication flow
+  final GoogleSignIn googleSignIn = GoogleSignIn();
+  GoogleSignInAccount? googleUser = await googleSignIn.signInSilently();
+  if (googleUser != null) {return true;};
+  return(await googleSignIn.isSignedIn());
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: GoogleSignIn().isSignedIn(),
+      future: isUserSignedIn(),
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.data == true) {
