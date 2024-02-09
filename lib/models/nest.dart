@@ -14,6 +14,7 @@ class Nest implements FirestoreItem {
   bool? completed;
   DateTime discover_date;
   DateTime last_modified;
+  bool experiment = false;
   List<Egg>? eggs = [];
   List<Object>? changelogs;
   List<Bird> parents = [];
@@ -77,7 +78,12 @@ class Nest implements FirestoreItem {
   }
 
   @override
-  Future <bool> save(CollectionReference<Object?> items, bool allowOverwrite) {
+  Future <bool> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, type = "default"}) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future <bool> delete({CollectionReference<Object?>? otherItems = null, bool soft = true, type = "default"}) async {
     throw UnimplementedError();
   }
 
@@ -85,7 +91,7 @@ class Nest implements FirestoreItem {
   toJson() {
     return {
       'discover_date': discover_date,
-      'last_modified': last_modified,
+      'last_modified': DateTime.now(),
       'accuracy': accuracy,
       'remark': remark,
       'responsible': responsible,

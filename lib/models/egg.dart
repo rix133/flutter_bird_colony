@@ -29,8 +29,13 @@ class Egg implements FirestoreItem{
     ));
   }
   @override
-  Future<bool> save(CollectionReference<Object?> items, bool allowOverwrite) {
+  Future <bool> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, type = "default"}) async {
     // TODO: implement save
+    throw UnimplementedError();
+  }
+
+  @override
+  Future <bool> delete({CollectionReference<Object?>? otherItems = null, bool soft = true, type = "default"}) async {
     throw UnimplementedError();
   }
 

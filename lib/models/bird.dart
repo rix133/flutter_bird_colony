@@ -79,45 +79,60 @@ class Bird implements FirestoreItem{
     };
   }
 
-  Future<bool> _write2Firestore(CollectionReference birds, CollectionReference nests,  bool isParent) async {
+  Future<bool> _write2Firestore(CollectionReference birds, CollectionReference nestsItemCollection,  bool isParent) async {
       // take ony those measures where value is not empty
       measures = measures.where((element) => element.value.isNotEmpty).toList();
-      //cehck if any measurment is called color ring
-      if(measures.any((Measure m) => m.name == "color ring")){
-        color_band = measures.firstWhere((element) => element.name == "color ring").value;
-      }
-      await birds.doc(band).set(toJson())
+
+      return(await birds.doc(band).set(toJson())
             .whenComplete(() => birds
             .doc(band)
             .collection("changelog")
             .doc(DateTime.now().toString())
             .set(toJson()))
-            .whenComplete(() => nests
-            .doc(nest)
-            .collection(isParent ? "parents" : "egg")
+            .whenComplete(() => (nest?.isEmpty ?? true) ? true : nestsItemCollection
             .doc(isParent ? band : "$nest egg $egg")
-            .set(isParent ? toJson() : {'ring': band, 'status':'hatched'}));
-        return true;
+            .set(isParent ? toJson() : {'ring': band, 'status':'hatched'})).then((value) => true).catchError((error) => false));
 
   }
 
   @override
-  Future <bool> save(CollectionReference<Object?> items, bool allowOverwrite) {
+  Future <bool> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, type = "parent"}) async {
+    if(band.isEmpty){
+      return false;
+    }
+    if(type == "parent" || type == "chick"){
+      CollectionReference birds = FirebaseFirestore.instance.collection("Birds");
+      bool isParent = (type == "parent");
+      if(allowOverwrite && otherItems != null){
+        return await _write2Firestore(birds, otherItems, isParent);
+      } else if (otherItems != null){
+        return await birds.doc(band).get().then((value) {
+          if (!value.exists) {
+            return _write2Firestore(birds, otherItems, isParent);
+          } else{
+            return false;
+          }
+        });
+      }
+    }
     throw UnimplementedError();
   }
 
-  Future <bool> save2Firestore(CollectionReference birds, CollectionReference nests,  bool isParent, bool allowOverwrite) async {
-    if(allowOverwrite){
-      return await _write2Firestore(birds, nests, isParent);
-    } else{
-      return await birds.doc(band).get().then((value) {
-        if (!value.exists) {
-          return _write2Firestore(birds, nests, isParent);
-        } else{
-          return false;
-        }
-      });
+  Future <bool> delete({CollectionReference<Object?>? otherItems = null, bool soft=true, type="parent"}) async {
+    // delete from the nest as well if asked for
+    if(otherItems != null){
+      await otherItems.doc(id).delete().then((value) => true).catchError((error) => false);
     }
+    CollectionReference items = FirebaseFirestore.instance.collection("Birds");
+    if(!soft){
+      return await items.doc(id).delete().then((value) => true).catchError((error) => false);
+    } else{
+      CollectionReference deletedCollection = FirebaseFirestore.instance.collection("deletedItems").doc("Birds").collection("deleted");
 
+      //TODO add a check if the item is already in deleted collection
+      return await deletedCollection.doc(id).set(toJson()).then((value) => items.doc(id).delete().then((value) => true)).catchError((error) => false);
+
+    }
   }
+
 }

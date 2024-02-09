@@ -368,7 +368,7 @@ class _EditChickState extends State<EditChick> {
                           egg: egg,
                           nest: _nest,
                           measures: []);
-                      bool saveOK =  await bird.save2Firestore(birds, nests, false, false);
+                      bool saveOK =  await bird.save(otherItems: nests, allowOverwrite: false, type: "chick");
                       if(saveOK){
                         sharedPreferencesService.recentBand = band;
                         Navigator.pop(context);

@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/bird.dart';
@@ -7,7 +6,6 @@ import 'package:kakrarahu/models/nest.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:provider/provider.dart';
-
 
 class EditParent extends StatefulWidget {
   const EditParent({Key? key}) : super(key: key);
@@ -20,24 +18,6 @@ class _EditParentState extends State<EditParent> {
   TextEditingController band_letCntr = TextEditingController();
   TextEditingController band_numCntr = TextEditingController();
   FocusNode _focusNode = FocusNode();
-  bool isButtonClicked = false;
-  Bird bird = Bird(
-    species: "",
-    ringed_date: DateTime.now(),
-    band: "",
-    nest: "",
-    measures: [],
-    // Add other fields as necessary
-  );
-
-  Nest nest = Nest(
-    accuracy: "",
-    coordinates: GeoPoint(0, 0),
-    discover_date: DateTime.now(),
-    last_modified: DateTime.now(),
-    responsible: "",
-    parents: [],
-  );
 
   Measure age = Measure(
     name: "age",
@@ -71,33 +51,88 @@ class _EditParentState extends State<EditParent> {
     unit: "mm",
   );
 
-  CollectionReference nests = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
-  CollectionReference birds = FirebaseFirestore.instance.collection("Birds");
+  Measure nestnr = Measure(
+    name: "nest",
+    value: "",
+    isNumber: true,
+    unit: "",
+  );
+  Measure species = Measure(
+    name: "species",
+    value: "Common Gull",
+    isNumber: false,
+    unit: "",
+  );
 
+  Bird bird = Bird(
+    species: "",
+    ringed_date: DateTime.now(),
+    band: "",
+    nest: "",
+    measures: [],
+    // Add other fields as necessary
+  );
+
+  Nest nest = Nest(
+    accuracy: "",
+    coordinates: GeoPoint(0, 0),
+    discover_date: DateTime.now(),
+    last_modified: DateTime.now(),
+    responsible: "",
+    parents: [],
+  );
+
+
+
+  CollectionReference nests =
+      FirebaseFirestore.instance.collection(DateTime.now().year.toString());
+  CollectionReference birds = FirebaseFirestore.instance.collection("Birds");
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final sps = Provider.of<SharedPreferencesService>(context, listen: false);
-      var map = ModalRoute.of(context)?.settings.arguments as Map;
-      nest = map["nest"] as Nest;
-      setState(() {
-        bird = Bird(
-          species: nest.species,
-          ringed_date: DateTime.now(),
-          band: "",
-          responsible: sps.userName,
-          nest: nest.name,
-          measures: [color_band, head, note, gland, age],
-          // Add other fields as necessary
-        );
-      });
+      var map = ModalRoute.of(context)?.settings.arguments;
+      List<Measure> allMeasures = [note, head, gland, age];
+      if (map != null) {
+        map = map as Map<String, dynamic>;
+        if (map["nest"] != null) {
+          nest = map["nest"] as Nest;
+        }
+        if (map["bird"] != null) {
+          bird = map["bird"] as Bird;
+          //check if measure is missing and add if needed
+          for(Measure m in allMeasures){
+            if(!bird.measures.map((e) => e.name).contains(m.name)){
+              bird.measures.add(m);
+            }
+          }
+
+        } else {
+          bird = Bird(
+            species: nest.species,
+            ringed_date: DateTime.now(),
+            band: "",
+            responsible: sps.userName,
+            nest: nest.name,
+            measures: allMeasures,
+            // Add other fields as necessary
+          );
+          nestnr.value = nest.name;
+          species.value = nest.species ?? "Common Gull";
+        }
+        setState(() {});
+    } else {
+        bird.measures = allMeasures;
+        setState(() {});
+        return;
+      }
     });
   }
 
   Row metalBand() {
-    if(bird.band.isNotEmpty){
+    if (bird.band.isNotEmpty) {
       band_letCntr.text = bird.band.substring(0, 2);
       band_numCntr.text = bird.band.substring(2);
     }
@@ -113,11 +148,8 @@ class _EditParentState extends State<EditParent> {
               hintText: "UA",
               fillColor: Colors.orange,
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
-                borderSide: (BorderSide(
-                    color: Colors.indigo
-                ))
-              ),
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: (BorderSide(color: Colors.indigo))),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(25.0),
                 borderSide: BorderSide(
@@ -140,11 +172,8 @@ class _EditParentState extends State<EditParent> {
               hintText: "12325",
               fillColor: Colors.orange,
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
-                borderSide: (BorderSide(
-                    color: Colors.indigo
-                ))
-              ),
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: (BorderSide(color: Colors.indigo))),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(25.0),
                 borderSide: BorderSide(
@@ -159,7 +188,17 @@ class _EditParentState extends State<EditParent> {
     );
   }
 
-
+  Bird getBird() {
+    //ensure UI is updated
+    bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
+    bird.species = species.valueCntr.text;
+    bird.nest = nestnr.valueCntr.text;
+    bird.color_band = color_band.valueCntr.text.toUpperCase();
+    bird.measures.forEach((element) {
+      element.value = element.valueCntr.text;
+    });
+    return bird;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -170,57 +209,18 @@ class _EditParentState extends State<EditParent> {
         body: Center(
           child: Container(
             padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
-            child: Column(
-              children: [Text("Edit bird"),
+            child: Column(children: [
+              Text("Edit bird",
+                  style: TextStyle(fontSize: 30, color: Colors.yellow)),
               SizedBox(height: 10),
-                metalBand(),
-                SizedBox(height: 10),
-                ...bird.measures.map((Measure m) => m.getMeasureForm()).toList(),
-                //add save button
-                ElevatedButton.icon(
-                  label: Text("Save"),
-                  icon: Icon(
-                    Icons.save,
-                    color: Colors.black87,
-                    size: 45,
-                  ),
-                  onPressed: isButtonClicked ? null : () async {
-                    isButtonClicked = true;
-                    bird.band = band_letCntr.text + band_numCntr.text;
-                    bird.measures.forEach((element) {
-                      element.value = element.valueCntr.text;
-                    });
-                    bool saveOK = await bird.save2Firestore(birds, nests, true, false);
-                    if (saveOK) {
-                      Navigator.pop(context);
-                    } else{
-                      showDialog(context: context, builder: (_) =>
-                          AlertDialog(
-                            title: Text("${band_letCntr.text + band_numCntr.text} already used! Do you want to overwrite?",
-                                style: TextStyle(color: Colors.deepPurpleAccent)
-                            ),
-                            actions: <Widget>[
-                              TextButton(
-                                child: const Text("Cancel"),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                              TextButton(
-                                child: const Text("Overwrite"),
-                                onPressed: () async{
-                                  Navigator.of(context).pop();
-                                  await bird.save2Firestore(birds, nests, true, true);
-                                  Navigator.of(context).pop();
-                                },
-                              )
-                            ],
-                          ));
-                    }
-                  },
-                )
-              ]
-            ),
+              species.getMeasureForm(),
+              nestnr.getMeasureForm(),
+              metalBand(),
+              SizedBox(height: 10),
+              color_band.getMeasureForm(),
+              ...bird.measures.map((Measure m) => m.getMeasureForm()).toList(),
+              modifingButtons(context, getBird, "parent", nests.doc(nest.name).collection("parents")),
+            ]),
           ),
         ),
       ),

@@ -8,7 +8,9 @@ abstract class FirestoreItem{
   //    void Function(void Function()) setState, BuildContext context);
   Map<String, dynamic> toJson();
 
-  Future <bool> save(CollectionReference items, bool allowOverwrite);
+  Future <bool> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"});
+
+  Future <bool> delete({CollectionReference<Object?>? otherItems = null, bool soft = true, String type = "default"});
 
   String? id;
   String? responsible;

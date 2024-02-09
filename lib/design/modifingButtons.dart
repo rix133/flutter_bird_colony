@@ -2,20 +2,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:provider/provider.dart';
 
-Row modifingButtons(BuildContext context, CollectionReference items, FirestoreItem item, SharedPreferencesService sps){
+Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, String type, CollectionReference? otherItems){
   bool isButtonClicked = false;
-
+  FirestoreItem item = getItem();
+  final sps = Provider.of<SharedPreferencesService>(context, listen: false);
   return(Row(
     mainAxisAlignment: MainAxisAlignment.spaceAround,
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      new ElevatedButton.icon(
+       ElevatedButton.icon(
           style: ButtonStyle(
               backgroundColor:
               MaterialStateProperty.all(
                   Colors.red[900])),
-          onPressed: isButtonClicked ? null : () {
+          onPressed: (isButtonClicked || (item.id == null)) ? null : () {
             isButtonClicked = true;
             showDialog<String>(
               barrierColor: Colors.black,
@@ -36,25 +38,35 @@ Row modifingButtons(BuildContext context, CollectionReference items, FirestoreIt
                         child: const Text('Cancel'),
                       ),
                       TextButton(
-                        onPressed: () {
-                          var time = DateTime.now();
-                          var kust =
-                          items.doc(item.name);
-                          kust
-                              .collection("changelog")
-                              .get()
-                              .then((value) => value.docs
-                              .forEach((element) {
-                            element.reference
-                                .update({
-                              "deleted": time
-                            });
-                          }));
-                          kust.delete();
-                          Navigator.pop(context);
-                          Navigator.pop(context);
+                        onPressed: () async {
+                          FirestoreItem item = getItem();
+                          isButtonClicked = await item.delete(otherItems: otherItems, type: type);
+                          if(!isButtonClicked){
+                            showDialog(context: context, builder: (_) =>
+                                AlertDialog(
+                                  contentTextStyle:
+                                  TextStyle(color: Colors.black),
+                                  titleTextStyle:
+                                  TextStyle(color: Colors.red),
+                                  title: Text("Error"),
+                                  content: Text("Item could not be deleted"),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ));
+                          }
+                          else{
+                            Navigator.pop(context);
+                            Navigator.pop(context);
+                          }
+
                         },
-                        child: const Text('OK'),
+                        child: const Text('Delete', style: TextStyle(color: Colors.red)),
                       ),
                     ],
                   ),
@@ -68,12 +80,59 @@ Row modifingButtons(BuildContext context, CollectionReference items, FirestoreIt
       ElevatedButton.icon(
           onPressed: isButtonClicked ? null : () async {
             isButtonClicked = true;
+            FirestoreItem item = getItem();
             item.responsible = sps.userName;
-            if(item.id==null){
-              items.add(item.toJson()).then((value) => items.doc(value.id).collection("changelog").doc(DateTime.now().toString()).set({"created":DateTime.now()}));
-            Navigator.pop(context);
-            } else {
-            items.doc(item.id).update(item.toJson()).then((value) => items.doc(item.id).update({"last_modified":DateTime.now()}));
+            isButtonClicked = await item.save(otherItems: otherItems, allowOverwrite: false, type: type);
+            if(!isButtonClicked){
+              showDialog(context: context, builder: (_) =>
+                  AlertDialog(
+                    title: Text("Error"),
+                    contentTextStyle:
+                    TextStyle(color: Colors.black),
+                    titleTextStyle:
+                    TextStyle(color: Colors.red),
+                    content: Text("Item could not be saved. Possibly id already exists or is empty. Do you want to try to overwrite?"),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () async{
+                          Navigator.pop(context);
+                          isButtonClicked = await item.save(otherItems: otherItems, allowOverwrite: true, type: type);
+                          if(!isButtonClicked){
+                            showDialog(context: context, builder: (_) =>
+                                AlertDialog(
+                                  title: Text("Error"),
+                                  contentTextStyle:
+                                  TextStyle(color: Colors.black),
+                                  titleTextStyle:
+                                  TextStyle(color: Colors.red),
+                                  content: Text("Item could not be overwritten."),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ));
+                          }
+                          else{
+                            Navigator.pop(context);
+                            Navigator.pop(context);
+                          }
+                        },
+                        child: const Text('Overwrite', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ));
+            }
+            else{
             Navigator.pop(context);
             }
           },

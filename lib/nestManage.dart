@@ -237,7 +237,10 @@ class _NestManageState extends State<NestManage> {
                           backgroundColor: Colors.grey,
                           padding: EdgeInsets.all(5)),
                       child: (Text(b.name)),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushNamed(context, "/editparent",
+                            arguments: {"bird": b, "nest": nest});
+                      },
                     );
                   }
                 },
