@@ -118,21 +118,29 @@ class Bird implements FirestoreItem{
     throw UnimplementedError();
   }
 
+  @override
   Future <bool> delete({CollectionReference<Object?>? otherItems = null, bool soft=true, type="parent"}) async {
-    // delete from the nest as well if asked for
-    if(otherItems != null){
-      await otherItems.doc(id).delete().then((value) => true).catchError((error) => false);
-    }
-    CollectionReference items = FirebaseFirestore.instance.collection("Birds");
-    if(!soft){
-      return await items.doc(id).delete().then((value) => true).catchError((error) => false);
-    } else{
-      CollectionReference deletedCollection = FirebaseFirestore.instance.collection("deletedItems").doc("Birds").collection("deleted");
-
-      //TODO add a check if the item is already in deleted collection
-      return await deletedCollection.doc(id).set(toJson()).then((value) => items.doc(id).delete().then((value) => true)).catchError((error) => false);
-
-    }
+  // delete from the nest as well if asked for
+  if(otherItems != null){
+    await otherItems.doc(id).delete().then((value) => true).catchError((error) => false);
   }
+  CollectionReference items = FirebaseFirestore.instance.collection("Birds");
+  if(!soft){
+    return await items.doc(id).delete().then((value) => true).catchError((error) => false);
+  } else{
+    CollectionReference deletedCollection = FirebaseFirestore.instance.collection("deletedItems").doc("Birds").collection("deleted");
+
+    //check if the item is already in deleted collection
+    return deletedCollection.doc(id).get().then((doc) {
+      if(doc.exists == false) {
+        return deletedCollection.doc(id).set(toJson()).then((value) =>
+            items.doc(id).delete().then((value) => true)).catchError((error) => false);
+      } else {
+        return deletedCollection.doc('${id}_${DateTime.now().toString()}').set(toJson()).then((value) =>
+            items.doc(id).delete().then((value) => true)).catchError((error) => false);
+      }
+    }).catchError((error) => false);
+  }
+}
 
 }
