@@ -106,6 +106,10 @@ class _EditParentState extends State<EditParent> {
               bird.measures.add(m);
             }
           }
+          // the nest is from another year
+          if(bird.nest_year != DateTime.now().year){
+            bird.nest = "";
+          }
         } else {
           bird = Bird(
             species: nest.species,
@@ -113,12 +117,14 @@ class _EditParentState extends State<EditParent> {
             band: "",
             responsible: sps.userName,
             nest: nest.name,
+            nest_year: nest.discover_date.year,
             measures: allMeasures,
             // Add other fields as necessary
           );
-          nestnr.value = nest.name;
-          species.value = nest.species ?? "Common Gull";
+
         }
+        nestnr.value = bird.nest ?? "";
+        species.value = bird.species ?? "Common Gull";
         setState(() {});
       } else {
         bird.measures = allMeasures;
@@ -189,7 +195,7 @@ class _EditParentState extends State<EditParent> {
     //ensure UI is updated
     bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
     bird.species = species.valueCntr.text;
-    checkNestChange(nestnr.valueCntr.text);
+    checkNestChange(nestnr.valueCntr.text, nest.discover_date.year);
     bird.nest = nestnr.valueCntr.text;
     bird.color_band = color_band.valueCntr.text.toUpperCase();
     bird.measures.forEach((element) {
@@ -198,7 +204,11 @@ class _EditParentState extends State<EditParent> {
     return bird;
   }
 
-  Future<bool> checkNestChange(String newNestName) async {
+  Future<bool> checkNestChange(String newNestName, int nestYear) async {
+    //its from another year the nest number
+    if(nestYear != DateTime.now().year){
+      return false;
+    }
     if (newNestName != bird.nest && (bird.nest ?? "").isNotEmpty) {
       return (await nests
           .doc(bird.nest)

@@ -6,6 +6,7 @@ import 'package:kakrarahu/models/measure.dart';
 class Bird implements FirestoreItem{
   String? id;
   String? nest;
+  int? nest_year;
   String? age;
   String band;
   String? color_band;
@@ -23,6 +24,7 @@ class Bird implements FirestoreItem{
     required this.band,
     this.color_band,
     this.responsible,
+    this.nest_year,
     this.species,
     this.age,
     this.nest,
@@ -60,6 +62,7 @@ class Bird implements FirestoreItem{
       egg: json['egg'] ?? null,
       species: json['species'] ?? null,
       nest: json['nest'] ?? null,
+      nest_year: json['nest_year'] ?? null,
       age: json['age'] ?? null,
       measures: (json['measures'] as List<dynamic>?)?.map((e) => measureFromJson(e)).toList() ?? [], // provide a default value if 'measures' does not exist
     ));
@@ -73,6 +76,7 @@ class Bird implements FirestoreItem{
       'responsible': responsible,
       'species': species,
       'nest': nest,
+      'nest_year': nest_year,
       'age': age,
       'egg': egg,
       'measures': measures.map((e) => e.toJson()).toList(),
