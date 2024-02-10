@@ -82,8 +82,6 @@ class _EditParentState extends State<EditParent> {
     parents: [],
   );
 
-
-
   CollectionReference nests =
       FirebaseFirestore.instance.collection(DateTime.now().year.toString());
   CollectionReference birds = FirebaseFirestore.instance.collection("Birds");
@@ -103,12 +101,11 @@ class _EditParentState extends State<EditParent> {
         if (map["bird"] != null) {
           bird = map["bird"] as Bird;
           //check if measure is missing and add if needed
-          for(Measure m in allMeasures){
-            if(!bird.measures.map((e) => e.name).contains(m.name)){
+          for (Measure m in allMeasures) {
+            if (!bird.measures.map((e) => e.name).contains(m.name)) {
               bird.measures.add(m);
             }
           }
-
         } else {
           bird = Bird(
             species: nest.species,
@@ -123,7 +120,7 @@ class _EditParentState extends State<EditParent> {
           species.value = nest.species ?? "Common Gull";
         }
         setState(() {});
-    } else {
+      } else {
         bird.measures = allMeasures;
         setState(() {});
         return;
@@ -192,12 +189,26 @@ class _EditParentState extends State<EditParent> {
     //ensure UI is updated
     bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
     bird.species = species.valueCntr.text;
+    checkNestChange(nestnr.valueCntr.text);
     bird.nest = nestnr.valueCntr.text;
     bird.color_band = color_band.valueCntr.text.toUpperCase();
     bird.measures.forEach((element) {
       element.value = element.valueCntr.text;
     });
     return bird;
+  }
+
+  Future<bool> checkNestChange(String newNestName) async {
+    if (newNestName != bird.nest && (bird.nest ?? "").isNotEmpty) {
+      return (await nests
+          .doc(bird.nest)
+          .collection("parents")
+          .doc(bird.band)
+          .delete()
+          .then((value) => true)
+          .catchError((error) => false));
+    }
+    return false;
   }
 
   @override
@@ -219,7 +230,8 @@ class _EditParentState extends State<EditParent> {
               SizedBox(height: 10),
               color_band.getMeasureForm(),
               ...bird.measures.map((Measure m) => m.getMeasureForm()).toList(),
-              modifingButtons(context, getBird, "parent", nests.doc(nest.name).collection("parents")),
+              modifingButtons(context, getBird, "parent",
+                  nests.doc(nest.name).collection("parents")),
             ]),
           ),
         ),
