@@ -18,7 +18,7 @@ class Egg implements FirestoreItem{
   String get name => id ?? "New Egg";
 
   @override
-  factory Egg.fromQuerySnapshot(QueryDocumentSnapshot<Object?> snapshot) {
+  factory Egg.fromQuerySnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     return (Egg(
         id: snapshot.id,

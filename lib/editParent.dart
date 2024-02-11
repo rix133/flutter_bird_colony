@@ -17,7 +17,7 @@ class EditParent extends StatefulWidget {
 class _EditParentState extends State<EditParent> {
   TextEditingController band_letCntr = TextEditingController();
   TextEditingController band_numCntr = TextEditingController();
-  FocusNode _focusNode = FocusNode();
+  //FocusNode _focusNode = FocusNode();
 
   Measure age = Measure(
     name: "age",
@@ -69,6 +69,7 @@ class _EditParentState extends State<EditParent> {
     ringed_date: DateTime.now(),
     band: "",
     nest: "",
+    nest_year: DateTime.now().year,
     measures: [],
     // Add other fields as necessary
   );
@@ -106,10 +107,6 @@ class _EditParentState extends State<EditParent> {
               bird.measures.add(m);
             }
           }
-          // the nest is from another year
-          if(bird.nest_year != DateTime.now().year){
-            bird.nest = "";
-          }
         } else {
           bird = Bird(
             species: nest.species,
@@ -123,7 +120,7 @@ class _EditParentState extends State<EditParent> {
           );
 
         }
-        nestnr.value = bird.nest ?? "";
+        nestnr.value = bird.current_nest;
         species.value = bird.species ?? "Common Gull";
         setState(() {});
       } else {
@@ -209,9 +206,10 @@ class _EditParentState extends State<EditParent> {
     if(nestYear != DateTime.now().year){
       return false;
     }
-    if (newNestName != bird.nest && (bird.nest ?? "").isNotEmpty) {
+    // the nest is fron this year and is updated to something
+    if (newNestName != bird.nest && (bird.current_nest).isNotEmpty) {
       return (await nests
-          .doc(bird.nest)
+          .doc(bird.current_nest)
           .collection("parents")
           .doc(bird.band)
           .delete()

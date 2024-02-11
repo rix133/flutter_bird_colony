@@ -137,7 +137,7 @@ class _StatisticsState extends State<Statistics> {
                         (context, AsyncSnapshot<QuerySnapshot> snapshot_nests) {
                       if (snapshot_nests.hasData) {
                         List<Nest> nests = snapshot_nests.data!.docs
-                            .map((e) => Nest.fromQuerySnapshot(e))
+                            .map((DocumentSnapshot e) => Nest.fromQuerySnapshot(e))
                             .toList();
                         nests = nests.where((Nest n) => n.timeSpan(dropdownValue)).toList();
                         nests = nests.where((Nest n) => n.people(dropdownValuePeople, username)).toList();
@@ -170,7 +170,7 @@ class _StatisticsState extends State<Statistics> {
                         (context, AsyncSnapshot<QuerySnapshot> snapshot_birds) {
                       if (snapshot_birds.hasData) {
                         List<Bird> birds = snapshot_birds.data!.docs
-                            .map((e) => Bird.fromQuerySnapshot(e))
+                            .map((DocumentSnapshot e) => Bird.fromQuerySnapshot(e))
                             .toList();
                         birds = birds.where((Bird b) => b.timeSpan(dropdownValue)).toList();
                         birds = birds.where((Bird b) => b.people(dropdownValuePeople, username)).toList();

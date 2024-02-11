@@ -1,9 +1,9 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:kakrarahu/models/measure.dart';
 
-class Bird implements FirestoreItem{
+class Bird implements FirestoreItem {
   String? id;
   String? nest;
   int? nest_year;
@@ -13,45 +13,70 @@ class Bird implements FirestoreItem{
   String? responsible;
   String? species;
   DateTime ringed_date;
+  DateTime? last_modified;
   String? egg;
   List<Measure> measures = [];
 
   @override
   String get name => color_band ?? band;
 
-  Bird({this.id,
-    required this.ringed_date,
-    required this.band,
-    this.color_band,
-    this.responsible,
-    this.nest_year,
-    this.species,
-    this.age,
-    this.nest,
-    this.egg,
-    required this.measures});
+  String get current_nest =>
+      (nest_year == DateTime.now().year) ? (nest ?? "") : "";
 
+  Bird(
+      {this.id,
+      required this.ringed_date,
+      required this.band,
+      this.color_band,
+      this.responsible,
+      this.nest_year,
+      this.species,
+      this.last_modified,
+      this.age,
+      this.nest,
+      this.egg,
+      required this.measures});
 
-
-
-  bool timeSpan(String range){
-    if(range == "All"){return(true);}
-    if(range == "Today"){
-      var today = DateTime.now().toIso8601String().split("T")[0];
-      return this.ringed_date.toIso8601String().split("T")[0].toString() == today;
+  bool timeSpan(String range) {
+    if (range == "All") {
+      return (true);
     }
+    if (range == "Today") {
+      var today = DateTime.now().toIso8601String().split("T")[0];
+      return this.ringed_date.toIso8601String().split("T")[0].toString() ==
+          today;
+    }
+    if (range == "This year") {
+      return this.ringed_date.year == DateTime.now().year;
+    }
+    int? rangeInt = int.tryParse(range);
+    if(rangeInt != null){
+      return this.ringed_date.year == rangeInt;
+    }
+
     return false;
   }
-  bool people(String range, String me){
-    if(range == "Everybody"){return(true);}
-    if(range == "Me"){
+
+  bool seenThisYear(bool chick){
+    if(chick || last_modified == null){
+      return this.ringed_date.year == DateTime.now().year;
+    } else{
+      return this.last_modified!.year == DateTime.now().year;
+    }
+  }
+
+  bool people(String range, String me) {
+    if (range == "Everybody") {
+      return (true);
+    }
+    if (range == "Me") {
       return this.responsible == me;
     }
     return false;
   }
 
   @override
-  factory Bird.fromQuerySnapshot(QueryDocumentSnapshot<Object?> snapshot) {
+  factory Bird.fromQuerySnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     return (Bird(
       id: snapshot.id,
@@ -62,9 +87,15 @@ class Bird implements FirestoreItem{
       egg: json['egg'] ?? null,
       species: json['species'] ?? null,
       nest: json['nest'] ?? null,
-      nest_year: json['nest_year'] ?? null,
+      nest_year: json['nest_year'] ?? DateTime.now().year,
+      last_modified: json['last_modified'] != null
+          ? (json['last_modified'] as Timestamp).toDate()
+          : null,
       age: json['age'] ?? null,
-      measures: (json['measures'] as List<dynamic>?)?.map((e) => measureFromJson(e)).toList() ?? [], // provide a default value if 'measures' does not exist
+      measures: (json['measures'] as List<dynamic>?)
+              ?.map((e) => measureFromJson(e))
+              .toList() ??
+          [], // provide a default value if 'measures' does not exist
     ));
   }
 
@@ -77,43 +108,89 @@ class Bird implements FirestoreItem{
       'species': species,
       'nest': nest,
       'nest_year': nest_year,
+      'last_modified': last_modified,
       'age': age,
       'egg': egg,
       'measures': measures.map((e) => e.toJson()).toList(),
     };
   }
 
-  Future<bool> _write2Firestore(CollectionReference birds, CollectionReference nestsItemCollection,  bool isParent) async {
-      // take ony those measures where value is not empty
-      measures = measures.where((element) => element.value.isNotEmpty).toList();
-
-      return(await birds.doc(band).set(toJson())
-            .whenComplete(() => birds
+  Future<bool> _write2Firestore(CollectionReference birds,
+      CollectionReference nestsItemCollection, bool isParent) async {
+    // take ony those measures where value is not empty
+    measures = measures.where((element) => element.value.isNotEmpty).toList();
+    // the modified date is assigned at write time
+    last_modified = DateTime.now();
+    return (await birds
+        .doc(band)
+        .set(toJson())
+        .whenComplete(() => birds
             .doc(band)
             .collection("changelog")
-            .doc(DateTime.now().toString())
+            .doc(last_modified.toString())
             .set(toJson()))
-            .whenComplete(() => (nest?.isEmpty ?? true) ? true : nestsItemCollection
-            .doc(isParent ? band : "$nest egg $egg")
-            .set(isParent ? toJson() : {'ring': band, 'status':'hatched'})).then((value) => true).catchError((error) => false));
-
+        .whenComplete(() => (nest?.isEmpty ?? true)
+            ? true
+            : nestsItemCollection
+                .doc(isParent ? band : "$nest egg $egg")
+                .set(isParent ? toJson() : {'ring': band, 'status': 'hatched'}))
+        .then((value) => true)
+        .catchError((error) => false));
   }
 
   @override
-  Future <bool> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, type = "parent"}) async {
-    if(band.isEmpty){
+  Future<bool> save(
+      {CollectionReference<Object?>? otherItems = null,
+      bool allowOverwrite = false,
+      type = "parent"}) async {
+    if (band.isEmpty && name.isEmpty) {
       return false;
     }
-    if(type == "parent" || type == "chick"){
-      CollectionReference birds = FirebaseFirestore.instance.collection("Birds");
+    if (type == "parent" || type == "chick") {
       bool isParent = (type == "parent");
-      if(allowOverwrite && otherItems != null){
+      if (band.isEmpty) {
+        // it has a nest and a color band
+        if (current_nest.isNotEmpty && name.isNotEmpty && otherItems != null) {
+          //show a snackbar saying that this is saved only under nest because metal band is missing
+          SnackBar(
+            content: Text(
+                "Metal band is missing, accessible only under nest only",
+                style: TextStyle(color: Colors.white)),
+            duration: Duration(seconds: 5),
+            backgroundColor: Colors.red,
+          );
+
+          //save only to nest parents not all birds
+          return (await otherItems
+              .doc(isParent ? name : "$nest egg $egg")
+              .set(isParent ? toJson() : {'ring': band, 'status': 'hatched'})
+              .then((value) => true)
+              .catchError((error) => false));
+        }
+        return false;
+      }
+      CollectionReference birds =
+          FirebaseFirestore.instance.collection("Birds");
+
+      if (allowOverwrite && otherItems != null) {
         return await _write2Firestore(birds, otherItems, isParent);
-      } else if (otherItems != null){
+      } else if (otherItems != null) {
         return await birds.doc(band).get().then((value) {
           if (!value.exists) {
             return _write2Firestore(birds, otherItems, isParent);
-          } else{
+          } else {
+            Bird prevBird = Bird.fromQuerySnapshot(value);
+            //this needs to be fixed only for birds ringed as chicks
+            if (prevBird.last_modified == null) {
+              //write the previous value to changelog just in case
+              return (birds
+                  .doc(band)
+                  .collection("changelog")
+                  .doc(ringed_date.toString())
+                  .set(prevBird.toJson())
+                  .then((value) => false));
+            }
+
             return false;
           }
         });
@@ -123,28 +200,47 @@ class Bird implements FirestoreItem{
   }
 
   @override
-  Future <bool> delete({CollectionReference<Object?>? otherItems = null, bool soft=true, type="parent"}) async {
-  // delete from the nest as well if asked for
-  if(otherItems != null){
-    await otherItems.doc(id).delete().then((value) => true).catchError((error) => false);
-  }
-  CollectionReference items = FirebaseFirestore.instance.collection("Birds");
-  if(!soft){
-    return await items.doc(id).delete().then((value) => true).catchError((error) => false);
-  } else{
-    CollectionReference deletedCollection = FirebaseFirestore.instance.collection("deletedItems").doc("Birds").collection("deleted");
+  Future<bool> delete(
+      {CollectionReference<Object?>? otherItems = null,
+      bool soft = true,
+      type = "parent"}) async {
+    // delete from the nest as well if asked for
+    if (otherItems != null) {
+      await otherItems
+          .doc(id)
+          .delete()
+          .then((value) => true)
+          .catchError((error) => false);
+    }
+    CollectionReference items = FirebaseFirestore.instance.collection("Birds");
+    if (!soft) {
+      return await items
+          .doc(id)
+          .delete()
+          .then((value) => true)
+          .catchError((error) => false);
+    } else {
+      CollectionReference deletedCollection = FirebaseFirestore.instance
+          .collection("deletedItems")
+          .doc("Birds")
+          .collection("deleted");
 
-    //check if the item is already in deleted collection
-    return deletedCollection.doc(id).get().then((doc) {
-      if(doc.exists == false) {
-        return deletedCollection.doc(id).set(toJson()).then((value) =>
-            items.doc(id).delete().then((value) => true)).catchError((error) => false);
-      } else {
-        return deletedCollection.doc('${id}_${DateTime.now().toString()}').set(toJson()).then((value) =>
-            items.doc(id).delete().then((value) => true)).catchError((error) => false);
-      }
-    }).catchError((error) => false);
+      //check if the item is already in deleted collection
+      return deletedCollection.doc(id).get().then((doc) {
+        if (doc.exists == false) {
+          return deletedCollection
+              .doc(id)
+              .set(toJson())
+              .then((value) => items.doc(id).delete().then((value) => true))
+              .catchError((error) => false);
+        } else {
+          return deletedCollection
+              .doc('${id}_${DateTime.now().toString()}')
+              .set(toJson())
+              .then((value) => items.doc(id).delete().then((value) => true))
+              .catchError((error) => false);
+        }
+      }).catchError((error) => false);
+    }
   }
-}
-
 }
