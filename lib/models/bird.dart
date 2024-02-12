@@ -2,10 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:kakrarahu/models/experiment.dart';
+import 'package:kakrarahu/models/experimented_item.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:kakrarahu/models/measure.dart';
 
-class Bird implements FirestoreItem {
+class Bird implements FirestoreItem, ExperimentedItem {
   String? id;
   String? nest;
   int? nest_year;

@@ -16,7 +16,6 @@ abstract class FirestoreItem{
 
   String? id;
   String? responsible;
-  List<Experiment>? experiments = [];
   String get name;
 
 }

@@ -2,11 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/models/experiment.dart';
+import 'package:kakrarahu/models/experimented_item.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:kakrarahu/models/measure.dart';
 
 
-class Nest implements FirestoreItem {
+class Nest implements FirestoreItem, ExperimentedItem {
   String? id;
   String accuracy;
   GeoPoint coordinates;
