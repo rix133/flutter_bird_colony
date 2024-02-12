@@ -8,7 +8,7 @@ class Egg implements FirestoreItem{
   String? responsible;
   String? ring;
   String status;
-  List<Experiment> experiments = [];
+  List<Experiment>? experiments = [];
   List<Object>? changelogs;
 
   Egg({this.id,

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/editParent.dart';
 import 'package:kakrarahu/homepage.dart';
+import 'package:kakrarahu/listBirds.dart';
+import 'package:kakrarahu/listExperiments.dart';
+import 'package:kakrarahu/listNests.dart';
 import 'package:kakrarahu/nestManage.dart';
 import 'package:kakrarahu/nestsNearby.dart';
 import 'package:kakrarahu/settings.dart';
@@ -108,9 +111,13 @@ class MyApp extends StatelessWidget {
         '/map':(context)=> Map(),
         '/statistics':(context)=> Statistics(),
         '/mapforcreate':(context)=>MapForCreate(),
-        '/findnest':(context)=>FindNearby(),
-        '/editchick':(context)=>EditChick(),
-        '/editparent':(context)=>EditParent(),
+        '/findNest':(context)=>FindNest(),
+        '/editChick':(context)=>EditChick(),
+        '/editParent':(context)=>EditParent(),
+        '/listBirds':(context)=>ListBirds(),
+        '/listExperiments':(context)=>ListExperiments(),
+        '/listNests':(context)=>ListNests(),
+
 
       },
       theme: ThemeData(

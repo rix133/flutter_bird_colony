@@ -70,7 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               ],
                             ),
                           ),
-                          HomePageButton(route: "/findnest", icon: Icons.search, label: "find", color: Colors.red[900]!),
+                          HomePageButton(route: "/findNest", icon: Icons.search, label: "find", color: Colors.red[900]!),
                         ],
                       ),
                     ),

@@ -10,7 +10,7 @@ import 'package:kakrarahu/models/nest.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
-import 'models/bird.dart';
+import 'package:kakrarahu/models/bird.dart';
 
 class NestManage extends StatefulWidget {
   const NestManage({Key? key}) : super(key: key);
@@ -25,18 +25,14 @@ class _NestManageState extends State<NestManage> {
   final FocusNode _focusNode = FocusNode();
   final species = new TextEditingController();
 
-/*  final StreamController<bool> _checkBoxController = StreamController();
-  Stream<bool> get _checkBoxStream => _checkBoxController.stream;*/
   var new_egg_nr;
   var save;
-  int _eggCount = 0;
   var exists;
   List<Bird> parents = [];
   Nest? nest;
   Map<String, dynamic> database = {};
   late CollectionReference nests;
   late Stream<QuerySnapshot> _eggStream;
-  late Stream<QuerySnapshot> _parentStream;
   late SharedPreferencesService sps;
 
 
@@ -82,139 +78,6 @@ class _NestManageState extends State<NestManage> {
     throw Exception("Nest is not initialized");
   }
 
-  Row modifingButtons_local(BuildContext context, CollectionReference nests,
-      Nest? nest, SharedPreferencesService sps) {
-    return (Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        new ElevatedButton.icon(
-            style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(Colors.red[900])),
-            onPressed: () {
-              showDialog<String>(
-                barrierColor: Colors.black,
-                context: context,
-                builder: (BuildContext context) => AlertDialog(
-                  contentTextStyle: TextStyle(color: Colors.black),
-                  titleTextStyle: TextStyle(color: Colors.red),
-                  title: const Text("Removing nest"),
-                  content:
-                      const Text('Are you sure you want to delete this nest?'),
-                  actions: <Widget>[
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, 'Cancel'),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        var time = DateTime.now();
-                        var kust = nests.doc(nest!.name);
-                        kust
-                            .collection("changelog")
-                            .get()
-                            .then((value) => value.docs.forEach((element) {
-                                  element.reference.update({"deleted": time});
-                                }));
-                        kust.delete();
-                        kust
-                            .collection("egg")
-                            .get()
-                            .then((value) => value.docs.forEach((element) {
-                                  element.reference
-                                      .collection("changelog")
-                                      .get()
-                                      .then((value2) =>
-                                          value2.docs.forEach((element2) {
-                                            element2.reference
-                                                .update({"deleted": time});
-                                          }));
-                                  element.reference.delete();
-                                }));
-
-                        Navigator.pop(context);
-                        Navigator.pop(context);
-                      },
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
-              );
-            },
-            icon: Icon(
-              Icons.delete,
-              size: 45,
-            ),
-            label: Text("delete")),
-        StreamBuilder<Object>(
-            stream: null,
-            builder: (context, snapshot) {
-              return new ElevatedButton.icon(
-                  onPressed: () async => {
-                        save = nest!.name,
-                        //addItem(coords, "coordinates"),
-                        //addItem(accuracy, "accuracy"),
-                        addItem(sps.userName, "responsible"),
-                        addItem(species.text, "species"),
-                        exists = await nests.doc(save).get(),
-                        if (exists.exists == true)
-                          {
-                            nests.doc(save).update(map).then((value) => nests
-                                .doc(save)
-                                .update({"last_modified": DateTime.now()})),
-                            map.addAll({"a": "B"}),
-                            nests
-                                .doc(save)
-                                .collection("changelog")
-                                .doc(DateTime.now().toString())
-                                .set(map)
-                                .then((value) => print("Success"))
-                                .catchError((error) => print("Failed: $error")),
-                            Navigator.pop(context),
-                          }
-                        else
-                          {
-                            showDialog<String>(
-                              barrierColor: Colors.black,
-                              context: context,
-                              builder: (BuildContext context) => AlertDialog(
-                                contentTextStyle:
-                                    TextStyle(color: Colors.black),
-                                titleTextStyle: TextStyle(color: Colors.red),
-                                title: const Text("Nest does not yet exist"),
-                                content: const Text(
-                                    'Do you want to declare a new nest?'),
-                                actions: <Widget>[
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, 'Cancel'),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context, 'OK');
-                                      Navigator.popAndPushNamed(
-                                          context, "/pesa",
-                                          arguments: {"sihtkoht": nest!.name});
-                                    },
-                                    child: const Text('OK'),
-                                  ),
-                                ],
-                              ),
-                            )
-                          },
-                        //ALERTDIALOG
-                      },
-                  icon: Icon(
-                    Icons.save,
-                    color: Colors.black87,
-                    size: 45,
-                  ),
-                  label: Text("save and check"));
-            }), //save button
-      ],
-    ));
-  }
 
   StreamBuilder _getEggsStream(Stream<QuerySnapshot> _eggStream){
     return(StreamBuilder<QuerySnapshot>(
@@ -280,7 +143,7 @@ class _NestManageState extends State<NestManage> {
                             },
                             onLongPress: () {
                               Navigator.pushNamed(
-                                  context, "/editchick",
+                                  context, "/editChick",
                                   arguments: {
                                     "pesa": nest!.name,
                                     "muna_nr": (id).toString(),
@@ -346,13 +209,6 @@ class _NestManageState extends State<NestManage> {
                             "responsible": sps.userName,
                             "status": "intact",
                           }));
-                          /*Navigator.pushNamed(context, "/eggs",
-                                          arguments: {
-                                            "sihtkoht": nest.name,
-                                            "egg": nest.name +
-                                                " egg " +
-                                                new_egg_nr.toString()
-                                          });*/
                         }
                       },
                       icon: Icon(
@@ -360,7 +216,7 @@ class _NestManageState extends State<NestManage> {
                         size: 45,
                       ),
                       onLongPress: () {
-                        Navigator.pushNamed(context, "/editchick",
+                        Navigator.pushNamed(context, "/editChick",
                             arguments: {
                               "pesa": (nest!.name).toString(),
                               "species":
@@ -389,46 +245,32 @@ class _NestManageState extends State<NestManage> {
     ));
   }
 
-  StreamBuilder _getParentsRow(Stream<QuerySnapshot> _parentStream) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: _parentStream,
-      builder: (context, snapshot) {
-        return Container(
+  Widget _getParentsRow(List<Bird>? _parents) {
+    return  Container(
           height: 50.0, // Adjust this value as needed
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child:ListView.builder(
-                itemCount: snapshot.data?.docs.length ?? 0,
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (BuildContext context, int index) {
-                  if (snapshot.hasError) {
-                    return Text('Something went wrong');
-                  } else if (snapshot.connectionState ==
-                      ConnectionState.waiting) {
-                    return Text("Loading");
-                  } else {
-                    Bird b =
-                    Bird.fromQuerySnapshot(snapshot.data!.docs[index]);
-                    return ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey,
-                          padding: EdgeInsets.all(5)),
-                      child: (Text(b.name)),
-                      onPressed: () {
-                        Navigator.pushNamed(context, "/editparent",
-                            arguments: {"bird": b, "nest": nest});
-                      },
-                    );
-                  }
-                },
-              )),
+                  ...?_parents?.map((Bird b) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, "/editParent", arguments: {
+                        "bird": b,
+                        "nest": nest,
+                      });
+                    },
+                    child: Text(b.band),
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(Colors.blue),
+                    ),
+                  );
+                }).toList(),
               ElevatedButton.icon(
                   style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(Colors.grey)),
                   onPressed: () {
-                    Navigator.pushNamed(context, "/editparent", arguments: {
+                    Navigator.pushNamed(context, "/editParent", arguments: {
                       "nest": nest,
                     });
                   },
@@ -436,12 +278,10 @@ class _NestManageState extends State<NestManage> {
                     Icons.add,
                     size: 45,
                   ),
-                  label: Text(_parentStream.length == 0 ? "add parent" : "")),
+                  label: Text((_parents?.length == 0 || _parents == null) ? "add parent" : "")),
             ],
           ),
         );
-      },
-    );
   }
 
  void addMeasure(Measure m) {
@@ -473,12 +313,6 @@ class _NestManageState extends State<NestManage> {
         .collection("egg")
         .snapshots();
 
-    _parentStream = FirebaseFirestore.instance
-        .collection(_year)
-        .doc(nest!.id)
-        .collection("parents")
-        .snapshots();
-
 
     return Scaffold(
       body: Center(
@@ -500,8 +334,9 @@ class _NestManageState extends State<NestManage> {
               buildRawAutocomplete(species, _focusNode),
               SizedBox(height: 15),
               ...nest!.measures.map((Measure m) => m.getMeasureFormWithAddButton(addMeasure)).toList(),
-              _getParentsRow(_parentStream),
+              _getParentsRow(nest!.parents),
               _getEggsStream(_eggStream),
+              modifingButtons(context, getNest, "modify", null),
             ],
           ),
         ),

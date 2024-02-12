@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:kakrarahu/models/measure.dart';
@@ -14,25 +16,26 @@ class Nest implements FirestoreItem {
   bool? completed;
   DateTime discover_date;
   DateTime last_modified;
-  List<Experiment> experiments = [];
+  List<Experiment>? experiments = [];
   List<Object>? changelogs;
   List<Measure> measures = [];
+  List<Bird>? parents = [];
 
   String get name => id ?? "New Nest";
 
-  Nest(
-      {this.id,
-      required this.discover_date,
-      required this.last_modified,
-      required this.accuracy,
-      required this.coordinates,
-      required this.responsible,
-      required this.experiments,
-      this.completed,
-      this.species,
-      this.remark,
-      required this.measures,
-      this.changelogs});
+  Nest({this.id,
+    required this.discover_date,
+    required this.last_modified,
+    required this.accuracy,
+    required this.coordinates,
+    required this.responsible,
+    required this.experiments,
+    this.completed,
+    this.species,
+    this.remark,
+    this.parents,
+    required this.measures,
+    this.changelogs});
 
   bool timeSpan(String range) {
     if (range == "All") {
@@ -63,24 +66,31 @@ class Nest implements FirestoreItem {
         id: snapshot.id,
         //assign a last century date
         discover_date:
-            (json['discover_date'] as Timestamp? ?? Timestamp(0, 0)).toDate(),
+        (json['discover_date'] as Timestamp? ?? Timestamp(0, 0)).toDate(),
         last_modified:
-            (json['last_modified'] as Timestamp? ?? Timestamp(0, 0)).toDate(),
+        (json['last_modified'] as Timestamp? ?? Timestamp(0, 0)).toDate(),
         accuracy: json['accuracy'] as String? ?? '',
         remark: json["remark"] as String? ?? '',
         responsible: json["responsible"] as String? ?? '',
         coordinates: json['coordinates'] as GeoPoint? ?? GeoPoint(0, 0),
         completed: json['completed'] as bool? ?? false,
+        parents: json['parents'] != null
+            ? (json['parents'] as List<dynamic>)
+            .map((e) => birdFromJson(e))
+            .toList()
+            : [],
         experiments: (json['experiments'] as List<dynamic>?)
-                ?.map((e) => experimentFromJson(e))
-                .toList() ??
-            [], // provide a default value if 'experiments' does not exist
+            ?.map((e) => experimentFromJson(e))
+            .toList() ??
+            [],
+        // provide a default value if 'experiments' does not exist
         measures: (json['measures'] as List<dynamic>?)
             ?.map((e) => measureFromJson(e))
             .toList() ??
-            [], // provide a default value if 'measures' does not exist
+            [],
+        // provide a default value if 'measures' does not exist
         species: json['species'] as String? ?? '');
-    if(nnest.remark != null){
+    if (nnest.remark != null) {
       nnest.measures?.add(Measure(
           name: "note",
           value: nnest.remark!,
@@ -91,21 +101,87 @@ class Nest implements FirestoreItem {
     return nnest;
   }
 
-  @override
-  Future<bool> save(
-      {CollectionReference<Object?>? otherItems = null,
-      bool allowOverwrite = false,
-      type = "default"}) async {
-    throw UnimplementedError();
+  Future<bool> _write2Firestore(CollectionReference nests) async {
+    // the modified date is assigned at write time
+    last_modified = DateTime.now();
+    return (await nests
+        .doc(name)
+        .set(toJson())
+        .whenComplete(() => nests
+        .doc(name)
+        .collection("changelog")
+        .doc(last_modified.toString())
+        .set(toJson()))
+        .then((value) => true)
+        .catchError((error) => false));
   }
 
   @override
-  Future<bool> delete(
-      {CollectionReference<Object?>? otherItems = null,
-      bool soft = true,
-      type = "default"}) async {
-    throw UnimplementedError();
+  Future<bool> save({CollectionReference<Object?>? otherItems = null,
+    bool allowOverwrite = false,
+    type = "default"}) async {
+    if (name.isEmpty) {
+      return false;
+    }
+    CollectionReference nests =
+    FirebaseFirestore.instance.collection(DateTime
+        .now()
+        .year
+        .toString());
+    if (type == "modify" || type == "default") {
+      return _write2Firestore(nests);
+      }
+
+      throw UnimplementedError();
+    }
+
+  @override
+  Future<bool> delete({CollectionReference<Object?>? otherItems = null,
+    bool soft = true,
+    type = "default"}) async {
+    // delete from the bird as well if asked for
+    if (otherItems != null) {
+      parents?.forEach((Bird b) {
+        otherItems
+            .doc(b.band)
+            .update({'nest': null, 'nest_year': null})
+            .then((value) => true)
+            .catchError((error) => false);
+      });
+    }
+    CollectionReference items =
+    FirebaseFirestore.instance.collection(DateTime.now().year.toString());
+    if (!soft) {
+      return await items
+          .doc(id)
+          .delete()
+          .then((value) => true)
+          .catchError((error) => false);
+    } else {
+      CollectionReference deletedCollection = FirebaseFirestore.instance
+          .collection("deletedItems")
+          .doc("Nests_" + DateTime.now().year.toString())
+          .collection("deleted");
+
+      //check if the item is already in deleted collection
+      return deletedCollection.doc(id).get().then((doc) {
+        if (doc.exists == false) {
+          return deletedCollection
+              .doc(id)
+              .set(toJson())
+              .then((value) => items.doc(id).delete().then((value) => true))
+              .catchError((error) => false);
+        } else {
+          return deletedCollection
+              .doc('${id}_${DateTime.now().toString()}')
+              .set(toJson())
+              .then((value) => items.doc(id).delete().then((value) => true))
+              .catchError((error) => false);
+        }
+      }).catchError((error) => false);
+    }
   }
+
 
   toJson() {
     return {
@@ -116,17 +192,29 @@ class Nest implements FirestoreItem {
       'responsible': responsible,
       'coordinates': coordinates,
       'completed': completed,
-      'experiments': experiments.map((e) => e.toSimpleJson()).toList(),
+      'experiments': experiments?.map((e) => e.toSimpleJson()).toList(),
       'species': species,
+      'parents': parents?.map((e) => e.toSimpleJson()).toList(),
       'measures': measures?.map((e) => e.toJson()).toList(),
     };
+  }
+  ListTile getListTile(BuildContext context){
+    return ListTile(
+      title: Text(name),
+      subtitle: Text(checkedStr()),
+      trailing: Icon(Icons.arrow_forward),
+      onTap: () {
+        //Navigator.pushNamed(context, '/nest', arguments: this);
+      },
+    );
   }
 
   bool isCompleted() {
     return completed ?? false;
   }
-  Duration chekedAgo(){
-    if(last_modified == null){
+
+  Duration chekedAgo() {
+    if (last_modified == null) {
       return Duration(days: -1);
     }
     return DateTime.now().difference(last_modified);
@@ -150,7 +238,7 @@ class Nest implements FirestoreItem {
     }
     String year = discover_date.year.toString();
     CollectionReference eggs =
-        FirebaseFirestore.instance.collection(year).doc(id).collection("egg");
+    FirebaseFirestore.instance.collection(year).doc(id).collection("egg");
     return eggs.get().then((value) => value.docs.length).catchError((e) => 0);
   }
 }

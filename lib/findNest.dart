@@ -1,56 +1,68 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kakrarahu/buildForm.dart';
 
-class FindNearby extends StatefulWidget {
-  const FindNearby({Key? key}) : super(key: key);
+class FindNest extends StatefulWidget {
+  const FindNest({Key? key}) : super(key: key);
 
   @override
-  State<FindNearby> createState() => _FindNearbyState();
+  State<FindNest> createState() => _FindNestState();
 }
 
-class _FindNearbyState extends State<FindNearby> {
-  String get _year => DateTime.now().year.toString();
-  Future<void> signOut() async {
-    await FirebaseAuth.instance.signOut();
-    await GoogleSignIn().signOut();
+class _FindNestState extends State<FindNest> {
+  CollectionReference pesa = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
+  bool enableBtn = true;
+  void submitForm(){
+    enableBtn = false;
+    searchNest(nestID.text);
   }
+
+  void searchNest(String target) async {
+      var exists = await pesa.doc(target).get();
+      if (exists.exists==true) {
+        Navigator.pushNamed(
+            context, "/nestManage",
+            arguments: {
+              "sihtkoht": target,
+            });
+        nestID.text="";
+      }
+      else {
+        AlertDialog(
+          title: Text("nest does not exist",
+              style: TextStyle(color: Colors.deepPurpleAccent)
+          ),
+          content: Text("Please check the nest ID",
+              style: TextStyle(color: Colors.deepPurpleAccent)
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                enableBtn = true;
+                Navigator.pop(context);
+              },
+              child: Text("OK"),
+            ),
+          ],
+        );
+      }
+      enableBtn = true;
+    }
 
   List list=[];
   final nestID = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    CollectionReference pesa = FirebaseFirestore.instance.collection(_year);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Center(
         child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              buildForm(context, "enter nest ID", null, nestID,true),
+              buildForm(context, "enter nest ID", null, nestID,true, searchNest),
               new ElevatedButton.icon(
-                  onPressed: () async {
-                    var sihtkoht = nestID.text;
-                    var exists = await pesa.doc(sihtkoht).get();
-                    if (exists.exists==true) {
-                      Navigator.pushNamed(
-                          context, "/nestManage",
-                          arguments: {
-                            "sihtkoht": sihtkoht,
-                          });
-                      nestID.text="";
-                    }
-                    else {
-                      AlertDialog(
-                        title: Text("nest does not exist",
-                            style: TextStyle(color: Colors.deepPurpleAccent)
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: enableBtn ? submitForm : null,
                   icon: Icon(
                     Icons.search,
                     color: Colors.black87,

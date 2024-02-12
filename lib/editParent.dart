@@ -95,7 +95,7 @@ class _EditParentState extends State<EditParent> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final sps = Provider.of<SharedPreferencesService>(context, listen: false);
       var map = ModalRoute.of(context)?.settings.arguments;
       List<Measure> allMeasures = [note, head, gland, age];
@@ -105,15 +105,32 @@ class _EditParentState extends State<EditParent> {
           nest = map["nest"] as Nest;
         }
         if (map["bird"] != null) {
-          bird = map["bird"] as Bird;
+          if(map["bird"]["band"].isNotEmpty && map["bird"]["id"] == null){
+            //reload from firestore this comes from nest and has firestore instance
+            bird = await birds
+                .doc(bird.band)
+                .get()
+                .then((value) => Bird.fromQuerySnapshot(value));
+          } else if(map["bird"]["band"] == null || map["bird"]["band"].isEmpty){
+            //its a only color ring bird
+            bird.color_band = map["bird"]["color_band"];
+          }else{
+            //its a fully functional bird
+            bird = map["bird"] as Bird;
+          }
+
           //check if measure is missing and add if needed
+          if(bird.measures == null){
+            bird.measures = [];
+          }
           for (Measure m in allMeasures) {
-            if (!bird.measures.map((e) => e.name).contains(m.name)) {
-              bird.measures.add(m);
+
+            if (!bird.measures!.map((e) => e.name).contains(m.name)) {
+              bird.measures!.add(m);
 
             }
           }
-          bird.measures.sort();
+          bird.measures!.sort();
         } else {
           bird = Bird(
             species: nest.species,
@@ -133,17 +150,10 @@ class _EditParentState extends State<EditParent> {
         setState(() {});
       } else {
         bird.measures = allMeasures;
-        bird.measures.sort();
+        bird.measures!.sort();
         setState(() {});
         return;
       }
-    });
-  }
-  sortMeasures(){
-    bird.measures.sort((a, b) {
-      int comp = a.name.compareTo(b.name);
-      if (comp != 0) return comp;
-      return a.modified.compareTo(b.modified);
     });
   }
 
@@ -206,8 +216,11 @@ class _EditParentState extends State<EditParent> {
 
  void addMeasure(Measure m) {
     setState(() {
-      bird.measures.add(m);
-      bird.measures.sort();
+      if(bird.measures == null){
+        bird.measures = [];
+      }
+      bird.measures!.add(m);
+      bird.measures!.sort();
     });
   }
 
@@ -218,7 +231,10 @@ class _EditParentState extends State<EditParent> {
     checkNestChange(nestnr.valueCntr.text, nest.discover_date.year);
     bird.nest = nestnr.valueCntr.text;
     bird.color_band = color_band.valueCntr.text.toUpperCase();
-    bird.measures.forEach((element) {
+    if(bird.measures == null){
+      bird.measures = [];
+    }
+    bird.measures!.forEach((element) {
       element.value = element.valueCntr.text;
     });
     return bird;
@@ -261,7 +277,7 @@ class _EditParentState extends State<EditParent> {
               metalBand(),
               SizedBox(height: 10),
               color_band.getMeasureForm(),
-              ...bird.measures.map((Measure m) => m.getMeasureFormWithAddButton(addMeasure)).toList(),
+              ...?bird.measures?.map((Measure m) => m.getMeasureFormWithAddButton(addMeasure)).toList(),
               listExperiments(bird),
               modifingButtons(context, getBird, "parent",
                   nests.doc(nest.name).collection("parents")),

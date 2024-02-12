@@ -135,7 +135,7 @@ class Experiment {
     );
   }
 
-  getListTile(BuildContext context, String person) {
+  ListTile getListTile(BuildContext context, String person) {
     return ListTile(
       title: Text(name),
       subtitle: Text(description ?? ""),
@@ -152,7 +152,12 @@ class Experiment {
       ),
     );
   }
+  void showNestMap(BuildContext context){
+    Navigator.pushNamed(context, "/map", arguments: {'experiment': this});
+  }
 }
+
+
 
 Experiment experimentFromJson(Map<String, dynamic> json) {
   return Experiment(
@@ -162,7 +167,10 @@ Experiment experimentFromJson(Map<String, dynamic> json) {
 }
 
 Widget listExperiments(FirestoreItem item) {
-  if(item.experiments.isEmpty){
+  if(item.experiments == null){
+    return Container();
+  }
+  if(item.experiments!.isEmpty){
     return Container();
   }
   return Padding(
@@ -171,7 +179,7 @@ Widget listExperiments(FirestoreItem item) {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Text("Exp. "),
-          ...item.experiments.map((e) => ElevatedButton(
+          ...?item.experiments?.map((e) => ElevatedButton(
                 onPressed: null,
                 child: Text(e.name),
                 style: ButtonStyle(

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:kakrarahu/models/measure.dart';
@@ -16,8 +17,8 @@ class Bird implements FirestoreItem {
   DateTime ringed_date;
   DateTime? last_modified;
   String? egg;
-  List<Measure> measures = [];
-  List<Experiment> experiments = [];
+  List<Measure>? measures = [];
+  List<Experiment>? experiments = [];
 
   @override
   String get name => color_band ?? band;
@@ -34,11 +35,11 @@ class Bird implements FirestoreItem {
       this.nest_year,
       this.species,
       this.last_modified,
-      required this.experiments,
+      this.experiments,
       this.age,
       this.nest,
       this.egg,
-      required this.measures});
+      this.measures});
 
   bool timeSpan(String range) {
     if (range == "All") {
@@ -53,17 +54,36 @@ class Bird implements FirestoreItem {
       return this.ringed_date.year == DateTime.now().year;
     }
     int? rangeInt = int.tryParse(range);
-    if(rangeInt != null){
+    if (rangeInt != null) {
       return this.ringed_date.year == rangeInt;
     }
 
     return false;
   }
+  String get nestString => nest_year == DateTime.now().year ? "nest: " + (nest ?? "unknown") : "";
+  String get description =>
+      "Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)}, $nestString, $species";
 
-  bool seenThisYear(bool chick){
-    if(chick || last_modified == null){
+  ListTile getListTile(BuildContext context) {
+    return ListTile(
+      title: Text(name + (color_band != null ? ' ($band)' : "")),
+      subtitle: Text(description),
+      trailing: IconButton(
+        icon: Icon(Icons.edit, color: Colors.blue),
+        onPressed: () {
+          Navigator.pushNamed(context, '/editParent', arguments: this);
+        },
+      ),
+      onTap: () {
+        AlertDialog(title: Text("What should this do?"));
+      },
+    );
+  }
+
+  bool seenThisYear(bool chick) {
+    if (chick || last_modified == null) {
       return this.ringed_date.year == DateTime.now().year;
-    } else{
+    } else {
       return this.last_modified!.year == DateTime.now().year;
     }
   }
@@ -95,7 +115,8 @@ class Bird implements FirestoreItem {
           ? (json['last_modified'] as Timestamp).toDate()
           : null,
       age: json['age'] ?? null,
-      experiments: json['experiments']  ??  [], // provide a default value if 'experiments' does not exist
+      experiments: json['experiments'] ?? [],
+      // provide a default value if 'experiments' does not exist
       measures: (json['measures'] as List<dynamic>?)
               ?.map((e) => measureFromJson(e))
               .toList() ??
@@ -116,14 +137,32 @@ class Bird implements FirestoreItem {
       'last_modified': last_modified,
       'age': age,
       'egg': egg,
-      'measures': measures.map((e) => e.toJson()).toList(),
+      'measures': measures?.map((e) => e.toJson()).toList(),
+    };
+  }
+
+  Map<String, dynamic> toSimpleJson() {
+    return {
+      'band': band,
+      'color_band': color_band,
     };
   }
 
   Future<bool> _write2Firestore(CollectionReference birds,
       CollectionReference nestsItemCollection, bool isParent) async {
     // take ony those measures where value is not empty
-    measures = measures.where((element) => element.value.isNotEmpty).toList();
+    if (measures != null) {
+      measures = [];
+    }
+    if (nest != null) {
+      if (nest!.isNotEmpty) {
+        nestsItemCollection = isParent
+            ? nestsItemCollection
+            : nestsItemCollection.doc(nest).collection("eggs");
+      }
+    }
+
+    measures = measures!.where((element) => element.value.isNotEmpty).toList();
     // the modified date is assigned at write time
     last_modified = DateTime.now();
     return (await birds
@@ -136,9 +175,13 @@ class Bird implements FirestoreItem {
             .set(toJson()))
         .whenComplete(() => (nest?.isEmpty ?? true)
             ? true
-            : nestsItemCollection
-                .doc(isParent ? band : "$nest egg $egg")
-                .set(isParent ? toJson() : {'ring': band, 'status': 'hatched'}))
+            : isParent
+                ? nestsItemCollection.doc(nest).update({
+                    'parents': FieldValue.arrayUnion([toSimpleJson()])
+                  })
+                : nestsItemCollection
+                    .doc("$nest egg $egg")
+                    .set({'ring': band, 'status': 'hatched'}))
         .then((value) => true)
         .catchError((error) => false));
   }
@@ -212,8 +255,10 @@ class Bird implements FirestoreItem {
     // delete from the nest as well if asked for
     if (otherItems != null) {
       await otherItems
-          .doc(id)
-          .delete()
+          .doc(nest)
+          .update({
+            'parents': FieldValue.arrayRemove([toSimpleJson()])
+          })
           .then((value) => true)
           .catchError((error) => false);
     }
@@ -248,4 +293,11 @@ class Bird implements FirestoreItem {
       }).catchError((error) => false);
     }
   }
+}
+
+Bird birdFromJson(Map<String, dynamic> json) {
+  return Bird(
+      ringed_date: (json['ringed_date'] as Timestamp).toDate(),
+      band: json['band'],
+      color_band: json['color_band']);
 }
