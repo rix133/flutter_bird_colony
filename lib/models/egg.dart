@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 
 class Egg implements FirestoreItem{
@@ -7,6 +8,7 @@ class Egg implements FirestoreItem{
   String? responsible;
   String? ring;
   String status;
+  List<Experiment> experiments = [];
   List<Object>? changelogs;
 
   Egg({this.id,

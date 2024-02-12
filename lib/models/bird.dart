@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:kakrarahu/models/measure.dart';
 
@@ -16,6 +17,7 @@ class Bird implements FirestoreItem {
   DateTime? last_modified;
   String? egg;
   List<Measure> measures = [];
+  List<Experiment> experiments = [];
 
   @override
   String get name => color_band ?? band;
@@ -32,6 +34,7 @@ class Bird implements FirestoreItem {
       this.nest_year,
       this.species,
       this.last_modified,
+      required this.experiments,
       this.age,
       this.nest,
       this.egg,
@@ -92,6 +95,7 @@ class Bird implements FirestoreItem {
           ? (json['last_modified'] as Timestamp).toDate()
           : null,
       age: json['age'] ?? null,
+      experiments: json['experiments']  ??  [], // provide a default value if 'experiments' does not exist
       measures: (json['measures'] as List<dynamic>?)
               ?.map((e) => measureFromJson(e))
               .toList() ??
@@ -108,6 +112,7 @@ class Bird implements FirestoreItem {
       'species': species,
       'nest': nest,
       'nest_year': nest_year,
+      'experiments': experiments,
       'last_modified': last_modified,
       'age': age,
       'egg': egg,

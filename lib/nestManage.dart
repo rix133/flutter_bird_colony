@@ -1,12 +1,13 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/buildForm.dart';
+import 'package:kakrarahu/design/modifingButtons.dart';
+import 'package:kakrarahu/design/speciesInput.dart';
+import 'package:kakrarahu/models/experiment.dart';
+import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/nest.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:kakrarahu/species.dart';
 import 'package:provider/provider.dart';
 
 import 'models/bird.dart';
@@ -23,9 +24,6 @@ class _NestManageState extends State<NestManage> {
 
   final FocusNode _focusNode = FocusNode();
   final species = new TextEditingController();
-  final remark = new TextEditingController();
-
-  static String _displayStringForOption(SpeciesList option) => option.english;
 
 /*  final StreamController<bool> _checkBoxController = StreamController();
   Stream<bool> get _checkBoxStream => _checkBoxController.stream;*/
@@ -39,6 +37,7 @@ class _NestManageState extends State<NestManage> {
   late CollectionReference nests;
   late Stream<QuerySnapshot> _eggStream;
   late Stream<QuerySnapshot> _parentStream;
+  late SharedPreferencesService sps;
 
 
   String get _year => DateTime.now().year.toString();
@@ -62,19 +61,28 @@ class _NestManageState extends State<NestManage> {
     nests = FirebaseFirestore.instance.collection(_year);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      sps = Provider.of<SharedPreferencesService>(context, listen: false);
       var data = ModalRoute.of(context)?.settings.arguments as Map;
 
       nests.doc(data["sihtkoht"]).get().then((value) {
         setState(() {
           nest = Nest.fromQuerySnapshot(value);
           species.text = nest!.species ?? "";
-          remark.text = nest!.remark ?? "";
         });
       });
     });
   }
 
-  Row modifingButtons(BuildContext context, CollectionReference nests,
+  Nest getNest() {
+    if(nest != null) {
+      nest!.species = species.text;
+      nest!.responsible = sps.userName;
+      return nest!;
+    }
+    throw Exception("Nest is not initialized");
+  }
+
+  Row modifingButtons_local(BuildContext context, CollectionReference nests,
       Nest? nest, SharedPreferencesService sps) {
     return (Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -148,11 +156,9 @@ class _NestManageState extends State<NestManage> {
                         //addItem(accuracy, "accuracy"),
                         addItem(sps.userName, "responsible"),
                         addItem(species.text, "species"),
-                        addItem(remark.text, "remark"),
                         exists = await nests.doc(save).get(),
                         if (exists.exists == true)
                           {
-                            print("ei eksisteeri"),
                             nests.doc(save).update(map).then((value) => nests
                                 .doc(save)
                                 .update({"last_modified": DateTime.now()})),
@@ -210,6 +216,179 @@ class _NestManageState extends State<NestManage> {
     ));
   }
 
+  StreamBuilder _getEggsStream(Stream<QuerySnapshot> _eggStream){
+    return(StreamBuilder<QuerySnapshot>(
+      stream: _eggStream,
+      builder: (context, snapshot) {
+        return Flexible(
+          child: Column(
+            children: [
+              Flexible(
+                child: ListView.builder(
+                    itemCount: snapshot.data?.docs.length ?? 0,
+                    scrollDirection: Axis.vertical,
+                    shrinkWrap: true,
+                    itemBuilder: (BuildContext context, int index) {
+                      if (snapshot.hasError) {
+                        return Text('Something went wrong');
+                      }
+
+                      if (snapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return Text("Loading");
+                      }
+                      var id =
+                      snapshot.data?.docs[index].id.split(" ")[2];
+                      var status =
+                      snapshot.data?.docs[index].get("status");
+                      var ringed = snapshot.data?.docs[index]
+                          .data()
+                          .toString()
+                          .contains("ring") ??
+                          false;
+                      return Column(
+                        crossAxisAlignment:
+                        CrossAxisAlignment.stretch,
+                        children: [
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: status == "intact" ||
+                                    status == "unknown"
+                                    ? Colors.green
+                                    : (status == "broken" ||
+                                    status == "missing" ||
+                                    status == "predated" ||
+                                    status == "drowned"
+                                    ? Colors.red
+                                    : Colors.orange[800])),
+                            child: (Text("Egg " +
+                                (id).toString() +
+                                " $status" +
+                                (ringed
+                                    ? "/" +
+                                    snapshot.data?.docs[index]
+                                        .get("ring")
+                                    : ""))),
+                            onPressed: () {
+                              Navigator.pushNamed(context, "/eggs",
+                                  arguments: {
+                                    "sihtkoht": nest!.name,
+                                    "egg": nest!.name +
+                                        " egg " +
+                                        (id).toString()
+                                  });
+                            },
+                            onLongPress: () {
+                              Navigator.pushNamed(
+                                  context, "/editchick",
+                                  arguments: {
+                                    "pesa": nest!.name,
+                                    "muna_nr": (id).toString(),
+                                    "species": database["species"]
+                                        .toString(),
+                                    "age": "1"
+                                  });
+                            },
+                          ),
+                          SizedBox(height: 5),
+                        ],
+                      );
+                    }),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection("Birds")
+                          .where("nest", isEqualTo: nest!.name)
+                          .where("ringed_date",
+                          isGreaterThan:
+                          DateTime(DateTime.now().year))
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        var amount = snapshot.data?.size;
+                        return Text(
+                          "Ringed ($amount)",
+                          style: TextStyle(fontSize: 10),
+                        );
+                      }),
+                  new ElevatedButton.icon(
+                      style: ButtonStyle(
+                          backgroundColor:
+                          MaterialStateProperty.all(Colors.grey)),
+                      onPressed: () {
+                        if (snapshot.data!.docs.length != null &&
+                            snapshot.hasError == false) {
+                          new_egg_nr =
+                          ((snapshot.data!.docs.length) + 1);
+                          nests
+                              .doc(nest!.name)
+                              .collection("egg")
+                              .doc(nest!.name +
+                              " egg " +
+                              new_egg_nr.toString())
+                              .set({
+                            "discover_date": DateTime.now().toLocal(),
+                            "responsible": sps.userName,
+                            "status": "intact",
+                          }).whenComplete(() => nests
+                              .doc(nest!.name)
+                              .collection("egg")
+                              .doc(nest!.name +
+                              " egg " +
+                              new_egg_nr.toString())
+                              .collection("changelog")
+                              .doc(DateTime.now().toString())
+                              .set({
+                            "discover_date":
+                            DateTime.now().toLocal(),
+                            "responsible": sps.userName,
+                            "status": "intact",
+                          }));
+                          /*Navigator.pushNamed(context, "/eggs",
+                                          arguments: {
+                                            "sihtkoht": nest.name,
+                                            "egg": nest.name +
+                                                " egg " +
+                                                new_egg_nr.toString()
+                                          });*/
+                        }
+                      },
+                      icon: Icon(
+                        Icons.egg,
+                        size: 45,
+                      ),
+                      onLongPress: () {
+                        Navigator.pushNamed(context, "/editchick",
+                            arguments: {
+                              "pesa": (nest!.name).toString(),
+                              "species":
+                              database["species"].toString(),
+                              "age": "1"
+                            });
+                      },
+                      label: Column(
+                        children: [
+                          Text("add egg"),
+                          Text(
+                            "(long press for chick)",
+                            style: TextStyle(fontSize: 10),
+                          )
+                        ],
+                      )),
+                  SizedBox(height: 15),
+                  modifingButtons(context, getNest, "modify", null),
+                  //asukoht ja save nupp
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    ));
+  }
+
   StreamBuilder _getParentsRow(Stream<QuerySnapshot> _parentStream) {
     return StreamBuilder<QuerySnapshot>(
       stream: _parentStream,
@@ -257,7 +436,7 @@ class _NestManageState extends State<NestManage> {
                     Icons.add,
                     size: 45,
                   ),
-                  label: Text("parent")),
+                  label: Text(_parentStream.length == 0 ? "add parent" : "")),
             ],
           ),
         );
@@ -265,87 +444,13 @@ class _NestManageState extends State<NestManage> {
     );
   }
 
-
-
-  // Function to build RawAutocomplete
-  Widget buildRawAutocomplete(TextEditingController species) {
-    return RawAutocomplete<SpeciesList>(
-      displayStringForOption: _displayStringForOption,
-      focusNode: _focusNode,
-      textEditingController: species,
-      onSelected: (selectedString) {
-        print(selectedString);
-      },
-      optionsViewBuilder: (context, onSelected, options) {
-        return Scaffold(
-          body: ListView.separated(
-              padding: EdgeInsets.zero,
-              itemBuilder: (context, index) {
-                final option = options.elementAt(index);
-                return ListTile(
-                  title: Text(
-                    option.english.toString(),
-                    textAlign: TextAlign.center,
-                  ),
-                  textColor: Colors.black,
-                  contentPadding: EdgeInsets.all(0),
-                  visualDensity: VisualDensity.comfortable,
-                  tileColor: Colors.orange[300],
-                  onTap: () {
-                    onSelected(option);
-                  },
-                );
-              },
-              separatorBuilder: (context, index) => Divider(
-                    height: 0,
-                  ),
-              itemCount: options.length),
-        );
-      },
-      fieldViewBuilder: (BuildContext context,
-          TextEditingController textEditingController,
-          FocusNode focusNode,
-          VoidCallback onFieldSubmitted) {
-        return TextFormField(
-          textAlign: TextAlign.center,
-          controller: textEditingController,
-          decoration: InputDecoration(
-            labelText: "species",
-            labelStyle: TextStyle(color: Colors.yellow),
-            hintText: "enter species",
-            fillColor: Colors.orange,
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
-                borderSide: (BorderSide(color: Colors.indigo))),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(25.0),
-              borderSide: BorderSide(
-                color: Colors.deepOrange,
-                width: 1.5,
-              ),
-            ),
-          ),
-          focusNode: focusNode,
-          onFieldSubmitted: (String value) {
-            onFieldSubmitted();
-            print('You just typed a new entry  $value');
-            FocusScope.of(context).unfocus();
-          },
-        );
-      },
-      optionsBuilder: (TextEditingValue textEditingValue) {
-        if (textEditingValue.text == '') {
-          return const Iterable<SpeciesList>.empty();
-        }
-        return Species.english.where((SpeciesList option) {
-          return option
-              .toString()
-              .toLowerCase()
-              .contains(textEditingValue.text.toLowerCase());
-        });
-      },
-    );
+ void addMeasure(Measure m) {
+    setState(() {
+      nest!.measures.add(m);
+      nest!.measures.sort();
+    });
   }
+
 
   Widget build(BuildContext context) {
     if (nest == null) {
@@ -375,7 +480,6 @@ class _NestManageState extends State<NestManage> {
         .snapshots();
 
 
-    final sps = Provider.of<SharedPreferencesService>(context, listen: false);
     return Scaffold(
       body: Center(
         child: Container(
@@ -387,210 +491,17 @@ class _NestManageState extends State<NestManage> {
                 new Text(nest!.name,
                     style:
                         TextStyle(fontSize: 30, fontStyle: FontStyle.italic)),
-                FutureBuilder(
-                  future: nests.doc(nest!.id).get(),
-                  builder: (BuildContext context,
-                      AsyncSnapshot<DocumentSnapshot<Object?>> snapshot) {
-                    if (snapshot.hasError) {
-                      return Text('Something went wrong');
-                    }
-
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Text("Loading");
-                    }
-                    Map<String, dynamic> data =
-                        snapshot.data!.data() as Map<String, dynamic>;
-                    return Column(
-                      children: [
-                        Text(data.containsKey("experiment")
-                            ? data["experiment"].toString()
-                            : ""),
-                        Text(
-                            (data["last_modified"] as Timestamp).toDate().day ==
-                                    DateTime.now().day
-                                ? "CHECKED"
-                                : "")
-                      ],
-                    );
-                  },
-                )
+                Text(nest!.checkedStr(),
+                    style: TextStyle(color: nest!.chekedAgo().inDays == 0 ? Colors.green : Colors.yellow.shade700)),
                 //Icon(Icons.check_circle,color: Colors.green,size: 40,)
               ]),
+              listExperiments(nest!), //list of experiments
               SizedBox(height: 15),
-              buildRawAutocomplete(species),
+              buildRawAutocomplete(species, _focusNode),
               SizedBox(height: 15),
-              buildForm(context, "remark", null, remark),
+              ...nest!.measures.map((Measure m) => m.getMeasureFormWithAddButton(addMeasure)).toList(),
               _getParentsRow(_parentStream),
-              StreamBuilder<QuerySnapshot>(
-                stream: _eggStream,
-                builder: (context, snapshot) {
-                  return Flexible(
-                    child: Column(
-                      children: [
-                        Flexible(
-                          child: ListView.builder(
-                              itemCount: snapshot.data?.docs.length ?? 0,
-                              scrollDirection: Axis.vertical,
-                              shrinkWrap: true,
-                              itemBuilder: (BuildContext context, int index) {
-                                if (snapshot.hasError) {
-                                  return Text('Something went wrong');
-                                }
-
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return Text("Loading");
-                                }
-                                var id =
-                                    snapshot.data?.docs[index].id.split(" ")[2];
-                                var status =
-                                    snapshot.data?.docs[index].get("status");
-                                var ringed = snapshot.data?.docs[index]
-                                        .data()
-                                        .toString()
-                                        .contains("ring") ??
-                                    false;
-                                return Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                          backgroundColor: status == "intact" ||
-                                                  status == "unknown"
-                                              ? Colors.green
-                                              : (status == "broken" ||
-                                                      status == "missing" ||
-                                                      status == "predated" ||
-                                                      status == "drowned"
-                                                  ? Colors.red
-                                                  : Colors.orange[800])),
-                                      child: (Text("Egg " +
-                                          (id).toString() +
-                                          " $status" +
-                                          (ringed
-                                              ? "/" +
-                                                  snapshot.data?.docs[index]
-                                                      .get("ring")
-                                              : ""))),
-                                      onPressed: () {
-                                        Navigator.pushNamed(context, "/eggs",
-                                            arguments: {
-                                              "sihtkoht": nest!.name,
-                                              "egg": nest!.name +
-                                                  " egg " +
-                                                  (id).toString()
-                                            });
-                                      },
-                                      onLongPress: () {
-                                        Navigator.pushNamed(
-                                            context, "/editchick",
-                                            arguments: {
-                                              "pesa": nest!.name,
-                                              "muna_nr": (id).toString(),
-                                              "species": database["species"]
-                                                  .toString(),
-                                              "age": "1"
-                                            });
-                                      },
-                                    ),
-                                    SizedBox(height: 5),
-                                  ],
-                                );
-                              }),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            StreamBuilder<QuerySnapshot>(
-                                stream: FirebaseFirestore.instance
-                                    .collection("Birds")
-                                    .where("nest", isEqualTo: nest!.name)
-                                    .where("ringed_date",
-                                        isGreaterThan:
-                                            DateTime(DateTime.now().year))
-                                    .snapshots(),
-                                builder: (context, snapshot) {
-                                  var amount = snapshot.data?.size;
-                                  return Text(
-                                    "Ringed ($amount)",
-                                    style: TextStyle(fontSize: 10),
-                                  );
-                                }),
-                            new ElevatedButton.icon(
-                                style: ButtonStyle(
-                                    backgroundColor:
-                                        MaterialStateProperty.all(Colors.grey)),
-                                onPressed: () {
-                                  if (snapshot.data!.docs.length != null &&
-                                      snapshot.hasError == false) {
-                                    new_egg_nr =
-                                        ((snapshot.data!.docs.length) + 1);
-                                    nests
-                                        .doc(nest!.name)
-                                        .collection("egg")
-                                        .doc(nest!.name +
-                                            " egg " +
-                                            new_egg_nr.toString())
-                                        .set({
-                                      "discover_date": DateTime.now().toLocal(),
-                                      "responsible": sps.userName,
-                                      "status": "intact",
-                                    }).whenComplete(() => nests
-                                                .doc(nest!.name)
-                                                .collection("egg")
-                                                .doc(nest!.name +
-                                                    " egg " +
-                                                    new_egg_nr.toString())
-                                                .collection("changelog")
-                                                .doc(DateTime.now().toString())
-                                                .set({
-                                              "discover_date":
-                                                  DateTime.now().toLocal(),
-                                              "responsible": sps.userName,
-                                              "status": "intact",
-                                            }));
-                                    /*Navigator.pushNamed(context, "/eggs",
-                                          arguments: {
-                                            "sihtkoht": nest.name,
-                                            "egg": nest.name +
-                                                " egg " +
-                                                new_egg_nr.toString()
-                                          });*/
-                                  }
-                                },
-                                icon: Icon(
-                                  Icons.egg,
-                                  size: 45,
-                                ),
-                                onLongPress: () {
-                                  Navigator.pushNamed(context, "/editchick",
-                                      arguments: {
-                                        "pesa": (nest!.name).toString(),
-                                        "species":
-                                            database["species"].toString(),
-                                        "age": "1"
-                                      });
-                                },
-                                label: Column(
-                                  children: [
-                                    Text("add egg"),
-                                    Text(
-                                      "(long press for chick)",
-                                      style: TextStyle(fontSize: 10),
-                                    )
-                                  ],
-                                )),
-                            SizedBox(height: 15),
-                            modifingButtons(context, nests, nest, sps),
-                            //asukoht ja save nupp
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+              _getEggsStream(_eggStream),
             ],
           ),
         ),

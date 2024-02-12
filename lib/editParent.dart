@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:kakrarahu/design/speciesInput.dart';
 import 'package:kakrarahu/models/bird.dart';
+import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/nest.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -17,31 +19,36 @@ class EditParent extends StatefulWidget {
 class _EditParentState extends State<EditParent> {
   TextEditingController band_letCntr = TextEditingController();
   TextEditingController band_numCntr = TextEditingController();
-  //FocusNode _focusNode = FocusNode();
+  TextEditingController speciesCntr = TextEditingController();
+  FocusNode _focusNode = FocusNode();
 
   Measure age = Measure(
     name: "age",
     value: "",
     isNumber: true,
     unit: "years",
+    modified: DateTime.now(),
   );
   Measure color_band = Measure(
     name: "color ring",
     value: "",
     isNumber: false,
     unit: "",
+    modified: DateTime.now(),
   );
   Measure head = Measure(
     name: "head length",
     value: "",
     isNumber: true,
     unit: "mm",
+    modified: DateTime.now(),
   );
   Measure note = Measure(
     name: "note",
     value: "",
     isNumber: false,
     unit: "text",
+    modified: DateTime.now(),
   );
 
   Measure gland = Measure(
@@ -49,6 +56,7 @@ class _EditParentState extends State<EditParent> {
     value: "",
     isNumber: true,
     unit: "mm",
+    modified: DateTime.now(),
   );
 
   Measure nestnr = Measure(
@@ -56,12 +64,7 @@ class _EditParentState extends State<EditParent> {
     value: "",
     isNumber: true,
     unit: "",
-  );
-  Measure species = Measure(
-    name: "species",
-    value: "Common Gull",
-    isNumber: false,
-    unit: "",
+    modified: DateTime.now(),
   );
 
   Bird bird = Bird(
@@ -71,6 +74,7 @@ class _EditParentState extends State<EditParent> {
     nest: "",
     nest_year: DateTime.now().year,
     measures: [],
+    experiments: [],
     // Add other fields as necessary
   );
 
@@ -80,7 +84,8 @@ class _EditParentState extends State<EditParent> {
     discover_date: DateTime.now(),
     last_modified: DateTime.now(),
     responsible: "",
-    parents: [],
+    experiments: [],
+    measures: [],
   );
 
   CollectionReference nests =
@@ -105,8 +110,10 @@ class _EditParentState extends State<EditParent> {
           for (Measure m in allMeasures) {
             if (!bird.measures.map((e) => e.name).contains(m.name)) {
               bird.measures.add(m);
+
             }
           }
+          bird.measures.sort();
         } else {
           bird = Bird(
             species: nest.species,
@@ -116,18 +123,27 @@ class _EditParentState extends State<EditParent> {
             nest: nest.name,
             nest_year: nest.discover_date.year,
             measures: allMeasures,
+            experiments: [],
             // Add other fields as necessary
           );
 
         }
         nestnr.value = bird.current_nest;
-        species.value = bird.species ?? "Common Gull";
+        speciesCntr.text = bird.species ?? "";
         setState(() {});
       } else {
         bird.measures = allMeasures;
+        bird.measures.sort();
         setState(() {});
         return;
       }
+    });
+  }
+  sortMeasures(){
+    bird.measures.sort((a, b) {
+      int comp = a.name.compareTo(b.name);
+      if (comp != 0) return comp;
+      return a.modified.compareTo(b.modified);
     });
   }
 
@@ -188,10 +204,17 @@ class _EditParentState extends State<EditParent> {
     );
   }
 
+ void addMeasure(Measure m) {
+    setState(() {
+      bird.measures.add(m);
+      bird.measures.sort();
+    });
+  }
+
   Bird getBird() {
     //ensure UI is updated
     bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
-    bird.species = species.valueCntr.text;
+    bird.species = speciesCntr.text;
     checkNestChange(nestnr.valueCntr.text, nest.discover_date.year);
     bird.nest = nestnr.valueCntr.text;
     bird.color_band = color_band.valueCntr.text.toUpperCase();
@@ -232,12 +255,14 @@ class _EditParentState extends State<EditParent> {
               Text("Edit bird",
                   style: TextStyle(fontSize: 30, color: Colors.yellow)),
               SizedBox(height: 10),
-              species.getMeasureForm(),
+              listExperiments(bird),
+              buildRawAutocomplete(speciesCntr, _focusNode),
               nestnr.getMeasureForm(),
               metalBand(),
               SizedBox(height: 10),
               color_band.getMeasureForm(),
-              ...bird.measures.map((Measure m) => m.getMeasureForm()).toList(),
+              ...bird.measures.map((Measure m) => m.getMeasureFormWithAddButton(addMeasure)).toList(),
+              listExperiments(bird),
               modifingButtons(context, getBird, "parent",
                   nests.doc(nest.name).collection("parents")),
             ]),
