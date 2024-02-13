@@ -17,7 +17,7 @@ class Measure implements Comparable<Measure>{
   toJson() {
     return {
       'name': name,
-      'value': valueCntr.text,
+      'value': value,
       'isNumber': isNumber,
       'unit': unit,
       'modified': modified.toIso8601String()
@@ -27,6 +27,10 @@ class Measure implements Comparable<Measure>{
 
   TextEditingController valueCntr = TextEditingController();
 
+  setValue(String? value) {
+    this.value = value ?? "";
+    valueCntr.text = value ?? "";
+  }
 
   Padding getMeasureForm(){
     valueCntr.text = value;
@@ -79,7 +83,7 @@ class Measure implements Comparable<Measure>{
     return ListTile(
       title: Text(name + (unit == "" ? "" : " (" + unit + ")")),
       trailing: TextFormField(
-        keyboardType: isNumber?TextInputType.number:TextInputType.text,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
         controller: valueCntr,
         textAlign: TextAlign.center,
         decoration: InputDecoration(
@@ -105,6 +109,7 @@ class Measure implements Comparable<Measure>{
     );
   }
   Row getMeasureFormWithAddButton(Function(Measure) onPressed){
+    valueCntr.text = value;
     String label = name + (unit == "" ? "" : " (" + unit + ")");
     if(modified == null){
       modified = DateTime.now();
@@ -119,6 +124,7 @@ class Measure implements Comparable<Measure>{
         Expanded(
           child: TextFormField(
             controller: valueCntr,
+            keyboardType: isNumber?TextInputType.number:TextInputType.text,
             textAlign: TextAlign.center,
             decoration: InputDecoration(
               labelText: label,
@@ -209,11 +215,13 @@ class Measure implements Comparable<Measure>{
 }
 
 Measure measureFromJson(Map<String, dynamic> json) {
-  return Measure(
+  Measure m = Measure(
       name: json['name'],
       value: json['value'],
       isNumber: json['isNumber'],
       unit: json['unit'],
       modified: json['modified'] != null ? DateTime.parse(json['modified']) : DateTime.now()
   );
+  m.valueCntr.text = m.value;
+  return m;
 }

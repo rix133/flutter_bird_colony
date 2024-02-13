@@ -5,10 +5,10 @@ import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
-Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, String type, CollectionReference? otherItems, Map? args, String? targetUrl){
+Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext context) getItem, String type, CollectionReference? otherItems, Map? args, String? targetUrl){
   UpdateResult ur = UpdateResult(success: false, message: "", type: "empty");
   bool isButtonClicked = false;
-  FirestoreItem item = getItem();
+  FirestoreItem item = getItem(context);
   final sps = Provider.of<SharedPreferencesService>(context, listen: false);
   return(Row(
     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -41,7 +41,7 @@ Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, Stri
                       ),
                       TextButton(
                         onPressed: () async {
-                          FirestoreItem item = getItem();
+                          FirestoreItem item = getItem(context);
                           ur = await item.delete(otherItems: otherItems, type: type);
                           if(!ur.success){
                             showDialog(context: context, builder: (_) =>
@@ -86,7 +86,7 @@ Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, Stri
       ElevatedButton.icon(
           onPressed: isButtonClicked ? null : () async {
             isButtonClicked = true;
-            FirestoreItem item = getItem();
+            FirestoreItem item = getItem(context);
             item.responsible = sps.userName;
             ur = await item.save(otherItems: otherItems, allowOverwrite: false, type: type);
             if(!ur.success){

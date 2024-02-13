@@ -106,24 +106,28 @@ class _EditParentState extends State<EditParent> {
         }
         if (map["bird"] != null) {
           bird = map["bird"] as Bird;
-          if (bird.band.isNotEmpty && bird.id == null) {
+          //does the bird exist in firestore
+          if (bird.band.isNotEmpty && (bird.id == null)) {
             //reload from firestore this comes from nest and has firestore instance
-            print(bird.toJson());
             bird = await birds
                 .doc(bird.band)
                 .get()
                 .then((DocumentSnapshot value) => Bird.fromQuerySnapshot(value));
+          } else{
+            bird.nest = nest.name;
+            bird.nest_year = nest.discover_date.year;
+            bird.species = nest.species;
           }
           //check if measure is missing and add if needed
           if (bird.measures == null) {
             bird.measures = [];
           }
-          for (Measure m in allMeasures) {
-            if (!bird.measures!.map((e) => e.name).contains(m.name)) {
-              bird.measures!.add(m);
-            }
+            for (Measure m in allMeasures) {
+              if (!bird.measures!.map((e) => e.name).contains(m.name)) {
+                bird.measures!.add(m);
+              }
+
           }
-          bird.measures!.sort();
         } else {
           bird = Bird(
             species: nest.species,
@@ -137,9 +141,10 @@ class _EditParentState extends State<EditParent> {
             // Add other fields as necessary
           );
         }
-        nestnr.value = bird.current_nest;
+        bird.measures!.sort();
         speciesCntr.text = bird.species ?? "";
-        nestnr.valueCntr.text = bird.nest ?? "";
+        nestnr.setValue(bird.nest);
+        color_band.setValue(bird.color_band);
         setState(() {});
       } else {
         bird.measures = allMeasures;
@@ -170,6 +175,10 @@ class _EditParentState extends State<EditParent> {
           child: TextFormField(
             controller: band_letCntr,
             textAlign: TextAlign.center,
+            onChanged: (String value) {
+              bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
+              setState(() {});
+            },
             decoration: InputDecoration(
               labelText: "Letters",
               labelStyle: TextStyle(color: Colors.yellow),
@@ -193,6 +202,10 @@ class _EditParentState extends State<EditParent> {
           child: TextFormField(
             keyboardType: TextInputType.number,
             controller: band_numCntr,
+            onChanged: (String value) {
+              bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
+              setState(() {});
+            },
             textAlign: TextAlign.center,
             decoration: InputDecoration(
               labelText: "Numbers",
@@ -218,27 +231,18 @@ class _EditParentState extends State<EditParent> {
 
   void addMeasure(Measure m) {
     setState(() {
-      if (bird.measures == null) {
-        bird.measures = [];
-      }
       bird.measures!.add(m);
       bird.measures!.sort();
     });
   }
 
-  Bird getBird() {
+  Bird getBird(BuildContext context) {
     //ensure UI is updated
     bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
     bird.species = speciesCntr.text;
     checkNestChange(nestnr.valueCntr.text, nest.discover_date.year);
     bird.nest = nestnr.valueCntr.text;
     bird.color_band = color_band.valueCntr.text.toUpperCase();
-    if (bird.measures == null) {
-      bird.measures = [];
-    }
-    bird.measures!.forEach((element) {
-      element.value = element.valueCntr.text;
-    });
     return bird;
   }
 
@@ -247,7 +251,7 @@ class _EditParentState extends State<EditParent> {
     if (nestYear != DateTime.now().year) {
       return false;
     }
-    // the nest is fron this year and is updated to something
+    // the nest is from this year and is updated to something
     if (newNestName != bird.nest && (bird.current_nest).isNotEmpty) {
       return (await nests
           .doc(bird.current_nest)
@@ -284,8 +288,8 @@ class _EditParentState extends State<EditParent> {
                   modifingButtons(context, getBird, "parent",nests, {"sihtkoht":bird.nest}, "/nestManage"),
                   SizedBox(height: 10),
                   ...?bird.measures
-                      ?.map((Measure m) =>
-                          m.getMeasureFormWithAddButton(addMeasure))
+                      ?.map((Measure m) => bird.band.isNotEmpty ?
+                          m.getMeasureFormWithAddButton(addMeasure) : Container())
                       .toList(),
                 ]),
               )),

@@ -32,7 +32,7 @@ class _NestManageState extends State<NestManage> {
   Nest? nest;
   Map<String, dynamic> database = {};
   late CollectionReference nests;
-  late Stream<QuerySnapshot> _eggStream;
+  Stream<QuerySnapshot> _eggStream = Stream.empty();
   late SharedPreferencesService sps;
 
 
@@ -61,15 +61,18 @@ class _NestManageState extends State<NestManage> {
       var data = ModalRoute.of(context)?.settings.arguments as Map;
 
       nests.doc(data["sihtkoht"]).get().then((value) {
-        setState(() {
-          nest = Nest.fromQuerySnapshot(value);
-          species.text = nest!.species ?? "";
-        });
+        if(value.exists){
+          setState(() {
+            nest = Nest.fromQuerySnapshot(value);
+            species.text = nest!.species ?? "";
+          });
+        }
+
       });
     });
   }
 
-  Nest getNest() {
+  Nest getNest(BuildContext context) {
     if(nest != null) {
       nest!.species = species.text;
       nest!.responsible = sps.userName;
@@ -243,6 +246,7 @@ class _NestManageState extends State<NestManage> {
       },
     ));
   }
+
   void gotoParent() {
     Navigator.pushNamed(context, "/editParent", arguments: {
       "nest": nest,
@@ -250,7 +254,9 @@ class _NestManageState extends State<NestManage> {
   }
 
   Widget _getParentsRow(List<Bird>? _parents, BuildContext context) {
-    return  Container(
+    return  SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+      child:Container(
           height: 50.0, // Adjust this value as needed
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -264,9 +270,9 @@ class _NestManageState extends State<NestManage> {
                         "nest": nest,
                       });
                     },
-                    child: Text(b.band),
+                    child: Text(b.name),
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.blue),
+                      backgroundColor: MaterialStateProperty.all(Colors.white60),
                     ),
                   );
                 }).toList(),
@@ -281,7 +287,7 @@ class _NestManageState extends State<NestManage> {
                 backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
               ),),
             ],
-          ),
+          )),
         );
   }
 

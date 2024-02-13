@@ -5,6 +5,7 @@ import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/experimented_item.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/models/nest.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
 class Bird implements FirestoreItem, ExperimentedItem {
@@ -23,7 +24,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
   List<Experiment>? experiments = [];
 
   @override
-  String get name => color_band ?? band;
+  String get name => (color_band?.isNotEmpty ?? false) ? color_band! : band;
 
   String get current_nest =>
       (nest_year == DateTime.now().year) ? (nest ?? "") : "";
@@ -147,7 +148,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
       'last_modified': last_modified,
       'age': age,
       'egg': egg,
-      'measures': measures?.map((e) => e.toJson()).toList(),
+      'measures': measures?.map((Measure e) => e.toJson()).toList(),
     };
   }
 
@@ -159,12 +160,85 @@ class Bird implements FirestoreItem, ExperimentedItem {
     };
   }
 
+  Future<UpdateResult> _saveBirdToFirestore(CollectionReference birds) async {
+    await birds.doc(band).set(toJson());
+    await _saveToChangelog(birds);
+    return UpdateResult.saveOK(item: this);
+  }
+
+  Future<void> _saveToChangelog(CollectionReference birds) async {
+    await birds.doc(band).collection("changelog").doc(last_modified.toString()).set(toJson());
+  }
+
+  Future<UpdateResult> _updateNest(CollectionReference nestsItemCollection, bool isParent) async {
+    if (nest?.isEmpty ?? true) {
+      return UpdateResult.saveOK(item: this);
+    } else if (isParent) {
+      return _updateNestParent(nestsItemCollection);
+    } else {
+      return _updateNestEgg(nestsItemCollection);
+    }
+  }
+
+  Future<UpdateResult> _updateNestParent(CollectionReference nestsItemCollection,
+      {bool delete = false}) async {
+    try {
+      Nest? nestObj = await nestsItemCollection.doc(nest).get().then((value) {
+        if(!value.exists) {
+          return null;
+        }
+        return Nest.fromQuerySnapshot(value);
+      });
+      if (nestObj == null) {
+        return UpdateResult.error(message: "Nest: $nest not found");
+      }
+      //search and replace the nest parents with the new one by band if exists, then by color band
+      if(nestObj.parents != null) {
+        bool hasBand = nestObj.parents!.any((element) => element.band == band);
+        bool hasColorBand = nestObj.parents!.any((element) => element.color_band == color_band);
+        if(hasBand) {
+          nestObj.parents!.removeWhere((element) => element.band == band);
+        } else if(hasColorBand) {
+          nestObj.parents!.removeWhere((element) => element.color_band == color_band);
+        }
+        //add the new parent
+        if(delete == false) {
+          nestObj.parents!.add(this);
+        }
+      } else {
+        if(delete == false) {
+          nestObj.parents = [this];
+        }
+      }
+      // update the nest with the new parents
+      await nestsItemCollection.doc(nest).update({
+        'parents': nestObj.parents!.map((e) => e.toSimpleJson()).toList()
+      });
+      return UpdateResult.saveOK(item: this);
+    } catch (error) {
+      return UpdateResult.error(message: "Error saving bird");
+    }
+  }
+
+  Future<UpdateResult> _updateNestEgg(CollectionReference nestsItemCollection) async {
+    await nestsItemCollection.doc("$nest egg $egg").set({'ring': band, 'status': 'hatched'});
+    return UpdateResult.saveOK(item: this);
+  }
+
+  Future<UpdateResult> _saveBird(CollectionReference birds, CollectionReference nestsItemCollection, bool isParent) async {
+    try {
+      await _saveBirdToFirestore(birds);
+      await _updateNest(nestsItemCollection, isParent);
+      return UpdateResult.saveOK(item: this);
+    } catch (error) {
+      return UpdateResult.error(message: "Error saving bird");
+    }
+  }
+
+
   Future<UpdateResult> _write2Firestore(CollectionReference birds,
       CollectionReference nestsItemCollection, bool isParent) async {
     // take ony those measures where value is not empty
-    if (measures != null) {
-      measures = [];
-    }
     if (nest != null) {
       if (nest!.isNotEmpty) {
         nestsItemCollection = isParent
@@ -172,35 +246,10 @@ class Bird implements FirestoreItem, ExperimentedItem {
             : nestsItemCollection.doc(nest).collection("eggs");
       }
     }
-
-    measures = measures!.where((element) => element.value.isNotEmpty).toList();
+    measures = measures?.where((Measure m) => m.value.isNotEmpty).toList() ?? [];
     // the modified date is assigned at write time
     last_modified = DateTime.now();
-    return (await birds
-        .doc(band)
-        .set(toJson())
-        .whenComplete(() => birds
-            .doc(band)
-            .collection("changelog")
-            .doc(last_modified.toString())
-            .set(toJson()))
-        .whenComplete(() => (nest?.isEmpty ?? true)
-            ? true
-            : isParent
-                ? nestsItemCollection
-                    .doc(nest)
-                    .update({
-                      'parents': FieldValue.arrayUnion([toSimpleJson()])
-                    })
-                    .then((value) => UpdateResult.saveOK(item: this))
-                    .catchError((error) =>
-                        UpdateResult.error(message: "Error saving bird"))
-                : nestsItemCollection
-                    .doc("$nest egg $egg")
-                    .set({'ring': band, 'status': 'hatched'}))
-        .then((value) => UpdateResult.saveOK(item: this))
-        .catchError(
-            (error) => UpdateResult.error(message: "Error saving bird")));
+    return await _saveBird(birds, nestsItemCollection, isParent);
   }
 
   @override
@@ -227,12 +276,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
           );
 
           //save only to nest parents not all birds
-          return (await otherItems
-              .doc(isParent ? name : "$nest egg $egg")
-              .set(isParent ? toJson() : {'ring': band, 'status': 'hatched'})
-              .then((value) => UpdateResult.saveOK(item: this))
-              .catchError(
-                  (error) => UpdateResult.error(message: "Error saving nest")));
+          return (await _updateNest(otherItems, isParent));
         }
         return UpdateResult.error(
             message: "Can't save bird without metal band");
@@ -257,11 +301,10 @@ class Bird implements FirestoreItem, ExperimentedItem {
                   .doc(ringed_date.toString())
                   .set(prevBird.toJson())
                   .then((value) => UpdateResult.error(
-                      message: "Bird with this band already exists")));
+                      message: " Bird with this band already exists! ")));
             }
-
             return UpdateResult.error(
-                message: "Bird with this band already exists");
+                message: " Bird with this band already exists! ");
           }
         });
       }
@@ -275,22 +318,26 @@ class Bird implements FirestoreItem, ExperimentedItem {
       bool soft = true,
       type = "parent"}) async {
     // delete from the nest as well if asked for
-    if (otherItems != null) {
-      await otherItems
-          .doc(nest)
-          .update({
-            'parents': FieldValue.arrayRemove([toSimpleJson()])
-          })
-          .then((value) => true)
-          .catchError((error) => false);
+    if (otherItems != null && type == "parent") {
+      await _updateNestParent(otherItems, delete: true);
     }
     CollectionReference items = FirebaseFirestore.instance.collection("Birds");
+    //check if the item exists
+    UpdateResult ur = await items.doc(id).get().then((doc)  {
+      if (!doc.exists) {
+        return UpdateResult.deleteOK(item: this);
+      }
+      return UpdateResult.error(message: "Bird found in the database");
+    });
+    if (ur.success) {
+      return ur;
+    }
     if (!soft) {
       return await items
           .doc(id)
           .delete()
           .then((value) => UpdateResult.deleteOK(item: this))
-          .catchError((error) => UpdateResult.error(message: error));
+          .catchError((error) => UpdateResult.error(message: error.toString()));
     } else {
       CollectionReference deletedCollection = FirebaseFirestore.instance
           .collection("deletedItems")
@@ -304,7 +351,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
               .doc(id)
               .delete()
               .then((value) => UpdateResult.deleteOK(item: this))
-              .catchError((error) => UpdateResult.error(message: error)));
+              .catchError((error) => UpdateResult.error(message: error.toString())));
         } else {
           return deletedCollection
               .doc('${id}_${DateTime.now().toString()}')

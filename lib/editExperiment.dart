@@ -117,7 +117,7 @@ class _EditExperimentState extends State<EditExperiment> {
       ],
     );
   }
-  Experiment getExperiment() {
+  Experiment getExperiment(BuildContext context) {
     experiment.last_modified = DateTime.now();
     return experiment;
   }
