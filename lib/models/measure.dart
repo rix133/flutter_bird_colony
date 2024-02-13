@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class Measure {
+class Measure implements Comparable<Measure>{
   String name = "";
   String value = "";
   bool isNumber = false;
@@ -65,6 +65,7 @@ class Measure {
       title: Text(name + ": " + value + (unit == "" ? "" : " " + unit)),
     );
   }
+
 
   @override
   int compareTo(Measure other) {
@@ -137,13 +138,15 @@ class Measure {
             ),
           ),
         ),
-        ElevatedButton.icon(
-          icon: Icon(Icons.add),
+        IconButton(
+          icon: Icon(Icons.add, color: Colors.black,),
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
+          ),
           onPressed: () {
             Measure newMeasure = Measure(name: name, value: "", isNumber: isNumber, unit: unit, modified: DateTime.now());
             onPressed(newMeasure);
           },
-          label: Text(""),
         )
       ],
     );

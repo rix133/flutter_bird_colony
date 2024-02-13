@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
+import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
-Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, String type, CollectionReference? otherItems){
+Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, String type, CollectionReference? otherItems, Map? args, String? targetUrl){
+  UpdateResult ur = UpdateResult(success: false, message: "", type: "empty");
   bool isButtonClicked = false;
   FirestoreItem item = getItem();
   final sps = Provider.of<SharedPreferencesService>(context, listen: false);
@@ -40,8 +42,8 @@ Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, Stri
                       TextButton(
                         onPressed: () async {
                           FirestoreItem item = getItem();
-                          isButtonClicked = await item.delete(otherItems: otherItems, type: type);
-                          if(!isButtonClicked){
+                          ur = await item.delete(otherItems: otherItems, type: type);
+                          if(!ur.success){
                             showDialog(context: context, builder: (_) =>
                                 AlertDialog(
                                   contentTextStyle:
@@ -49,7 +51,7 @@ Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, Stri
                                   titleTextStyle:
                                   TextStyle(color: Colors.red),
                                   title: Text("Error"),
-                                  content: Text("Item could not be deleted"),
+                                  content: Text("Item could not be deleted. " + ur.message),
                                   actions: <Widget>[
                                     TextButton(
                                       onPressed: () {
@@ -61,8 +63,12 @@ Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, Stri
                                 ));
                           }
                           else{
-                            Navigator.pop(context);
-                            Navigator.pop(context);
+                            if(args != null && targetUrl != null){
+                              Navigator.pop(context);
+                              Navigator.popAndPushNamed(context, targetUrl, arguments: args);
+                            } else {
+                              Navigator.pop(context);
+                            }
                           }
 
                         },
@@ -82,8 +88,8 @@ Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, Stri
             isButtonClicked = true;
             FirestoreItem item = getItem();
             item.responsible = sps.userName;
-            isButtonClicked = await item.save(otherItems: otherItems, allowOverwrite: false, type: type);
-            if(!isButtonClicked){
+            ur = await item.save(otherItems: otherItems, allowOverwrite: false, type: type);
+            if(!ur.success){
               showDialog(context: context, builder: (_) =>
                   AlertDialog(
                     title: Text("Error"),
@@ -91,7 +97,7 @@ Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, Stri
                     TextStyle(color: Colors.black),
                     titleTextStyle:
                     TextStyle(color: Colors.red),
-                    content: Text("Item could not be saved. Possibly id already exists or is empty. Do you want to try to overwrite?"),
+                    content: Text("Item could not be saved." + ur.message + " Do you want to try to overwrite?"),
                     actions: <Widget>[
                       TextButton(
                         onPressed: () {
@@ -101,9 +107,9 @@ Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, Stri
                       ),
                       TextButton(
                         onPressed: () async{
-                          Navigator.pop(context);
-                          isButtonClicked = await item.save(otherItems: otherItems, allowOverwrite: true, type: type);
-                          if(!isButtonClicked){
+                          ur = await item.save(otherItems: otherItems, allowOverwrite: true, type: type);
+                          if(!ur.success){
+                            Navigator.pop(context);
                             showDialog(context: context, builder: (_) =>
                                 AlertDialog(
                                   title: Text("Error"),
@@ -111,7 +117,7 @@ Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, Stri
                                   TextStyle(color: Colors.black),
                                   titleTextStyle:
                                   TextStyle(color: Colors.red),
-                                  content: Text("Item could not be overwritten."),
+                                  content: Text("Item could not be overwritten. "+ ur.message),
                                   actions: <Widget>[
                                     TextButton(
                                       onPressed: () {
@@ -124,7 +130,12 @@ Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, Stri
                           }
                           else{
                             Navigator.pop(context);
-                            Navigator.pop(context);
+                            if(args != null && targetUrl != null){
+                              Navigator.pop(context);
+                              Navigator.popAndPushNamed(context, targetUrl, arguments: args);
+                            } else {
+                              Navigator.pop(context);
+                            }
                           }
                         },
                         child: const Text('Overwrite', style: TextStyle(color: Colors.red)),
@@ -133,7 +144,12 @@ Row modifingButtons(BuildContext context, FirestoreItem Function() getItem, Stri
                   ));
             }
             else{
-            Navigator.pop(context);
+              if(args != null && targetUrl != null){
+                Navigator.pop(context);
+                Navigator.popAndPushNamed(context, targetUrl, arguments: args);
+              } else {
+                Navigator.pop(context);
+              }
             }
           },
           icon: Icon(

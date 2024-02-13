@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kakrarahu/editExperiment.dart';
 import 'package:kakrarahu/editParent.dart';
 import 'package:kakrarahu/homepage.dart';
 import 'package:kakrarahu/listBirds.dart';
@@ -117,6 +118,7 @@ class MyApp extends StatelessWidget {
         '/listBirds':(context)=>ListBirds(),
         '/listExperiments':(context)=>ListExperiments(),
         '/listNests':(context)=>ListNests(),
+        '/editExperiment':(context)=>EditExperiment(),
 
 
       },

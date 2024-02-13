@@ -1,17 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
-import 'package:kakrarahu/models/dataSearch.dart';
 import 'package:kakrarahu/models/experimented_item.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:kakrarahu/models/updateResult.dart';
 
 class Experiment implements FirestoreItem {
   String? id;
   String name = "New Experiment";
   String? description;
   String? responsible;
-  Color color = Colors.blue;
+  Color color = Colors.grey;
   int? year = DateTime
       .now()
       .year;
@@ -74,55 +74,36 @@ class Experiment implements FirestoreItem {
     };
   }
 
-  List<DropdownMenuItem> types = [
-    DropdownMenuItem(child: Text("Nest"), value: "nest"),
-    DropdownMenuItem(child: Text("Bird"), value: "bird"),
-    DropdownMenuItem(child: Text("Other"), value: "experiment"),
-  ];
-
-  CollectionReference? getOtherItems(String type) {
-    if (type == "nest") {
-      return FirebaseFirestore.instance.collection(DateTime
-          .now()
-          .year
-          .toString());
-    } else if (type == "bird") {
-      return FirebaseFirestore.instance.collection("Birds");
-    } else {
-      return null;
+  bool hasNests(){
+    if(nests != null){
+      if(nests!.isNotEmpty){
+        return true;
+      }
     }
+    return false;
   }
 
-  Widget selectOtherItems(CollectionReference otherItems){
-    return StreamBuilder<QuerySnapshot>(
-      stream: otherItems.snapshots(),
-      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.hasError) {
-          return Text('Something went wrong');
-        }
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Text("Loading");
-        }
-        List<String> items = snapshot.data!.docs.map((doc) => doc.id).toList();
-        return IconButton(
-          icon: Icon(Icons.search),
-          onPressed: () async {
-            final String? selected = await showSearch(
-              context: context,
-              delegate: DataSearch(items),
-            );
-            if (selected != null) {
-              if(type == "nest"){
-                nests!.add(selected);
-              } else if(type == "bird"){
-                birds!.add(selected);
-              }
-            }
-          },
-        );
-      },
-    );
+  bool hasBirds(){
+    if(birds != null){
+      if(birds!.isNotEmpty){
+        return true;
+      }
+    }
+    return false;
   }
+  List<Widget> listItems(BuildContext context){
+    List<Widget> items = [];
+   if(hasNests()){
+        items.add(Text("Nests: "));
+        items.addAll(nests?.map((e) => ElevatedButton(onPressed: gotoNest(e, context), child: Text(e, style: TextStyle(color: Colors.white),))).toList() ?? [Container()]);
+    }if(hasBirds()){
+      items.add(Text("Birds: "));
+      items.addAll(birds?.map((e) => ElevatedButton(onPressed: gotoBird(e, context), child: Text(e, style: TextStyle(color: Colors.white),))).toList() ?? [Container()]);
+    }
+
+    return items;
+  }
+
   gotoNest(String nest, BuildContext context){
     return () => {
       Navigator.pushNamed(context, "/nestManage", arguments: {'sihtkoht': nest})
@@ -140,90 +121,12 @@ class Experiment implements FirestoreItem {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Text("Nests: "),
-          ...?nests?.map((e) => ElevatedButton(onPressed: gotoNest(e, context), child: Text(e))),
-          Text("Birds: "),
-          ...?birds?.map((e) => ElevatedButton(onPressed: gotoBird(e, context), child: Text(e))),
+          ...listItems(context),
         ],
       ),
     );
   }
 
-  Experiment getExperiment() {
-    last_modified = DateTime.now();
-    return this;
-  }
-
-  Form getExperimentForm(BuildContext context, String person) {
-    responsible = person;
-    CollectionReference? otherItems = getOtherItems(type);
-    return Form(
-      child: Column(
-        children: [
-          TextFormField(
-            initialValue: name,
-            decoration: InputDecoration(labelText: "Name"),
-            onChanged: (String? value) => name = value!,
-          ),
-          SizedBox(height:5),
-          TextFormField(
-            initialValue: description,
-            decoration: InputDecoration(labelText: "Description"),
-            onChanged: (String? value) => description = value!,
-          ),
-          SizedBox(height:5),
-          TextFormField(
-            initialValue: year.toString(),
-            decoration: InputDecoration(labelText: "Year"),
-            onChanged: (String? value) => year = int.parse(value!),
-          ),
-          SizedBox(height:5),
-          DropdownButton(items: types,
-              onChanged: (value) =>
-              {
-                type = value.toString(),
-                otherItems = getOtherItems(type)
-              }),
-          SizedBox(height:5),
-          selectOtherItems(otherItems!),
-          SizedBox(height:5),
-          getItemsRow(context),
-          SizedBox(height:5),
-          ElevatedButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text('Pick a color!'),
-                    content: SingleChildScrollView(
-                      child: ColorPicker(
-                        pickerColor: color,
-                        onColorChanged: (Color value) => color = value,
-                        pickerAreaHeightPercent: 0.8,
-                      ),
-                    ),
-                    actions: <Widget>[
-                      ElevatedButton(
-                        child: const Text('Got it'),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-            child: Text("Pick Color"),
-          ),
-          SizedBox(height:5),
-          modifingButtons(context, getExperiment, type, otherItems),
-
-        ],
-      ),
-    );
-  }
 
   ListTile getListTile(BuildContext context, String person) {
     return ListTile(
@@ -232,12 +135,7 @@ class Experiment implements FirestoreItem {
       trailing: IconButton(
         icon: Icon(Icons.edit, color: Colors.blue),
         onPressed: () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return getExperimentForm(context, person);
-            },
-          );
+          Navigator.pushNamed(context, '/editExperiment', arguments: {'experiment': this});
         },
       ),
     );
@@ -249,7 +147,7 @@ class Experiment implements FirestoreItem {
 
 
   @override
-  Future<bool> delete({CollectionReference<
+  Future<UpdateResult> delete({CollectionReference<
       Object?>? otherItems = null, bool soft = true, String type = "default"}) {
     CollectionReference expCollection =   FirebaseFirestore.instance.collection('experiments');
     if(otherItems != null){
@@ -276,9 +174,9 @@ class Experiment implements FirestoreItem {
       return expCollection
           .doc(id)
           .delete()
-          .then((value) => true)
-          .catchError((error) => false);
-    } else {
+          .then((value) => UpdateResult.deleteOK(item: this))
+          .catchError((error) => UpdateResult.error(message: error.toString()));
+    }  else {
       CollectionReference deletedCollection = FirebaseFirestore.instance
           .collection("deletedItems")
           .doc("experiments")
@@ -290,21 +188,21 @@ class Experiment implements FirestoreItem {
           return deletedCollection
               .doc(id)
               .set(toJson())
-              .then((value) => expCollection.doc(id).delete().then((value) => true))
-              .catchError((error) => false);
+              .then((value) => expCollection.doc(id).delete().then((value) => UpdateResult.deleteOK(item: this)))
+              .catchError((error) => UpdateResult.error(message: error.toString()));
         } else {
           return deletedCollection
               .doc('${id}_${DateTime.now().toString()}')
               .set(toJson())
-              .then((value) => expCollection.doc(id).delete().then((value) => true))
-              .catchError((error) => false);
+              .then((value) => expCollection.doc(id).delete().then((value) => UpdateResult.deleteOK(item: this)))
+              .catchError((error) => UpdateResult.error(message: error.toString()));
         }
-      }).catchError((error) => false);
+      }).catchError((error) => UpdateResult.error(message: error.toString()));
     }
   }
 
   @override
-  Future<bool> save({CollectionReference<
+  Future<UpdateResult> save({CollectionReference<
       Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"}) {
     CollectionReference expCollection =   FirebaseFirestore.instance.collection('experiments');
     last_modified = DateTime.now();
@@ -359,7 +257,7 @@ class Experiment implements FirestoreItem {
             .collection("changelog")
             .doc(last_modified.toString())
             .set(toJson())
-      }).then((value) => true)).catchError((onError) => false);
+      }).then((value) => UpdateResult.saveOK(item:this))).catchError((onError) => UpdateResult.error(message: onError.toString()));
 
     } else {
       return (expCollection.doc(id).set(toJson()).then((value) =>
@@ -368,7 +266,7 @@ class Experiment implements FirestoreItem {
             .doc(id)
             .collection("changelog")
             .doc(last_modified.toString())
-            .set(toJson())}).then((value) => true)).catchError((onError) => false);
+            .set(toJson())}).then((value) => UpdateResult.saveOK(item:this))).catchError((onError) => UpdateResult.error(message: onError.toString()));
     }
   }
 

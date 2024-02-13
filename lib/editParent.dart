@@ -105,29 +105,22 @@ class _EditParentState extends State<EditParent> {
           nest = map["nest"] as Nest;
         }
         if (map["bird"] != null) {
-          if(map["bird"]["band"].isNotEmpty && map["bird"]["id"] == null){
+          bird = map["bird"] as Bird;
+          if (bird.band.isNotEmpty && bird.id == null) {
             //reload from firestore this comes from nest and has firestore instance
+            print(bird.toJson());
             bird = await birds
                 .doc(bird.band)
                 .get()
-                .then((value) => Bird.fromQuerySnapshot(value));
-          } else if(map["bird"]["band"] == null || map["bird"]["band"].isEmpty){
-            //its a only color ring bird
-            bird.color_band = map["bird"]["color_band"];
-          }else{
-            //its a fully functional bird
-            bird = map["bird"] as Bird;
+                .then((DocumentSnapshot value) => Bird.fromQuerySnapshot(value));
           }
-
           //check if measure is missing and add if needed
-          if(bird.measures == null){
+          if (bird.measures == null) {
             bird.measures = [];
           }
           for (Measure m in allMeasures) {
-
             if (!bird.measures!.map((e) => e.name).contains(m.name)) {
               bird.measures!.add(m);
-
             }
           }
           bird.measures!.sort();
@@ -143,10 +136,10 @@ class _EditParentState extends State<EditParent> {
             experiments: [],
             // Add other fields as necessary
           );
-
         }
         nestnr.value = bird.current_nest;
         speciesCntr.text = bird.species ?? "";
+        nestnr.valueCntr.text = bird.nest ?? "";
         setState(() {});
       } else {
         bird.measures = allMeasures;
@@ -159,8 +152,17 @@ class _EditParentState extends State<EditParent> {
 
   Row metalBand() {
     if (bird.band.isNotEmpty) {
-      band_letCntr.text = bird.band.substring(0, 2);
-      band_numCntr.text = bird.band.substring(2);
+      // take the letters and numbers apart
+      // and put them in the textfields
+      int lastLetter = bird.band.lastIndexOf(RegExp(r'[A-Z]'));
+      if (lastLetter != -1) {
+        band_letCntr.text = bird.band.substring(0, lastLetter + 1);
+        band_numCntr.text = bird.band.substring(lastLetter + 1);
+      } else {
+        // handle the case when there are no letters
+        band_letCntr.text = '';
+        band_numCntr.text = bird.band;
+      }
     }
     return Row(
       children: [
@@ -214,9 +216,9 @@ class _EditParentState extends State<EditParent> {
     );
   }
 
- void addMeasure(Measure m) {
+  void addMeasure(Measure m) {
     setState(() {
-      if(bird.measures == null){
+      if (bird.measures == null) {
         bird.measures = [];
       }
       bird.measures!.add(m);
@@ -231,7 +233,7 @@ class _EditParentState extends State<EditParent> {
     checkNestChange(nestnr.valueCntr.text, nest.discover_date.year);
     bird.nest = nestnr.valueCntr.text;
     bird.color_band = color_band.valueCntr.text.toUpperCase();
-    if(bird.measures == null){
+    if (bird.measures == null) {
       bird.measures = [];
     }
     bird.measures!.forEach((element) {
@@ -242,7 +244,7 @@ class _EditParentState extends State<EditParent> {
 
   Future<bool> checkNestChange(String newNestName, int nestYear) async {
     //its from another year the nest number
-    if(nestYear != DateTime.now().year){
+    if (nestYear != DateTime.now().year) {
       return false;
     }
     // the nest is fron this year and is updated to something
@@ -266,23 +268,27 @@ class _EditParentState extends State<EditParent> {
         resizeToAvoidBottomInset: false,
         body: Center(
           child: Container(
-            padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
-            child: Column(children: [
-              Text("Edit bird",
-                  style: TextStyle(fontSize: 30, color: Colors.yellow)),
-              SizedBox(height: 10),
-              listExperiments(bird),
-              buildRawAutocomplete(speciesCntr, _focusNode),
-              nestnr.getMeasureForm(),
-              metalBand(),
-              SizedBox(height: 10),
-              color_band.getMeasureForm(),
-              ...?bird.measures?.map((Measure m) => m.getMeasureFormWithAddButton(addMeasure)).toList(),
-              listExperiments(bird),
-              modifingButtons(context, getBird, "parent",
-                  nests.doc(nest.name).collection("parents")),
-            ]),
-          ),
+              padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
+              child: SingleChildScrollView(
+                child: Column(children: [
+                  Text("Edit bird",
+                      style: TextStyle(fontSize: 30, color: Colors.yellow)),
+                  SizedBox(height: 10),
+                  listExperiments(bird),
+                  buildRawAutocomplete(speciesCntr, _focusNode),
+                  nestnr.getMeasureForm(),
+                  metalBand(),
+                  SizedBox(height: 10),
+                  color_band.getMeasureForm(),
+                  listExperiments(bird),
+                  modifingButtons(context, getBird, "parent",nests, {"sihtkoht":bird.nest}, "/nestManage"),
+                  SizedBox(height: 10),
+                  ...?bird.measures
+                      ?.map((Measure m) =>
+                          m.getMeasureFormWithAddButton(addMeasure))
+                      .toList(),
+                ]),
+              )),
         ),
       ),
     );

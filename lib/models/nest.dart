@@ -5,6 +5,7 @@ import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/experimented_item.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/models/updateResult.dart';
 
 
 class Nest implements FirestoreItem, ExperimentedItem {
@@ -17,6 +18,7 @@ class Nest implements FirestoreItem, ExperimentedItem {
   bool? completed;
   DateTime discover_date;
   DateTime last_modified;
+  DateTime? first_egg;
   List<Experiment>? experiments = [];
   List<Object>? changelogs;
   List<Measure> measures = [];
@@ -32,6 +34,7 @@ class Nest implements FirestoreItem, ExperimentedItem {
     required this.responsible,
     required this.experiments,
     this.completed,
+    this.first_egg,
     this.species,
     this.remark,
     this.parents,
@@ -71,7 +74,10 @@ class Nest implements FirestoreItem, ExperimentedItem {
         last_modified:
         (json['last_modified'] as Timestamp? ?? Timestamp(0, 0)).toDate(),
         accuracy: json['accuracy'] as String? ?? '',
-        remark: json["remark"] as String? ?? '',
+        remark: json["remark"],
+        first_egg: json['first_egg'] != null
+            ? (json['first_egg'] as Timestamp).toDate()
+            : null,
         responsible: json["responsible"] as String? ?? '',
         coordinates: json['coordinates'] as GeoPoint? ?? GeoPoint(0, 0),
         completed: json['completed'] as bool? ?? false,
@@ -92,17 +98,18 @@ class Nest implements FirestoreItem, ExperimentedItem {
         // provide a default value if 'measures' does not exist
         species: json['species'] as String? ?? '');
     if (nnest.remark != null) {
+      if(nnest.remark!.isNotEmpty){
       nnest.measures?.add(Measure(
           name: "note",
           value: nnest.remark!,
           isNumber: false,
           unit: "",
           modified: nnest.last_modified));
-    }
+    }}
     return nnest;
   }
 
-  Future<bool> _write2Firestore(CollectionReference nests) async {
+  Future<UpdateResult> _write2Firestore(CollectionReference nests) async {
     // the modified date is assigned at write time
     last_modified = DateTime.now();
     return (await nests
@@ -113,16 +120,16 @@ class Nest implements FirestoreItem, ExperimentedItem {
         .collection("changelog")
         .doc(last_modified.toString())
         .set(toJson()))
-        .then((value) => true)
-        .catchError((error) => false));
+        .then((value) => UpdateResult.saveOK(item:this))
+        .catchError((e) => UpdateResult.error(message: e.toString())));
   }
 
   @override
-  Future<bool> save({CollectionReference<Object?>? otherItems = null,
+  Future<UpdateResult> save({CollectionReference<Object?>? otherItems = null,
     bool allowOverwrite = false,
     type = "default"}) async {
     if (name.isEmpty) {
-      return false;
+      return UpdateResult.error(message: "Nest name can't be empty");
     }
     CollectionReference nests =
     FirebaseFirestore.instance.collection(DateTime
@@ -137,7 +144,7 @@ class Nest implements FirestoreItem, ExperimentedItem {
     }
 
   @override
-  Future<bool> delete({CollectionReference<Object?>? otherItems = null,
+  Future<UpdateResult> delete({CollectionReference<Object?>? otherItems = null,
     bool soft = true,
     type = "default"}) async {
     // delete from the bird as well if asked for
@@ -156,8 +163,8 @@ class Nest implements FirestoreItem, ExperimentedItem {
       return await items
           .doc(id)
           .delete()
-          .then((value) => true)
-          .catchError((error) => false);
+          .then((value) => UpdateResult.deleteOK(item: this))
+          .catchError((error) => UpdateResult.error(message: error.toString()));
     } else {
       CollectionReference deletedCollection = FirebaseFirestore.instance
           .collection("deletedItems")
@@ -170,25 +177,25 @@ class Nest implements FirestoreItem, ExperimentedItem {
           return deletedCollection
               .doc(id)
               .set(toJson())
-              .then((value) => items.doc(id).delete().then((value) => true))
-              .catchError((error) => false);
+              .then((value) => items.doc(id).delete().then((value) => UpdateResult.deleteOK(item: this)))
+              .catchError((error) => UpdateResult.error(message: error.toString()));
         } else {
           return deletedCollection
               .doc('${id}_${DateTime.now().toString()}')
               .set(toJson())
-              .then((value) => items.doc(id).delete().then((value) => true))
-              .catchError((error) => false);
+              .then((value) => items.doc(id).delete().then((value) => UpdateResult.deleteOK(item: this)))
+              .catchError((error) => UpdateResult.error(message: error.toString()));
         }
-      }).catchError((error) => false);
+      }).catchError((error) => UpdateResult.error(message: error.toString()));
     }
   }
-
 
   toJson() {
     return {
       'discover_date': discover_date,
       'last_modified': DateTime.now(),
       'accuracy': accuracy,
+      'first_egg': first_egg,
       'remark': remark,
       'responsible': responsible,
       'coordinates': coordinates,

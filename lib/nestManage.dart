@@ -185,6 +185,7 @@ class _NestManageState extends State<NestManage> {
                             snapshot.hasError == false) {
                           new_egg_nr =
                           ((snapshot.data!.docs.length) + 1);
+                          if(new_egg_nr == 1){nest!.first_egg = DateTime.now();}
                           nests
                               .doc(nest!.name)
                               .collection("egg")
@@ -234,8 +235,6 @@ class _NestManageState extends State<NestManage> {
                         ],
                       )),
                   SizedBox(height: 15),
-                  modifingButtons(context, getNest, "modify", null),
-                  //asukoht ja save nupp
                 ],
               ),
             ],
@@ -244,8 +243,13 @@ class _NestManageState extends State<NestManage> {
       },
     ));
   }
+  void gotoParent() {
+    Navigator.pushNamed(context, "/editParent", arguments: {
+      "nest": nest,
+    });
+  }
 
-  Widget _getParentsRow(List<Bird>? _parents) {
+  Widget _getParentsRow(List<Bird>? _parents, BuildContext context) {
     return  Container(
           height: 50.0, // Adjust this value as needed
           child: Row(
@@ -266,19 +270,16 @@ class _NestManageState extends State<NestManage> {
                     ),
                   );
                 }).toList(),
-              ElevatedButton.icon(
+              (_parents?.length == 0 || _parents == null) ? ElevatedButton.icon(
                   style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(Colors.grey)),
-                  onPressed: () {
-                    Navigator.pushNamed(context, "/editParent", arguments: {
-                      "nest": nest,
-                    });
-                  },
+                  onPressed: gotoParent,
                   icon: Icon(
                     Icons.add,
-                    size: 45,
                   ),
-                  label: Text((_parents?.length == 0 || _parents == null) ? "add parent" : "")),
+                  label: Text("add parent")) : IconButton(icon:Icon(Icons.add),onPressed: gotoParent, style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
+              ),),
             ],
           ),
         );
@@ -289,6 +290,33 @@ class _NestManageState extends State<NestManage> {
       nest!.measures.add(m);
       nest!.measures.sort();
     });
+  }
+
+  Row getTitleRow(){
+    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+      RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: nest!.name,
+              style: TextStyle(fontSize: 30, fontStyle: FontStyle.italic),
+            ),
+            WidgetSpan(
+              child: Transform.translate(
+                offset: const Offset(0.0, 5.0),
+                child: Text(
+                  nest!.checkedStr(),
+                  style: TextStyle(
+                      fontSize: 12.0,
+                      color: nest!.chekedAgo().inDays == 0 ? Colors.green : Colors.yellow.shade700
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      )
+    ]);
   }
 
 
@@ -321,22 +349,16 @@ class _NestManageState extends State<NestManage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                new Text(nest!.name,
-                    style:
-                        TextStyle(fontSize: 30, fontStyle: FontStyle.italic)),
-                Text(nest!.checkedStr(),
-                    style: TextStyle(color: nest!.chekedAgo().inDays == 0 ? Colors.green : Colors.yellow.shade700)),
-                //Icon(Icons.check_circle,color: Colors.green,size: 40,)
-              ]),
+              getTitleRow(),
               listExperiments(nest!), //list of experiments
               SizedBox(height: 15),
               buildRawAutocomplete(species, _focusNode),
               SizedBox(height: 15),
               ...nest!.measures.map((Measure m) => m.getMeasureFormWithAddButton(addMeasure)).toList(),
-              _getParentsRow(nest!.parents),
+              SizedBox(height: 15),
+              _getParentsRow(nest!.parents, context),
               _getEggsStream(_eggStream),
-              modifingButtons(context, getNest, "modify", null),
+              modifingButtons(context, getNest, "modify", null, null, null),
             ],
           ),
         ),

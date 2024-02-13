@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:kakrarahu/design/listOverviewPageButtons.dart';
 import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/models/nest.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -37,13 +38,14 @@ class _ListNestsState extends State<ListNests> {
     Stream<QuerySnapshot> _birdsStream = birdCollection.snapshots();
     return Scaffold(
         appBar: AppBar(
-          title: Text("Birds", style: TextStyle(color: Colors.black)),
-          backgroundColor: Colors.amberAccent,
+          title: Text("Nests", style: TextStyle(color: Colors.black)),
+          backgroundColor: Colors.lightBlueAccent,
         ),
         body: Container(
             color: Theme.of(context).scaffoldBackgroundColor,
             child: Column(
               children: [
+                listOverviewPageButtons(context),
                 Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[

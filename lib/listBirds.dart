@@ -1,10 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:kakrarahu/design/listOverviewPageButtons.dart';
 import 'package:kakrarahu/models/bird.dart';
-import 'package:kakrarahu/models/nest.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
-
 
 class ListBirds extends StatefulWidget {
   const ListBirds({Key? key}) : super(key: key);
@@ -16,14 +15,18 @@ class ListBirds extends StatefulWidget {
 class _ListBirdsState extends State<ListBirds> {
   int _selectedYear = DateTime.now().year;
   late SharedPreferencesService sps;
-  CollectionReference birdCollection = FirebaseFirestore.instance.collection('Birds');
+  CollectionReference birdCollection =
+      FirebaseFirestore.instance.collection('Birds');
   TextEditingController searchController = TextEditingController();
+  Stream<QuerySnapshot> _birdsStream = Stream.empty();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
+      _birdsStream = birdCollection.snapshots();
+      setState(() {});
     });
   }
 
@@ -34,16 +37,16 @@ class _ListBirdsState extends State<ListBirds> {
   }
 
   Widget build(BuildContext context) {
-    Stream<QuerySnapshot> _birdsStream = birdCollection.snapshots();
     return Scaffold(
         appBar: AppBar(
           title: Text("Birds", style: TextStyle(color: Colors.black)),
-          backgroundColor: Colors.amberAccent,
+          backgroundColor: Colors.tealAccent,
         ),
         body: Container(
             color: Theme.of(context).scaffoldBackgroundColor,
             child: Column(
               children: [
+                listOverviewPageButtons(context),
                 Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
@@ -51,11 +54,14 @@ class _ListBirdsState extends State<ListBirds> {
                       Container(width: 8),
                       DropdownButton<int>(
                         value: _selectedYear,
-                        items: List<int>.generate(DateTime.now().year - 2022 + 1, (int index) => index + 2022)
-                            .map((int year) {
+                        items: List<int>.generate(
+                            DateTime.now().year - 2022 + 1,
+                            (int index) => index + 2022).map((int year) {
                           return DropdownMenuItem<int>(
                             value: year,
-                            child: Text(year.toString(), style: TextStyle(color: Colors.deepPurpleAccent)),
+                            child: Text(year.toString(),
+                                style:
+                                    TextStyle(color: Colors.deepPurpleAccent)),
                           );
                         }).toList(),
                         onChanged: (int? newValue) {
@@ -67,6 +73,9 @@ class _ListBirdsState extends State<ListBirds> {
                     ]),
                 TextField(
                   controller: searchController,
+                  onChanged: (value) {
+                    setState(() {});
+                  },
                   decoration: InputDecoration(
                     labelText: "Search",
                     hintText: "Search by band or nests",
@@ -83,13 +92,22 @@ class _ListBirdsState extends State<ListBirds> {
                             (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                           if (snapshot.hasData) {
                             List<Bird> birds = snapshot.data!.docs
-                                .map((DocumentSnapshot e) => Bird.fromQuerySnapshot(e))
-                                 .where((Bird e) => e.nest_year == _selectedYear || e.ringed_date!.year == _selectedYear)
-                                .where((Bird e) => e.band.contains(searchController.text) || e.color_band!.contains(searchController.text))
+                                .map((DocumentSnapshot e) =>
+                                    Bird.fromQuerySnapshot(e))
+                                .where((Bird e) =>
+                                    e.nest_year == _selectedYear ||
+                                    e.ringed_date!.year == _selectedYear)
+                                .where((Bird e) =>
+                                    e.band.toLowerCase().contains(
+                                        searchController.text.toLowerCase()) ||
+                                    (e.color_band != null
+                                        ? e.color_band!.toLowerCase().contains(
+                                            searchController.text.toLowerCase())
+                                        : false))
                                 .toList();
                             return ListView(
                               children: [
-                                ...birds.map((Bird e)=>e.getListTile(context))
+                                ...birds.map((Bird e) => e.getListTile(context))
                               ],
                             );
                           } else {
@@ -101,5 +119,4 @@ class _ListBirdsState extends State<ListBirds> {
               ],
             )));
   }
-
 }

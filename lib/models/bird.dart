@@ -5,6 +5,7 @@ import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/experimented_item.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/models/updateResult.dart';
 
 class Bird implements FirestoreItem, ExperimentedItem {
   String? id;
@@ -61,7 +62,10 @@ class Bird implements FirestoreItem, ExperimentedItem {
 
     return false;
   }
-  String get nestString => nest_year == DateTime.now().year ? "nest: " + (nest ?? "unknown") : "";
+
+  String get nestString =>
+      nest_year == DateTime.now().year ? "nest: " + (nest ?? "unknown") : "";
+
   String get description =>
       "Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)}, $nestString, $species";
 
@@ -72,7 +76,8 @@ class Bird implements FirestoreItem, ExperimentedItem {
       trailing: IconButton(
         icon: Icon(Icons.edit, color: Colors.blue),
         onPressed: () {
-          Navigator.pushNamed(context, '/editParent', arguments: this);
+          Navigator.pushNamed(context, '/editParent',
+              arguments: {'bird': this});
         },
       ),
       onTap: () {
@@ -111,12 +116,16 @@ class Bird implements FirestoreItem, ExperimentedItem {
       egg: json['egg'] ?? null,
       species: json['species'] ?? null,
       nest: json['nest'] ?? null,
-      nest_year: json['nest_year'] ?? DateTime.now().year,
+      nest_year:
+          json['nest_year'] ?? (json['ringed_date'] as Timestamp).toDate().year,
       last_modified: json['last_modified'] != null
           ? (json['last_modified'] as Timestamp).toDate()
           : null,
       age: json['age'] ?? null,
-      experiments: json['experiments'] ?? [],
+      experiments: (json['experiments'] as List<dynamic>?)
+              ?.map((e) => experimentFromJson(e))
+              .toList() ??
+          [],
       // provide a default value if 'experiments' does not exist
       measures: (json['measures'] as List<dynamic>?)
               ?.map((e) => measureFromJson(e))
@@ -144,12 +153,13 @@ class Bird implements FirestoreItem, ExperimentedItem {
 
   Map<String, dynamic> toSimpleJson() {
     return {
+      'ringed_date': ringed_date,
       'band': band,
       'color_band': color_band,
     };
   }
 
-  Future<bool> _write2Firestore(CollectionReference birds,
+  Future<UpdateResult> _write2Firestore(CollectionReference birds,
       CollectionReference nestsItemCollection, bool isParent) async {
     // take ony those measures where value is not empty
     if (measures != null) {
@@ -177,23 +187,30 @@ class Bird implements FirestoreItem, ExperimentedItem {
         .whenComplete(() => (nest?.isEmpty ?? true)
             ? true
             : isParent
-                ? nestsItemCollection.doc(nest).update({
-                    'parents': FieldValue.arrayUnion([toSimpleJson()])
-                  })
+                ? nestsItemCollection
+                    .doc(nest)
+                    .update({
+                      'parents': FieldValue.arrayUnion([toSimpleJson()])
+                    })
+                    .then((value) => UpdateResult.saveOK(item: this))
+                    .catchError((error) =>
+                        UpdateResult.error(message: "Error saving bird"))
                 : nestsItemCollection
                     .doc("$nest egg $egg")
                     .set({'ring': band, 'status': 'hatched'}))
-        .then((value) => true)
-        .catchError((error) => false));
+        .then((value) => UpdateResult.saveOK(item: this))
+        .catchError(
+            (error) => UpdateResult.error(message: "Error saving bird")));
   }
 
   @override
-  Future<bool> save(
+  Future<UpdateResult> save(
       {CollectionReference<Object?>? otherItems = null,
       bool allowOverwrite = false,
       type = "parent"}) async {
     if (band.isEmpty && name.isEmpty) {
-      return false;
+      return UpdateResult.error(
+          message: "Can't save bird without metal band and color band");
     }
     if (type == "parent" || type == "chick") {
       bool isParent = (type == "parent");
@@ -213,10 +230,12 @@ class Bird implements FirestoreItem, ExperimentedItem {
           return (await otherItems
               .doc(isParent ? name : "$nest egg $egg")
               .set(isParent ? toJson() : {'ring': band, 'status': 'hatched'})
-              .then((value) => true)
-              .catchError((error) => false));
+              .then((value) => UpdateResult.saveOK(item: this))
+              .catchError(
+                  (error) => UpdateResult.error(message: "Error saving nest")));
         }
-        return false;
+        return UpdateResult.error(
+            message: "Can't save bird without metal band");
       }
       CollectionReference birds =
           FirebaseFirestore.instance.collection("Birds");
@@ -237,10 +256,12 @@ class Bird implements FirestoreItem, ExperimentedItem {
                   .collection("changelog")
                   .doc(ringed_date.toString())
                   .set(prevBird.toJson())
-                  .then((value) => false));
+                  .then((value) => UpdateResult.error(
+                      message: "Bird with this band already exists")));
             }
 
-            return false;
+            return UpdateResult.error(
+                message: "Bird with this band already exists");
           }
         });
       }
@@ -249,7 +270,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
   }
 
   @override
-  Future<bool> delete(
+  Future<UpdateResult> delete(
       {CollectionReference<Object?>? otherItems = null,
       bool soft = true,
       type = "parent"}) async {
@@ -268,8 +289,8 @@ class Bird implements FirestoreItem, ExperimentedItem {
       return await items
           .doc(id)
           .delete()
-          .then((value) => true)
-          .catchError((error) => false);
+          .then((value) => UpdateResult.deleteOK(item: this))
+          .catchError((error) => UpdateResult.error(message: error));
     } else {
       CollectionReference deletedCollection = FirebaseFirestore.instance
           .collection("deletedItems")
@@ -279,19 +300,22 @@ class Bird implements FirestoreItem, ExperimentedItem {
       //check if the item is already in deleted collection
       return deletedCollection.doc(id).get().then((doc) {
         if (doc.exists == false) {
-          return deletedCollection
+          return deletedCollection.doc(id).set(toJson()).then((value) => items
               .doc(id)
-              .set(toJson())
-              .then((value) => items.doc(id).delete().then((value) => true))
-              .catchError((error) => false);
+              .delete()
+              .then((value) => UpdateResult.deleteOK(item: this))
+              .catchError((error) => UpdateResult.error(message: error)));
         } else {
           return deletedCollection
               .doc('${id}_${DateTime.now().toString()}')
               .set(toJson())
-              .then((value) => items.doc(id).delete().then((value) => true))
-              .catchError((error) => false);
+              .then((value) => items
+                  .doc(id)
+                  .delete()
+                  .then((value) => UpdateResult.deleteOK(item: this))
+                  .catchError((error) => UpdateResult.error(message: error)));
         }
-      }).catchError((error) => false);
+      }).catchError((error) => UpdateResult.error(message: error));
     }
   }
 }

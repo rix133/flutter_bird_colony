@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
+import 'package:kakrarahu/models/updateResult.dart';
 
 class Egg implements FirestoreItem{
   String? id;
@@ -31,13 +32,13 @@ class Egg implements FirestoreItem{
     ));
   }
   @override
-  Future <bool> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, type = "default"}) async {
+  Future <UpdateResult> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, type = "default"}) async {
     // TODO: implement save
     throw UnimplementedError();
   }
 
   @override
-  Future <bool> delete({CollectionReference<Object?>? otherItems = null, bool soft = true, type = "default"}) async {
+  Future <UpdateResult> delete({CollectionReference<Object?>? otherItems = null, bool soft = true, type = "default"}) async {
     throw UnimplementedError();
   }
 

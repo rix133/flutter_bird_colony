@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/bird.dart';
+import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/species.dart';
 import 'package:provider/provider.dart';
@@ -367,14 +368,14 @@ class _EditChickState extends State<EditChick> {
                           egg: egg,
                           nest: _nest,
                           measures: []);
-                      bool saveOK =  await bird.save(otherItems: nests, allowOverwrite: false, type: "chick");
-                      if(saveOK){
+                      UpdateResult saveOK =  await bird.save(otherItems: nests, allowOverwrite: false, type: "chick");
+                      if(saveOK.success){
                         sharedPreferencesService.recentBand = band;
                         Navigator.pop(context);
                       } else{
                         showDialog(context: context, builder: (_) =>
                             AlertDialog(
-                              title: Text("$band already used!",
+                              title: Text("$band already used! or ${saveOK.message}",
                                   style: TextStyle(color: Colors.deepPurpleAccent)
                               ),
                               actions: <Widget>[
