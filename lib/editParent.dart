@@ -70,6 +70,7 @@ class _EditParentState extends State<EditParent> {
   Bird bird = Bird(
     species: "",
     ringed_date: DateTime.now(),
+    ringed_as_chick: false,
     band: "",
     nest: "",
     nest_year: DateTime.now().year,
@@ -132,6 +133,7 @@ class _EditParentState extends State<EditParent> {
           bird = Bird(
             species: nest.species,
             ringed_date: DateTime.now(),
+            ringed_as_chick: false,
             band: "",
             responsible: sps.userName,
             nest: nest.name,
@@ -148,6 +150,10 @@ class _EditParentState extends State<EditParent> {
         setState(() {});
       } else {
         bird.measures = allMeasures;
+        //remove age from measures if ringed as chick
+        if (bird.ringed_as_chick) {
+          bird.measures!.removeWhere((element) => element.name == "age");
+        }
         bird.measures!.sort();
         setState(() {});
         return;
@@ -236,6 +242,20 @@ class _EditParentState extends State<EditParent> {
     });
   }
 
+  Padding getAgeRow(){
+    int ageYears = DateTime.now().year - bird.ringed_date.year;
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text('Age: $ageYears years',
+                style: TextStyle(fontSize: 20, color: Colors.yellow))),
+        ],
+      ),
+    );
+  }
+
   Bird getBird(BuildContext context) {
     //ensure UI is updated
     bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
@@ -285,8 +305,10 @@ class _EditParentState extends State<EditParent> {
                   SizedBox(height: 10),
                   color_band.getMeasureForm(),
                   listExperiments(bird),
-                  modifingButtons(context, getBird, "parent",nests, {"sihtkoht":bird.nest}, "/nestManage"),
+                  modifingButtons(context, getBird, "parent",nests, {"sihtkoht":bird.nest}, "/nestManage", silentOverwrite: true),
                   SizedBox(height: 10),
+                  //show age in years if ringed as chick
+                  bird.ringed_as_chick ? getAgeRow() : Container(),
                   ...?bird.measures
                       ?.map((Measure m) => bird.band.isNotEmpty ?
                           m.getMeasureFormWithAddButton(addMeasure) : Container())

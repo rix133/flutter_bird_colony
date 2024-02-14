@@ -5,7 +5,7 @@ import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
-Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext context) getItem, String type, CollectionReference? otherItems, Map? args, String? targetUrl){
+Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext context) getItem, String type, CollectionReference? otherItems, Map? args, String? targetUrl, {bool silentOverwrite = false}){
   UpdateResult ur = UpdateResult(success: false, message: "", type: "empty");
   bool isButtonClicked = false;
   FirestoreItem item = getItem(context);
@@ -63,10 +63,15 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
                                 ));
                           }
                           else{
+                            //close delete confirmation dialog
+                            Navigator.pop(context);
                             if(args != null && targetUrl != null){
+                              //close the current page and the page before and go to the target page
+                              //this basically updates the page before
                               Navigator.pop(context);
                               Navigator.popAndPushNamed(context, targetUrl, arguments: args);
                             } else {
+                              //close the page and go to page before (not updating the page before)
                               Navigator.pop(context);
                             }
                           }
@@ -88,7 +93,7 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
             isButtonClicked = true;
             FirestoreItem item = getItem(context);
             item.responsible = sps.userName;
-            ur = await item.save(otherItems: otherItems, allowOverwrite: false, type: type);
+            ur = await item.save(otherItems: otherItems, allowOverwrite: silentOverwrite, type: type);
             if(!ur.success){
               showDialog(context: context, builder: (_) =>
                   AlertDialog(

@@ -361,6 +361,7 @@ class _EditChickState extends State<EditChick> {
                       //make a bird
                       Bird bird = Bird(
                           ringed_date: date,
+                          ringed_as_chick: true,
                           band: band,
                           species: _species,
                           age: _age,

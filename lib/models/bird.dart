@@ -18,6 +18,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
   String? responsible;
   String? species;
   DateTime ringed_date;
+  bool ringed_as_chick = true;
   DateTime? last_modified;
   String? egg;
   List<Measure>? measures = [];
@@ -33,6 +34,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
       {this.id,
       required this.ringed_date,
       required this.band,
+      required this.ringed_as_chick,
       this.color_band,
       this.responsible,
       this.nest_year,
@@ -111,6 +113,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
     return (Bird(
       id: snapshot.id,
       ringed_date: (json['ringed_date'] as Timestamp).toDate(),
+      ringed_as_chick: json["ringed_as_chick"] ?? true,
       band: json["band"] ?? '',
       color_band: json["color_band"] ?? null,
       responsible: json["responsible"] ?? null,
@@ -138,6 +141,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
   Map<String, dynamic> toJson() {
     return {
       'ringed_date': ringed_date,
+      'ringed_as_chick': ringed_as_chick,
       'band': band,
       'color_band': color_band,
       'responsible': responsible,
@@ -160,7 +164,38 @@ class Bird implements FirestoreItem, ExperimentedItem {
     };
   }
 
-  Future<UpdateResult> _saveBirdToFirestore(CollectionReference birds) async {
+  Future<UpdateResult> _checkNestChange(CollectionReference? nestsItemCollection, Bird prevBird) async {
+    if (nest != null && nest != prevBird.nest && nestsItemCollection != null) {
+      if (prevBird.nest != null) {
+        return(prevBird.updateNestParent(nestsItemCollection, delete: true));
+      }
+    }
+    return UpdateResult.saveOK(item: this);
+
+  }
+
+  Future<UpdateResult> _saveBirdToFirestore(CollectionReference birds, CollectionReference? nestsItemCollection) async {
+    Bird? prevBird = await birds.doc(band).get().then((value) {
+      if (!value.exists) {
+        return null;
+      }
+      return Bird.fromQuerySnapshot(value);
+    });
+    if (prevBird != null) {
+      //handle legacy birds
+      if (prevBird.last_modified == null) {
+        //write the previous value to changelog just in case
+        ringed_as_chick = true;
+        await birds
+            .doc(band)
+            .collection("changelog")
+            .doc(ringed_date.toString())
+            .set(prevBird.toJson());
+      }
+      //handle nest change of parents on nests
+      await _checkNestChange(nestsItemCollection, prevBird);
+    }
+    ringed_date =prevBird?.ringed_date ?? ringed_date;
     await birds.doc(band).set(toJson());
     await _saveToChangelog(birds);
     return UpdateResult.saveOK(item: this);
@@ -174,13 +209,13 @@ class Bird implements FirestoreItem, ExperimentedItem {
     if (nest?.isEmpty ?? true) {
       return UpdateResult.saveOK(item: this);
     } else if (isParent) {
-      return _updateNestParent(nestsItemCollection);
+      return updateNestParent(nestsItemCollection);
     } else {
       return _updateNestEgg(nestsItemCollection);
     }
   }
 
-  Future<UpdateResult> _updateNestParent(CollectionReference nestsItemCollection,
+  Future<UpdateResult> updateNestParent(CollectionReference nestsItemCollection,
       {bool delete = false}) async {
     try {
       Nest? nestObj = await nestsItemCollection.doc(nest).get().then((value) {
@@ -225,10 +260,12 @@ class Bird implements FirestoreItem, ExperimentedItem {
     return UpdateResult.saveOK(item: this);
   }
 
-  Future<UpdateResult> _saveBird(CollectionReference birds, CollectionReference nestsItemCollection, bool isParent) async {
+  Future<UpdateResult> _saveBird(CollectionReference birds, CollectionReference? nestsItemCollection, bool isParent) async {
     try {
-      await _saveBirdToFirestore(birds);
-      await _updateNest(nestsItemCollection, isParent);
+      await _saveBirdToFirestore(birds, nestsItemCollection);
+      if(nestsItemCollection != null){
+        await _updateNest(nestsItemCollection, isParent);
+      }
       return UpdateResult.saveOK(item: this);
     } catch (error) {
       return UpdateResult.error(message: "Error saving bird");
@@ -237,10 +274,10 @@ class Bird implements FirestoreItem, ExperimentedItem {
 
 
   Future<UpdateResult> _write2Firestore(CollectionReference birds,
-      CollectionReference nestsItemCollection, bool isParent) async {
+      CollectionReference? nestsItemCollection, bool isParent) async {
     // take ony those measures where value is not empty
     if (nest != null) {
-      if (nest!.isNotEmpty) {
+      if (nest!.isNotEmpty && nestsItemCollection != null) {
         nestsItemCollection = isParent
             ? nestsItemCollection
             : nestsItemCollection.doc(nest).collection("eggs");
@@ -266,15 +303,6 @@ class Bird implements FirestoreItem, ExperimentedItem {
       if (band.isEmpty) {
         // it has a nest and a color band
         if (current_nest.isNotEmpty && name.isNotEmpty && otherItems != null) {
-          //show a snackbar saying that this is saved only under nest because metal band is missing
-          SnackBar(
-            content: Text(
-                "Metal band is missing, accessible only under nest only",
-                style: TextStyle(color: Colors.white)),
-            duration: Duration(seconds: 5),
-            backgroundColor: Colors.red,
-          );
-
           //save only to nest parents not all birds
           return (await _updateNest(otherItems, isParent));
         }
@@ -284,27 +312,14 @@ class Bird implements FirestoreItem, ExperimentedItem {
       CollectionReference birds =
           FirebaseFirestore.instance.collection("Birds");
 
-      if (allowOverwrite && otherItems != null) {
+      if (allowOverwrite) {
         return await _write2Firestore(birds, otherItems, isParent);
-      } else if (otherItems != null) {
+      } else {
         return await birds.doc(band).get().then((value) {
           if (!value.exists) {
             return _write2Firestore(birds, otherItems, isParent);
           } else {
-            Bird prevBird = Bird.fromQuerySnapshot(value);
-            //this needs to be fixed only for birds ringed as chicks
-            if (prevBird.last_modified == null) {
-              //write the previous value to changelog just in case
-              return (birds
-                  .doc(band)
-                  .collection("changelog")
-                  .doc(ringed_date.toString())
-                  .set(prevBird.toJson())
-                  .then((value) => UpdateResult.error(
-                      message: " Bird with this band already exists! ")));
-            }
-            return UpdateResult.error(
-                message: " Bird with this band already exists! ");
+            return UpdateResult.error(message: " Bird with this band already exists! ");
           }
         });
       }
@@ -319,7 +334,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
       type = "parent"}) async {
     // delete from the nest as well if asked for
     if (otherItems != null && type == "parent") {
-      await _updateNestParent(otherItems, delete: true);
+      await updateNestParent(otherItems, delete: true);
     }
     CollectionReference items = FirebaseFirestore.instance.collection("Birds");
     //check if the item exists
@@ -370,6 +385,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
 Bird birdFromJson(Map<String, dynamic> json) {
   return Bird(
       ringed_date: (json['ringed_date'] as Timestamp).toDate(),
+      ringed_as_chick: json['ringed_as_chick'] ?? true,
       band: json['band'],
       color_band: json['color_band']);
 }
