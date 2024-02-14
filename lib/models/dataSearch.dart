@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 
 class DataSearch extends SearchDelegate<String> {
   final List<String> items;
+  final String hintText;
 
-  DataSearch(this.items);
+  DataSearch(this.items, this.hintText)
+      : super(
+    searchFieldStyle: TextStyle(color: Colors.black87), // Set your desired color here
+  );
 
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -42,26 +46,34 @@ class DataSearch extends SearchDelegate<String> {
         : items.where((p) => p.startsWith(query)).toList();
 
     return ListView.builder(
-      itemBuilder: (context, index) => ListTile(
+      itemBuilder: (context, index) => Padding(
+          padding: const EdgeInsets.all(5.0),
+          child:ListTile(
         onTap: () {
           close(context, suggestionList[index]);
         },
-        title: RichText(
-          text: TextSpan(
-            text: suggestionList[index].substring(0, query.length),
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-            ),
-            children: [
-              TextSpan(
-                text: suggestionList[index].substring(query.length),
-                style: TextStyle(color: Colors.grey),
+        title: Padding(
+          padding: const EdgeInsets.all(5.0),
+          child: RichText(
+            text: TextSpan(
+              text: 'add $hintText: ',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 20, // Increased text size
               ),
-            ],
+              children: [
+                TextSpan(
+                  text: '${suggestionList[index]}',
+                  style: TextStyle(
+                    color: Colors.yellow,
+                    fontSize: 20, // Increased text size
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
+      )),
       itemCount: suggestionList.length,
     );
   }

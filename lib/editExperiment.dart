@@ -18,6 +18,9 @@ class EditExperiment extends StatefulWidget {
 class _EditExperimentState extends State<EditExperiment> {
   SharedPreferencesService? sps;
   CollectionReference experiments = FirebaseFirestore.instance.collection('experiments');
+  CollectionReference nestsCollection = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
+  CollectionReference birdsCollection = FirebaseFirestore.instance.collection('Birds');
+  CollectionReference? otherCollection;
   Experiment experiment = Experiment(
     name: "",
     year: DateTime.now().year,
@@ -37,6 +40,7 @@ class _EditExperimentState extends State<EditExperiment> {
         map = map as Map<String, dynamic>;
         if (map["experiment"] != null) {
           experiment = map["experiment"] as Experiment;
+          otherCollection = getOtherItems(experiment.type);
         }
       }
       setState(() {  });
@@ -56,12 +60,9 @@ class _EditExperimentState extends State<EditExperiment> {
 
   CollectionReference? getOtherItems(String type) {
     if (type == "nest") {
-      return FirebaseFirestore.instance.collection(DateTime
-          .now()
-          .year
-          .toString());
+      return nestsCollection;
     } else if (type == "bird") {
-      return FirebaseFirestore.instance.collection("Birds");
+      return birdsCollection;
     } else {
       return null;
     }
@@ -78,20 +79,25 @@ class _EditExperimentState extends State<EditExperiment> {
           return Text("Loading");
         }
         List<String> items = snapshot.data!.docs.map((doc) => doc.id).toList();
-        return IconButton(
+        return ElevatedButton.icon(
           icon: Icon(Icons.search),
+          label: Text('Select ${experiment.type}s'),
           onPressed: () async {
             final String? selected = await showSearch(
               context: context,
-              delegate: DataSearch(items),
+              delegate: DataSearch(items, experiment.type),
             );
+            print(selected);
             if (selected != null) {
+              setState(() {
               if(experiment.type == "nest"){
                 experiment.nests!.add(selected);
               } else if(experiment.type == "bird"){
                 experiment.birds!.add(selected);
               }
+              });
             }
+
           },
         );
       },
@@ -99,18 +105,18 @@ class _EditExperimentState extends State<EditExperiment> {
   }
 
 
-  Row getDropdownWithLabel(CollectionReference? otherItems) {
+  Row getDropdownWithLabel(String title, CollectionReference? otherItems) {
     return Row(
       children: [
-        Text('Select Type: '), // This is the label
+        Text(title), // This is the label
         DropdownButton(
           value: experiment.type,
-          hint: Text('Select Type'), // This is the placeholder
+          hint: Text(title), // This is the placeholder
           items: types,
           onChanged: (value) {
             setState(() {
               experiment.type = value.toString();
-              otherItems = getOtherItems(experiment.type);
+              otherCollection = getOtherItems(experiment.type);
             });
           },
         ),
@@ -119,6 +125,7 @@ class _EditExperimentState extends State<EditExperiment> {
   }
   Experiment getExperiment(BuildContext context) {
     experiment.last_modified = DateTime.now();
+    otherCollection = getOtherItems(experiment.type);
     return experiment;
   }
 
@@ -143,17 +150,11 @@ class _EditExperimentState extends State<EditExperiment> {
             onChanged: (String? value) => experiment.description = value!,
           ),
           SizedBox(height:15),
-          TextFormField(
-            initialValue: experiment.year.toString(),
-            decoration: InputDecoration(labelText: "Year"),
-            onChanged: (String? value) => experiment.year = int.parse(value!),
-          ),
-          SizedBox(height:15),
-          getDropdownWithLabel(otherItems),
+          getDropdownWithLabel("Select type: ", otherItems),
           SizedBox(height:15),
           selectOtherItems(otherItems!),
           SizedBox(height:15),
-          experiment.getItemsRow(context),
+          experiment.getItemsList(context, setState),
           SizedBox(height:15),
           ElevatedButton(
             onPressed: () {
@@ -173,6 +174,7 @@ class _EditExperimentState extends State<EditExperiment> {
                       ElevatedButton(
                         child: const Text('Got it'),
                         onPressed: () {
+                          setState((){});
                           Navigator.of(context).pop();
                         },
                       ),
@@ -181,13 +183,13 @@ class _EditExperimentState extends State<EditExperiment> {
                 },
               );
             },
-            child: Text("Pick Color"),
+            child: Padding(child: Text("Pick Color"), padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15)),
             style: ButtonStyle(
               backgroundColor: MaterialStateProperty.all(experiment.color),
             ),
           ),
-          SizedBox(height:15),
-          modifingButtons(context, getExperiment, experiment.type, otherItems, null,null),
+          SizedBox(height:30),
+          modifingButtons(context, getExperiment, experiment.type, otherCollection, {}, "/listExperiments"),
 
         ],
       )),

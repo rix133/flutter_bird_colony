@@ -4,7 +4,7 @@ import 'package:kakrarahu/editParent.dart';
 import 'package:kakrarahu/homepage.dart';
 import 'package:kakrarahu/listBirds.dart';
 import 'package:kakrarahu/listExperiments.dart';
-import 'package:kakrarahu/listNests.dart';
+//import 'package:kakrarahu/listNests.dart';
 import 'package:kakrarahu/nestManage.dart';
 import 'package:kakrarahu/nestsNearby.dart';
 import 'package:kakrarahu/settings.dart';
@@ -117,7 +117,7 @@ class MyApp extends StatelessWidget {
         '/editParent':(context)=>EditParent(),
         '/listBirds':(context)=>ListBirds(),
         '/listExperiments':(context)=>ListExperiments(),
-        '/listNests':(context)=>ListNests(),
+        //'/listNests':(context)=>ListNests(),
         '/editExperiment':(context)=>EditExperiment(),
 
 

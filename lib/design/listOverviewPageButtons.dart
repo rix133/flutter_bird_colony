@@ -24,7 +24,7 @@ SingleChildScrollView listOverviewPageButtons(BuildContext context) {
       ),
       ElevatedButton.icon(
         onPressed: ModalRoute.of(context)?.settings.name == "/listNests" ? null : () {
-          Navigator.popAndPushNamed(context, "/listNests");
+          //Navigator.popAndPushNamed(context, "/listNests");
         },
         icon: Icon(
           Icons.home,

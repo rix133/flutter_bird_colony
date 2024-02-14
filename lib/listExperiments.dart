@@ -88,9 +88,10 @@ class _ListExperimentsState extends State<ListExperiments> {
                             List<Experiment> exps = snapshot.data!.docs
                                 .map((DocumentSnapshot e) => Experiment.fromQuerySnapshot(e))
                                  .where((Experiment e) => e.year == _selectedYear)
-                                .where((Experiment e) => e.name.toLowerCase().contains(searchController.text.toLowerCase()) || e.nests!.contains(searchController.text))
+                                .where((Experiment e) => e.name.toLowerCase().contains(searchController.text.toLowerCase()) || (e.nests?.contains(searchController.text) ?? false))
                                 .toList();
                             return ListView(
+                              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                               children: [
                                 ...exps.map((Experiment e)=>e.getListTile(context, sps.userName))
                               ],
@@ -111,9 +112,8 @@ class _ListExperimentsState extends State<ListExperiments> {
                           Navigator.pushNamed(context, '/editExperiment');
                         },
                         icon: Icon(Icons.add),
-                        label: Text("Add Experiment"),
+                        label: Padding(child:Text("Add Experiment", style: TextStyle(fontSize: 18)), padding: EdgeInsets.all(12)),
                         style: ButtonStyle(
-                            textStyle: MaterialStateProperty.all(TextStyle(fontSize: 20)),
                             backgroundColor: MaterialStateProperty.all(Colors.grey)
                         )
                       ),

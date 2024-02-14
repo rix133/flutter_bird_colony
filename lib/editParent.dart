@@ -63,7 +63,7 @@ class _EditParentState extends State<EditParent> {
     name: "nest",
     value: "",
     isNumber: true,
-    unit: "",
+    unit: DateTime.now().year.toString(),
     modified: DateTime.now(),
   );
 
@@ -113,11 +113,18 @@ class _EditParentState extends State<EditParent> {
             bird = await birds
                 .doc(bird.band)
                 .get()
-                .then((DocumentSnapshot value) => Bird.fromQuerySnapshot(value));
-          } else{
-            bird.nest = nest.name;
-            bird.nest_year = nest.discover_date.year;
-            bird.species = nest.species;
+                .then((DocumentSnapshot value) =>
+                Bird.fromQuerySnapshot(value));
+          }else{
+            if (map["nest"] != null) {
+              bird.nest = nest.name;
+              bird.nest_year = nest.discover_date.year;
+              bird.species = nest.species;
+            } else {
+              if(bird.nest_year != DateTime.now().year){
+                bird.nest = "";
+              }
+            }
           }
           //check if measure is missing and add if needed
           if (bird.measures == null) {
