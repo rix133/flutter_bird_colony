@@ -7,6 +7,7 @@ import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/nest.dart';
 import 'package:kakrarahu/models/updateResult.dart';
+import 'package:kakrarahu/services/deleteService.dart';
 
 class Bird implements FirestoreItem, ExperimentedItem {
   String? id;
@@ -360,24 +361,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
           .collection("deleted");
 
       //check if the item is already in deleted collection
-      return deletedCollection.doc(id).get().then((doc) {
-        if (doc.exists == false) {
-          return deletedCollection.doc(id).set(toJson()).then((value) => items
-              .doc(id)
-              .delete()
-              .then((value) => UpdateResult.deleteOK(item: this))
-              .catchError((error) => UpdateResult.error(message: error.toString())));
-        } else {
-          return deletedCollection
-              .doc('${id}_${DateTime.now().toString()}')
-              .set(toJson())
-              .then((value) => items
-                  .doc(id)
-                  .delete()
-                  .then((value) => UpdateResult.deleteOK(item: this))
-                  .catchError((error) => UpdateResult.error(message: error)));
-        }
-      }).catchError((error) => UpdateResult.error(message: error));
+      return deleteFiresoreItem(this, items, deletedCollection);
     }
   }
 }

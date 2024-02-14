@@ -6,6 +6,7 @@ import 'package:kakrarahu/models/experimented_item.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
+import 'package:kakrarahu/services/deleteService.dart';
 
 
 class Nest implements FirestoreItem, ExperimentedItem {
@@ -106,6 +107,14 @@ class Nest implements FirestoreItem, ExperimentedItem {
           unit: "",
           modified: nnest.last_modified));
     }}
+    if(nnest.measures.isEmpty){
+      nnest.measures.add(Measure(
+          name: "note",
+          value: "",
+          isNumber: false,
+          unit: "",
+          modified: nnest.last_modified));
+    }
     return nnest;
   }
 
@@ -131,6 +140,9 @@ class Nest implements FirestoreItem, ExperimentedItem {
     if (name.isEmpty) {
       return UpdateResult.error(message: "Nest name can't be empty");
     }
+    //remove empty measures
+    measures.removeWhere((element) => element.value.isEmpty);
+
     CollectionReference nests =
     FirebaseFirestore.instance.collection(DateTime
         .now()
@@ -172,21 +184,7 @@ class Nest implements FirestoreItem, ExperimentedItem {
           .collection("deleted");
 
       //check if the item is already in deleted collection
-      return deletedCollection.doc(id).get().then((doc) {
-        if (doc.exists == false) {
-          return deletedCollection
-              .doc(id)
-              .set(toJson())
-              .then((value) => items.doc(id).delete().then((value) => UpdateResult.deleteOK(item: this)))
-              .catchError((error) => UpdateResult.error(message: error.toString()));
-        } else {
-          return deletedCollection
-              .doc('${id}_${DateTime.now().toString()}')
-              .set(toJson())
-              .then((value) => items.doc(id).delete().then((value) => UpdateResult.deleteOK(item: this)))
-              .catchError((error) => UpdateResult.error(message: error.toString()));
-        }
-      }).catchError((error) => UpdateResult.error(message: error.toString()));
+      return deleteFiresoreItem(this, items, deletedCollection);
     }
   }
 

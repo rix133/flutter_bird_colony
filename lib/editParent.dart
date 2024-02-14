@@ -67,6 +67,14 @@ class _EditParentState extends State<EditParent> {
     modified: DateTime.now(),
   );
 
+  Measure fid = Measure(
+    name: "0_FID",
+    value: "",
+    isNumber: true,
+    unit: "m",
+    modified: DateTime.now(),
+  );
+
   Bird bird = Bird(
     species: "",
     ringed_date: DateTime.now(),
@@ -99,7 +107,7 @@ class _EditParentState extends State<EditParent> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final sps = Provider.of<SharedPreferencesService>(context, listen: false);
       var map = ModalRoute.of(context)?.settings.arguments;
-      List<Measure> allMeasures = [note, head, gland, age];
+      List<Measure> allMeasures = [note, head, gland, age, fid];
       if (map != null) {
         map = map as Map<String, dynamic>;
         if (map["nest"] != null) {
@@ -243,6 +251,7 @@ class _EditParentState extends State<EditParent> {
   }
 
   void addMeasure(Measure m) {
+    bird.measures = bird.measures!.map((e) => e..value= e.valueCntr.text).toList();
     setState(() {
       bird.measures!.add(m);
       bird.measures!.sort();

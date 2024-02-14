@@ -39,6 +39,9 @@ class Measure implements Comparable<Measure>{
         child: TextFormField(
           keyboardType: isNumber?TextInputType.number:TextInputType.text,
           controller: valueCntr,
+          onChanged: (value) {
+            this.value = value;
+          },
           textAlign: TextAlign.center,
           decoration: InputDecoration(
             labelText: name +  (unit == "" ? "" : " (" + unit + ")"),

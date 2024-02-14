@@ -5,6 +5,10 @@ import 'package:kakrarahu/models/experimented_item.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:kakrarahu/models/updateResult.dart';
+import 'package:kakrarahu/services/deleteService.dart';
+
+import 'bird.dart';
+import 'nest.dart';
 
 class Experiment implements FirestoreItem {
   String? id;
@@ -21,7 +25,8 @@ class Experiment implements FirestoreItem {
   DateTime? last_modified;
   DateTime? created = DateTime.now();
 
-  List<String> previousOtherItems = [];
+  List<String> previousNests = [];
+  List<String> previousBirds = [];
 
   Experiment({this.id,
     required this.name,
@@ -48,11 +53,8 @@ class Experiment implements FirestoreItem {
     color = Color(int.parse(json['color']));
     last_modified = (json['last_modified'] as Timestamp).toDate();
     created = (json['created'] as Timestamp).toDate();
-    if(type=="nest"){
-      previousOtherItems = nests ?? [];
-    } else if(type=="bird"){
-      previousOtherItems = birds ?? [];
-    }
+    previousBirds = List.from(birds ?? []);
+    previousNests = List.from(nests ?? []);
   }
 
   Map<String, dynamic> toSimpleJson() {
@@ -176,29 +178,54 @@ class Experiment implements FirestoreItem {
   }
 
 
+  Future<UpdateResult> _updateNestCollection(List<String>? items, {bool delete = false}) async {
+    CollectionReference nestCollection =  FirebaseFirestore.instance.collection(year.toString());
+    if(items != null){
+      Nest n;
+      for(String i in items){
+         await nestCollection.doc(i).get().then((DocumentSnapshot value) => {
+          if(value.exists){
+            n = Nest.fromQuerySnapshot(value),
+            n.experiments = n.experiments?.where((element) => element.id != id).toList(),
+            if(!delete){
+              n.experiments?.add(this),
+            },
+            nestCollection.doc(i).update({'experiments': n.experiments?.map((e) => e.toSimpleJson()).toList()})
+          }
+        });
+      }
+    }
+    return UpdateResult.saveOK(item: this);
+  }
+
+  Future<UpdateResult> _updateBirdsCollection(List<String>? items, {bool delete = false}) async {
+    CollectionReference birdCollection =  FirebaseFirestore.instance.collection(year.toString());
+    if(items != null){
+      Bird b;
+      for(String i in items){
+         await birdCollection.doc(i).get().then((DocumentSnapshot value) => {
+          if(value.exists){
+            b = Bird.fromQuerySnapshot(value),
+            b.experiments = b.experiments?.where((element) => element.id != id).toList(),
+            if(!delete){
+              b.experiments?.add(this),
+            },
+            birdCollection.doc(i).update({'experiments': b.experiments?.map((e) => e.toSimpleJson()).toList()})
+          }
+        });
+      }
+    }
+    return UpdateResult.saveOK(item: this);
+  }
+
+
   @override
   Future<UpdateResult> delete({CollectionReference<
       Object?>? otherItems = null, bool soft = true, String type = "default"}) {
     CollectionReference expCollection =   FirebaseFirestore.instance.collection('experiments');
-    if(otherItems != null){
-      List <String> otherData = [];
-      if(type == "nest"){
-        otherData = nests!;
-      } else if(type == "bird"){
-        otherData = birds!;
-      }
-      List<Experiment> presentExperiments = [];
-        otherData.forEach((element) {
-          otherItems!.doc(element).get().then((value) => {
-            if(value.exists){
-              presentExperiments = value["experiments"].map((e) => e.experimentFromJson(e)).toList(),
-              presentExperiments.removeWhere((element) => element.id == id),
-              otherItems!.doc(element).update({"experiments": presentExperiments.map((e) => e.toSimpleJson()).toList()})
-            }
-          });
-        });
 
-    }
+    _updateNestCollection(previousNests, delete: true);
+    _updateBirdsCollection(previousBirds, delete: true);
 
     if (!soft) {
       return expCollection
@@ -212,22 +239,7 @@ class Experiment implements FirestoreItem {
           .doc("experiments")
           .collection("deleted");
 
-      //check if the item is already in deleted collection
-      return deletedCollection.doc(id).get().then((doc) {
-        if (doc.exists == false) {
-          return deletedCollection
-              .doc(id)
-              .set(toJson())
-              .then((value) => expCollection.doc(id).delete().then((value) => UpdateResult.deleteOK(item: this)))
-              .catchError((error) => UpdateResult.error(message: error.toString()));
-        } else {
-          return deletedCollection
-              .doc('${id}_${DateTime.now().toString()}')
-              .set(toJson())
-              .then((value) => expCollection.doc(id).delete().then((value) => UpdateResult.deleteOK(item: this)))
-              .catchError((error) => UpdateResult.error(message: error.toString()));
-        }
-      }).catchError((error) => UpdateResult.error(message: error.toString()));
+      return deleteFiresoreItem(this, expCollection, deletedCollection);
     }
   }
 
@@ -235,6 +247,9 @@ class Experiment implements FirestoreItem {
   Future<UpdateResult> save({CollectionReference<
       Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"}) {
     CollectionReference expCollection =   FirebaseFirestore.instance.collection('experiments');
+    print(previousNests);
+    print(nests);
+
     last_modified = DateTime.now();
     //remove duplicate nests
     if(nests != null){
@@ -243,53 +258,24 @@ class Experiment implements FirestoreItem {
     if(birds != null){
       birds = birds!.toSet().toList();
     }
-    List <String> otherData = [];
-    List<dynamic> presentExperiments = [];
     //get items that are missing from otherdata but exist in previousOtherItems
-    List<String> deletedItems = previousOtherItems.where((element) => !otherData.contains(element)).toList();
-    if(otherItems != null){
-      if(type == "nest"){
-        otherData = nests!;
-      } else if(type == "bird"){
-        otherData = birds!;
-      }
-    }
+    List<String> deletedNests = previousNests.where((element) => !nests!.contains(element)).toList();
+    List<String> deletedBirds = previousBirds.where((element) => !birds!.contains(element)).toList();
+    print(deletedNests);
 
     if (id == null) {
       created = DateTime.now();
       id = created!.toIso8601String();
     }
+
+    //save the experiment data to nests or birds
+    _updateNestCollection(nests, delete: false);
+    _updateNestCollection(deletedNests, delete: true);
+    _updateBirdsCollection(birds, delete: false);
+    _updateBirdsCollection(deletedBirds, delete: true);
+
       return(expCollection.doc(id).set(toJson()).then((value) =>
       {
-        if(otherItems != null){
-          //save the experiment data to nests or birds
-        for(String d in otherData){
-          otherItems!.doc(d).get().then((DocumentSnapshot value) => {
-            if(value.exists){
-              presentExperiments = value.get("experiments")?.map((e) => experimentFromJson(e)).toList() ?? [],
-              //check if the experiment is already in the list by id
-              if(!presentExperiments.any((element) => element.id == id)){
-                presentExperiments.add(this),
-                otherItems!.doc(d).update({"experiments": presentExperiments.map((e) => e.toSimpleJson()).toList()})
-              } else {
-                //update the experiment in the list
-                presentExperiments[presentExperiments.indexWhere((element) => element.id == id)] = this,
-                otherItems!.doc(d).update({"experiments": presentExperiments.map((e) => e.toSimpleJson()).toList()})
-              }
-            }
-          }
-          )},
-        //remove the deleted items from the nests or birds
-        for(String d in deletedItems){
-          otherItems!.doc(d).get().then((DocumentSnapshot value) => {
-            if(value.exists){
-              presentExperiments = value.get("experiments")?.map((e) => e.experimentFromJson(e)).toList() ?? [],
-              presentExperiments.removeWhere((element) => element.id == id),
-              otherItems!.doc(d).update({"experiments": presentExperiments.map((e) => e.toSimpleJson()).toList()})
-            }
-          }),
-        }
-        },
         expCollection
             .doc(id)
             .collection("changelog")
@@ -323,7 +309,7 @@ Widget listExperiments(ExperimentedItem item) {
           Text("Exp. "),
           ...?item.experiments?.map((e) =>
               ElevatedButton(
-                onPressed: null,
+                onPressed: () => null,
                 child: Text(e.name),
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(e.color),
