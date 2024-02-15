@@ -1,11 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
+import 'package:kakrarahu/models/nest.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
 class Egg implements FirestoreItem{
   String? id;
-  Timestamp discover_date;
+  DateTime discover_date;
   String? responsible;
   String? ring;
   String status;
@@ -21,11 +23,11 @@ class Egg implements FirestoreItem{
   String get name => id ?? "New Egg";
 
   @override
-  factory Egg.fromQuerySnapshot(DocumentSnapshot<Object?> snapshot) {
+  factory Egg.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     return (Egg(
         id: snapshot.id,
-        discover_date: json['discover_date'],
+        discover_date: (json['discover_date'] as Timestamp).toDate(),
         responsible: json["responsible"],
         ring: json['ring'],
         status: json['status']
@@ -40,6 +42,49 @@ class Egg implements FirestoreItem{
   @override
   Future <UpdateResult> delete({CollectionReference<Object?>? otherItems = null, bool soft = true, type = "default"}) async {
     throw UnimplementedError();
+  }
+
+  int getNr(){
+    return(int.tryParse(id?.split(" ")[2] ?? "0") ?? 0);
+  }
+
+  ElevatedButton getButton(BuildContext context, Nest? nest){
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+          backgroundColor: status == "intact" ||
+              status == "unknown"
+              ? Colors.green
+              : (status == "broken" ||
+              status == "missing" ||
+              status == "predated" ||
+              status == "drowned"
+              ? Colors.red
+              : Colors.orange[800])),
+      child: (Text("Egg " +
+          getNr().toString() +
+          " $status" +
+          (ring != null
+              ? "/" +
+              ring!
+              : ""))),
+      onPressed: () {
+        Navigator.pushNamed(context, "/eggs",
+            arguments: {
+              "sihtkoht": nest!.name,
+              "egg": id,
+            });
+      },
+      onLongPress: () {
+        Navigator.pushNamed(
+            context, "/editChick",
+            arguments: {
+              "pesa": nest!.name,
+              "muna_nr": (id).toString(),
+              "species": nest!.species,
+              "age": "1"
+            });
+      },
+    );
   }
 
   @override

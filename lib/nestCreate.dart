@@ -254,10 +254,11 @@ class _PesaState extends State<Pesa> {
                           addItem(species.text, "species");
                           addItem(remark.text, "remark");
                           addItem(time, "last_modified");
+                          addItem(time, "discover_date");
                           addItem([], "experiments");
                           addItem(sihtkoht, "id");
                           exists = await pesa.doc(sihtkoht).get();
-                          if (exists.exists == false&&accuracy!="loading...") {
+                          if (exists.exists == false && accuracy!="loading...") {
                             print("ei eksisteeri");
                             pesa.doc(sihtkoht).set(map);
                             pesa

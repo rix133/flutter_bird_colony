@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/experimented_item.dart';
@@ -64,8 +65,49 @@ class Nest implements FirestoreItem, ExperimentedItem {
     return false;
   }
 
+  Marker getMarker(BuildContext context, bool visibility){
+    return Marker(
+        infoWindow: InfoWindow(
+            title: id,
+            onTap: () => Navigator.pushNamed(context, "/nestManage",
+                arguments: {"sihtkoht": id})),
+        consumeTapEvents: false,
+        visible: visibility,
+        markerId: MarkerId(id!),
+        //visible: snapshot.data!.docs[i].get("last_modified").toDate().day==today,
+        icon: BitmapDescriptor.defaultMarkerWithHue(getMarkerColor()),
+        position: LatLng(coordinates.latitude, coordinates.longitude));
+  }
+
+  getMarkerColor() {
+    if (completed != null) {
+      if(completed!){
+        return BitmapDescriptor.hueAzure;
+      }
+    }
+    if(first_egg != null){
+      if(DateTime.now().difference(first_egg!).inDays > 10){
+        return BitmapDescriptor.hueMagenta;
+      }
+    }
+
+    if (chekedAgo() > Duration(days: 3)) {
+      return BitmapDescriptor.hueRed;
+    }
+    else if (!checkedToday()) {
+      return BitmapDescriptor.hueYellow;
+    }
+    return BitmapDescriptor.hueGreen;
+  }
+
+  checkedToday() {
+    return last_modified.toIso8601String().split("T")[0] ==
+        DateTime.now().toIso8601String().split("T")[0];
+  }
+
+
   @override
-  factory Nest.fromQuerySnapshot(DocumentSnapshot<Object?> snapshot) {
+  factory Nest.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     Nest nnest = Nest(
         id: snapshot.id,
@@ -108,7 +150,7 @@ class Nest implements FirestoreItem, ExperimentedItem {
           unit: "",
           modified: nnest.last_modified));
     }}
-    if(nnest.measures.isEmpty){
+    if(nnest.measures.where((element) => element.name == "note").isEmpty){
       nnest.measures.add(Measure(
           name: "note",
           type: "nest",
@@ -117,6 +159,18 @@ class Nest implements FirestoreItem, ExperimentedItem {
           unit: "",
           modified: nnest.last_modified));
     }
+    //add measures from experments to the nest
+    nnest.experiments?.forEach((Experiment e) {
+      e.measures?.forEach((Measure m) {
+        nnest.measures.where((element) => element.name == m.name).isEmpty
+            ? nnest.measures.add(m)
+            : nnest.measures
+            .where((element) => element.name == m.name)
+            .first
+            .value = m.value;
+      });
+    });
+    nnest.measures.sort();
     return nnest;
   }
 

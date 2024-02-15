@@ -109,7 +109,7 @@ class MyApp extends StatelessWidget {
         '/nestsNearby':(context)=> const NestsNearby(),
         '/nestManage':(context)=> const NestManage(),
         '/settings':(context)=>  SettingsPage(),
-        '/map':(context)=> Map(),
+        '/map':(context)=> NestsMap(),
         '/statistics':(context)=> Statistics(),
         '/mapforcreate':(context)=>MapForCreate(),
         '/findNest':(context)=>FindNest(),

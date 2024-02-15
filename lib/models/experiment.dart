@@ -1,9 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:kakrarahu/models/experimented_item.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/deleteService.dart';
@@ -181,8 +179,9 @@ class Experiment implements FirestoreItem {
     );
   }
 
+
   void showNestMap(BuildContext context) {
-    Navigator.pushNamed(context, "/map", arguments: {'nests': nests});
+    Navigator.pushNamed(context, "/map", arguments: {'nests_ids': nests});
   }
 
 
@@ -193,7 +192,7 @@ class Experiment implements FirestoreItem {
       for(String i in items){
          await nestCollection.doc(i).get().then((DocumentSnapshot value) => {
           if(value.exists){
-            n = Nest.fromQuerySnapshot(value),
+            n = Nest.fromDocSnapshot(value),
             n.experiments = n.experiments?.where((element) => element.id != id).toList(),
             if(!delete){
               n.experiments?.add(this),

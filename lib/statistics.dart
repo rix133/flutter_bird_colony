@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/models/nest.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'search.dart' as globals;
 import 'species.dart';
 
 class Statistics extends StatefulWidget {
@@ -24,7 +23,6 @@ class _StatisticsState extends State<Statistics> {
 
   String username = "";
 
-  final search = TextEditingController();
 
   List<DropdownMenuItem<String>> timespans = <DropdownMenuItem<String>>[
     DropdownMenuItem(child: Text("All", style: TextStyle(color: Colors.deepPurpleAccent)), value: "All" ),
@@ -41,12 +39,10 @@ class _StatisticsState extends State<Statistics> {
 
   @override
   void dispose() {
-    search.dispose();
     super.dispose();
   }
 
   Widget build(BuildContext context) {
-    search.text = globals.search;
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       if (user == null) {
       } else {
@@ -137,7 +133,7 @@ class _StatisticsState extends State<Statistics> {
                         (context, AsyncSnapshot<QuerySnapshot> snapshot_nests) {
                       if (snapshot_nests.hasData) {
                         List<Nest> nests = snapshot_nests.data!.docs
-                            .map((DocumentSnapshot e) => Nest.fromQuerySnapshot(e))
+                            .map((DocumentSnapshot e) => Nest.fromDocSnapshot(e))
                             .toList();
                         nests = nests.where((Nest n) => n.timeSpan(dropdownValue)).toList();
                         nests = nests.where((Nest n) => n.people(dropdownValuePeople, username)).toList();
@@ -229,8 +225,9 @@ class _StatisticsState extends State<Statistics> {
   }
 
   void showNestsonMap(List<Nest> nests){
-    String nestList = nests.map((Nest n) => n.id).toList().join(",");
-    globals.search = "{$nestList}";
-    Navigator.pushNamed(context, "/map");
+    Set<String?> nestList = nests.map((Nest n) => n.id).toSet();
+    //remove nulls
+    nestList.removeWhere((element) => element == null);
+    Navigator.pushNamed(context, "/map", arguments: {"nest_ids": nestList});
   }
 }

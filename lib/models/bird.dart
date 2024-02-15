@@ -223,7 +223,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
         if(!value.exists) {
           return null;
         }
-        return Nest.fromQuerySnapshot(value);
+        return Nest.fromDocSnapshot(value);
       });
       if (nestObj == null) {
         return UpdateResult.error(message: "Nest: $nest not found");
