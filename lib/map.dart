@@ -19,7 +19,6 @@ class Map extends StatefulWidget {
 
 class _MapState extends State<Map> {
   var today = DateTime.now().toIso8601String().split("T")[0];
-  String get _year => DateTime.now().year.toString();
   static const kakrarahud = CameraPosition(
     target: LatLng(58.766218, 23.430432),
     bearing: 270,
@@ -33,7 +32,7 @@ class _MapState extends State<Map> {
   var rest2="";
   var rest3="";
 
-  late CollectionReference pesa;
+  CollectionReference pesa = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
   Set<Circle> circle = {
     Circle(
       circleId: CircleId("myLocEmpty"),
@@ -46,7 +45,6 @@ class _MapState extends State<Map> {
   @override
   initState() {
     super.initState();
-    pesa = FirebaseFirestore.instance.collection(_year);
   }
 
   @override
@@ -84,16 +82,13 @@ class _MapState extends State<Map> {
     }else{rest3=rest2.toString();}
     List<String> curlymap=curly.split(",");
 
-    Query redMarkerFilter=FirebaseFirestore.instance
-        .collection(_year)
+    Query redMarkerFilter=pesa
         .where("last_modified",
         isLessThanOrEqualTo: DateTime(
             rest3 == "red" ? DateTime.now().year : DateTime.now().year + 1,
             DateTime.now().month,
             DateTime.now().day));
-    Query experiment_query = rest3 == "experiment"?redMarkerFilter.where("experiment"):
-    redMarkerFilter;
-    Stream<QuerySnapshot> _nestsStream=curlymap.first!=""&&curlymap.length<=10?experiment_query.where("id",whereIn: curlymap).snapshots():experiment_query.snapshots();
+    Stream<QuerySnapshot> _nestsStream=curlymap.first!=""&&curlymap.length<=10?redMarkerFilter.where("id",whereIn: curlymap).snapshots() : pesa.snapshots();
 
     return Scaffold(
       body: StreamBuilder(
@@ -107,7 +102,6 @@ class _MapState extends State<Map> {
               for (var i = 0; i < changes.length; i++) {
                 var snap=changes[i].doc;
                 var id = snap.id;
-                var is_experiment=snap.data().toString().contains("experiment")?(snap.get("experiment")=="clean"?"clean":"polluted"):"";
                 var species=snap.get("species")??"";
                 var visibility= false;
                 var coords = snap.get("coordinates");
@@ -130,11 +124,7 @@ class _MapState extends State<Map> {
                             ? true
                             : (rest3 == id ||
                             (rest3=="today"?(snap.data().toString().contains("discover_date")?snap.get("discover_date").toDate().toIso8601String().split("T")[0].toString()==today:false):false)||
-                                rest3 == is_experiment ||
-                            rest3==name||
-                                (is_experiment == ""
-                                    ? false
-                                    : rest3 == "experiment"))))) {
+                            rest3==name)))) {
                   visibility=true;
                 }
                 markers.add(Marker(
