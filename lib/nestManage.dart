@@ -36,7 +36,6 @@ class _NestManageState extends State<NestManage> {
   Stream<QuerySnapshot> _eggStream = Stream.empty();
   late SharedPreferencesService sps;
 
-
   String get _year => DateTime.now().year.toString();
   var map = <String, dynamic>{};
 
@@ -62,19 +61,18 @@ class _NestManageState extends State<NestManage> {
       var data = ModalRoute.of(context)?.settings.arguments as Map;
 
       nests.doc(data["sihtkoht"]).get().then((value) {
-        if(value.exists){
+        if (value.exists) {
           setState(() {
             nest = Nest.fromDocSnapshot(value);
             species.text = nest!.species ?? "";
           });
         }
-
       });
     });
   }
 
   Nest getNest(BuildContext context) {
-    if(nest != null) {
+    if (nest != null) {
       nest!.species = species.text;
       nest!.responsible = sps.userName;
       return nest!;
@@ -82,9 +80,9 @@ class _NestManageState extends State<NestManage> {
     throw Exception("Nest is not initialized");
   }
 
-  StreamBuilder _getEggsStream(Stream<QuerySnapshot> _eggStream){
+  StreamBuilder _getEggsStream(Stream<QuerySnapshot> _eggStream) {
     Egg egg;
-    return(StreamBuilder<QuerySnapshot>(
+    return (StreamBuilder<QuerySnapshot>(
       stream: _eggStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -95,16 +93,15 @@ class _NestManageState extends State<NestManage> {
           return CircularProgressIndicator();
         }
 
-        if(snapshot.hasData){
-
+        if (snapshot.hasData) {
           return Container(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ...snapshot.data!.docs.map((doc) {
                   egg = Egg.fromDocSnapshot(doc);
-                  if(nest!.first_egg == null){
-                      nest!.first_egg = egg.discover_date;
+                  if (nest!.first_egg == null) {
+                    nest!.first_egg = egg.discover_date;
                   }
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -115,7 +112,6 @@ class _NestManageState extends State<NestManage> {
                   );
                 }).toList(),
                 ..._getAddEggButton(context, snapshot),
-
               ],
             ),
           );
@@ -126,11 +122,16 @@ class _NestManageState extends State<NestManage> {
     ));
   }
 
-  List<Widget> _getAddEggButton(BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot){
+  List<Widget> _getAddEggButton(
+      BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
     if (!snapshot.hasData) {
       return [Text('No data')];
     }
-    int amount = snapshot.data!.docs.map((e) => Egg.fromDocSnapshot(e)).where((e) => e.ring != null).length;
+    int amount = snapshot.data!.docs
+        .map((e) => Egg.fromDocSnapshot(e))
+        .where((e) =>
+            e.ring != null && e.discover_date.year != DateTime.now().year)
+        .length;
     return [
       Text(
         "Ringed ($amount)",
@@ -138,26 +139,29 @@ class _NestManageState extends State<NestManage> {
       ),
       ElevatedButton.icon(
           style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.grey)
-          ),
+              backgroundColor: MaterialStateProperty.all(Colors.grey)),
           onPressed: () {
             if (snapshot.data!.docs.isNotEmpty) {
               Egg egg = Egg(
                   discover_date: DateTime.now(),
                   responsible: sps.userName,
                   status: "intact",
-                  ring: null
-              );
+                  ring: null);
               new_egg_nr = snapshot.data!.docs.length + 1;
-              if(new_egg_nr == 1){nest!.first_egg = DateTime.now();}
+              if (new_egg_nr == 1) {
+                nest!.first_egg = DateTime.now();
+              }
               String eggID = nest!.name + " egg " + new_egg_nr.toString();
               nests
-                  .doc(nest!.id).collection("egg").doc(eggID)
-                  .set(egg.toJson()).whenComplete(() => nests
+                  .doc(nest!.id)
+                  .collection("egg")
                   .doc(eggID)
-                  .collection("changelog")
-                  .doc(DateTime.now().toString())
-                  .set(egg.toJson()));
+                  .set(egg.toJson())
+                  .whenComplete(() => nests
+                      .doc(eggID)
+                      .collection("changelog")
+                      .doc(DateTime.now().toString())
+                      .set(egg.toJson()));
             }
           },
           icon: Icon(
@@ -165,13 +169,15 @@ class _NestManageState extends State<NestManage> {
             size: 45,
           ),
           onLongPress: () {
-            Navigator.pushNamed(context, "/editChick",
-                arguments: {
-                  "pesa": (nest!.name).toString(),
-                  "species": nest!.species,
-                  "age": "0"
-                }
-            );
+            Navigator.pushNamed(context, "/editParent", arguments: {
+              "nest": nest,
+              //this egg has no number as it has no id
+              "egg": Egg(
+                  discover_date: DateTime.now(),
+                  responsible: sps.userName,
+                  status: "intact",
+                  ring: null),
+            });
           },
           label: Column(
             children: [
@@ -181,13 +187,10 @@ class _NestManageState extends State<NestManage> {
                 style: TextStyle(fontSize: 10),
               )
             ],
-          )
-      ),
+          )),
       SizedBox(height: 15),
     ];
   }
-
-
 
   void gotoParent() {
     Navigator.pushNamed(context, "/editParent", arguments: {
@@ -196,90 +199,88 @@ class _NestManageState extends State<NestManage> {
   }
 
   Widget _getParentsRow(List<Bird>? _parents, BuildContext context) {
-    return  SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-      child:Container(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
           height: 50.0, // Adjust this value as needed
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                  ...?_parents?.map((Bird b) {
-                  return ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, "/editParent", arguments: {
-                        "bird": b,
-                        "nest": nest,
-                      });
-                    },
-                    child: Text(b.name),
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.white60),
-                    ),
-                  );
-                }).toList(),
-              (_parents?.length == 0 || _parents == null) ? ElevatedButton.icon(
+              ...?_parents?.map((Bird b) {
+                return ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, "/editParent", arguments: {
+                      "bird": b,
+                      "nest": nest,
+                    });
+                  },
+                  child: Text(b.name),
                   style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(_getParentButtonColor())),
-                  onPressed: gotoParent,
-                  icon: Icon(
-                    Icons.add,
+                    backgroundColor: MaterialStateProperty.all(Colors.white60),
                   ),
-                  label: Text("add parent")) : IconButton(icon:Icon(Icons.add),onPressed: gotoParent, style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
-              ),),
-              _daysSinceFirstEgg() > 0 ? Align(child:Text("${_daysSinceFirstEgg()} days", style: TextStyle(fontSize: 18)),alignment: Alignment.centerLeft) : Container(),
-
+                );
+              }).toList(),
+              (_parents?.length == 0 || _parents == null)
+                  ? ElevatedButton.icon(
+                      style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all(
+                              _getParentButtonColor())),
+                      onPressed: gotoParent,
+                      icon: Icon(
+                        Icons.add,
+                      ),
+                      label: Text("add parent"))
+                  : IconButton(
+                      icon: Icon(Icons.add),
+                      onPressed: gotoParent,
+                      style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(Colors.white60),
+                      ),
+                    ),
             ],
           )),
-        );
+    );
   }
 
- void addMeasure(Measure m) {
+  void addMeasure(Measure m) {
     setState(() {
       nest!.measures.add(m);
       nest!.measures.sort();
     });
   }
 
-  Color _getParentButtonColor(){
-    if(_daysSinceFirstEgg() > 10){
-      return Colors.lightGreenAccent;
+  Color _getParentButtonColor() {
+    if (_daysSinceFirstEgg() > 10) {
+      return Colors.white60;
     }
     return Colors.grey;
   }
 
-  int _daysSinceFirstEgg(){
+  int _daysSinceFirstEgg() {
     return DateTime.now().difference(nest!.first_egg ?? DateTime.now()).inDays;
   }
 
-  Row getTitleRow(){
+  Row getTitleRow() {
     return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-      RichText(
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: nest!.name,
-              style: TextStyle(fontSize: 30, fontStyle: FontStyle.italic),
-            ),
-            WidgetSpan(
-              child: Transform.translate(
-                offset: const Offset(0.0, 5.0),
-                child: Text(
-                  nest!.checkedStr(),
-                  style: TextStyle(
-                      fontSize: 12.0,
-                      color: nest!.chekedAgo().inDays == 0 ? Colors.green : Colors.yellow.shade700
-                  ),
-                ),
-              ),
-            ),
-          ],
+      Text(
+        nest!.name,
+        style: TextStyle(fontSize: 30, fontStyle: FontStyle.italic),
+      ),
+      Align(
+        alignment: Alignment.bottomLeft,
+        child: Text(
+          nest!.checkedStr(),
+          style: TextStyle(
+              fontSize: 14.0,
+              color: nest!.chekedAgo().inDays == 0
+                  ? Colors.green
+                  : Colors.yellow.shade700),
         ),
-      )
+      ),
     ]);
   }
-
 
   Widget build(BuildContext context) {
     if (nest == null) {
@@ -302,30 +303,32 @@ class _NestManageState extends State<NestManage> {
         .collection("egg")
         .snapshots();
 
-
     return Scaffold(
       body: Align(
-        alignment: Alignment.topCenter,
-        child: SingleChildScrollView(
-        child: Container(
-          padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              getTitleRow(),
-              listExperiments(nest!), //list of experiments
-              SizedBox(height: 15),
-              buildRawAutocomplete(species, _focusNode),
-              SizedBox(height: 15),
-              ...nest!.measures.map((Measure m) => m.getMeasureFormWithAddButton(addMeasure)).toList(),
-              SizedBox(height: 15),
-              _getParentsRow(nest!.parents, context),
-            _getEggsStream(_eggStream),
-            SizedBox(height: 30),
-            modifingButtons(context, getNest, "modify", null, null, null),
-            ],
-          ),
-        ))),
+          alignment: Alignment.topCenter,
+          child: SingleChildScrollView(
+              child: Container(
+            padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                getTitleRow(),
+                listExperiments(nest!), //list of experiments
+                SizedBox(height: 15),
+                buildRawAutocomplete(species, _focusNode),
+                SizedBox(height: 15),
+                ...nest!.measures
+                    .map((Measure m) =>
+                        m.getMeasureFormWithAddButton(addMeasure))
+                    .toList(),
+                SizedBox(height: 15),
+                _getParentsRow(nest!.parents, context),
+                _getEggsStream(_eggStream),
+                SizedBox(height: 30),
+                modifingButtons(context, getNest, "modify", null, null, null),
+              ],
+            ),
+          ))),
     );
   }
 }

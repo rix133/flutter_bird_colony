@@ -9,6 +9,8 @@ import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:provider/provider.dart';
 
+import 'models/egg.dart';
+
 class EditParent extends StatefulWidget {
   const EditParent({Key? key}) : super(key: key);
 
@@ -73,7 +75,9 @@ class _EditParentState extends State<EditParent> {
     modified: DateTime.now(),
   );
 
+  Egg? egg;
 
+  String type = "parent";
 
   Bird bird = Bird(
     species: "",
@@ -144,7 +148,27 @@ class _EditParentState extends State<EditParent> {
               }
 
           }
-        } else {
+        }
+
+        //its hatching time
+        else if(map["egg"] != null){
+          type ="chick";
+          egg = map["egg"] as Egg;
+          bird = Bird(
+            species: nest.species,
+            ringed_date: DateTime.now(),
+            ringed_as_chick: true,
+            egg: egg?.getNr(),
+            band: "",
+            responsible: sps.userName,
+            nest: nest.name,
+            nest_year: nest.discover_date.year,
+            measures: allMeasures,
+            experiments: nest.experiments,
+            // Add other fields as necessary
+          );
+        }
+        else {
           bird = Bird(
             species: nest.species,
             ringed_date: DateTime.now(),
@@ -154,7 +178,7 @@ class _EditParentState extends State<EditParent> {
             nest: nest.name,
             nest_year: nest.discover_date.year,
             measures: allMeasures,
-            experiments: [],
+            experiments: nest.experiments,
             // Add other fields as necessary
           );
         }
@@ -321,7 +345,7 @@ class _EditParentState extends State<EditParent> {
                   SizedBox(height: 10),
                   color_band.getMeasureForm(),
                   listExperiments(bird),
-                  modifingButtons(context, getBird, "parent",nests, {"sihtkoht":bird.nest}, "/nestManage", silentOverwrite: true),
+                  modifingButtons(context, getBird, type, nests, {"sihtkoht":bird.nest}, "/nestManage", silentOverwrite: type == "parent"),
                   SizedBox(height: 10),
                   //show age in years if ringed as chick
                   bird.ringed_as_chick ? getAgeRow() : Container(),

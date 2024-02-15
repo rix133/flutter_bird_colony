@@ -287,9 +287,9 @@ class Nest implements FirestoreItem, ExperimentedItem {
     if (difference.inDays > 0) {
       return "Checked ${difference.inDays} days ago";
     } else if (difference.inHours > 0) {
-      return "Checked ${difference.inHours} hours ago";
+      return "CHECKED ${difference.inHours} hours ago";
     } else if (difference.inMinutes > 0) {
-      return "Checked just now";
+      return "CHECKED just now";
     }
     return "";
   }

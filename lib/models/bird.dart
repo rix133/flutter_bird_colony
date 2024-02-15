@@ -9,6 +9,8 @@ import 'package:kakrarahu/models/nest.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/deleteService.dart';
 
+import 'egg.dart';
+
 class Bird implements FirestoreItem, ExperimentedItem {
   String? id;
   String? nest;
@@ -257,7 +259,16 @@ class Bird implements FirestoreItem, ExperimentedItem {
   }
 
   Future<UpdateResult> _updateNestEgg(CollectionReference nestsItemCollection) async {
-    await nestsItemCollection.doc("$nest egg $egg").set({'ring': band, 'status': 'hatched'});
+    if (egg == null) {
+      await nestsItemCollection.doc(nest).collection("egg").doc("$nest chick $band").set(Egg(
+          discover_date: DateTime(1800),
+          responsible: "unknown",
+          ring: band,
+          status: 'hatched').toJson());
+      return UpdateResult.saveOK(item: this);
+    } else {
+      await nestsItemCollection.doc(nest).collection("egg").doc("$nest egg $egg").update({'ring': band, 'status': 'hatched'});
+    }
     return UpdateResult.saveOK(item: this);
   }
 

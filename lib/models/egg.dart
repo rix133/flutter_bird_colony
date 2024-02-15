@@ -44,8 +44,22 @@ class Egg implements FirestoreItem{
     throw UnimplementedError();
   }
 
-  int getNr(){
-    return(int.tryParse(id?.split(" ")[2] ?? "0") ?? 0);
+  String? getNr(){
+    return(id?.split(" ")[2] ?? null);
+  }
+
+  String statusText(){
+    String txt = "Egg " +
+        (getNr() ?? "?") +
+        " $status";
+    if(ring != null){
+      txt += "/$ring";
+    }
+    if(DateTime.now().isAfter(discover_date)){
+      txt += " " + DateTime.now().difference(discover_date).inDays.toString() + " days old";
+    }
+
+    return txt;
   }
 
   ElevatedButton getButton(BuildContext context, Nest? nest){
@@ -60,13 +74,7 @@ class Egg implements FirestoreItem{
               status == "drowned"
               ? Colors.red
               : Colors.orange[800])),
-      child: (Text("Egg " +
-          getNr().toString() +
-          " $status" +
-          (ring != null
-              ? "/" +
-              ring!
-              : ""))),
+      child: Text(statusText()),
       onPressed: () {
         Navigator.pushNamed(context, "/eggs",
             arguments: {
@@ -76,12 +84,10 @@ class Egg implements FirestoreItem{
       },
       onLongPress: () {
         Navigator.pushNamed(
-            context, "/editChick",
+            context, "/editParent",
             arguments: {
-              "pesa": nest!.name,
-              "muna_nr": (id).toString(),
-              "species": nest!.species,
-              "age": "1"
+              "nest": nest,
+              "egg": this,
             });
       },
     );
