@@ -113,7 +113,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
   @override
   factory Bird.fromQuerySnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
-    return (Bird(
+    Bird nbird = Bird(
       id: snapshot.id,
       ringed_date: (json['ringed_date'] as Timestamp).toDate(),
       ringed_as_chick: json["ringed_as_chick"] ?? true,
@@ -138,7 +138,22 @@ class Bird implements FirestoreItem, ExperimentedItem {
               ?.map((e) => measureFromJson(e))
               .toList() ??
           [], // provide a default value if 'measures' does not exist
-    ));
+    );
+    //add measures from experiments to the bird
+    nbird.experiments?.forEach((Experiment e) {
+      e.measures?.forEach((Measure m) {
+        //add the measure if it does not exist and its type is parent chick or any
+        if (nbird.measures!
+            .where((element) => element.name == m.name)
+            .isEmpty &&
+            (m.type == "parent" || m.type == "any" || m.type == "chick")) {
+          nbird.measures!.add(m);
+        }
+      });
+    });
+    nbird.measures!.sort();
+
+    return nbird;
   }
 
   Map<String, dynamic> toJson() {
@@ -256,6 +271,10 @@ class Bird implements FirestoreItem, ExperimentedItem {
     } catch (error) {
       return UpdateResult.error(message: "Error saving bird");
     }
+  }
+
+  bool isChick() {
+    return ringed_as_chick == true && ringed_date.year == nest_year;
   }
 
   Future<UpdateResult> _updateNestEgg(CollectionReference nestsItemCollection) async {

@@ -144,7 +144,7 @@ class _StatisticsState extends State<Statistics> {
                                 title: Text("Total nests"),
                                 trailing: Text(nests.length.toString())),
                             getNestListTile("Common Gull", nests, experimental: true),
-                            ...Species.english.map((SpeciesList sp) => getNestListTile(sp.english, nests)).toList(),
+                            ...SpeciesList.english.map((Species sp) => getNestListTile(sp.english, nests)).toList(),
                             getNestListTile("", nests),
                           ],
                         );
@@ -175,7 +175,7 @@ class _StatisticsState extends State<Statistics> {
                             ListTile(
                                 title: Text("Total ringed"),
                                 trailing: Text(birds.length.toString())),
-                            ...Species.english.map((SpeciesList sp) => getBirdsListTile(sp.english, birds)).toList(),
+                            ...SpeciesList.english.map((Species sp) => getBirdsListTile(sp.english, birds)).toList(),
                           ],
                         );
                       } else {

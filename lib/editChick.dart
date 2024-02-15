@@ -30,7 +30,7 @@ class _EditChickState extends State<EditChick> {
   String _recentBand = "";
   late SharedPreferencesService sharedPreferencesService;
 
-  static String _displayStringForOption(SpeciesList option) => option.english;
+  static String _displayStringForOption(Species option) => option.english;
   var username;
   var uid;
 
@@ -38,7 +38,7 @@ class _EditChickState extends State<EditChick> {
   void initState() {
     super.initState();
     sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
-    _recentBand = sharedPreferencesService.recentBand;
+    _recentBand = sharedPreferencesService.getRecentBand("Common Gull");
   }
 
   @override
@@ -85,7 +85,7 @@ class _EditChickState extends State<EditChick> {
                       decoration: TextDecoration.underline),
                 ),
                 SizedBox(height: 25),
-                RawAutocomplete<SpeciesList>(
+                RawAutocomplete<Species>(
                   displayStringForOption: _displayStringForOption,
                   focusNode: _focusNode,
                   textEditingController: species,
@@ -158,9 +158,9 @@ class _EditChickState extends State<EditChick> {
                   },
                   optionsBuilder: (TextEditingValue textEditingValue) {
                     if (textEditingValue.text == '') {
-                      return const Iterable<SpeciesList>.empty();
+                      return const Iterable<Species>.empty();
                     }
-                    return Species.english.where((SpeciesList option) {
+                    return SpeciesList.english.where((Species option) {
                       return option
                           .toString()
                           .toLowerCase()
@@ -371,7 +371,7 @@ class _EditChickState extends State<EditChick> {
                           measures: []);
                       UpdateResult saveOK =  await bird.save(otherItems: nests, allowOverwrite: false, type: "chick");
                       if(saveOK.success){
-                        sharedPreferencesService.recentBand = band;
+                        sharedPreferencesService.recentBand(bird.species ?? "", band);
                         Navigator.pop(context);
                       } else{
                         showDialog(context: context, builder: (_) =>

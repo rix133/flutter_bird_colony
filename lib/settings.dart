@@ -14,14 +14,15 @@ class _SettingsPageState extends State<SettingsPage> {
   String? _userName;
   String? _userEmail;
   bool _isLoggedIn = false;
+  SharedPreferencesService? sharedPreferencesService;
 
   @override
   void initState() {
     super.initState();
-    final sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
-    _isLoggedIn = sharedPreferencesService.isLoggedIn;
-    _userName = sharedPreferencesService.userName;
-    _userEmail = sharedPreferencesService.userEmail;
+    sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
+    _isLoggedIn = sharedPreferencesService!.isLoggedIn;
+    _userName = sharedPreferencesService!.userName;
+    _userEmail = sharedPreferencesService!.userEmail;
   }
 
 
@@ -66,10 +67,9 @@ class _SettingsPageState extends State<SettingsPage> {
   _login() async {
     final user = await signInWithGoogle();
     if (user != null) {
-      final sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
-      sharedPreferencesService.isLoggedIn = true;
-      sharedPreferencesService.userName = user.displayName ?? '';
-      sharedPreferencesService.userEmail = user.email ?? '';
+      sharedPreferencesService?.isLoggedIn = true;
+      sharedPreferencesService?.userName = user.displayName ?? '';
+      sharedPreferencesService?.userEmail = user.email ?? '';
       Navigator.popAndPushNamed(context, '/');
     }
   }
@@ -80,14 +80,40 @@ class _SettingsPageState extends State<SettingsPage> {
     _isLoggedIn = false;
     _userName = '';
     _userEmail = '';
-    final sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
-    sharedPreferencesService.isLoggedIn = _isLoggedIn;
-    sharedPreferencesService.userName = _userName ?? '';
-    sharedPreferencesService.userEmail = _userEmail ?? '';
+    sharedPreferencesService?.isLoggedIn = _isLoggedIn;
+    sharedPreferencesService?.userName = _userName ?? '';
+    sharedPreferencesService?.userEmail = _userEmail ?? '';
     setState(() {
 
     });
 
+  }
+
+  List<Widget> getSettings(_isLoggedIn) {
+    return _isLoggedIn ? [
+      Row(
+        children: <Widget>[
+          Text('Automatically get next metal band for chicks:'),
+          Switch(
+            value: sharedPreferencesService?.autoNextBand ?? false,
+            onChanged: (value) {
+              sharedPreferencesService?.autoNextBand = value;
+            },
+          ),
+        ],
+      ),
+    Row(
+        children: <Widget>[
+          Text('Automatically get next metal band for parents:'),
+          Switch(
+            value: sharedPreferencesService?.autoNextBandParent ?? false,
+            onChanged: (value) {
+              sharedPreferencesService?.autoNextBandParent = value;
+            },
+          ),
+        ],
+      ),
+    ] : [];
   }
 
   @override
@@ -109,6 +135,7 @@ class _SettingsPageState extends State<SettingsPage> {
               onPressed: _isLoggedIn ? _logout : _login,
             ),
             SizedBox(height: 20),
+            ...getSettings(_isLoggedIn),
           ],
         ),
       ),

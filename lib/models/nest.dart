@@ -162,12 +162,13 @@ class Nest implements FirestoreItem, ExperimentedItem {
     //add measures from experments to the nest
     nnest.experiments?.forEach((Experiment e) {
       e.measures?.forEach((Measure m) {
-        nnest.measures.where((element) => element.name == m.name).isEmpty
-            ? nnest.measures.add(m)
-            : nnest.measures
+        //add the measure if it does not exist and its type is mest or any
+        if (nnest.measures
             .where((element) => element.name == m.name)
-            .first
-            .value = m.value;
+            .isEmpty &&
+            (m.type == "nest" || m.type == "any")) {
+          nnest.measures.add(m);
+        }
       });
     });
     nnest.measures.sort();

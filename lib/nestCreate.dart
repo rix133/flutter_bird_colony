@@ -23,7 +23,7 @@ class _PesaState extends State<Pesa> {
   final species = TextEditingController();
   final remark = TextEditingController();
 
-  static String _displayStringForOption(SpeciesList option) => option.english;
+  static String _displayStringForOption(Species option) => option.english;
   var _asukoht;
   bool signed = false;
   var accuracy = "loading...";
@@ -147,7 +147,7 @@ class _PesaState extends State<Pesa> {
                     child: buildForm(context, "enter nest ID", null, nestID,  true)),
                 //Icon(Icons.check_circle,color: Colors.green,size: 40,)
               ]),
-              RawAutocomplete<SpeciesList>(
+              RawAutocomplete<Species>(
                 displayStringForOption: _displayStringForOption,
                 focusNode: _focusNode,
                 textEditingController: species,
@@ -214,7 +214,7 @@ class _PesaState extends State<Pesa> {
                   /*if (textEditingValue.text == '') {
                     return const Iterable<SpeciesList>.empty();
                   }*/
-                  return Species.english.where((SpeciesList option) {
+                  return SpeciesList.english.where((Species option) {
                     return option
                         .toString()
                         .toLowerCase()

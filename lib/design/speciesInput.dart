@@ -2,14 +2,14 @@
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/species.dart';
 
-Widget buildRawAutocomplete(TextEditingController species, FocusNode _focusNode) {
-  String _displayStringForOption(SpeciesList option) => option.english;
-  return RawAutocomplete<SpeciesList>(
+Widget buildRawAutocomplete(TextEditingController species, FocusNode _focusNode, Function(String) returnFun) {
+  String _displayStringForOption(Species option) => option.english;
+  return RawAutocomplete<Species>(
     displayStringForOption: _displayStringForOption,
     focusNode: _focusNode,
     textEditingController: species,
-    onSelected: (selectedString) {
-      print(selectedString);
+    onSelected: (selected) {
+      returnFun(selected.english);
     },
     optionsViewBuilder: (context, onSelected, options) {
       return Scaffold(
@@ -62,6 +62,7 @@ Widget buildRawAutocomplete(TextEditingController species, FocusNode _focusNode)
         ),
         focusNode: focusNode,
         onFieldSubmitted: (String value) {
+
           onFieldSubmitted();
           print('You just typed a new entry  $value');
           FocusScope.of(context).unfocus();
@@ -70,9 +71,9 @@ Widget buildRawAutocomplete(TextEditingController species, FocusNode _focusNode)
     },
     optionsBuilder: (TextEditingValue textEditingValue) {
       if (textEditingValue.text == '') {
-        return const Iterable<SpeciesList>.empty();
+        return const Iterable<Species>.empty();
       }
-      return Species.english.where((SpeciesList option) {
+      return SpeciesList.english.where((Species option) {
         return option
             .toString()
             .toLowerCase()

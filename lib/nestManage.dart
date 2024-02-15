@@ -315,7 +315,11 @@ class _NestManageState extends State<NestManage> {
                 getTitleRow(),
                 listExperiments(nest!), //list of experiments
                 SizedBox(height: 15),
-                buildRawAutocomplete(species, _focusNode),
+                buildRawAutocomplete(species, _focusNode, (String value) {
+                  setState(() {
+                    nest!.species = value;
+                  });
+                }),
                 SizedBox(height: 15),
                 ...nest!.measures
                     .map((Measure m) =>
