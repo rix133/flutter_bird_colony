@@ -88,7 +88,7 @@ class Nest implements FirestoreItem, ExperimentedItem {
             .toList()
             : [],
         experiments: (json['experiments'] as List<dynamic>?)
-            ?.map((e) => experimentFromJson(e))
+            ?.map((e) => experimentFromSimpleJson(e))
             .toList() ??
             [],
         // provide a default value if 'experiments' does not exist
@@ -102,6 +102,7 @@ class Nest implements FirestoreItem, ExperimentedItem {
       if(nnest.remark!.isNotEmpty){
       nnest.measures?.add(Measure(
           name: "note",
+          type: "nest",
           value: nnest.remark!,
           isNumber: false,
           unit: "",
@@ -110,6 +111,7 @@ class Nest implements FirestoreItem, ExperimentedItem {
     if(nnest.measures.isEmpty){
       nnest.measures.add(Measure(
           name: "note",
+          type: "nest",
           value: "",
           isNumber: false,
           unit: "",

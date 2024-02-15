@@ -4,6 +4,7 @@ import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:kakrarahu/models/experimented_item.dart';
 import 'package:kakrarahu/models/firestore_item.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/deleteService.dart';
 
@@ -21,6 +22,7 @@ class Experiment implements FirestoreItem {
       .year;
   List<String>? nests = [];
   List<String>? birds = [];
+  List<Measure> measures = [];
   String type = "nest";
   DateTime? last_modified;
   DateTime? created = DateTime.now();
@@ -35,6 +37,7 @@ class Experiment implements FirestoreItem {
     this.year,
     this.nests,
     this.type = "nest",
+    this.measures = const [],
     this.birds,
     this.color = Colors.blue,
     this.last_modified,
@@ -47,6 +50,10 @@ class Experiment implements FirestoreItem {
     description = json['description'];
     responsible = json['responsible'];
     year = json['year'];
+    measures = (json['measures'] as List<dynamic>?)
+        ?.map((e) => measureFromJson(e))
+        .toList() ??
+        [];
     nests = List<String>.from(json['nests'] ?? []);
     birds = List<String>.from(json['birds'] ?? []);
     type = json['type'] ?? "nest";
@@ -58,7 +65,7 @@ class Experiment implements FirestoreItem {
   }
 
   Map<String, dynamic> toSimpleJson() {
-    return {'id': id, 'name': name, 'color': color.value.toString()};
+    return {'id': id, 'name': name, 'color': color.value.toString(), 'measures': measures?.map((e) => e.toFormJson()).toList()};
   }
 
   @override
@@ -72,6 +79,7 @@ class Experiment implements FirestoreItem {
       'type': type,
       'color': color.value.toString(),
       'last_modified': last_modified,
+      'measures': measures?.map((e) => e.toJson()).toList(),
       'created': created
     };
   }
@@ -287,10 +295,14 @@ class Experiment implements FirestoreItem {
 
 }
 
-Experiment experimentFromJson(Map<String, dynamic> json) {
+Experiment experimentFromSimpleJson(Map<String, dynamic> json) {
   return Experiment(
       id: json['id'],
       name: json['name'],
+      measures: (json['measures'] as List<dynamic>?)
+          ?.map((e) => measureFromFormJson(e))
+          .toList() ??
+          [],
       color: Color(int.parse(json['color'])));
 }
 

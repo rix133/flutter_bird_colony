@@ -8,6 +8,8 @@ import 'package:kakrarahu/models/dataSearch.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
+import 'models/measure.dart';
+
 class EditExperiment extends StatefulWidget {
   const EditExperiment({Key? key}) : super(key: key);
 
@@ -104,6 +106,12 @@ class _EditExperimentState extends State<EditExperiment> {
     );
   }
 
+  void addMeasure() {
+    setState(() {
+      experiment.measures!.add(Measure(name: "", unit: "", type: "any", isNumber: false, value: '', modified: DateTime.now()));
+    });
+  }
+
 
   Row getDropdownWithLabel(String title, CollectionReference? otherItems) {
     return Row(
@@ -188,6 +196,18 @@ class _EditExperimentState extends State<EditExperiment> {
               backgroundColor: MaterialStateProperty.all(experiment.color),
             ),
           ),
+          SizedBox(height:15),
+          ElevatedButton.icon(
+            icon: Icon(Icons.add),
+            onPressed: () {
+              addMeasure();
+            },
+            label: Padding(child: Text("Add Measure"), padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15)),
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(Colors.grey),
+            ),
+          ),
+          ...experiment.measures!.map((e) => e.createMeasureForm(setState)),
           SizedBox(height:30),
           modifingButtons(context, getExperiment, experiment.type, otherCollection, {}, "/listExperiments"),
 

@@ -26,12 +26,14 @@ class _EditParentState extends State<EditParent> {
     name: "age",
     value: "",
     isNumber: true,
+    type: "bird",
     unit: "years",
     modified: DateTime.now(),
   );
   Measure color_band = Measure(
     name: "color ring",
     value: "",
+    type: "bird",
     isNumber: false,
     unit: "",
     modified: DateTime.now(),
@@ -39,6 +41,7 @@ class _EditParentState extends State<EditParent> {
   Measure head = Measure(
     name: "head length",
     value: "",
+    type: "bird",
     isNumber: true,
     unit: "mm",
     modified: DateTime.now(),
@@ -46,6 +49,7 @@ class _EditParentState extends State<EditParent> {
   Measure note = Measure(
     name: "note",
     value: "",
+    type: "any",
     isNumber: false,
     unit: "text",
     modified: DateTime.now(),
@@ -54,6 +58,7 @@ class _EditParentState extends State<EditParent> {
   Measure gland = Measure(
     name: "gland",
     value: "",
+    type: "bird",
     isNumber: true,
     unit: "mm",
     modified: DateTime.now(),
@@ -61,19 +66,14 @@ class _EditParentState extends State<EditParent> {
 
   Measure nestnr = Measure(
     name: "nest",
+    type:  "bird",
     value: "",
     isNumber: true,
     unit: DateTime.now().year.toString(),
     modified: DateTime.now(),
   );
 
-  Measure fid = Measure(
-    name: "0_FID",
-    value: "",
-    isNumber: true,
-    unit: "m",
-    modified: DateTime.now(),
-  );
+
 
   Bird bird = Bird(
     species: "",
@@ -107,7 +107,7 @@ class _EditParentState extends State<EditParent> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final sps = Provider.of<SharedPreferencesService>(context, listen: false);
       var map = ModalRoute.of(context)?.settings.arguments;
-      List<Measure> allMeasures = [note, head, gland, age, fid];
+      List<Measure> allMeasures = [note, head, gland, age];
       if (map != null) {
         map = map as Map<String, dynamic>;
         if (map["nest"] != null) {

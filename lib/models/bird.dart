@@ -128,7 +128,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
           : null,
       age: json['age'] ?? null,
       experiments: (json['experiments'] as List<dynamic>?)
-              ?.map((e) => experimentFromJson(e))
+              ?.map((e) => experimentFromSimpleJson(e))
               .toList() ??
           [],
       // provide a default value if 'experiments' does not exist
