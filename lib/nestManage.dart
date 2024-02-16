@@ -103,13 +103,13 @@ class _NestManageState extends State<NestManage> {
                   if (nest!.first_egg == null) {
                     nest!.first_egg = egg.discover_date;
                   }
-                  return Column(
+                  return egg.knownOrder() ? Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       egg.getButton(context, nest),
                       SizedBox(height: 5),
                     ],
-                  );
+                  ) : SizedBox.shrink();
                 }).toList(),
                 ..._getAddEggButton(context, snapshot),
               ],

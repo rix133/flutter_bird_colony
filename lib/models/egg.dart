@@ -93,6 +93,11 @@ class Egg implements FirestoreItem{
     );
   }
 
+  bool knownOrder(){
+    return id?.contains("egg") ?? false;
+
+  }
+
   @override
   Map<String, dynamic> toJson() {
     return {

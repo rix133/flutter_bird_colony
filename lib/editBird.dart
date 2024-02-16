@@ -162,7 +162,7 @@ class _EditBirdState extends State<EditBird> {
             responsible: sps?.userName ?? "unknown",
             nest: nest.name,
             nest_year: nest.discover_date.year,
-            measures: allMeasures,
+            measures: [note],
             experiments: nest.experiments,
             // Add other fields as necessary
           );
@@ -235,6 +235,9 @@ class _EditBirdState extends State<EditBird> {
             onChanged: (String value) {
               band_letCntr.text = band_letCntr.text.toUpperCase();
               bird.band = (band_letCntr.text + band_numCntr.text);
+              setState(() {
+
+              });
             },
             decoration: InputDecoration(
               labelText: "Letters",
@@ -261,6 +264,8 @@ class _EditBirdState extends State<EditBird> {
             controller: band_numCntr,
             onChanged: (String value) {
               bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
+              setState(() {
+              });
             },
             textAlign: TextAlign.center,
             decoration: InputDecoration(
@@ -336,32 +341,13 @@ class _EditBirdState extends State<EditBird> {
 
   Bird getBird(BuildContext context) {
     //ensure UI is updated
-    bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
     bird.species = speciesCntr.text;
-    checkNestChange(nestnr.valueCntr.text, nest.discover_date.year);
     bird.nest = nestnr.valueCntr.text;
     bird.color_band = color_band.valueCntr.text.toUpperCase();
 
     return bird;
   }
 
-  Future<bool> checkNestChange(String newNestName, int nestYear) async {
-    //its from another year the nest number
-    if (nestYear != DateTime.now().year) {
-      return false;
-    }
-    // the nest is from this year and is updated to something
-    if (newNestName != bird.nest && (bird.current_nest).isNotEmpty) {
-      return (await nests
-          .doc(bird.current_nest)
-          .collection("parents")
-          .doc(bird.band)
-          .delete()
-          .then((value) => true)
-          .catchError((error) => false));
-    }
-    return false;
-  }
 
   assignNextMetalBand(String recentBand) {
     if (recentBand.isNotEmpty) {
@@ -375,6 +361,7 @@ class _EditBirdState extends State<EditBird> {
         int? nr = int.tryParse(recentBand.substring(lastLetter + 1));
         band_numCntr.text = nr != null ? (nr! + 1).toString() : "";
       }
+      bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
     }
   }
 
@@ -391,7 +378,8 @@ class _EditBirdState extends State<EditBird> {
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        body: Center(
+        body: Align(
+          alignment: Alignment.topCenter,
           child: Container(
               padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
               child: SingleChildScrollView(

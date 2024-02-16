@@ -58,12 +58,16 @@ class Bird implements FirestoreItem, ExperimentedItem {
       e.measures?.forEach((Measure m) {
         //add the measure if it does not exist and its type is parent chick or any
         if (measures!.where((element) => element.name == m.name).isEmpty &&
-            (m.type == "parent" || m.type == "any" || m.type == "chick")) {
+            (m.type == (isChick() ? "chick" : "parent") || m.type == "any" )) {
           measures!.add(m);
         }
       });
     });
     measures!.sort();
+  }
+
+  String getType() {
+    return isChick() ? "chick" : "parent";
   }
 
   bool timeSpan(String range) {
@@ -221,7 +225,6 @@ class Bird implements FirestoreItem, ExperimentedItem {
       //handle nest change of parents on nests
       await _checkNestChange(nestsItemCollection, prevBird);
     }
-    print("here");
     ringed_date =prevBird?.ringed_date ?? DateTime.now();
     last_modified = DateTime.now();
     return(birds.doc(band).set(toJson()).then((value) => _saveToChangelog(birds)).then((value) => UpdateResult.saveOK(item: this))
@@ -262,7 +265,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
         bool hasBand = nestObj.parents!.any((element) => element.band == band && band.isNotEmpty);
         bool hasColorBand = nestObj.parents!.any((element) => element.color_band == color_band && (color_band?.isNotEmpty ?? false));
         if(hasBand || hasColorBand) {
-          nestObj.parents!.removeWhere((element) => (element.band == band) || (element.color_band == color_band));
+          nestObj.parents!.removeWhere((element) => (element.band == band && band.isNotEmpty) || (element.color_band == color_band && (color_band?.isNotEmpty ?? false)));
         }
         //add the new parent
         if(delete == false) {
@@ -285,16 +288,16 @@ class Bird implements FirestoreItem, ExperimentedItem {
     return ringed_as_chick == true && ringed_date.year == nest_year;
   }
 
-  Future<UpdateResult> _updateNestEgg(CollectionReference nestsItemCollection) async {
+  Future<UpdateResult> _updateNestEgg(CollectionReference eggItemCollection) async {
     if (egg == null) {
-      await nestsItemCollection.doc(nest).collection("egg").doc("$nest chick $band").set(Egg(
+      await eggItemCollection.doc("$nest chick $band").set(Egg(
           discover_date: DateTime(1800),
           responsible: "unknown",
           ring: band,
           status: 'hatched').toJson());
       return UpdateResult.saveOK(item: this);
     } else {
-      await nestsItemCollection.doc(nest).collection("egg").doc("$nest egg $egg").update({'ring': band, 'status': 'hatched'});
+      await eggItemCollection.doc("$nest egg $egg").update({'ring': band, 'status': 'hatched'});
     }
     return UpdateResult.saveOK(item: this);
   }
