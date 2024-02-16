@@ -38,7 +38,7 @@ class _EditChickState extends State<EditChick> {
   void initState() {
     super.initState();
     sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
-    _recentBand = sharedPreferencesService.getRecentBand("Common Gull");
+    _recentBand = sharedPreferencesService.getRecentMetalBand("Common Gull");
   }
 
   @override

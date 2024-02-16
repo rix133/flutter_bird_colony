@@ -11,20 +11,21 @@ import 'package:provider/provider.dart';
 
 import 'models/egg.dart';
 
-class EditParent extends StatefulWidget {
-  const EditParent({Key? key}) : super(key: key);
+class EditBird extends StatefulWidget {
+  const EditBird({Key? key}) : super(key: key);
 
   @override
-  State<EditParent> createState() => _EditParentState();
+  State<EditBird> createState() => _EditBirdState();
 }
 
-class _EditParentState extends State<EditParent> {
+class _EditBirdState extends State<EditBird> {
   TextEditingController band_letCntr = TextEditingController();
   TextEditingController band_numCntr = TextEditingController();
   TextEditingController speciesCntr = TextEditingController();
   FocusNode _focusNode = FocusNode();
   SharedPreferencesService? sps;
   String _recentMetalBand = "";
+  bool buttonsDisabled = false;
 
   Measure age = Measure(
     name: "age",
@@ -165,7 +166,8 @@ class _EditParentState extends State<EditParent> {
             experiments: nest.experiments,
             // Add other fields as necessary
           );
-        } else {
+        }
+        else {
           bird = Bird(
             species: nest.species,
             ringed_date: DateTime.now(),
@@ -179,6 +181,7 @@ class _EditParentState extends State<EditParent> {
             // Add other fields as necessary
           );
         }
+
         bird.measures!.sort();
         speciesCntr.text = bird.species ?? "";
         nestnr.setValue(bird.nest);
@@ -199,6 +202,17 @@ class _EditParentState extends State<EditParent> {
   }
 
   Row metalBand() {
+    if(bird.id != null){
+      //give unmodifiable row with the band if the bird is from firestore
+      int lastLetter = bird.band.lastIndexOf(RegExp(r'[A-Z]'));
+      band_letCntr.text = bird.band.substring(0, lastLetter + 1);
+      band_numCntr.text = bird.band.substring(lastLetter + 1);
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+          children: [Expanded(child: Padding(padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 0),
+              child:Text("Metal: " + bird.band, style: TextStyle(fontSize: 30, color: Colors.yellow))))]);
+    }
+
     if (bird.band.isNotEmpty) {
       // take the letters and numbers apart
       // and put them in the textfields
@@ -268,6 +282,7 @@ class _EditParentState extends State<EditParent> {
           ),
         ),
         //add button to assign next metal band
+        SizedBox(width: 10),
         ElevatedButton(
           onPressed: () {
             setState(() {
@@ -276,7 +291,7 @@ class _EditParentState extends State<EditParent> {
           },
           child: Padding(
             padding:
-                const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                const EdgeInsets.symmetric(horizontal: 1.0, vertical: 16.0),
             child: Text("Guess"),
           ),
         ),
@@ -290,6 +305,18 @@ class _EditParentState extends State<EditParent> {
     setState(() {
       bird.measures!.add(m);
       bird.measures!.sort();
+    });
+  }
+
+  void saveOk() {
+    setState(() {
+      sps?.recentBand(bird?.species ?? '', bird.band);
+      buttonsDisabled = false;
+    });
+  }
+  void deleteOk() {
+    setState(() {
+      buttonsDisabled = false;
     });
   }
 
@@ -314,6 +341,7 @@ class _EditParentState extends State<EditParent> {
     checkNestChange(nestnr.valueCntr.text, nest.discover_date.year);
     bird.nest = nestnr.valueCntr.text;
     bird.color_band = color_band.valueCntr.text.toUpperCase();
+
     return bird;
   }
 
@@ -340,11 +368,12 @@ class _EditParentState extends State<EditParent> {
       int lastLetter = recentBand.lastIndexOf(RegExp(r'[A-Z]'));
       if (lastLetter != -1) {
         band_letCntr.text = recentBand.substring(0, lastLetter + 1);
-        band_numCntr.text =
-            (int.parse(recentBand.substring(lastLetter + 1)) + 1).toString();
+        int? nr = int.tryParse(recentBand.substring(lastLetter + 1));
+        band_numCntr.text = nr != null ? (nr! + 1).toString() : "";
       } else {
         band_letCntr.text = '';
-        band_numCntr.text = (int.parse(recentBand) + 1).toString();
+        int? nr = int.tryParse(recentBand.substring(lastLetter + 1));
+        band_numCntr.text = nr != null ? (nr! + 1).toString() : "";
       }
     }
   }
@@ -384,7 +413,8 @@ class _EditParentState extends State<EditParent> {
                   bird.isChick() ? Container() : color_band.getMeasureForm(),
                   modifingButtons(context, getBird, ageType, nests,
                       {"sihtkoht": bird.nest}, "/nestManage",
-                      silentOverwrite: (ageType == "parent")),
+                      silentOverwrite: (ageType == "parent"),
+                      disabled: buttonsDisabled, onSaveOK: saveOk, onDeleteOK: deleteOk),
                   SizedBox(height: 10),
                   //show age in years if ringed as chick
                   bird.ringed_as_chick ? getAgeRow() : Container(),

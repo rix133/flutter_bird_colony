@@ -5,9 +5,8 @@ import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
-Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext context) getItem, String type, CollectionReference? otherItems, Map? args, String? targetUrl, {bool silentOverwrite = false}){
+Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext context) getItem, String type, CollectionReference? otherItems, Map? args, String? targetUrl, {bool silentOverwrite = false, bool disabled =false, Function? onSaveOK = null, Function? onDeleteOK = null}){
   UpdateResult ur = UpdateResult(success: false, message: "", type: "empty");
-  bool isButtonClicked = false;
   FirestoreItem item = getItem(context);
   final sps = Provider.of<SharedPreferencesService>(context, listen: false);
   return(Row(
@@ -19,8 +18,8 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
               backgroundColor:
               MaterialStateProperty.all(
                   Colors.red[900])),
-          onPressed: (isButtonClicked || (item.id == null)) ? null : () {
-            isButtonClicked = true;
+          onPressed: (disabled || (item.id == null)) ? null : () {
+            disabled = true;
             showDialog<String>(
               barrierColor: Colors.black,
               context: context,
@@ -64,6 +63,7 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
                           }
                           else{
                             //close delete confirmation dialog
+                            onDeleteOK?.call();
                             Navigator.pop(context);
                             if(args != null && targetUrl != null){
                               //close the current page and the page before and go to the target page
@@ -89,8 +89,8 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
           ),
           label: Text("delete")),
       ElevatedButton.icon(
-          onPressed: isButtonClicked ? null : () async {
-            isButtonClicked = true;
+          onPressed: disabled ? null : () async {
+            disabled = true;
             FirestoreItem item = getItem(context);
             item.responsible = sps.userName;
             ur = await item.save(otherItems: otherItems, allowOverwrite: silentOverwrite, type: type);
@@ -134,6 +134,7 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
                                 ));
                           }
                           else{
+                            onSaveOK?.call();
                             Navigator.pop(context);
                             if(args != null && targetUrl != null){
                               Navigator.pop(context);
@@ -149,6 +150,7 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
                   ));
             }
             else{
+              onSaveOK?.call();
               if(args != null && targetUrl != null){
                 Navigator.pop(context);
                 Navigator.popAndPushNamed(context, targetUrl, arguments: args);

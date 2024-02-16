@@ -33,21 +33,38 @@ class Bird implements FirestoreItem, ExperimentedItem {
   String get current_nest =>
       (nest_year == DateTime.now().year) ? (nest ?? "") : "";
 
-  Bird(
-      {this.id,
-      required this.ringed_date,
-      required this.band,
-      required this.ringed_as_chick,
-      this.color_band,
-      this.responsible,
-      this.nest_year,
-      this.species,
-      this.last_modified,
-      this.experiments,
-      this.age,
-      this.nest,
-      this.egg,
-      this.measures});
+  Bird({
+    this.id,
+    required this.ringed_date,
+    required this.band,
+    required this.ringed_as_chick,
+    this.color_band,
+    this.responsible,
+    this.nest_year,
+    this.species,
+    this.last_modified,
+    List<Experiment>? experiments,
+    this.age,
+    this.nest,
+    this.egg,
+    List<Measure>? measures
+  }) : this.experiments = experiments,
+        this.measures = measures ?? [] {
+    updateMeasuresFromExperiments();
+  }
+
+  void updateMeasuresFromExperiments() {
+    experiments?.forEach((Experiment e) {
+      e.measures?.forEach((Measure m) {
+        //add the measure if it does not exist and its type is parent chick or any
+        if (measures!.where((element) => element.name == m.name).isEmpty &&
+            (m.type == "parent" || m.type == "any" || m.type == "chick")) {
+          measures!.add(m);
+        }
+      });
+    });
+    measures!.sort();
+  }
 
   bool timeSpan(String range) {
     if (range == "All") {
@@ -140,18 +157,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
           [], // provide a default value if 'measures' does not exist
     );
     //add measures from experiments to the bird
-    nbird.experiments?.forEach((Experiment e) {
-      e.measures?.forEach((Measure m) {
-        //add the measure if it does not exist and its type is parent chick or any
-        if (nbird.measures!
-            .where((element) => element.name == m.name)
-            .isEmpty &&
-            (m.type == "parent" || m.type == "any" || m.type == "chick")) {
-          nbird.measures!.add(m);
-        }
-      });
-    });
-    nbird.measures!.sort();
+    nbird.updateMeasuresFromExperiments();
 
     return nbird;
   }
@@ -166,7 +172,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
       'species': species,
       'nest': nest,
       'nest_year': nest_year,
-      'experiments': experiments,
+      'experiments': experiments?.map((Experiment e) => e.toSimpleJson()).toList(),
       'last_modified': last_modified,
       'age': age,
       'egg': egg,
@@ -193,8 +199,10 @@ class Bird implements FirestoreItem, ExperimentedItem {
   }
 
   Future<UpdateResult> _saveBirdToFirestore(CollectionReference birds, CollectionReference? nestsItemCollection) async {
+    print("getting bird from firestore");
     Bird? prevBird = await birds.doc(band).get().then((value) {
       if (!value.exists) {
+
         return null;
       }
       return Bird.fromQuerySnapshot(value);
@@ -213,14 +221,18 @@ class Bird implements FirestoreItem, ExperimentedItem {
       //handle nest change of parents on nests
       await _checkNestChange(nestsItemCollection, prevBird);
     }
-    ringed_date =prevBird?.ringed_date ?? ringed_date;
-    await birds.doc(band).set(toJson());
-    await _saveToChangelog(birds);
-    return UpdateResult.saveOK(item: this);
+    print("here");
+    ringed_date =prevBird?.ringed_date ?? DateTime.now();
+    last_modified = DateTime.now();
+    return(birds.doc(band).set(toJson()).then((value) => _saveToChangelog(birds)).then((value) => UpdateResult.saveOK(item: this))
+        .catchError((error) => UpdateResult.error(message: error.toString())));
+
   }
 
   Future<void> _saveToChangelog(CollectionReference birds) async {
+    print("saving to changelog");
     await birds.doc(band).collection("changelog").doc(last_modified.toString()).set(toJson());
+    print("saved to changelog");
   }
 
   Future<UpdateResult> _updateNest(CollectionReference nestsItemCollection, bool isParent) async {
@@ -247,12 +259,10 @@ class Bird implements FirestoreItem, ExperimentedItem {
       }
       //search and replace the nest parents with the new one by band if exists, then by color band
       if(nestObj.parents != null) {
-        bool hasBand = nestObj.parents!.any((element) => element.band == band);
-        bool hasColorBand = nestObj.parents!.any((element) => element.color_band == color_band);
-        if(hasBand) {
-          nestObj.parents!.removeWhere((element) => element.band == band);
-        } else if(hasColorBand) {
-          nestObj.parents!.removeWhere((element) => element.color_band == color_band);
+        bool hasBand = nestObj.parents!.any((element) => element.band == band && band.isNotEmpty);
+        bool hasColorBand = nestObj.parents!.any((element) => element.color_band == color_band && (color_band?.isNotEmpty ?? false));
+        if(hasBand || hasColorBand) {
+          nestObj.parents!.removeWhere((element) => (element.band == band) || (element.color_band == color_band));
         }
         //add the new parent
         if(delete == false) {
@@ -264,10 +274,8 @@ class Bird implements FirestoreItem, ExperimentedItem {
         }
       }
       // update the nest with the new parents
-      await nestsItemCollection.doc(nest).update({
-        'parents': nestObj.parents!.map((e) => e.toSimpleJson()).toList()
-      });
-      return UpdateResult.saveOK(item: this);
+      return(nestsItemCollection.doc(nest).update({'parents': nestObj.parents!.map((e) => e.toSimpleJson()).toList()}).then((value) => UpdateResult.saveOK(item: this))
+      );
     } catch (error) {
       return UpdateResult.error(message: "Error saving bird");
     }
@@ -292,10 +300,17 @@ class Bird implements FirestoreItem, ExperimentedItem {
   }
 
   Future<UpdateResult> _saveBird(CollectionReference birds, CollectionReference? nestsItemCollection, bool isParent) async {
+    UpdateResult? ur;
     try {
-      await _saveBirdToFirestore(birds, nestsItemCollection);
+        ur = await _saveBirdToFirestore(birds, nestsItemCollection);
+        if(!ur.success) {
+          return ur;
+        }
       if(nestsItemCollection != null){
-        await _updateNest(nestsItemCollection, isParent);
+        ur = await _updateNest(nestsItemCollection, isParent);
+        if(!ur.success) {
+          return ur;
+        }
       }
       return UpdateResult.saveOK(item: this);
     } catch (error) {
@@ -311,7 +326,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
       if (nest!.isNotEmpty && nestsItemCollection != null) {
         nestsItemCollection = isParent
             ? nestsItemCollection
-            : nestsItemCollection.doc(nest).collection("eggs");
+            : nestsItemCollection.doc(nest).collection("egg");
       }
     }
     measures = measures?.where((Measure m) => m.value.isNotEmpty).toList() ?? [];
