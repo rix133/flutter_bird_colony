@@ -64,6 +64,22 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  reset() {
+    setState(() {
+    _isLoggedIn = false;
+    _userName = '';
+    _userEmail = '';
+    sharedPreferencesService?.isLoggedIn = _isLoggedIn;
+    sharedPreferencesService?.userName = _userName ?? '';
+    sharedPreferencesService?.userEmail = _userEmail ?? '';
+    sharedPreferencesService?.autoNextBand = false;
+    sharedPreferencesService?.autoNextBandParent = false;
+    sharedPreferencesService?.clearAllMetalBands();
+
+    });
+
+  }
+
   _login() async {
     final user = await signInWithGoogle();
     if (user != null) {
@@ -77,15 +93,8 @@ class _SettingsPageState extends State<SettingsPage> {
   _logout() async {
     await _googleSignIn.signOut().then((value) =>
         FirebaseAuth.instance.signOut());
-    _isLoggedIn = false;
-    _userName = '';
-    _userEmail = '';
-    sharedPreferencesService?.isLoggedIn = _isLoggedIn;
-    sharedPreferencesService?.userName = _userName ?? '';
-    sharedPreferencesService?.userEmail = _userEmail ?? '';
-    setState(() {
+    reset();
 
-    });
 
   }
 
@@ -93,7 +102,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return _isLoggedIn ? [
       Row(
         children: <Widget>[
-          Text('Automatically get next metal band for chicks:'),
+          Text('Guess next metal band for chicks:'),
           Switch(
             value: sharedPreferencesService?.autoNextBand ?? false,
             onChanged: (value) {
@@ -104,7 +113,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     Row(
         children: <Widget>[
-          Text('Automatically get next metal band for parents:'),
+          Text('Guess next metal band for parents:'),
           Switch(
             value: sharedPreferencesService?.autoNextBandParent ?? false,
             onChanged: (value) {

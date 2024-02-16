@@ -24,7 +24,7 @@ class _EditParentState extends State<EditParent> {
   TextEditingController speciesCntr = TextEditingController();
   FocusNode _focusNode = FocusNode();
   SharedPreferencesService? sps;
-  String _recentBand = "";
+  String _recentMetalBand = "";
 
   Measure age = Measure(
     name: "age",
@@ -70,7 +70,7 @@ class _EditParentState extends State<EditParent> {
 
   Measure nestnr = Measure(
     name: "nest",
-    type:  "bird",
+    type: "bird",
     value: "",
     isNumber: true,
     unit: DateTime.now().year.toString(),
@@ -124,18 +124,15 @@ class _EditParentState extends State<EditParent> {
           //does the bird exist in firestore
           if (bird.band.isNotEmpty && (bird.id == null)) {
             //reload from firestore this comes from nest and has firestore instance
-            bird = await birds
-                .doc(bird.band)
-                .get()
-                .then((DocumentSnapshot value) =>
-                Bird.fromQuerySnapshot(value));
-          }else{
+            bird = await birds.doc(bird.band).get().then(
+                (DocumentSnapshot value) => Bird.fromQuerySnapshot(value));
+          } else {
             if (map["nest"] != null) {
               bird.nest = nest.name;
               bird.nest_year = nest.discover_date.year;
               bird.species = nest.species;
             } else {
-              if(bird.nest_year != DateTime.now().year){
+              if (bird.nest_year != DateTime.now().year) {
                 bird.nest = "";
               }
             }
@@ -144,17 +141,16 @@ class _EditParentState extends State<EditParent> {
           if (bird.measures == null) {
             bird.measures = [];
           }
-            for (Measure m in allMeasures) {
-              if (!bird.measures!.map((e) => e.name).contains(m.name)) {
-                bird.measures!.add(m);
-              }
-
+          for (Measure m in allMeasures) {
+            if (!bird.measures!.map((e) => e.name).contains(m.name)) {
+              bird.measures!.add(m);
+            }
           }
         }
 
         //its hatching time
-        else if(map["egg"] != null){
-          ageType ="chick";
+        else if (map["egg"] != null) {
+          ageType = "chick";
           egg = map["egg"] as Egg;
           bird = Bird(
             species: nest.species,
@@ -169,8 +165,7 @@ class _EditParentState extends State<EditParent> {
             experiments: nest.experiments,
             // Add other fields as necessary
           );
-        }
-        else {
+        } else {
           bird = Bird(
             species: nest.species,
             ringed_date: DateTime.now(),
@@ -196,10 +191,10 @@ class _EditParentState extends State<EditParent> {
           bird.measures!.removeWhere((element) => element.name == "age");
         }
         bird.measures!.sort();
-        setState(() {});
-        return;
       }
-      _recentBand = sps?.getRecentBand(bird.species ?? "") ?? "";
+      _recentMetalBand = sps?.getRecentMetalBand(bird.species ?? "") ?? "";
+      autoAssignNextMetalBand(_recentMetalBand);
+      setState(() {});
     });
   }
 
@@ -276,12 +271,13 @@ class _EditParentState extends State<EditParent> {
         ElevatedButton(
           onPressed: () {
             setState(() {
-              assignNextMetalBand(_recentBand);
+              assignNextMetalBand(_recentMetalBand);
             });
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
-            child: Text("Next"),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+            child: Text("Guess"),
           ),
         ),
       ],
@@ -289,22 +285,23 @@ class _EditParentState extends State<EditParent> {
   }
 
   void addMeasure(Measure m) {
-    bird.measures = bird.measures!.map((e) => e..value= e.valueCntr.text).toList();
+    bird.measures =
+        bird.measures!.map((e) => e..value = e.valueCntr.text).toList();
     setState(() {
       bird.measures!.add(m);
       bird.measures!.sort();
     });
   }
 
-  Padding getAgeRow(){
+  Padding getAgeRow() {
     int ageYears = DateTime.now().year - bird.ringed_date.year;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(
         children: [
           Expanded(
-            child: Text('Age: $ageYears years',
-                style: TextStyle(fontSize: 20, color: Colors.yellow))),
+              child: Text('Age: $ageYears years',
+                  style: TextStyle(fontSize: 20, color: Colors.yellow))),
         ],
       ),
     );
@@ -352,6 +349,13 @@ class _EditParentState extends State<EditParent> {
     }
   }
 
+  autoAssignNextMetalBand(String recentBand) {
+    if ((ageType == "chick" && (sps?.autoNextBand ?? false)) ||
+        (ageType == "parent" && (sps?.autoNextBandParent ?? false))) {
+      assignNextMetalBand(recentBand);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -370,23 +374,24 @@ class _EditParentState extends State<EditParent> {
                   buildRawAutocomplete(speciesCntr, _focusNode, (String sp) {
                     setState(() {
                       bird.species = sp;
-                      _recentBand = sps?.getRecentBand(sp) ?? "";
-                      if(ageType== "chick" && (sps?.autoNextBand ?? false)){
-                        assignNextMetalBand(_recentBand);
-                      }
+                      _recentMetalBand = sps?.getRecentMetalBand(sp) ?? "";
+                      autoAssignNextMetalBand(_recentMetalBand);
                     });
                   }),
                   nestnr.getMeasureForm(),
                   metalBand(),
                   bird.isChick() ? Container() : SizedBox(height: 10),
                   bird.isChick() ? Container() : color_band.getMeasureForm(),
-                  modifingButtons(context, getBird, ageType, nests, {"sihtkoht":bird.nest}, "/nestManage", silentOverwrite: (ageType == "parent")),
+                  modifingButtons(context, getBird, ageType, nests,
+                      {"sihtkoht": bird.nest}, "/nestManage",
+                      silentOverwrite: (ageType == "parent")),
                   SizedBox(height: 10),
                   //show age in years if ringed as chick
                   bird.ringed_as_chick ? getAgeRow() : Container(),
                   ...?bird.measures
-                      ?.map((Measure m) => bird.band.isNotEmpty ?
-                          m.getMeasureFormWithAddButton(addMeasure) : Container())
+                      ?.map((Measure m) => bird.band.isNotEmpty
+                          ? m.getMeasureFormWithAddButton(addMeasure)
+                          : Container())
                       .toList(),
                 ]),
               )),

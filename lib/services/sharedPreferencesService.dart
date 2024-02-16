@@ -1,7 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-
 import '../species.dart';
 
 class SharedPreferencesService extends ChangeNotifier {
@@ -61,23 +59,27 @@ class SharedPreferencesService extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<String> get recentBands => _sharedPreferences.getStringList('recentBands') ?? [];
 
   void recentBand(String speciesEng, String value) {
     String bandGroup = SpeciesList.english.firstWhere((species) => species.english == speciesEng).bandLetters();
-    Map<String, String> recentBands = jsonDecode(_sharedPreferences.getString('recentBands') ?? '{}');
 
-    // Update the band for the species
-    recentBands[bandGroup] = value;
-
-    // Save the updated map back to SharedPreferences
-    _sharedPreferences.setString('recentBands', jsonEncode(recentBands));
+    // Save the band for the species to SharedPreferences
+    _sharedPreferences.setString(bandGroup, value);
     notifyListeners();
   }
 
-  String getRecentBand(String speciesEng) {
+  String getRecentMetalBand(String speciesEng) {
     String bandGroup = SpeciesList.english.firstWhere((species) => species.english == speciesEng).bandLetters();
-    Map<String, String> recentBands = jsonDecode(_sharedPreferences.getString('recentBands') ?? '{}');
-    return recentBands[bandGroup] ?? '';
+
+    // Retrieve the band for the species from SharedPreferences
+    return _sharedPreferences.getString(bandGroup) ?? bandGroup;
+  }
+
+  void clearAllMetalBands() {
+    SpeciesList.english.forEach((species) {
+      String bandGroup = species.bandLetters();
+      _sharedPreferences.remove(bandGroup);
+    });
+    notifyListeners();
   }
 }
