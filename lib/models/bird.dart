@@ -1,17 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:kakrarahu/models/experiment.dart';
-import 'package:kakrarahu/models/experimented_item.dart';
-import 'package:kakrarahu/models/firestore_item.dart';
+import 'package:kakrarahu/models/experimentedItem.dart';
+import 'package:kakrarahu/models/firestoreItem.dart';
+import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/nest.dart';
 import 'package:kakrarahu/models/updateResult.dart';
-import 'package:kakrarahu/services/deleteService.dart';
 
 import 'egg.dart';
 
-class Bird implements FirestoreItem, ExperimentedItem {
+class Bird extends ExperimentedItem implements FirestoreItem{
   String? id;
   String? nest;
   int? nest_year;
@@ -24,8 +25,6 @@ class Bird implements FirestoreItem, ExperimentedItem {
   bool ringed_as_chick = true;
   DateTime? last_modified;
   String? egg;
-  List<Measure>? measures = [];
-  List<Experiment>? experiments = [];
 
   @override
   String get name => (color_band?.isNotEmpty ?? false) ? color_band! : band;
@@ -43,28 +42,15 @@ class Bird implements FirestoreItem, ExperimentedItem {
     this.nest_year,
     this.species,
     this.last_modified,
-    List<Experiment>? experiments,
     this.age,
     this.nest,
     this.egg,
-    List<Measure>? measures
-  }) : this.experiments = experiments,
-        this.measures = measures ?? [] {
-    updateMeasuresFromExperiments();
+    List<Experiment>? experiments,
+    required List<Measure> measures
+  }) : super(experiments: experiments, measures: measures) {
+    updateMeasuresFromExperiments(isChick() ? "chick" : "parent");
   }
-
-  void updateMeasuresFromExperiments() {
-    experiments?.forEach((Experiment e) {
-      e.measures?.forEach((Measure m) {
-        //add the measure if it does not exist and its type is parent chick or any
-        if (measures!.where((element) => element.name == m.name).isEmpty &&
-            (m.type == (isChick() ? "chick" : "parent") || m.type == "any" )) {
-          measures!.add(m);
-        }
-      });
-    });
-    measures!.sort();
-  }
+  
 
   String getType() {
     return isChick() ? "chick" : "parent";
@@ -134,6 +120,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
   @override
   factory Bird.fromQuerySnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
+    ExperimentedItem eitem = ExperimentedItem.fromJson(json);
     Bird nbird = Bird(
       id: snapshot.id,
       ringed_date: (json['ringed_date'] as Timestamp).toDate(),
@@ -150,18 +137,12 @@ class Bird implements FirestoreItem, ExperimentedItem {
           ? (json['last_modified'] as Timestamp).toDate()
           : null,
       age: json['age'] ?? null,
-      experiments: (json['experiments'] as List<dynamic>?)
-              ?.map((e) => experimentFromSimpleJson(e))
-              .toList() ??
-          [],
+      experiments: eitem.experiments,
       // provide a default value if 'experiments' does not exist
-      measures: (json['measures'] as List<dynamic>?)
-              ?.map((e) => measureFromJson(e))
-              .toList() ??
-          [], // provide a default value if 'measures' does not exist
+      measures: eitem.measures, // provide a default value if 'measures' does not exist
     );
     //add measures from experiments to the bird
-    nbird.updateMeasuresFromExperiments();
+    nbird.updateMeasuresFromExperiments(nbird.isChick() ? "chick" : "parent");
 
     return nbird;
   }
@@ -180,7 +161,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
       'last_modified': last_modified,
       'age': age,
       'egg': egg,
-      'measures': measures?.map((Measure e) => e.toJson()).toList(),
+      'measures': measures.map((Measure e) => e.toJson()).toList(),
     };
   }
 
@@ -288,10 +269,17 @@ class Bird implements FirestoreItem, ExperimentedItem {
     return ringed_as_chick == true && ringed_date.year == nest_year;
   }
 
+  int ageInYears() {
+    return ringed_as_chick ? (DateTime.now().year - ringed_date.year) : int.tryParse(age ?? "") ?? 0;
+  }
+
   Future<UpdateResult> _updateNestEgg(CollectionReference eggItemCollection) async {
     if (egg == null) {
       await eggItemCollection.doc("$nest chick $band").set(Egg(
-          discover_date: DateTime(1800),
+          discover_date: DateTime(1900),
+          last_checked: DateTime.now(),
+          experiments: experiments,
+          measures: [],
           responsible: "unknown",
           ring: band,
           status: 'hatched').toJson());
@@ -332,7 +320,7 @@ class Bird implements FirestoreItem, ExperimentedItem {
             : nestsItemCollection.doc(nest).collection("egg");
       }
     }
-    measures = measures?.where((Measure m) => m.value.isNotEmpty).toList() ?? [];
+    measures = measures.where((Measure m) => m.value.isNotEmpty).toList();
     // the modified date is assigned at write time
     last_modified = DateTime.now();
     return await _saveBird(birds, nestsItemCollection, isParent);
@@ -409,9 +397,52 @@ class Bird implements FirestoreItem, ExperimentedItem {
           .collection("deleted");
 
       //check if the item is already in deleted collection
-      return deleteFiresoreItem(this, items, deletedCollection);
+
+      return FSItemMixin().deleteFiresoreItem(this, items, deletedCollection);
     }
   }
+
+  @override
+  List<TextCellValue> toExcelRowHeader() {
+    return [
+      TextCellValue('band'),
+      TextCellValue('color_band'),
+      TextCellValue("type"),
+      TextCellValue('nest'),
+      TextCellValue('nest_year'),
+      TextCellValue('age_years'),
+      TextCellValue('responsible'),
+      TextCellValue('species'),
+      TextCellValue('ringed_date'),
+      TextCellValue('ringed_as_chick'),
+      TextCellValue('last_modified'),
+      TextCellValue('egg'),
+      // Add more headers as per your requirements
+    ];
+  }
+
+  @override
+  Future<List<List<CellValue>>> toExcelRows() async {
+    List<List<CellValue>> rows = [];
+    List<CellValue> baseItems = [
+      TextCellValue(band),
+      TextCellValue(color_band ?? ""),
+      TextCellValue(getType()),
+      TextCellValue(nest ?? ""),
+      IntCellValue(nest_year ?? 0),
+      IntCellValue(ageInYears()),
+      TextCellValue(responsible ?? ""),
+      TextCellValue(species ?? ""),
+      DateCellValue(year: ringed_date.year, month: ringed_date.month, day: ringed_date.day),
+      BoolCellValue(ringed_as_chick),
+      DateTimeCellValue(year: last_modified?.year ?? 0, month: last_modified?.month ?? 0, day: last_modified?.day ?? 0, hour: last_modified?.hour ?? 0, minute: last_modified?.minute ?? 0),
+      TextCellValue(egg ?? ""),
+      // Add more row data as per your requirements
+    ];
+    rows.add(baseItems);
+    return rows;
+  }
+
 }
 
 Bird birdFromJson(Map<String, dynamic> json) {
@@ -419,5 +450,9 @@ Bird birdFromJson(Map<String, dynamic> json) {
       ringed_date: (json['ringed_date'] as Timestamp).toDate(),
       ringed_as_chick: json['ringed_as_chick'] ?? true,
       band: json['band'],
+      measures: (json['measures'] as List<dynamic>?)
+              ?.map((e) => measureFromJson(e))
+              .toList() ??
+          [],
       color_band: json['color_band']);
 }

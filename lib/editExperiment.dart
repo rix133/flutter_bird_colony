@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/experiment.dart';
-import 'package:kakrarahu/models/firestore_item.dart';
+import 'package:kakrarahu/models/firestoreItem.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 import 'package:kakrarahu/models/dataSearch.dart';
@@ -137,6 +137,9 @@ class _EditExperimentState extends State<EditExperiment> {
     return experiment;
   }
 
+  saveDeleteOk() {
+    Navigator.popAndPushNamed(context, '/experiments');
+  }
 
   Form getExperimentForm(BuildContext context) {
     experiment.responsible = sps?.userName ?? "";
@@ -209,7 +212,7 @@ class _EditExperimentState extends State<EditExperiment> {
           ),
           ...experiment.measures!.map((e) => e.createMeasureForm(setState)),
           SizedBox(height:30),
-          modifingButtons(context, getExperiment, experiment.type, otherCollection, {}, "/listExperiments"),
+          modifingButtons(context, setState, getExperiment, experiment.type, otherCollection, onSaveOK: saveDeleteOk, onDeleteOK: saveDeleteOk),
 
         ],
       )),

@@ -1,15 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/models/firestore_item.dart';
+import 'package:kakrarahu/models/firestoreItem.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
-Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext context) getItem, String type, CollectionReference? otherItems, Map? args, String? targetUrl, {bool silentOverwrite = false, bool disabled =false, Function? onSaveOK = null, Function? onDeleteOK = null}){
+Stack modifingButtons(BuildContext context, Function setState, FirestoreItem Function(BuildContext context) getItem, String type, CollectionReference? otherItems, {bool silentOverwrite = false, Function? onSaveOK = null, Function? onDeleteOK = null}){
   UpdateResult ur = UpdateResult(success: false, message: "", type: "empty");
   FirestoreItem item = getItem(context);
   final sps = Provider.of<SharedPreferencesService>(context, listen: false);
-  return(Row(
+  bool _isLoading = false;
+  //if(onSaveOK == null) onSaveOK = (){Navigator.pop(context);};
+  //if(onDeleteOK == null) onDeleteOK = (){Navigator.pop(context);};
+  return Stack(
+      children: [
+      Opacity(
+      opacity: _isLoading ? 0.3 : 1, // Dim the UI when loading
+      child: AbsorbPointer(
+      absorbing: _isLoading, // Disable interaction when loading
+      child:Row(
     mainAxisAlignment: MainAxisAlignment.spaceAround,
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -18,8 +27,7 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
               backgroundColor:
               MaterialStateProperty.all(
                   Colors.red[900])),
-          onPressed: (disabled || (item.id == null)) ? null : () {
-            disabled = true;
+          onPressed: (item.id == null) ? null : () {
             showDialog<String>(
               barrierColor: Colors.black,
               context: context,
@@ -40,9 +48,15 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
                       ),
                       TextButton(
                         onPressed: () async {
+                          setState(() {
+                            _isLoading = true;
+                          });
                           FirestoreItem item = getItem(context);
                           ur = await item.delete(otherItems: otherItems, type: type);
                           if(!ur.success){
+                            setState(() {
+                              _isLoading = false;
+                            });
                             showDialog(context: context, builder: (_) =>
                                 AlertDialog(
                                   contentTextStyle:
@@ -62,18 +76,10 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
                                 ));
                           }
                           else{
+                              _isLoading = false;
                             //close delete confirmation dialog
+                             Navigator.pop(context);
                             onDeleteOK?.call();
-                            Navigator.pop(context);
-                            if(args != null && targetUrl != null){
-                              //close the current page and the page before and go to the target page
-                              //this basically updates the page before
-                              Navigator.pop(context);
-                              Navigator.popAndPushNamed(context, targetUrl, arguments: args);
-                            } else {
-                              //close the page and go to page before (not updating the page before)
-                              Navigator.pop(context);
-                            }
                           }
 
                         },
@@ -89,8 +95,10 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
           ),
           label: Text("delete")),
       ElevatedButton.icon(
-          onPressed: disabled ? null : () async {
-            disabled = true;
+          onPressed:  () async {
+            setState(() {
+              _isLoading = true;
+            });
             FirestoreItem item = getItem(context);
             item.responsible = sps.userName;
             ur = await item.save(otherItems: otherItems, allowOverwrite: silentOverwrite, type: type);
@@ -114,6 +122,9 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
                         onPressed: () async{
                           ur = await item.save(otherItems: otherItems, allowOverwrite: true, type: type);
                           if(!ur.success){
+                            setState(() {
+                              _isLoading = false;
+                            });
                             Navigator.pop(context);
                             showDialog(context: context, builder: (_) =>
                                 AlertDialog(
@@ -134,14 +145,9 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
                                 ));
                           }
                           else{
-                            onSaveOK?.call();
+                            _isLoading = false;
                             Navigator.pop(context);
-                            if(args != null && targetUrl != null){
-                              Navigator.pop(context);
-                              Navigator.popAndPushNamed(context, targetUrl, arguments: args);
-                            } else {
-                              Navigator.pop(context);
-                            }
+                            onSaveOK?.call();
                           }
                         },
                         child: const Text('Overwrite', style: TextStyle(color: Colors.red)),
@@ -150,13 +156,9 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
                   ));
             }
             else{
+              _isLoading = false;
               onSaveOK?.call();
-              if(args != null && targetUrl != null){
-                Navigator.pop(context);
-                Navigator.popAndPushNamed(context, targetUrl, arguments: args);
-              } else {
-                Navigator.pop(context);
-              }
+              Navigator.pop(context);
             }
           },
           icon: Icon(
@@ -166,5 +168,11 @@ Row modifingButtons(BuildContext context, FirestoreItem Function(BuildContext co
           ),
           label: Text("save")),//save button
     ],
-  ));
+      ),
+      ),
+      ),
+        if (_isLoading)
+          Center(child: CircularProgressIndicator()), // Show loading indicator when loading
+      ],
+  );
 }

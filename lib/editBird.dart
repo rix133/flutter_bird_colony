@@ -127,6 +127,7 @@ class _EditBirdState extends State<EditBird> {
             //reload from firestore this comes from nest and has firestore instance
             bird = await birds.doc(bird.band).get().then(
                 (DocumentSnapshot value) => Bird.fromQuerySnapshot(value));
+            bird.addNonExistingExperiments(nest.experiments, bird.isChick() ? "chick" : "parent");
           } else {
             if (map["nest"] != null) {
               bird.nest = nest.name;
@@ -210,7 +211,7 @@ class _EditBirdState extends State<EditBird> {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
           children: [Expanded(child: Padding(padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 0),
-              child:Text("Metal: " + bird.band, style: TextStyle(fontSize: 30, color: Colors.yellow))))]);
+              child:Text("Metal: " + bird.band, style: TextStyle(fontSize: 20, color: Colors.yellow))))]);
     }
 
     if (bird.band.isNotEmpty) {
@@ -314,15 +315,11 @@ class _EditBirdState extends State<EditBird> {
   }
 
   void saveOk() {
-    setState(() {
       sps?.recentBand(bird?.species ?? '', bird.band);
-      buttonsDisabled = false;
-    });
+      Navigator.popAndPushNamed(context, "/nestManage", arguments: {"sihtkoht": bird.nest});
   }
   void deleteOk() {
-    setState(() {
-      buttonsDisabled = false;
-    });
+      Navigator.popAndPushNamed(context, "/nestManage", arguments: {"sihtkoht": bird.nest});
   }
 
   Padding getAgeRow() {
@@ -399,10 +396,9 @@ class _EditBirdState extends State<EditBird> {
                   metalBand(),
                   bird.isChick() ? Container() : SizedBox(height: 10),
                   bird.isChick() ? Container() : color_band.getMeasureForm(),
-                  modifingButtons(context, getBird, ageType, nests,
-                      {"sihtkoht": bird.nest}, "/nestManage",
+                  modifingButtons(context,setState, getBird, ageType, nests,
                       silentOverwrite: (ageType == "parent"),
-                      disabled: buttonsDisabled, onSaveOK: saveOk, onDeleteOK: deleteOk),
+                      onSaveOK: saveOk, onDeleteOK: deleteOk),
                   SizedBox(height: 10),
                   //show age in years if ringed as chick
                   bird.ringed_as_chick ? getAgeRow() : Container(),

@@ -1,3 +1,4 @@
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -40,6 +41,21 @@ class Measure implements Comparable<Measure>{
       'isNumber': isNumber,
       'unit': unit
     };
+  }
+
+  List<CellValue> toExcelRow(){
+    double? vd = isNumber ? double.tryParse(value) : null;
+    return [
+      DateTimeCellValue(year: modified.year, month: modified.month, day: modified.day, hour: modified.hour, minute: modified.minute, second: modified.second),
+      (isNumber && vd != null) ? DoubleCellValue(vd) : TextCellValue(value)
+    ];
+  }
+
+  List<TextCellValue> toExcelRowHeader() {
+    return [
+      TextCellValue('measure_time'),
+      TextCellValue(name + "_" + unit)
+    ];
   }
 
 

@@ -282,7 +282,7 @@ class _NestsMapState extends State<NestsMap> {
           FloatingActionButton(
             heroTag: "addNest",
             onPressed: () {
-              Navigator.pushNamed(context, "/pesa");
+              Navigator.pushNamed(context, "/nestCreate");
             },
             child: const Icon(Icons.add),
           ),

@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/models/experimented_item.dart';
-import 'package:kakrarahu/models/firestore_item.dart';
+import 'package:kakrarahu/models/experimentedItem.dart';
+import 'package:kakrarahu/models/firestoreItem.dart';
+import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
-import 'package:kakrarahu/services/deleteService.dart';
 
 import 'bird.dart';
 import 'nest.dart';
@@ -246,7 +247,7 @@ class Experiment implements FirestoreItem {
           .doc("experiments")
           .collection("deleted");
 
-      return deleteFiresoreItem(this, expCollection, deletedCollection);
+      return FSItemMixin().deleteFiresoreItem(this, expCollection, deletedCollection);
     }
   }
 
@@ -254,8 +255,7 @@ class Experiment implements FirestoreItem {
   Future<UpdateResult> save({CollectionReference<
       Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"}) {
     CollectionReference expCollection =   FirebaseFirestore.instance.collection('experiments');
-    print(previousNests);
-    print(nests);
+
 
     last_modified = DateTime.now();
     //remove duplicate nests
@@ -268,7 +268,6 @@ class Experiment implements FirestoreItem {
     //get items that are missing from otherdata but exist in previousOtherItems
     List<String> deletedNests = previousNests.where((element) => !nests!.contains(element)).toList();
     List<String> deletedBirds = previousBirds.where((element) => !birds!.contains(element)).toList();
-    print(deletedNests);
 
     if (id == null) {
       created = DateTime.now();
@@ -281,21 +280,69 @@ class Experiment implements FirestoreItem {
     _updateBirdsCollection(birds, delete: false);
     _updateBirdsCollection(deletedBirds, delete: true);
 
-      return(expCollection.doc(id).set(toJson()).then((value) =>
-      {
-        expCollection
-            .doc(id)
-            .collection("changelog")
-            .doc(last_modified.toString())
-            .set(toJson())
-      }).then((value) => UpdateResult.saveOK(item:this))).catchError((onError) => UpdateResult.error(message: onError.toString()));
+      return(expCollection.doc(id).set(toJson()).then((value) => FSItemMixin().saveChangeLog(this, expCollection)).then((value) => UpdateResult.saveOK(item:this))).catchError((onError) => UpdateResult.error(message: onError.toString()));
 
     }
+
+  @override
+  List<TextCellValue> toExcelRowHeader() {
+    List<TextCellValue> baseHeader = [
+      TextCellValue('experiment_name'),
+      TextCellValue('experiment_description'),
+      TextCellValue('experiment_responsible'),
+      TextCellValue('experiment_year'),
+      TextCellValue('experiment_type'),
+      TextCellValue('experiment_last_modified'),
+      TextCellValue('experiment_created'),
+      // Add more headers as per your requirements
+    ];
+    if (hasNests()){
+      baseHeader.add(TextCellValue('nest'));
+    }
+    if (hasBirds()){
+      baseHeader.add(TextCellValue('bird'));
+    }
+    return baseHeader;
+  }
+
+  @override
+  Future<List<List<CellValue>>> toExcelRows() async {
+    List<List<CellValue>> rows = [];
+    List<CellValue> baseItems = [
+      TextCellValue(name),
+      TextCellValue(description ?? ""),
+      TextCellValue(responsible ?? ""),
+      IntCellValue(year ?? 1900),
+      TextCellValue(type),
+      DateTimeCellValue(year: last_modified?.year ?? 1900, month: last_modified?.month ?? 1, day: last_modified?.day ?? 1, hour: last_modified?.hour ?? 0, minute: last_modified?.minute ?? 0),
+      DateCellValue(year: created?.year ?? 1900, month: created?.month ?? 1, day: created?.day ?? 1),
+    ];
+    if (hasNests()){
+      for (String nest in nests!){
+        List<CellValue> items = List.from(baseItems);
+        items.add(TextCellValue(nest));
+        rows.add(items);
+      }
+    }
+    if (hasBirds()){
+      for (String bird in birds!){
+        List<CellValue> items = List.from(baseItems);
+        items.add(TextCellValue(bird));
+        rows.add(items);
+      }
+    }
+
+    if(!hasNests() && !hasBirds()){
+      rows.add(baseItems);
+    }
+    return rows;
+  }
+
 
 }
 
 Experiment experimentFromSimpleJson(Map<String, dynamic> json) {
-  return Experiment(
+  Experiment e =  Experiment(
       id: json['id'],
       name: json['name'],
       measures: (json['measures'] as List<dynamic>?)
@@ -303,6 +350,7 @@ Experiment experimentFromSimpleJson(Map<String, dynamic> json) {
           .toList() ??
           [],
       color: Color(int.parse(json['color'])));
+  return e;
 }
 
 Widget listExperiments(ExperimentedItem item) {

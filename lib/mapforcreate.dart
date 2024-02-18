@@ -143,7 +143,7 @@ class _MapForCreateState extends State<MapForCreate> {
           SizedBox(height: 10),
           GestureDetector(
             onLongPress: (){
-              FirebaseFirestore.instance.collection('recent').doc("kalakas").get().then((value) => Navigator.pushNamed(context, "/pesa",
+              FirebaseFirestore.instance.collection('recent').doc("kalakas").get().then((value) => Navigator.pushNamed(context, "/nestCreate",
                   arguments: {
                     "nestid": value.get("nestid"),
                     "species":"Common Gull"
@@ -152,7 +152,7 @@ class _MapForCreateState extends State<MapForCreate> {
             child: FloatingActionButton(
               heroTag: "addNest",
               onPressed: () {
-                Navigator.pushNamed(context, "/pesa");
+                Navigator.pushNamed(context, "/nestCreate");
               },
               child: const Icon(Icons.add),
             ),

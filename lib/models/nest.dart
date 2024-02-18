@@ -1,16 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/models/experiment.dart';
-import 'package:kakrarahu/models/experimented_item.dart';
-import 'package:kakrarahu/models/firestore_item.dart';
+import 'package:kakrarahu/models/experimentedItem.dart';
+import 'package:kakrarahu/models/firestoreItem.dart';
+import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
-import 'package:kakrarahu/services/deleteService.dart';
 
 
-class Nest implements FirestoreItem, ExperimentedItem {
+
+class Nest extends ExperimentedItem  implements FirestoreItem {
   String? id;
   String accuracy;
   GeoPoint coordinates;
@@ -21,9 +23,6 @@ class Nest implements FirestoreItem, ExperimentedItem {
   DateTime discover_date;
   DateTime last_modified;
   DateTime? first_egg;
-  List<Experiment>? experiments = [];
-  List<Object>? changelogs;
-  List<Measure> measures = [];
   List<Bird>? parents = [];
 
   String get name => id ?? "New Nest";
@@ -34,14 +33,16 @@ class Nest implements FirestoreItem, ExperimentedItem {
     required this.accuracy,
     required this.coordinates,
     required this.responsible,
-    required this.experiments,
     this.completed,
     this.first_egg,
     this.species,
     this.remark,
     this.parents,
-    required this.measures,
-    this.changelogs});
+    List<Experiment>? experiments,
+    required List<Measure> measures
+  }) : super(experiments: experiments, measures: measures) {
+    updateMeasuresFromExperiments("nest");
+  }
 
   bool timeSpan(String range) {
     if (range == "All") {
@@ -64,6 +65,7 @@ class Nest implements FirestoreItem, ExperimentedItem {
     }
     return false;
   }
+
 
   Marker getMarker(BuildContext context, bool visibility){
     return Marker(
@@ -109,6 +111,7 @@ class Nest implements FirestoreItem, ExperimentedItem {
   @override
   factory Nest.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
+    ExperimentedItem eitem = ExperimentedItem.fromJson(json);
     Nest nnest = Nest(
         id: snapshot.id,
         //assign a last century date
@@ -129,17 +132,10 @@ class Nest implements FirestoreItem, ExperimentedItem {
             .map((e) => birdFromJson(e))
             .toList()
             : [],
-        experiments: (json['experiments'] as List<dynamic>?)
-            ?.map((e) => experimentFromSimpleJson(e))
-            .toList() ??
-            [],
-        // provide a default value if 'experiments' does not exist
-        measures: (json['measures'] as List<dynamic>?)
-            ?.map((e) => measureFromJson(e))
-            .toList() ??
-            [],
-        // provide a default value if 'measures' does not exist
-        species: json['species'] as String? ?? '');
+        species: json['species'] as String? ?? '',
+      experiments: eitem.experiments,
+      measures: eitem.measures,
+    );
     if (nnest.remark != null) {
       if(nnest.remark!.isNotEmpty){
       nnest.measures?.add(Measure(
@@ -150,28 +146,8 @@ class Nest implements FirestoreItem, ExperimentedItem {
           unit: "",
           modified: nnest.last_modified));
     }}
-    if(nnest.measures.where((element) => element.name == "note").isEmpty){
-      nnest.measures.add(Measure(
-          name: "note",
-          type: "nest",
-          value: "",
-          isNumber: false,
-          unit: "",
-          modified: nnest.last_modified));
-    }
     //add measures from experments to the nest
-    nnest.experiments?.forEach((Experiment e) {
-      e.measures?.forEach((Measure m) {
-        //add the measure if it does not exist and its type is mest or any
-        if (nnest.measures
-            .where((element) => element.name == m.name)
-            .isEmpty &&
-            (m.type == "nest" || m.type == "any")) {
-          nnest.measures.add(m);
-        }
-      });
-    });
-    nnest.measures.sort();
+    nnest.updateMeasuresFromExperiments("nest");
     return nnest;
   }
 
@@ -181,11 +157,7 @@ class Nest implements FirestoreItem, ExperimentedItem {
     return (await nests
         .doc(name)
         .set(toJson())
-        .whenComplete(() => nests
-        .doc(name)
-        .collection("changelog")
-        .doc(last_modified.toString())
-        .set(toJson()))
+        .whenComplete(() => FSItemMixin().saveChangeLog(this, nests))
         .then((value) => UpdateResult.saveOK(item:this))
         .catchError((e) => UpdateResult.error(message: e.toString())));
   }
@@ -241,8 +213,74 @@ class Nest implements FirestoreItem, ExperimentedItem {
           .collection("deleted");
 
       //check if the item is already in deleted collection
-      return deleteFiresoreItem(this, items, deletedCollection);
+      return FSItemMixin().deleteFiresoreItem(this, items, deletedCollection);
     }
+  }
+
+  double getAccuracy(String accuracy) {
+    //remove all letters
+    String number = accuracy.replaceAll(RegExp(r'[^0-9]'), '');
+    if (number.isEmpty) {
+      return 99999;
+    }
+    return double.tryParse(number)??99999;
+
+  }
+
+  Future<List<List<CellValue>>> toExcelRows() async{
+    List<List<CellValue>> rows = [];
+    List<CellValue> baseItems = [
+      TextCellValue(name ?? ""),
+      DoubleCellValue(getAccuracy(accuracy)),
+      DoubleCellValue(coordinates.latitude),
+      DoubleCellValue(coordinates.longitude),
+      TextCellValue(species ?? ""),
+      DateCellValue(year: discover_date.year, month: discover_date.month, day: discover_date.day),
+      TextCellValue(responsible ?? ""),
+      DateTimeCellValue(year: last_modified.year, month: last_modified.month, day: last_modified.day, hour: last_modified.hour, minute: last_modified.minute),
+      IntCellValue(await eggCount()),
+      first_egg != null
+          ? DateCellValue(year: first_egg!.year, month: first_egg!.month, day: first_egg!.day)
+          : TextCellValue(''),
+      IntCellValue(DateTime.now().difference(first_egg ?? DateTime(2200)).inDays),
+      TextCellValue(experiments?.map((e) => e.name).join("\r") ?? ""),
+      TextCellValue(parents?.map((p) => p.name).join("\r") ?? "")
+    ];
+
+
+    Map<String, List<Measure>> measuresMap = getMeasuresMap();
+
+    if(measuresMap.isNotEmpty){
+      measuresMap.forEach((key, List<Measure> m) {
+        rows.add([...baseItems, ...m.expand((e) => e.toExcelRow())]);
+      });
+    } else {
+      rows.add(baseItems);
+    }
+
+    return rows;
+  }
+
+  toExcelRowHeader() {
+    List<TextCellValue> baseItems = [
+    TextCellValue('name'),
+    TextCellValue('accuracy'),
+    TextCellValue('latitude'),
+TextCellValue('longitude'),
+TextCellValue('species'),
+      TextCellValue('discover_date'),
+      TextCellValue('last_modified_by'),
+      TextCellValue('last_modified'),
+      TextCellValue('egg_count'),
+      TextCellValue('first_egg_date'),
+      TextCellValue("days_since_first_egg"),
+      TextCellValue('experiments'),
+      TextCellValue('parents')
+    ];
+    Map<String, List<Measure>> measuresMap = getMeasuresMap();
+    List<TextCellValue> measureItems = measuresMap.map((key, value) => MapEntry(key, value.first.toExcelRowHeader())).values.expand((e) => e).toList();
+
+    return [...baseItems, ...measureItems];
   }
 
   toJson() {

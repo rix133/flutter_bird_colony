@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kakrarahu/editEgg.dart';
 import 'package:kakrarahu/editExperiment.dart';
 import 'package:kakrarahu/editBird.dart';
 import 'package:kakrarahu/homepage.dart';
@@ -6,7 +7,7 @@ import 'package:kakrarahu/listBirds.dart';
 import 'package:kakrarahu/listExperiments.dart';
 //import 'package:kakrarahu/listNests.dart';
 import 'package:kakrarahu/nestManage.dart';
-import 'package:kakrarahu/nestsNearby.dart';
+//import 'package:kakrarahu/nestsNearby.dart';
 import 'package:kakrarahu/settings.dart';
 import 'package:kakrarahu/statistics.dart';
 import 'services/sharedPreferencesService.dart';
@@ -18,7 +19,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'map.dart';
-import 'eggs.dart';
 import 'editChick.dart';
 import 'mapforcreate.dart';
 import 'package:provider/provider.dart';
@@ -104,9 +104,9 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context)=>MyHomePage(),
-        '/eggs': (context)=>const Eggs(),
-        '/pesa':(context)=>const Pesa(),
-        '/nestsNearby':(context)=> const NestsNearby(),
+        '/editEgg': (context)=>const EditEgg(),
+        '/nestCreate':(context)=>const nestCreate(),
+        //'/nestsNearby':(context)=> const NestsNearby(),
         '/nestManage':(context)=> const NestManage(),
         '/settings':(context)=>  SettingsPage(),
         '/map':(context)=> NestsMap(),

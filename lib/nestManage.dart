@@ -60,11 +60,17 @@ class _NestManageState extends State<NestManage> {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       var data = ModalRoute.of(context)?.settings.arguments as Map;
 
+
       nests.doc(data["sihtkoht"]).get().then((value) {
         if (value.exists) {
           setState(() {
             nest = Nest.fromDocSnapshot(value);
             species.text = nest!.species ?? "";
+            _eggStream = FirebaseFirestore.instance
+                .collection(nest!.discover_date.year.toString())
+                .doc(nest!.id)
+                .collection("egg")
+                .snapshots();
           });
         }
       });
@@ -100,6 +106,7 @@ class _NestManageState extends State<NestManage> {
               children: [
                 ...snapshot.data!.docs.map((doc) {
                   egg = Egg.fromDocSnapshot(doc);
+                  egg.addNonExistingExperiments(nest!.experiments, "egg");
                   if (nest!.first_egg == null) {
                     nest!.first_egg = egg.discover_date;
                   }
@@ -145,6 +152,9 @@ class _NestManageState extends State<NestManage> {
               Egg egg = Egg(
                   discover_date: DateTime.now(),
                   responsible: sps.userName,
+                  measures: [],
+                  experiments: nest?.experiments ?? [],
+                  last_checked: DateTime.now(),
                   status: "intact",
                   ring: null);
               new_egg_nr = snapshot.data!.docs.length + 1;
@@ -174,8 +184,11 @@ class _NestManageState extends State<NestManage> {
               //this egg has no number as it has no id
               "egg": Egg(
                   discover_date: DateTime.now(),
+                  last_checked: DateTime.now(),
                   responsible: sps.userName,
-                  status: "intact",
+                  measures: [],
+                  experiments: nest?.experiments ?? [],
+                  status: "unknown",
                   ring: null),
             });
           },
@@ -245,11 +258,17 @@ class _NestManageState extends State<NestManage> {
   }
 
   void addMeasure(Measure m) {
-    setState(() {
-      nest!.measures.add(m);
-      nest!.measures.sort();
-    });
+    if(nest != null){
+      nest!.measures =
+          nest!.measures.map((e) => e..value = e.valueCntr.text).toList();
+      setState(() {
+        nest!.measures.add(m);
+        nest!.measures.sort();
+      });
+    }
+
   }
+
 
   Color _getParentButtonColor() {
     if (_daysSinceFirstEgg() > 10) {
@@ -297,11 +316,6 @@ class _NestManageState extends State<NestManage> {
         ),
       );
     }
-    _eggStream = FirebaseFirestore.instance
-        .collection(_year)
-        .doc(nest!.id)
-        .collection("egg")
-        .snapshots();
 
     return Scaffold(
       body: Align(
@@ -329,7 +343,7 @@ class _NestManageState extends State<NestManage> {
                 _getParentsRow(nest!.parents, context),
                 _getEggsStream(_eggStream),
                 SizedBox(height: 30),
-                modifingButtons(context, getNest, "modify", null, null, null),
+                modifingButtons(context,  setState, getNest, "modify", null, silentOverwrite: true),
               ],
             ),
           ))),

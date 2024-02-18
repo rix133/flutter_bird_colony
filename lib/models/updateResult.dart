@@ -1,4 +1,4 @@
-import 'package:kakrarahu/models/firestore_item.dart';
+import 'package:kakrarahu/models/firestoreItem.dart';
 
 
 class UpdateResult {

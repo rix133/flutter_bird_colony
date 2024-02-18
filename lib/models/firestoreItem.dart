@@ -1,21 +1,26 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:kakrarahu/models/experiment.dart';
+import 'package:excel/excel.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
 abstract class FirestoreItem{
 
   //ListTile getListTile(void Function(String?) removeFun,
   //    void Function(void Function()) setState, BuildContext context);
+  String? id;
+  String? responsible;
+  String get name;
   Map<String, dynamic> toJson();
 
   Future <UpdateResult> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"});
 
   Future <UpdateResult> delete({CollectionReference<Object?>? otherItems = null, bool soft = true, String type = "default"});
 
+  //get a row in an excel table
+  Future<List<List<CellValue>>> toExcelRows();
 
-  String? id;
-  String? responsible;
-  String get name;
+  List<TextCellValue> toExcelRowHeader();
+
+
 
 }
