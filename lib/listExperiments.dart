@@ -72,6 +72,9 @@ class _ListExperimentsState extends State<ListExperiments> {
                     ]),
                 TextField(
                   controller: searchController,
+                  onChanged: (String value) {
+                    setState(() {});
+                  },
                   decoration: InputDecoration(
                     labelText: "Search",
                     hintText: "Search by name or nests",

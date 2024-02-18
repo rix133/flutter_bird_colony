@@ -75,6 +75,13 @@ class SharedPreferencesService extends ChangeNotifier {
     return _sharedPreferences.getString(bandGroup) ?? bandGroup;
   }
 
+  bool get isAdmin => _sharedPreferences.getBool('isAdmin') ?? false;
+
+  set isAdmin(bool value) {
+    _sharedPreferences.setBool('isAdmin', value);
+    notifyListeners();
+  }
+
   void clearAllMetalBands() {
     SpeciesList.english.forEach((species) {
       String bandGroup = species.bandLetters();

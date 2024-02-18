@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -74,6 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
     sharedPreferencesService?.userEmail = _userEmail ?? '';
     sharedPreferencesService?.autoNextBand = false;
     sharedPreferencesService?.autoNextBandParent = false;
+    sharedPreferencesService?.isAdmin = false;
     sharedPreferencesService?.clearAllMetalBands();
 
     });
@@ -83,10 +85,30 @@ class _SettingsPageState extends State<SettingsPage> {
   _login() async {
     final user = await signInWithGoogle();
     if (user != null) {
-      sharedPreferencesService?.isLoggedIn = true;
-      sharedPreferencesService?.userName = user.displayName ?? '';
-      sharedPreferencesService?.userEmail = user.email ?? '';
-      Navigator.popAndPushNamed(context, '/');
+      FirebaseFirestore.instance.collection('users').doc(user.uid).get().then((value) {
+        if (value.exists) {
+          sharedPreferencesService?.isAdmin = value['isAdmin'];
+          sharedPreferencesService?.isLoggedIn = true;
+          sharedPreferencesService?.userName = user.displayName ?? '';
+          sharedPreferencesService?.userEmail = user.email ?? '';
+          Navigator.popAndPushNamed(context, '/');
+        } else {
+          AlertDialog(
+            title: Text('Not authorized'),
+            content: Text('You are not authorized to use this app, request access from the admin.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        }
+      });
+
+
     }
   }
 

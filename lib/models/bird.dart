@@ -77,17 +77,19 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   }
 
   String get nestString =>
-      nest_year == DateTime.now().year ? "nest: " + (nest ?? "unknown") : "";
+      nest_year == DateTime.now().year ? ", nest: " + (nest ?? "unknown") : "";
 
   String get description =>
-      "Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)}, $nestString, $species";
+      "Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)} $nestString, $species";
 
   ListTile getListTile(BuildContext context) {
     return ListTile(
       title: Text(name + (color_band != null ? ' ($band)' : "")),
       subtitle: Text(description),
       trailing: IconButton(
-        icon: Icon(Icons.edit, color: Colors.blue),
+        icon: Icon(Icons.edit, color: Colors.black87),
+        style: ButtonStyle(
+          backgroundColor: MaterialStateProperty.all<Color>(Colors.grey)),
         onPressed: () {
           Navigator.pushNamed(context, '/editParent',
               arguments: {'bird': this});
