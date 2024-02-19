@@ -46,13 +46,13 @@ class _NestsMapState extends State<NestsMap> {
   @override
   initState() {
     super.initState();
-    WidgetsBinding.instance!.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       var map = ModalRoute.of(context)!.settings.arguments;
       if(map != null){
         map = map as Map<String, dynamic>;
-        if(map?["nest_ids"] != null){
-          print(map?["nest_ids"]);
-          query = pesa.where(FieldPath.documentId, whereIn: map?["nest_ids"]);
+        if(map["nest_ids"] != null){
+          print(map["nest_ids"]);
+          query = pesa.where(FieldPath.documentId, whereIn: map["nest_ids"]);
         }
       }
       sps = Provider.of<SharedPreferencesService>(context, listen: false);

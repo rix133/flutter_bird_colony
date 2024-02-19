@@ -138,7 +138,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
     );
     if (nnest.remark != null) {
       if(nnest.remark!.isNotEmpty){
-      nnest.measures?.add(Measure(
+      nnest.measures.add(Measure(
           name: "note",
           type: "nest",
           value: nnest.remark!,
@@ -230,7 +230,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
   Future<List<List<CellValue>>> toExcelRows() async{
     List<List<CellValue>> rows = [];
     List<CellValue> baseItems = [
-      TextCellValue(name ?? ""),
+      TextCellValue(name),
       DoubleCellValue(getAccuracy()),
       DoubleCellValue(coordinates.latitude),
       DoubleCellValue(coordinates.longitude),
@@ -296,7 +296,7 @@ TextCellValue('species'),
       'experiments': experiments?.map((e) => e.toSimpleJson()).toList(),
       'species': species,
       'parents': parents?.map((e) => e.toSimpleJson()).toList(),
-      'measures': measures?.map((e) => e.toJson()).toList(),
+      'measures': measures.map((e) => e.toJson()).toList(),
     };
   }
   ListTile getListTile(BuildContext context){
@@ -315,9 +315,6 @@ TextCellValue('species'),
   }
 
   Duration chekedAgo() {
-    if (last_modified == null) {
-      return Duration(days: -1);
-    }
     return DateTime.now().difference(last_modified);
   }
 
