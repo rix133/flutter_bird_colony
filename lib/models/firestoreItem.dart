@@ -12,6 +12,10 @@ abstract class FirestoreItem{
   String get name;
   Map<String, dynamic> toJson();
 
+  factory FirestoreItem.fromDocSnapshot(DocumentSnapshot<Map<String, dynamic>> documentSnapshot){
+    throw UnimplementedError('fromDocSnapshot() must be implemented in subclasses');
+  }
+
   Future <UpdateResult> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"});
 
   Future <UpdateResult> delete({CollectionReference<Object?>? otherItems = null, bool soft = true, String type = "default"});

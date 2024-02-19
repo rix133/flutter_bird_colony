@@ -1,18 +1,18 @@
 
 class Species {
   const Species({
-    required this.estonian,
+    required this.local,
     required this.english,
     required this.latinCode,
   });
 
-  final String estonian;
+  final String local;
   final String english;
   final String latinCode;
 
   @override
   String toString() {
-    return '$english, $estonian,$latinCode';
+    return '$english, $local,$latinCode';
   }
 
   @override
@@ -20,7 +20,7 @@ class Species {
     if (other.runtimeType != runtimeType) {
       return false;
     }
-    return other is Species && other.english == english && other.estonian == estonian && other.latinCode==latinCode;
+    return other is Species && other.english == english && other.local == local && other.latinCode==latinCode;
   }
   String bandLetters(){
     if(english == 'Common Gull'){
@@ -70,25 +70,25 @@ class Species {
 
 
   @override
-  int get hashCode => Object.hash(estonian, english, latinCode);
+  int get hashCode => Object.hash(local, english, latinCode);
 }
 class SpeciesList{
   SpeciesList._();
     static List<Species> english = <Species>[
-      Species(english:'Common Gull',estonian:'kalakajakas',latinCode:'larcan'),
-      Species(english:'European Herring Gull',estonian:'hõbekajakas',latinCode:'lararg'),
-      Species(english:'Lesser Black-backed Gull',estonian:'tõmmukajakas',latinCode:'larfus'),
-      Species(english:'Great Black-backed Gull',estonian:'merikajakas',latinCode:'larmar'),
-      Species(english:'Common Tern',estonian:'jõgitiir',latinCode:'stehir'),
-      Species(english:'Arctic Tern',estonian:'randtiir',latinCode:'steaea'),
-      Species(english:'Great Cormorant',estonian:'kormoran',latinCode:'phacar'),
-      Species(english:'Eurasian Oystercatcher',estonian:'merisk',latinCode:'haeost'),
-      Species(english:'Common Ringed Plover',estonian:'liivatüll',latinCode:'chahia'),
-      Species(english:'Mute Swan',estonian:'kühmnokk-luik',latinCode:'cygolo'),
-      Species(english:'Black-Headed Gull',estonian:'naerukajakas',latinCode:'larrid'),
-      Species(english:'Greylag goose',estonian:'hallhani',latinCode:'ansans'),
-      Species(english:'Mallard',estonian:'sinikael-part',latinCode:'anapla'),
-      Species(english:'Little Gull',estonian:'väikekajakas',latinCode:'hydmin'),
+      Species(english:'Common Gull',local:'kalakajakas',latinCode:'larcan'),
+      Species(english:'European Herring Gull',local:'hõbekajakas',latinCode:'lararg'),
+      Species(english:'Lesser Black-backed Gull',local:'tõmmukajakas',latinCode:'larfus'),
+      Species(english:'Great Black-backed Gull',local:'merikajakas',latinCode:'larmar'),
+      Species(english:'Common Tern',local:'jõgitiir',latinCode:'stehir'),
+      Species(english:'Arctic Tern',local:'randtiir',latinCode:'steaea'),
+      Species(english:'Great Cormorant',local:'kormoran',latinCode:'phacar'),
+      Species(english:'Eurasian Oystercatcher',local:'merisk',latinCode:'haeost'),
+      Species(english:'Common Ringed Plover',local:'liivatüll',latinCode:'chahia'),
+      Species(english:'Mute Swan',local:'kühmnokk-luik',latinCode:'cygolo'),
+      Species(english:'Black-Headed Gull',local:'naerukajakas',latinCode:'larrid'),
+      Species(english:'Greylag goose',local:'hallhani',latinCode:'ansans'),
+      Species(english:'Mallard',local:'sinikael-part',latinCode:'anapla'),
+      Species(english:'Little Gull',local:'väikekajakas',latinCode:'hydmin'),
     ];
 
 }

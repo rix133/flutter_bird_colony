@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/defaultSettings.dart';
 import '../species.dart';
 
 class SharedPreferencesService extends ChangeNotifier {
@@ -113,6 +114,16 @@ class SharedPreferencesService extends ChangeNotifier {
       String bandGroup = species.bandLetters();
       _sharedPreferences.remove(bandGroup);
     });
+    notifyListeners();
+  }
+
+  setFromDefaultSettings(DefaultSettings defaultSettings) {
+    desiredAccuracy = defaultSettings.desiredAccuracy;
+    selectedYear = defaultSettings.selectedYear;
+    autoNextBand = defaultSettings.autoNextBand;
+    autoNextBandParent = defaultSettings.autoNextBandParent;
+    biasedRepeatedMeasures = defaultSettings.biasedRepeatedMeasurements;
+    defaultSpecies = defaultSettings.defaultSpecies.english;
     notifyListeners();
   }
 }

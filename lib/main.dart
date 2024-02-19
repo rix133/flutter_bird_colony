@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kakrarahu/editDefaultSettings.dart';
 import 'package:kakrarahu/editEgg.dart';
 import 'package:kakrarahu/editExperiment.dart';
 import 'package:kakrarahu/editBird.dart';
@@ -119,6 +120,7 @@ class MyApp extends StatelessWidget {
         '/listExperiments':(context)=>ListExperiments(),
         //'/listNests':(context)=>ListNests(),
         '/editExperiment':(context)=>EditExperiment(),
+        '/editDefaultSettings':(context)=>EditDefaultSettings(),
 
 
       },
@@ -145,5 +147,6 @@ class MyApp extends StatelessWidget {
 
 
 }
+
 
 

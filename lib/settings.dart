@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:kakrarahu/models/defaultSettings.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -16,6 +17,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String? _userEmail;
   bool _isLoggedIn = false;
   bool _isAdmin = false;
+  List<String> _allowedUsers = [];
   SharedPreferencesService? sharedPreferencesService;
 
   @override
@@ -25,9 +27,100 @@ class _SettingsPageState extends State<SettingsPage> {
     _isLoggedIn = sharedPreferencesService!.isLoggedIn;
     _userName = sharedPreferencesService!.userName;
     _userEmail = sharedPreferencesService!.userEmail;
+    _isAdmin = sharedPreferencesService!.isAdmin;
+    if(_isAdmin) {
+      FirebaseFirestore.instance.collection('users').get().then((value) {
+        value.docs.forEach((element) {
+          _allowedUsers.add(element.id);
+        });
+        setState(() {
+
+        });
+      });
+    }
+  }
+
+  Future<String> _addUserByEmail() async {
+    String email = '';
+    String? warning;
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: Text('New user', style: TextStyle(color: Colors.black)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    style: TextStyle(color: Colors.black),
+                    decoration: InputDecoration(hintText: 'Email', hintStyle: TextStyle(color: Colors.deepPurpleAccent)),
+                    onChanged: (value) {
+                      email = value;
+                    },
+                  ),
+                  if (warning != null)
+                    Text(
+                      warning ?? '',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    email = '';
+                    Navigator.pop(context);
+                  },
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    if (email.isNotEmpty &&
+                        !_allowedUsers.contains(email) &&
+                        RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9_%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$").hasMatch(email)) {
+                      FirebaseFirestore.instance.collection('users').doc(email).set({'isAdmin': false});
+                      Navigator.pop(context);
+                    } else {
+                      setState(() {
+                        warning = 'Invalid email or already added';
+                      });
+                    }
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    return email;
   }
 
 
+  Widget _getAllowedUsers() {
+    return _isAdmin ? Column(
+      children: [
+        Text('Allowed users:'),
+        ..._allowedUsers.map((e) => Text(e)),
+        SizedBox(height: 20),
+        ElevatedButton.icon(
+          onPressed: () async {
+            await _addUserByEmail().then((value) {
+              if (value.isNotEmpty) {
+                _allowedUsers.add(value);
+                setState(() { });
+              }
+            });
+          },
+          label: Padding(child:Text('Add user'), padding: EdgeInsets.all(10)),
+          icon: Icon(Icons.add),
+        ),
+      ],
+    ) : Container();
+  }
 
 
 
@@ -80,19 +173,18 @@ class _SettingsPageState extends State<SettingsPage> {
   _setDefaultSettings() {
     FirebaseFirestore.instance.collection('settings').doc('default').get().then((value) {
       if (value.exists) {
-        sharedPreferencesService?.autoNextBand = value['autoNextBand'];
-        sharedPreferencesService?.autoNextBandParent = value['autoNextBandParent'];
-        sharedPreferencesService?.desiredAccuracy = value['desiredAccuracy'];
-        sharedPreferencesService?.biasedRepeatedMeasures = value['biasedRepeatedMeasures'];
-        sharedPreferencesService?.defaultSpecies = value['defaultSpecies'];
+        DefaultSettings defaultSettings = DefaultSettings.fromDocSnapshot(value);
+        sharedPreferencesService?.setFromDefaultSettings(defaultSettings);
+
       }
     });
   }
 
+
   _login() async {
     final user = await signInWithGoogle();
     if (user != null) {
-      FirebaseFirestore.instance.collection('users').doc(user.uid).get().then((value) {
+      FirebaseFirestore.instance.collection('users').doc(user.email).get().then((value) {
         if (value.exists) {
           _isAdmin = value['isAdmin'];
           sharedPreferencesService?.isAdmin = value['isAdmin'];
@@ -185,6 +277,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
         child: Column(
           children: <Widget>[
             if (_isLoggedIn)
@@ -198,12 +291,14 @@ class _SettingsPageState extends State<SettingsPage> {
             SizedBox(height: 20),
             ...getSettings(_isLoggedIn),
             SizedBox(height: 20),
+            _getAllowedUsers(),
+            SizedBox(height: 20),
             _goToEditDefaultSettings(),
 
           ],
         ),
       ),
-    );
+    ));
   }
 }
 
