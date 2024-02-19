@@ -15,6 +15,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String? _userName;
   String? _userEmail;
   bool _isLoggedIn = false;
+  bool _isAdmin = false;
   SharedPreferencesService? sharedPreferencesService;
 
   @override
@@ -68,18 +69,24 @@ class _SettingsPageState extends State<SettingsPage> {
   reset() {
     setState(() {
     _isLoggedIn = false;
+    _isAdmin = false;
     _userName = '';
     _userEmail = '';
-    sharedPreferencesService?.isLoggedIn = _isLoggedIn;
-    sharedPreferencesService?.userName = _userName ?? '';
-    sharedPreferencesService?.userEmail = _userEmail ?? '';
-    sharedPreferencesService?.autoNextBand = false;
-    sharedPreferencesService?.autoNextBandParent = false;
-    sharedPreferencesService?.isAdmin = false;
-    sharedPreferencesService?.clearAllMetalBands();
+    sharedPreferencesService?.clearAll();
 
     });
 
+  }
+  _setDefaultSettings() {
+    FirebaseFirestore.instance.collection('settings').doc('default').get().then((value) {
+      if (value.exists) {
+        sharedPreferencesService?.autoNextBand = value['autoNextBand'];
+        sharedPreferencesService?.autoNextBandParent = value['autoNextBandParent'];
+        sharedPreferencesService?.desiredAccuracy = value['desiredAccuracy'];
+        sharedPreferencesService?.biasedRepeatedMeasures = value['biasedRepeatedMeasures'];
+        sharedPreferencesService?.defaultSpecies = value['defaultSpecies'];
+      }
+    });
   }
 
   _login() async {
@@ -87,11 +94,22 @@ class _SettingsPageState extends State<SettingsPage> {
     if (user != null) {
       FirebaseFirestore.instance.collection('users').doc(user.uid).get().then((value) {
         if (value.exists) {
+          _isAdmin = value['isAdmin'];
           sharedPreferencesService?.isAdmin = value['isAdmin'];
           sharedPreferencesService?.isLoggedIn = true;
           sharedPreferencesService?.userName = user.displayName ?? '';
           sharedPreferencesService?.userEmail = user.email ?? '';
-          Navigator.popAndPushNamed(context, '/');
+          _setDefaultSettings();
+          if(!_isAdmin) {
+            Navigator.popAndPushNamed(context, '/');
+          }
+          else {
+            setState(() {
+              _isLoggedIn = true;
+              _userName = user.displayName;
+              _userEmail = user.email;
+            });
+          }
         } else {
           AlertDialog(
             title: Text('Not authorized'),
@@ -110,6 +128,18 @@ class _SettingsPageState extends State<SettingsPage> {
 
 
     }
+  }
+
+  Widget _goToEditDefaultSettings() {
+    return _isAdmin ? Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+        children:[ElevatedButton.icon(
+      onPressed: () {
+        Navigator.pushNamed(context, '/editDefaultSettings');
+      },
+      label: Text('Edit default settings'),
+      icon: Icon(Icons.settings),
+    )]) : Container();
   }
 
   _logout() async {
@@ -167,6 +197,9 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             SizedBox(height: 20),
             ...getSettings(_isLoggedIn),
+            SizedBox(height: 20),
+            _goToEditDefaultSettings(),
+
           ],
         ),
       ),

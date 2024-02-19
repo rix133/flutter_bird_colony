@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:kakrarahu/design/speciesInput.dart';
 import 'package:kakrarahu/models/experiment.dart';
@@ -27,10 +28,10 @@ class _NestManageState extends State<NestManage> {
   final FocusNode _focusNode = FocusNode();
   final species = new TextEditingController();
 
-  var new_egg_nr;
-  var save;
-  var exists;
+  int new_egg_nr = 1;
+  Position? position;
   List<Bird> parents = [];
+  double _desiredAccuracy = 1;
   Nest? nest;
   late CollectionReference nests;
   Stream<QuerySnapshot> _eggStream = Stream.empty();
@@ -58,6 +59,7 @@ class _NestManageState extends State<NestManage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
+      _desiredAccuracy = sps.desiredAccuracy;
       var data = ModalRoute.of(context)?.settings.arguments as Map;
 
 
@@ -71,10 +73,53 @@ class _NestManageState extends State<NestManage> {
                 .doc(nest!.id)
                 .collection("egg")
                 .snapshots();
+            if(nest != null) {
+              position = Position(longitude: nest!.coordinates.longitude,
+                  latitude: nest!.coordinates.latitude,
+                  timestamp: nest!.discover_date,
+                  accuracy: nest!.getAccuracy(),
+                  altitude: 0.0,
+                  altitudeAccuracy: 0.0,
+                  heading: 0.0,
+                  headingAccuracy: 0.0,
+                  speed: 0.0,
+                  speedAccuracy: 0.0);
+            }
           });
         }
       });
     });
+  }
+
+  Widget locationButton(){
+    if(nest == null || position == null){
+      return SizedBox.shrink();
+    }
+    double accuracyDiff = (position?.accuracy ?? 999999) - _desiredAccuracy;
+    Future<void> updateFun() async {
+      position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.best);
+      if((position?.accuracy ?? 999999) < _desiredAccuracy){
+        nest!.coordinates = GeoPoint(position!.latitude, position!.longitude);
+        nest!.accuracy = position!.accuracy.toStringAsFixed(2) + "m";
+      }
+      setState(() { });
+    };
+    return (Padding(
+      padding: const EdgeInsets.all(8.0),
+      child:
+        ElevatedButton.icon(
+        style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all(accuracyDiff < 0 ? Colors.green : Colors.red)),
+        onPressed: () => updateFun(),
+        icon: Icon(
+          Icons.my_location,
+          color: Colors.black87,
+          size: 40,
+        ),
+        label: Padding(padding:EdgeInsets.symmetric(vertical: 20),
+        child:Text('~ ${position!.accuracy.toStringAsFixed(1)} m')))
+    ));
   }
 
   Nest getNest(BuildContext context) {
@@ -329,11 +374,12 @@ class _NestManageState extends State<NestManage> {
                 getTitleRow(),
                 listExperiments(nest!), //list of experiments
                 SizedBox(height: 15),
-                buildRawAutocomplete(species, _focusNode, (String value) {
+                Row(children:[Expanded(child:buildRawAutocomplete(species, _focusNode, (String value) {
                   setState(() {
                     nest!.species = value;
                   });
-                }),
+                })),
+                  locationButton(),]),
                 SizedBox(height: 15),
                 ...nest!.measures
                     .map((Measure m) =>

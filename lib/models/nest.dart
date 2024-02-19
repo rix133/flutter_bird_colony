@@ -217,13 +217,13 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
     }
   }
 
-  double getAccuracy(String accuracy) {
+  double getAccuracy() {
     //remove all letters
-    String number = accuracy.replaceAll(RegExp(r'[^0-9]'), '');
+    String number = accuracy.endsWith('m') ? accuracy.substring(0, accuracy.length - 1) : accuracy;
     if (number.isEmpty) {
-      return 99999;
+      return 9999.9;
     }
-    return double.tryParse(number)??99999;
+    return double.tryParse(number)??9999.9;
 
   }
 
@@ -231,7 +231,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
     List<List<CellValue>> rows = [];
     List<CellValue> baseItems = [
       TextCellValue(name ?? ""),
-      DoubleCellValue(getAccuracy(accuracy)),
+      DoubleCellValue(getAccuracy()),
       DoubleCellValue(coordinates.latitude),
       DoubleCellValue(coordinates.longitude),
       TextCellValue(species ?? ""),

@@ -24,7 +24,7 @@ class _NestsMapState extends State<NestsMap> {
     zoom: 16.35,
   );
 
-  late GoogleMapController _googleMapController;
+  GoogleMapController? _googleMapController;
   Stream<Position> loc = Stream.empty();
   Stream<QuerySnapshot> _nestStream = Stream.empty();
   String visible = "";
@@ -51,6 +51,7 @@ class _NestsMapState extends State<NestsMap> {
       if(map != null){
         map = map as Map<String, dynamic>;
         if(map?["nest_ids"] != null){
+          print(map?["nest_ids"]);
           query = pesa.where(FieldPath.documentId, whereIn: map?["nest_ids"]);
         }
       }
@@ -60,6 +61,7 @@ class _NestsMapState extends State<NestsMap> {
           locationSettings: LocationSettings(
         accuracy: LocationAccuracy.best,
       ));
+
       updateMarkersToShow();
       setState(() {});
     });
@@ -69,7 +71,7 @@ class _NestsMapState extends State<NestsMap> {
   void dispose() {
     search.dispose();
     focus.dispose();
-    _googleMapController.dispose();
+    _googleMapController?.dispose();
     markersToShow.dispose();
     super.dispose();
   }
@@ -147,7 +149,9 @@ class _NestsMapState extends State<NestsMap> {
                 ],
               );
             } else {
-              return Text("loading...");
+              return Center(
+                child: CircularProgressIndicator(),
+              );
             }
           }),
       floatingActionButton: Column(
@@ -168,7 +172,7 @@ class _NestsMapState extends State<NestsMap> {
                           FloatingActionButton(
                             heroTag: "compass",
                             onPressed: () {
-                              _googleMapController.animateCamera(
+                              _googleMapController?.animateCamera(
                                   CameraUpdate.newCameraPosition(CameraPosition(
                                 target: LatLng(
                                     snapshot.data?.latitude ?? 58.766218,
@@ -185,7 +189,7 @@ class _NestsMapState extends State<NestsMap> {
                           FloatingActionButton(
                             heroTag: "myLoc",
                             onPressed: () {
-                              _googleMapController.animateCamera(
+                              _googleMapController?.animateCamera(
                                   CameraUpdate.newCameraPosition(CameraPosition(
                                 target: LatLng(
                                     snapshot.data?.latitude ?? 58.766218,
@@ -222,8 +226,7 @@ class _NestsMapState extends State<NestsMap> {
           FloatingActionButton(
             heroTag: "zoomOut",
             onPressed: () {
-              _googleMapController
-                  .animateCamera(CameraUpdate.newCameraPosition(kakrarahud));
+              _googleMapController?.animateCamera(CameraUpdate.newCameraPosition(kakrarahud));
               focus.unfocus();
             },
             child: const Icon(Icons.zoom_out_map),
@@ -233,8 +236,7 @@ class _NestsMapState extends State<NestsMap> {
             heroTag: "search",
             isExtended: false,
             onPressed: () {
-              _googleMapController
-                  .animateCamera(CameraUpdate.newCameraPosition(kakrarahud));
+              _googleMapController?.animateCamera(CameraUpdate.newCameraPosition(kakrarahud));
               focus.unfocus();
               showDialog(
                   context: context,

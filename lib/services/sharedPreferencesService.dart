@@ -15,6 +15,13 @@ class SharedPreferencesService extends ChangeNotifier {
     notifyListeners();
   }
 
+  double get desiredAccuracy => _sharedPreferences.getDouble('desiredAccuracy') ?? 4;
+
+  set desiredAccuracy(double value) {
+    _sharedPreferences.setDouble('desiredAccuracy', value);
+    notifyListeners();
+  }
+
   int get selectedYear => _sharedPreferences.getInt('selectedYear') ?? DateTime.now().year;
 
   String get selectedYearString => selectedYear == 2022 ? 'Nest' : selectedYear.toString();
@@ -79,6 +86,25 @@ class SharedPreferencesService extends ChangeNotifier {
 
   set isAdmin(bool value) {
     _sharedPreferences.setBool('isAdmin', value);
+    notifyListeners();
+  }
+
+  String get defaultSpecies => _sharedPreferences.getString('defaultSpecies') ?? 'Common Gull';
+
+  set defaultSpecies(String value) {
+    _sharedPreferences.setString('defaultSpecies', value);
+    notifyListeners();
+  }
+
+  bool get biasedRepeatedMeasures => _sharedPreferences.getBool('biasedRepeatedMeasures') ?? false;
+
+  set biasedRepeatedMeasures(bool value) {
+    _sharedPreferences.setBool('biasedRepeatedMeasures', value);
+    notifyListeners();
+  }
+
+  void clearAll() {
+    _sharedPreferences.clear();
     notifyListeners();
   }
 

@@ -37,7 +37,6 @@ class _nestCreateState extends State<nestCreate> {
   void _getCurrentLocation() async {
     final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best);
-    print(position.accuracy);
     if (mounted) {
       setState(() {
         _asukoht = position;
