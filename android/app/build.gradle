@@ -38,6 +38,12 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+def getMapsApiKey() {
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('key.properties').newDataInputStream())
+    return properties.getProperty('MAPS_API_KEY')
+}
+
 android {
     ndkVersion = "25.2.9519653"
     compileSdkVersion 33
@@ -54,6 +60,7 @@ android {
         targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        buildConfigField("String", "MAPS_API_KEY", "\"${getMapsApiKey()}\"")
     }
     signingConfigs {
         release {
