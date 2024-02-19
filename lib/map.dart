@@ -95,7 +95,6 @@ class _NestsMapState extends State<NestsMap> {
       nestsToShow = nests;
     }
     markersToShow.value = nestsToShow.map((e) => e.getMarker(context, true)).toSet();
-    markersToShow.notifyListeners();
   }
 
 
