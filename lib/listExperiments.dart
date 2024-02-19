@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/design/listOverviewPageButtons.dart';
 import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -39,16 +38,10 @@ class _ListExperimentsState extends State<ListExperiments> {
   }
 
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text("Experiments", style: TextStyle(color: Colors.black)),
-          backgroundColor: Colors.redAccent,
-        ),
-        body: Container(
+    return Container(
             color: Theme.of(context).scaffoldBackgroundColor,
             child: Column(
               children: [
-                listOverviewPageButtons(context),
                 Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
@@ -116,7 +109,7 @@ class _ListExperimentsState extends State<ListExperiments> {
                     getDownloadButton(context)
                   ],))
               ]),
-            ));
+            );
   }
 
   getAddButton(BuildContext context) {

@@ -374,7 +374,7 @@ class _NestManageState extends State<NestManage> {
                 getTitleRow(),
                 listExperiments(nest!), //list of experiments
                 SizedBox(height: 15),
-                Row(children:[Expanded(child:buildRawAutocomplete(species, _focusNode, (String value) {
+                Row(children:[Expanded(child:speciesRawAutocomplete(species, _focusNode, (String value) {
                   setState(() {
                     nest!.species = value;
                   });

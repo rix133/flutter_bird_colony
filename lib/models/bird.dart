@@ -96,7 +96,34 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         },
       ),
       onTap: () {
-        AlertDialog(title: Text("What should this do?"));
+        showDialog(context: context, builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Colors.black87,
+            title: Text("Bird details"),
+            content: Column(
+              children: [
+                Text("Band: $band"),
+                Text("Color band: ${color_band ?? "unknown"}"),
+                Text("Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)}"),
+                Text("Nest: ${nest ?? "unknown"}"),
+                Text("Species: ${species ?? "unknown"}"),
+                Text("Responsible: ${responsible ?? "unknown"}"),
+                Text("Age: ${age ?? "unknown"}"),
+                Text("Last modified: ${last_modified != null ? DateFormat('d MMM yyyy').format(last_modified!) : "unknown"}"),
+                Text("Egg: ${egg ?? "unknown"}"),
+                Text("Experiments: ${experiments?.map((e) => e.name).join(", ") ?? "unknown"}"),
+                Text("Measures: ${measures.map((e) => e.name).join(", ")}"),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text("Close"))
+            ],
+          );
+        });
       },
     );
   }
@@ -120,7 +147,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   }
 
   @override
-  factory Bird.fromQuerySnapshot(DocumentSnapshot<Object?> snapshot) {
+  factory Bird.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     ExperimentedItem eitem = ExperimentedItem.fromJson(json);
     Bird nbird = Bird(
@@ -192,7 +219,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
 
         return null;
       }
-      return Bird.fromQuerySnapshot(value);
+      return Bird.fromDocSnapshot(value);
     });
     if (prevBird != null) {
       //handle legacy birds

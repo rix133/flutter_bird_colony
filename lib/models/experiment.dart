@@ -64,7 +64,7 @@ class Experiment implements FirestoreItem {
   }
 
   Map<String, dynamic> toSimpleJson() {
-    return {'id': id, 'name': name, 'color': color.value.toString(), 'measures': measures?.map((e) => e.toFormJson()).toList()};
+    return {'id': id, 'name': name, 'color': color.value.toString(), 'measures': measures.map((e) => e.toFormJson()).toList()};
   }
 
   @override
@@ -78,7 +78,7 @@ class Experiment implements FirestoreItem {
       'type': type,
       'color': color.value.toString(),
       'last_modified': last_modified,
-      'measures': measures?.map((e) => e.toJson()).toList(),
+      'measures': measures.map((e) => e.toJson()).toList(),
       'created': created
     };
   }
@@ -213,7 +213,7 @@ class Experiment implements FirestoreItem {
       for(String i in items){
          await birdCollection.doc(i).get().then((DocumentSnapshot value) => {
           if(value.exists){
-            b = Bird.fromQuerySnapshot(value),
+            b = Bird.fromDocSnapshot(value),
             b.experiments = b.experiments?.where((element) => element.id != id).toList(),
             if(!delete){
               b.experiments?.add(this),

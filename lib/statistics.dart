@@ -166,7 +166,7 @@ class _StatisticsState extends State<Statistics> {
                         (context, AsyncSnapshot<QuerySnapshot> snapshot_birds) {
                       if (snapshot_birds.hasData) {
                         List<Bird> birds = snapshot_birds.data!.docs
-                            .map((DocumentSnapshot e) => Bird.fromQuerySnapshot(e))
+                            .map((DocumentSnapshot e) => Bird.fromDocSnapshot(e))
                             .toList();
                         birds = birds.where((Bird b) => b.timeSpan(dropdownValue)).toList();
                         birds = birds.where((Bird b) => b.people(dropdownValuePeople, username)).toList();

@@ -126,7 +126,7 @@ class _EditBirdState extends State<EditBird> {
           if (bird.band.isNotEmpty && (bird.id == null)) {
             //reload from firestore this comes from nest and has firestore instance
             bird = await birds.doc(bird.band).get().then(
-                (DocumentSnapshot value) => Bird.fromQuerySnapshot(value));
+                (DocumentSnapshot value) => Bird.fromDocSnapshot(value));
             bird.addNonExistingExperiments(nest.experiments, bird.isChick() ? "chick" : "parent");
           } else {
             if (map["nest"] != null) {
@@ -139,13 +139,10 @@ class _EditBirdState extends State<EditBird> {
               }
             }
           }
-          //check if measure is missing and add if needed
-          if (bird.measures == null) {
-            bird.measures = [];
-          }
+
           for (Measure m in allMeasures) {
-            if (!bird.measures!.map((e) => e.name).contains(m.name)) {
-              bird.measures!.add(m);
+            if (!bird.measures.map((e) => e.name).contains(m.name)) {
+              bird.measures.add(m);
             }
           }
         }
@@ -183,7 +180,7 @@ class _EditBirdState extends State<EditBird> {
           );
         }
 
-        bird.measures!.sort();
+        bird.measures.sort();
         speciesCntr.text = bird.species ?? "";
         nestnr.setValue(bird.nest);
         color_band.setValue(bird.color_band);
@@ -192,9 +189,9 @@ class _EditBirdState extends State<EditBird> {
         bird.measures = allMeasures;
         //remove age from measures if ringed as chick
         if (bird.ringed_as_chick) {
-          bird.measures!.removeWhere((element) => element.name == "age");
+          bird.measures.removeWhere((element) => element.name == "age");
         }
-        bird.measures!.sort();
+        bird.measures.sort();
       }
       _recentMetalBand = sps?.getRecentMetalBand(bird.species ?? "") ?? "";
       autoAssignNextMetalBand(_recentMetalBand);
@@ -307,15 +304,15 @@ class _EditBirdState extends State<EditBird> {
 
   void addMeasure(Measure m) {
     bird.measures =
-        bird.measures!.map((e) => e..value = e.valueCntr.text).toList();
+        bird.measures.map((e) => e..value = e.valueCntr.text).toList();
     setState(() {
-      bird.measures!.add(m);
-      bird.measures!.sort();
+      bird.measures.add(m);
+      bird.measures.sort();
     });
   }
 
   void saveOk() {
-      sps?.recentBand(bird?.species ?? '', bird.band);
+      sps?.recentBand(bird.species ?? '', bird.band);
       Navigator.popAndPushNamed(context, "/nestManage", arguments: {"sihtkoht": bird.nest});
   }
   void deleteOk() {
@@ -352,11 +349,11 @@ class _EditBirdState extends State<EditBird> {
       if (lastLetter != -1) {
         band_letCntr.text = recentBand.substring(0, lastLetter + 1);
         int? nr = int.tryParse(recentBand.substring(lastLetter + 1));
-        band_numCntr.text = nr != null ? (nr! + 1).toString() : "";
+        band_numCntr.text = nr != null ? (nr + 1).toString() : "";
       } else {
         band_letCntr.text = '';
         int? nr = int.tryParse(recentBand.substring(lastLetter + 1));
-        band_numCntr.text = nr != null ? (nr! + 1).toString() : "";
+        band_numCntr.text = nr != null ? (nr + 1).toString() : "";
       }
       bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
     }
@@ -385,7 +382,7 @@ class _EditBirdState extends State<EditBird> {
                       style: TextStyle(fontSize: 30, color: Colors.yellow)),
                   SizedBox(height: 10),
                   listExperiments(bird),
-                  buildRawAutocomplete(speciesCntr, _focusNode, (String sp) {
+                  speciesRawAutocomplete(speciesCntr, _focusNode, (String sp) {
                     setState(() {
                       bird.species = sp;
                       _recentMetalBand = sps?.getRecentMetalBand(sp) ?? "";
@@ -402,8 +399,8 @@ class _EditBirdState extends State<EditBird> {
                   SizedBox(height: 10),
                   //show age in years if ringed as chick
                   bird.ringed_as_chick ? getAgeRow() : Container(),
-                  ...?bird.measures
-                      ?.map((Measure m) => bird.band.isNotEmpty
+                  ...bird.measures
+                      .map((Measure m) => bird.band.isNotEmpty
                           ? m.getMeasureFormWithAddButton(addMeasure)
                           : Container())
                       .toList(),

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/species.dart';
 
-Widget buildRawAutocomplete(TextEditingController species, FocusNode _focusNode, Function(String) returnFun) {
+Widget speciesRawAutocomplete(TextEditingController species, FocusNode _focusNode, Function(String) returnFun,{bgColor = Colors.amberAccent, textColor = Colors.black, borderColor= Colors.deepOrange, labelColor = Colors.yellow}) {
   String _displayStringForOption(Species option) => option.english;
   return RawAutocomplete<Species>(
     displayStringForOption: _displayStringForOption,
@@ -22,10 +22,10 @@ Widget buildRawAutocomplete(TextEditingController species, FocusNode _focusNode,
                   option.english.toString(),
                   textAlign: TextAlign.center,
                 ),
-                textColor: Colors.black,
+                textColor: textColor,
                 contentPadding: EdgeInsets.all(0),
                 visualDensity: VisualDensity.comfortable,
-                tileColor: Colors.orange[300],
+                tileColor: bgColor,
                 onTap: () {
                   onSelected(option);
                 },
@@ -46,16 +46,16 @@ Widget buildRawAutocomplete(TextEditingController species, FocusNode _focusNode,
         controller: textEditingController,
         decoration: InputDecoration(
           labelText: "species",
-          labelStyle: TextStyle(color: Colors.yellow),
+          labelStyle: TextStyle(color: labelColor),
           hintText: "enter species",
-          fillColor: Colors.orange,
+          fillColor: bgColor,
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25),
               borderSide: (BorderSide(color: Colors.indigo))),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.0),
             borderSide: BorderSide(
-              color: Colors.deepOrange,
+              color: borderColor,
               width: 1.5,
             ),
           ),

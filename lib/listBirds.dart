@@ -1,11 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/design/listOverviewPageButtons.dart';
 import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/species.dart';
 import 'package:provider/provider.dart';
 
+import 'design/experimentDropdown.dart';
+import 'design/speciesInput.dart';
+import 'design/yearDropdown.dart';
 import 'models/experiment.dart';
 import 'models/firestoreItemMixin.dart';
 
@@ -21,6 +23,8 @@ class _ListBirdsState extends State<ListBirds> {
   String? _selectedExperiments;
   String? _selectedSpecies;
   int? _selectedAge;
+  TextEditingController _speciesController = TextEditingController();
+  FocusNode _focusNode = FocusNode();
   List<Experiment> allExperiments = [];
   List<Species> allSpecies = SpeciesList.english;
 
@@ -50,6 +54,8 @@ class _ListBirdsState extends State<ListBirds> {
   void dispose() {
     super.dispose();
     searchController.dispose();
+    _speciesController.dispose();
+    _focusNode.dispose();
   }
 
   getAddButton(BuildContext context) {
@@ -83,6 +89,18 @@ class _ListBirdsState extends State<ListBirds> {
     );
   }
 
+  updateYearFilter(int year) {
+    setState(() {
+      _selectedYear = year;
+    });
+  }
+
+  updateExperimentFilter(String? experiment) {
+    setState(() {
+      _selectedExperiments = experiment;
+    });
+  }
+
   void openFilterDialog(BuildContext context){
      showDialog(
           context: context,
@@ -90,112 +108,24 @@ class _ListBirdsState extends State<ListBirds> {
             return AlertDialog(
               backgroundColor: Colors.black87,
               title: Text("Filter"),
-              content: Column(
+              content: SingleChildScrollView(child:Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SingleChildScrollView(
-                      child: Row(children: [
-                        Text("Year"),
-                        SizedBox(width: 20,),
-                        DropdownButton<int>(
-                          value: _selectedYear,
-                          style: TextStyle(color: Colors.deepPurpleAccent),
-                          items: List<int>.generate(
-                              DateTime.now().year - 2022 + 1,
-                                  (int index) => index + 2022).map((int year) {
-                            return DropdownMenuItem<int>(
-                              value: year,
-                              child: Text(year.toString(),
-                                  style: TextStyle(color: Colors.deepPurpleAccent)),
-                            );
-                          }).toList(),
-                          onChanged: (int? newValue) {
-                            setState(() {
-                              _selectedYear = newValue!;
-                            });
-                          },
-                        )
-                      ]),
-                    ),
+                YearDropdown(
+                selectedYear: _selectedYear,
+                onChanged: updateYearFilter,
+              ),
+
+                  ExperimentDropdown(
+                    allExperiments: allExperiments,
+                    selectedExperiment: _selectedExperiments,
+                    onChanged: updateExperimentFilter,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(children: [
-                        Text("Experiment"),
-                        SizedBox(width: 20,),
-                        DropdownButton<String>(
-                          value: _selectedExperiments,
-                          style: TextStyle(color: Colors.deepPurpleAccent),
-                          items: allExperiments.map((Experiment e) {
-                            return DropdownMenuItem<String>(
-                              value: e.name,
-                              child: Text(e.name,
-                                  style: TextStyle(color: Colors.deepPurpleAccent)),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              _selectedExperiments = newValue;
-                            });
-                          },
-                        )
-                      ]),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(children: [
-                        SizedBox(width: 10,),
-                        Text("Species"),
-                        DropdownButton<String>(
-                          value: _selectedSpecies,
-                          style: TextStyle(color: Colors.deepPurpleAccent),
-                          items: allSpecies.map((Species e) {
-                            return DropdownMenuItem<String>(
-                              value: e.english,
-                              child: Text(e.english == null ? "All" : e.english,
-                                  style: TextStyle(color: Colors.deepPurpleAccent)),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              _selectedSpecies = newValue;
-                            });
-                          },
-                        )
-                      ]),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SingleChildScrollView(
-                      child: Row(children: [
-                        Text("Age"),
-                        SizedBox(width: 20,),
-                        DropdownButton<int>(
-                          value: _selectedAge,
-                          style: TextStyle(color: Colors.deepPurpleAccent),
-                          items: [null,0,1,2,3,4,5,6,7,8,9,10].map((int? e) {
-                            return DropdownMenuItem<int>(
-                              value: e,
-                              child: Text(e == null ? "All" : e.toString(),
-                                  style: TextStyle(color: Colors.deepPurpleAccent)),
-                            );
-                          }).toList(),
-                          onChanged: (int? newValue) {
-                            setState(() {
-                              _selectedAge = newValue;
-                            });
-                          },
-                        )
-                      ]),
-                    ),
-                  ),]),
+                  speciesRawAutocomplete(_speciesController, _focusNode, (String value) {
+                    setState(() {
+                      _selectedSpecies = value;
+                    });
+                  }, borderColor: Colors.white38, bgColor: Colors.amberAccent, labelColor: Colors.grey),
+                 ])),
               actions: [
                 ElevatedButton(
                     onPressed: () {
@@ -208,7 +138,7 @@ class _ListBirdsState extends State<ListBirds> {
   }
 
   bool filterByYear(Bird e) {
-    return e.nest_year == _selectedYear || e.ringed_date!.year == _selectedYear;
+    return e.nest_year == _selectedYear || e.ringed_date.year == _selectedYear;
   }
 
   bool filterByText(Bird e) {
@@ -230,16 +160,10 @@ class _ListBirdsState extends State<ListBirds> {
   }
 
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text("Birds", style: TextStyle(color: Colors.black)),
-          backgroundColor: Colors.tealAccent,
-        ),
-        body: Container(
+    return Container(
             color: Theme.of(context).scaffoldBackgroundColor,
             child: Column(
               children: [
-                listOverviewPageButtons(context),
                 SizedBox(height: 20,),
                 Row(children:[Expanded(child:TextField(
                   controller: searchController,
@@ -272,7 +196,7 @@ class _ListBirdsState extends State<ListBirds> {
                             (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                           if (snapshot.hasData) {
                             birds = snapshot.data!.docs
-                                .map((DocumentSnapshot e) => Bird.fromQuerySnapshot(e))
+                                .map((DocumentSnapshot e) => Bird.fromDocSnapshot(e))
                                 .where(filterByYear)
                                 .where(filterByText)
                                 .where(filterByExperiments)
@@ -299,6 +223,6 @@ class _ListBirdsState extends State<ListBirds> {
                         getDownloadButton(context, sps)
                       ],)),
               ],
-            )));
+            ));
   }
 }

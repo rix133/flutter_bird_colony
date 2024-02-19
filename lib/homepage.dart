@@ -64,7 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                HomePageButton(route: "/listExperiments", icon: Icons.science, label: "data", color: Colors.blue[700]!),
+                                HomePageButton(route: "/listDatas", icon: Icons.science, label: "data", color: Colors.blue[700]!),
                                 HomePageButton(route: "/statistics", icon: Icons.bar_chart, label: "stats", color: Colors.amber[700]!),
                               ],
                             ),
@@ -82,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
             );
           } else {
             // User is not signed in. Redirect to settings page
-            WidgetsBinding.instance!.addPostFrameCallback((_) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
               Navigator.pushReplacementNamed(context, '/settings');
             });
             return Container(); // Return an empty container until navigation completes

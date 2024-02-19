@@ -3,6 +3,7 @@ import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kakrarahu/models/bird.dart';
+import 'package:kakrarahu/models/egg.dart';
 import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/experimentedItem.dart';
 import 'package:kakrarahu/models/firestoreItem.dart';
@@ -301,12 +302,50 @@ TextCellValue('species'),
   }
   ListTile getListTile(BuildContext context){
     return ListTile(
-      title: Text(name),
+      title: Text('ID: $name, $species'),
       subtitle: Text(checkedStr()),
-      trailing: Icon(Icons.arrow_forward),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(icon:Icon(Icons.map, color: Colors.black87),
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all<Color>(getMarkerColor() == BitmapDescriptor.hueGreen ? Colors.green : Colors.limeAccent)),
+              onPressed: () {
+                Navigator.pushNamed(context, '/map',
+                    arguments: {'nest_ids': [id]});
+              }),
+          IconButton( icon: Icon(Icons.edit, color: Colors.black87),
+    style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(Colors.grey)),
+              onPressed: () {
+            Navigator.pushNamed(context, '/nestManage', arguments: {"sihtkoht": id});
+          }),
+        ],
+      ),
       onTap: () {
-        //Navigator.pushNamed(context, '/nest', arguments: this);
+        showDialog(context: context, builder: (BuildContext context) {
+          return AlertDialog(
+              backgroundColor: Colors.black87,
+              title: Text("Nest details"),
+          content: Column(
+            children: [
+              Text("Accuracy: $accuracy"),
+              Text("Coordinates: ${coordinates.latitude}, ${coordinates.longitude}"),
+              Text("Species: $species"),
+              Text("Discover date: ${discover_date.toIso8601String().split("T")[0]}"),
+              Text("Responsible: $responsible"),
+              Text("Last modified: ${last_modified.toIso8601String().split("T")[0]}"),
+              Text("Completed: ${completed ?? false}"),
+              Text("First egg: ${first_egg?.toIso8601String().split("T")[0] ?? ""}"),
+              Text("${checkedStr()}"),
+              Text("Experiments: ${experiments?.map((e) => e.name).join(", ") ?? ""}"),
+              Text("Parents: ${parents?.map((p) => p.name).join(", ") ?? ""}"),
+              Text("Measures: ${measures.map((e) => e.name).join(", ")}"),
+            ],
+          ),
+          );
       },
+    );
+  }
     );
   }
 
@@ -330,13 +369,20 @@ TextCellValue('species'),
     return "";
   }
 
-  Future<int> eggCount() {
+  Future<int> eggCount() async {
+    List<Egg> eggs = await this.eggs();
+    return eggs.where((egg) => egg.type() == 'egg').length;
+  }
+
+  Future<List<Egg>> eggs() {
     if (id == null) {
-      return Future.value(0);
+      return Future.value([]);
     }
     String year = discover_date.year.toString();
     CollectionReference eggs =
     FirebaseFirestore.instance.collection(year).doc(id).collection("egg");
-    return eggs.get().then((value) => value.docs.length).catchError((e) => 0);
+    return eggs.get().then((value) => value.docs.map((e) => Egg.fromDocSnapshot(e)).toList());
+
   }
+
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+//import 'package:flutter_svg/flutter_svg.dart';
 
 SingleChildScrollView listOverviewPageButtons(BuildContext context) {
   //get the buttons for listExperiments, listNests, listBirds
@@ -24,7 +24,7 @@ SingleChildScrollView listOverviewPageButtons(BuildContext context) {
       ),
       ElevatedButton.icon(
         onPressed: ModalRoute.of(context)?.settings.name == "/listNests" ? null : () {
-          //Navigator.popAndPushNamed(context, "/listNests");
+          Navigator.popAndPushNamed(context, "/listNests");
         },
         icon: Icon(
           Icons.home,
@@ -40,11 +40,13 @@ SingleChildScrollView listOverviewPageButtons(BuildContext context) {
         onPressed: ModalRoute.of(context)?.settings.name == "/listBirds" ? null : () {
           Navigator.popAndPushNamed(context, "/listBirds");
         },
-        icon: SvgPicture.asset(
+        icon: /*SvgPicture.asset(
           'assets/icons/bird.svg',
           colorFilter: ColorFilter.mode(ModalRoute.of(context)?.settings.name == "/listBirds" ? Colors.green : Colors.black87, BlendMode.srcIn),
           height: 25,
           width: 25,
+        )*/Icon(
+          Icons.ac_unit
         ),
         label: Text("Birds"),
           style: ButtonStyle(

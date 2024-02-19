@@ -196,10 +196,15 @@ class _SettingsPageState extends State<SettingsPage> {
             Navigator.popAndPushNamed(context, '/');
           }
           else {
-            setState(() {
-              _isLoggedIn = true;
-              _userName = user.displayName;
-              _userEmail = user.email;
+            FirebaseFirestore.instance.collection('users').get().then((value) {
+              value.docs.forEach((element) {
+                _allowedUsers.add(element.id);
+              });
+              setState(() {
+                _isLoggedIn = true;
+                _userName = user.displayName;
+                _userEmail = user.email;
+              });
             });
           }
         } else {
