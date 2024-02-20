@@ -69,7 +69,7 @@ class SharedPreferencesService extends ChangeNotifier {
 
 
   void recentBand(String speciesEng, String value) {
-    String bandGroup = SpeciesList.english.firstWhere((species) => species.english == speciesEng).bandLetters();
+    String bandGroup = SpeciesList.english.firstWhere((species) => species.english == speciesEng).getBandLetters();
 
     // Save the band for the species to SharedPreferences
     _sharedPreferences.setString(bandGroup, value);
@@ -77,7 +77,7 @@ class SharedPreferencesService extends ChangeNotifier {
   }
 
   String getRecentMetalBand(String speciesEng) {
-    String bandGroup = SpeciesList.english.firstWhere((species) => species.english == speciesEng).bandLetters();
+    String bandGroup = SpeciesList.english.firstWhere((species) => species.english == speciesEng).getBandLetters();
 
     // Retrieve the band for the species from SharedPreferences
     return _sharedPreferences.getString(bandGroup) ?? bandGroup;
@@ -111,7 +111,7 @@ class SharedPreferencesService extends ChangeNotifier {
 
   void clearAllMetalBands() {
     SpeciesList.english.forEach((species) {
-      String bandGroup = species.bandLetters();
+      String bandGroup = species.getBandLetters();
       _sharedPreferences.remove(bandGroup);
     });
     notifyListeners();

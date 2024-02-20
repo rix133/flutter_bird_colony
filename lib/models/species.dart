@@ -12,12 +12,14 @@ class Species implements FirestoreItem{
     this.latin,
     required this.latinCode,
     this.responsible,
+    this.letters = ''
   });
   String? id;
   String local; //name in local langauge
   String english;
   String latinCode;
   String? latin;
+  String letters;
 
   factory Species.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
@@ -27,6 +29,7 @@ class Species implements FirestoreItem{
       local: data['local'] ?? '',
       latin: data['latin'],
       latinCode: data['latinCode']  ?? '',
+      letters: data['letters'] ?? '',
     );
   }
 
@@ -42,7 +45,7 @@ class Species implements FirestoreItem{
     }
     return other is Species && other.english == english && other.local == local && other.latinCode==latinCode;
   }
-  String bandLetters(){
+  String getBandLetters(){
     if(english == 'Common Gull'){
       return 'UA';
     }
@@ -97,8 +100,7 @@ class Species implements FirestoreItem{
 
   @override
   Future<UpdateResult> delete({CollectionReference<Object?>? otherItems = null, bool soft = true, String type = "default"}) {
-    // TODO: implement delete
-    throw UnimplementedError();
+    return(FirebaseFirestore.instance.collection('settings').doc('species').collection(type).doc(id).delete().then((value) => UpdateResult.deleteOK(item: this)).catchError((error) => UpdateResult.error(message: error)));
   }
 
   @override
@@ -106,26 +108,35 @@ class Species implements FirestoreItem{
 
   @override
   Future<UpdateResult> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"}) {
-    // TODO: implement save
-    throw UnimplementedError();
+    return(FirebaseFirestore.instance.collection('settings').doc('species').collection(type).doc(id).set(toJson()).then((value) => UpdateResult.saveOK(item: this)).catchError((error) => UpdateResult.error(message: error)));
   }
 
   @override
   List<TextCellValue> toExcelRowHeader() {
-    // TODO: implement toExcelRowHeader
-    throw UnimplementedError();
+    return [TextCellValue('English'),TextCellValue('Local'),TextCellValue('Latin'),TextCellValue('Latin Code'),TextCellValue('Responsible')];
   }
 
   @override
   Future<List<List<CellValue>>> toExcelRows() {
-    // TODO: implement toExcelRows
-    throw UnimplementedError();
+    return Future.value([[
+      TextCellValue(english),
+      TextCellValue(local),
+      TextCellValue(latin ?? ''),
+      TextCellValue(latinCode),
+      TextCellValue(responsible ?? ''),
+    ]]);
   }
 
   @override
   Map<String, dynamic> toJson() {
-    // TODO: implement toJson
-    throw UnimplementedError();
+    return {
+      'english': english,
+      'local': local,
+      'latin': latin,
+      'latinCode': latinCode,
+      'responsible': responsible,
+      'letters': letters,
+    };
   }
 }
 class SpeciesList{
