@@ -102,7 +102,7 @@ class Species implements FirestoreItem{
   }
 
   @override
-  String get name => local ?? english;
+  String get name => local.isEmpty ? english : local;
 
   @override
   Future<UpdateResult> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"}) {

@@ -70,10 +70,12 @@ class _ListNestsState extends State<ListNests> {
     return Padding(
       padding: const EdgeInsets.all(18.0),
       child: ElevatedButton.icon(
-          onPressed: null,
-          icon: Icon(Icons.add),
+          onPressed: () {
+            Navigator.pushNamed(context, "/map", arguments: {'nest_ids': nests.map((e) => e.id).toList()});
+          },
+          icon: Icon(Icons.map),
           label: Padding(
-              child: Text("Add Nest", style: TextStyle(fontSize: 18)),
+              child: Text("Show nests", style: TextStyle(fontSize: 18)),
               padding: EdgeInsets.all(12)),
           style: ButtonStyle(
               backgroundColor: MaterialStateProperty.all(Colors.grey))),
