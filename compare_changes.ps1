@@ -2,7 +2,7 @@
 $commit1 = "master"
 
 # Define the default date
-$defaultDate = "2024-01-01"
+$defaultDate = "2023-09-31"
 
 # Check if a date argument was provided
 if ($args.Length -eq 0) {
