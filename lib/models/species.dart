@@ -1,14 +1,34 @@
 
-class Species {
-  const Species({
-    required this.local,
-    required this.english,
-    required this.latinCode,
-  });
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:excel/excel.dart';
+import 'package:kakrarahu/models/firestoreItem.dart';
+import 'package:kakrarahu/models/updateResult.dart';
 
-  final String local;
-  final String english;
-  final String latinCode;
+class Species implements FirestoreItem{
+  Species({
+    this.id,
+    required this.english,
+    required this.local,
+    this.latin,
+    required this.latinCode,
+    this.responsible,
+  });
+  String? id;
+  String local; //name in local langauge
+  String english;
+  String latinCode;
+  String? latin;
+
+  factory Species.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
+    Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+    return Species(
+      id: snapshot.id,
+      english: data['english'] ?? '',
+      local: data['local'] ?? '',
+      latin: data['latin'],
+      latinCode: data['latinCode']  ?? '',
+    );
+  }
 
   @override
   String toString() {
@@ -71,6 +91,42 @@ class Species {
 
   @override
   int get hashCode => Object.hash(local, english, latinCode);
+
+  @override
+  String? responsible;
+
+  @override
+  Future<UpdateResult> delete({CollectionReference<Object?>? otherItems = null, bool soft = true, String type = "default"}) {
+    // TODO: implement delete
+    throw UnimplementedError();
+  }
+
+  @override
+  String get name => local ?? english;
+
+  @override
+  Future<UpdateResult> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"}) {
+    // TODO: implement save
+    throw UnimplementedError();
+  }
+
+  @override
+  List<TextCellValue> toExcelRowHeader() {
+    // TODO: implement toExcelRowHeader
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<List<CellValue>>> toExcelRows() {
+    // TODO: implement toExcelRows
+    throw UnimplementedError();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    // TODO: implement toJson
+    throw UnimplementedError();
+  }
 }
 class SpeciesList{
   SpeciesList._();

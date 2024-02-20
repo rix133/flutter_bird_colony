@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:kakrarahu/species.dart';
+import 'package:kakrarahu/models/species.dart';
 import 'package:provider/provider.dart';
 
 import 'design/experimentDropdown.dart';

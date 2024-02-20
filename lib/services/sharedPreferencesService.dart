@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/defaultSettings.dart';
-import '../species.dart';
+import '../models/species.dart';
 
 class SharedPreferencesService extends ChangeNotifier {
   SharedPreferencesService(this._sharedPreferences);

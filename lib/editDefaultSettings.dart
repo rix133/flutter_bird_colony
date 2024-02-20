@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:kakrarahu/models/defaultSettings.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:kakrarahu/species.dart';
+import 'package:kakrarahu/models/species.dart';
 import 'package:provider/provider.dart';
 
 class EditDefaultSettings extends StatefulWidget {

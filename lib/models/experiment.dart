@@ -166,14 +166,26 @@ class Experiment implements FirestoreItem {
           onTap: (){
             showNestMap(context);
           },
-          trailing: IconButton(
-            icon: Icon(Icons.edit, color: Colors.black),
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
-            ),
-            onPressed: () {
-              Navigator.pushNamed(context, '/editExperiment', arguments: {'experiment': this});
-            },
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(icon:Icon(Icons.map, color: Colors.black87),
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(Colors.grey)),
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/map',
+                        arguments: {'nest_ids': nests});
+                  }),
+              IconButton(
+                icon: Icon(Icons.edit, color: Colors.black),
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
+                ),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/editExperiment', arguments: {'experiment': this});
+                },
+              ),
+            ],
           ),
         ),
       ),

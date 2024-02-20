@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/species.dart';
+import 'package:kakrarahu/models/species.dart';
 
 Widget speciesRawAutocomplete(TextEditingController species, FocusNode _focusNode, Function(String) returnFun,{bgColor = Colors.amberAccent, textColor = Colors.black, borderColor= Colors.deepOrange, labelColor = Colors.yellow}) {
   String _displayStringForOption(Species option) => option.english;

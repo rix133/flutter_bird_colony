@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/firestoreItem.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
-import '../species.dart';
+import 'species.dart';
 
 class DefaultSettings implements FirestoreItem{
   String? id;

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/models/nest.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'species.dart';
+import 'models/species.dart';
 
 class Statistics extends StatefulWidget {
   const Statistics({Key? key}) : super(key: key);

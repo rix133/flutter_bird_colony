@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/speciesInput.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:kakrarahu/species.dart';
+import 'package:kakrarahu/models/species.dart';
 import 'package:provider/provider.dart';
 
 import 'design/experimentDropdown.dart';
@@ -22,15 +22,17 @@ class _ListNestsState extends State<ListNests> {
   int _selectedYear = DateTime.now().year;
   String? _selectedExperiments;
   String? _selectedSpecies;
-  int? _minNestAge;
-  int? _maxNestAge;
-  int? _minEggAge;
-  int? _maxEggAge;
+  double? _minNestAge;
+  double? _maxNestAge;
+  double? _minEggAge;
+  double? _maxEggAge;
   int? _minEggs;
   int? _maxEggs;
   List<Experiment> allExperiments = [];
   List<Species> allSpecies = SpeciesList.english;
   TextEditingController _speciesController = TextEditingController();
+  double? _minLocationAccuracy;
+  double? _maxLocationAccuracy;
   FocusNode _focusNode = FocusNode();
 
   SharedPreferencesService? sps;
@@ -97,7 +99,7 @@ class _ListNestsState extends State<ListNests> {
     );
   }
 
-  Padding getMinMaxInput(BuildContext context, String label, Function(String) minFun, Function(String) maxFun, int? min, int? max) {
+  Padding getMinMaxInput(BuildContext context, String label, Function(String) minFun, Function(String) maxFun, double? min, double? max) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(children: [
@@ -147,24 +149,35 @@ class _ListNestsState extends State<ListNests> {
 
   updateMinEggAge(String value) {
     setState(() {
-      _minEggAge = int.tryParse(value);
+      _minEggAge = double.tryParse(value);
     });
   }
   updateMaxEggAge(String value) {
     setState(() {
-      _maxEggAge = int.tryParse(value);
+      _maxEggAge = double.tryParse(value);
     });
   }
   updateMinNestAge(String value) {
     setState(() {
-      _minNestAge = int.tryParse(value);
+      _minNestAge = double.tryParse(value);
     });
   }
   updateMaxNestAge(String value) {
     setState(() {
-      _maxNestAge = int.tryParse(value);
+      _maxNestAge = double.tryParse(value);
     });
   }
+  updateMinLocationAccuracy(String value) {
+    setState(() {
+      _minLocationAccuracy = double.tryParse(value);
+    });
+  }
+  updateMaxLocationAccuracy(String value) {
+    setState(() {
+      _maxLocationAccuracy = double.tryParse(value);
+    });
+  }
+
   void clearFilters() {
     setState(() {
       _selectedYear = DateTime.now().year;
@@ -246,6 +259,7 @@ class _ListNestsState extends State<ListNests> {
                   }, borderColor: Colors.white38, bgColor: Colors.amberAccent, labelColor: Colors.grey),
              getMinMaxInput(context, "First egg age", updateMinEggAge, updateMaxEggAge, _minEggAge, _maxEggAge),
               getMinMaxInput(context, "Nest age", updateMinNestAge, updateMaxNestAge, _minNestAge, _maxNestAge),
+              getMinMaxInput(context, "Loc accuracy", updateMinLocationAccuracy, updateMaxLocationAccuracy, _minLocationAccuracy, _maxLocationAccuracy),
 
             ])),
             actions: [
@@ -303,6 +317,14 @@ class _ListNestsState extends State<ListNests> {
         timeSinceFirstEgg < _maxEggAge! - 1;
   }
 
+  bool filterByLocationAccuracy(Nest e) {
+    if (e.getAccuracy() > 9998) return true;
+    if (_minLocationAccuracy == null && _maxLocationAccuracy == null) return true;
+    if (_minLocationAccuracy == null) return e.getAccuracy() < _maxLocationAccuracy!;
+    if (_maxLocationAccuracy == null) return e.getAccuracy() > _minLocationAccuracy!;
+    return e.getAccuracy() > _minLocationAccuracy! && e.getAccuracy() < _maxLocationAccuracy!;
+  }
+
   Future<bool> filterByEggCount(Nest e) async {
     if (_minEggs == null && _maxEggs == null) return true;
     int? eggCount = await e.eggCount();
@@ -311,7 +333,7 @@ class _ListNestsState extends State<ListNests> {
     return eggCount > _minEggs! - 1 && eggCount < _maxEggs! - 1;
   }
 
-  List<Nest> getFilteredNests(AsyncSnapshot snapshot) {
+    List<Nest> getFilteredNests(AsyncSnapshot snapshot) {
     List<Nest> nests =
         snapshot.data!.docs.map<Nest>((e) => Nest.fromDocSnapshot(e)).toList();
 
@@ -320,6 +342,7 @@ class _ListNestsState extends State<ListNests> {
     nests = nests.where(filterBySpecies).toList();
     nests = nests.where(filterByNestAge).toList();
     nests = nests.where(filterByFirstEggAge).toList();
+    nests = nests.where(filterByLocationAccuracy).toList();
 
     /* Filter nests by egg count asynchronously
     nests = await Future.wait(nests.map((nest) async {
