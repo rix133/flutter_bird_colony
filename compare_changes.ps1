@@ -33,8 +33,8 @@ $totalLinesCommit1 = (git ls-files | foreach { Get-Content $_ } | Measure-Object
 Write-Host "Changes since $date" -ForegroundColor Green
 
 # Output the total lines
-Write-Output "Total lines at commit ${date}: $totalLinesCommit2"
-Write-Output "Total lines at commit ${commit1}: $totalLinesCommit1"
+Write-Output "Total lines at ${date}: $totalLinesCommit2"
+Write-Output "Total lines at latest: $totalLinesCommit1"
 $added = $totalLinesCommit1 - $totalLinesCommit2
 
 # Calculate percentages
