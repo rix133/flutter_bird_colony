@@ -6,10 +6,10 @@ import 'package:kakrarahu/models/species.dart';
 import 'package:provider/provider.dart';
 
 import 'design/experimentDropdown.dart';
-import 'design/speciesInput.dart';
 import 'design/yearDropdown.dart';
 import 'models/experiment.dart';
 import 'models/firestoreItemMixin.dart';
+import 'models/speciesRawAutocomplete.dart';
 
 class ListBirds extends StatefulWidget {
   const ListBirds({Key? key}) : super(key: key);
@@ -23,7 +23,6 @@ class _ListBirdsState extends State<ListBirds> {
   String? _selectedExperiments;
   String? _selectedSpecies;
   int? _selectedAge;
-  TextEditingController _speciesController = TextEditingController();
   FocusNode _focusNode = FocusNode();
   List<Experiment> allExperiments = [];
   List<Species> allSpecies = SpeciesList.english;
@@ -54,7 +53,6 @@ class _ListBirdsState extends State<ListBirds> {
   void dispose() {
     super.dispose();
     searchController.dispose();
-    _speciesController.dispose();
     _focusNode.dispose();
   }
 
@@ -120,11 +118,16 @@ class _ListBirdsState extends State<ListBirds> {
                     selectedExperiment: _selectedExperiments,
                     onChanged: updateExperimentFilter,
                   ),
-                  speciesRawAutocomplete(_speciesController, _focusNode, (String value) {
-                    setState(() {
-                      _selectedSpecies = value;
-                    });
-                  }, borderColor: Colors.white38, bgColor: Colors.amberAccent, labelColor: Colors.grey),
+                  SpeciesRawAutocomplete(
+                      returnFun: (Species s) {
+                        _selectedSpecies = s.english;
+                        setState(() {});
+                      },
+                      species: Species(english: _selectedSpecies?? "", local: '', latinCode: ''),
+                      speciesList: sps?.defaultSpeciesList ?? [],
+                      borderColor: Colors.white38,
+                      bgColor: Colors.amberAccent,
+                      labelColor: Colors.grey),
                  ])),
               actions: [
                 ElevatedButton(

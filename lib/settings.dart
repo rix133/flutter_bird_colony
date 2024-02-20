@@ -99,6 +99,21 @@ class _SettingsPageState extends State<SettingsPage> {
     return email;
   }
 
+  _goToEditSpecies() {
+    return _isAdmin ? Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ElevatedButton.icon(
+          onPressed: () {
+            Navigator.pushNamed(context, '/listSpecies');
+          },
+          label: Padding(child:Text('Manage species'), padding: EdgeInsets.all(10)),
+          icon: Icon(Icons.folder),
+        ),
+      ],
+    ) : Container();
+  }
+
 
   Widget _getAllowedUsers() {
     return _isAdmin ? Column(
@@ -299,6 +314,8 @@ class _SettingsPageState extends State<SettingsPage> {
             _getAllowedUsers(),
             SizedBox(height: 20),
             _goToEditDefaultSettings(),
+            SizedBox(height: 20),
+            _goToEditSpecies(),
 
           ],
         ),

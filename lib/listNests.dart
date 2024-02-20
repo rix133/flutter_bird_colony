@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/design/speciesInput.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/models/species.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +9,7 @@ import 'design/yearDropdown.dart';
 import 'models/experiment.dart';
 import 'models/firestoreItemMixin.dart';
 import 'models/nest.dart';
+import 'models/speciesRawAutocomplete.dart';
 
 class ListNests extends StatefulWidget {
   const ListNests({Key? key}) : super(key: key);
@@ -29,8 +29,6 @@ class _ListNestsState extends State<ListNests> {
   int? _minEggs;
   int? _maxEggs;
   List<Experiment> allExperiments = [];
-  List<Species> allSpecies = SpeciesList.english;
-  TextEditingController _speciesController = TextEditingController();
   double? _minLocationAccuracy;
   double? _maxLocationAccuracy;
   FocusNode _focusNode = FocusNode();
@@ -62,7 +60,6 @@ class _ListNestsState extends State<ListNests> {
     super.dispose();
     searchController.dispose();
     _focusNode.dispose();
-    _speciesController.dispose();
 
   }
 
@@ -254,11 +251,16 @@ class _ListNestsState extends State<ListNests> {
                 selectedExperiment: _selectedExperiments,
                 onChanged: updateExperimentFilter,
               ),
-              speciesRawAutocomplete(_speciesController, _focusNode, (String value) {
-                    setState(() {
-                      _selectedSpecies = value;
-                    });
-                  }, borderColor: Colors.white38, bgColor: Colors.amberAccent, labelColor: Colors.grey),
+              SpeciesRawAutocomplete(
+                  returnFun: (Species s) {
+                    _selectedSpecies = s.english;
+                    setState(() {});
+                  },
+                  species: Species(english: _selectedSpecies?? "", local: '', latinCode: ''),
+                  speciesList: sps?.defaultSpeciesList ?? [],
+                  borderColor: Colors.white38,
+                  bgColor: Colors.amberAccent,
+                  labelColor: Colors.grey),
              getMinMaxInput(context, "First egg age", updateMinEggAge, updateMaxEggAge, _minEggAge, _maxEggAge),
               getMinMaxInput(context, "Nest age", updateMinNestAge, updateMaxNestAge, _minNestAge, _maxNestAge),
               getMinMaxInput(context, "Loc accuracy", updateMinLocationAccuracy, updateMaxLocationAccuracy, _minLocationAccuracy, _maxLocationAccuracy),

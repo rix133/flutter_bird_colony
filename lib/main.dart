@@ -7,10 +7,12 @@ import 'package:kakrarahu/homepage.dart';
 import 'package:kakrarahu/listBirds.dart';
 import 'package:kakrarahu/listExperiments.dart';
 import 'package:kakrarahu/listNests.dart';
+import 'package:kakrarahu/listSpecies.dart';
 import 'package:kakrarahu/nestManage.dart';
 //import 'package:kakrarahu/nestsNearby.dart';
 import 'package:kakrarahu/settings.dart';
 import 'package:kakrarahu/statistics.dart';
+import 'editSpecies.dart';
 import 'listDatas.dart';
 import 'services/sharedPreferencesService.dart';
 import 'design/styles.dart';
@@ -123,6 +125,8 @@ class MyApp extends StatelessWidget {
         '/editExperiment':(context)=>EditExperiment(),
         '/editDefaultSettings':(context)=>EditDefaultSettings(),
         '/listDatas':(context)=>ListDatas(),
+        '/listSpecies':(context)=>ListSpecies(),
+        '/editSpecies':(context)=>EditSpecies(),
 
 
       },

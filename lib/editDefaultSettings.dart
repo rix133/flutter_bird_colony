@@ -19,6 +19,7 @@ State<EditDefaultSettings> createState() => _EditDefaultSettingsState();
 
 class _EditDefaultSettingsState extends State<EditDefaultSettings> {
     SharedPreferencesService? sps;
+    String type = "default";
     DefaultSettings defaultSettings = DefaultSettings(
       desiredAccuracy: 4,
       selectedYear: DateTime.now().year,
@@ -26,7 +27,7 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
       autoNextBandParent: false,
       defaultLocation: GeoPoint(58.766218, 23.430432),
       biasedRepeatedMeasurements: false,
-      species: [],
+      settingsType: "default",
       defaultSpecies: Species(english: "", latinCode: "", local: ""),
     );
 
@@ -43,7 +44,7 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
             setState(() {  });
           }
         } else {
-          FirebaseFirestore.instance.collection('settings').doc('default').get().then((value) {
+          FirebaseFirestore.instance.collection('settings').doc(type).get().then((value) {
             if (value.exists) {
               defaultSettings = DefaultSettings.fromDocSnapshot(value);
             }
@@ -68,8 +69,9 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
       body: Padding(padding: EdgeInsets.all(16.0),
       child:SingleChildScrollView(child:Column(
         children: [
-    ...defaultSettings.getDefaultSettingsForm(context, setState),
-    modifingButtons(context, setState, (context) => defaultSettings, "settings", null)
+    ...defaultSettings.getDefaultSettingsForm(context, setState, sps),
+    SizedBox(height: 30),
+    modifingButtons(context, setState, (context) => defaultSettings, type, null)
           ]))));
   }
 }

@@ -8,6 +8,13 @@ class SharedPreferencesService extends ChangeNotifier {
 
   final SharedPreferences _sharedPreferences;
 
+  String get settingsType => _sharedPreferences.getString('settingsType') ?? 'default';
+
+  set settingsType(String value) {
+    _sharedPreferences.setString('settingsType', value);
+    notifyListeners();
+  }
+
 
   String get email => _sharedPreferences.getString('email') ?? '';
 
@@ -94,6 +101,15 @@ class SharedPreferencesService extends ChangeNotifier {
 
   set defaultSpecies(String value) {
     _sharedPreferences.setString('defaultSpecies', value);
+    notifyListeners();
+  }
+
+  List<Species> get defaultSpeciesList {
+    return SpeciesList.english;
+  }
+
+  set defaultSpeciesList(List<Species> value) {
+    _sharedPreferences.setStringList('defaultSpeciesList', value.map((e) => e.english).toList());
     notifyListeners();
   }
 
