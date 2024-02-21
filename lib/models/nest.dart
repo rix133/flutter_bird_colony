@@ -229,7 +229,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
   }
 
   Future<List<List<CellValue>>> toExcelRows() async{
-    List<List<CellValue>> rows = [];
+
     List<CellValue> baseItems = [
       TextCellValue(name),
       DoubleCellValue(getAccuracy()),
@@ -239,26 +239,15 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
       DateCellValue(year: discover_date.year, month: discover_date.month, day: discover_date.day),
       TextCellValue(responsible ?? ""),
       DateTimeCellValue(year: last_modified.year, month: last_modified.month, day: last_modified.day, hour: last_modified.hour, minute: last_modified.minute),
-      IntCellValue(await eggCount()),
       first_egg != null
           ? DateCellValue(year: first_egg!.year, month: first_egg!.month, day: first_egg!.day)
           : TextCellValue(''),
       IntCellValue(DateTime.now().difference(first_egg ?? DateTime(2200)).inDays),
-      TextCellValue(experiments?.map((e) => e.name).join("\r") ?? ""),
-      TextCellValue(parents?.map((p) => p.name).join("\r") ?? "")
+      TextCellValue(experiments?.map((e) => e.name).join(";\r") ?? ""),
+      TextCellValue(parents?.map((p) => p.name).join(";\r") ?? "")
     ];
 
-
-    Map<String, List<Measure>> measuresMap = getMeasuresMap();
-
-    if(measuresMap.isNotEmpty){
-      measuresMap.forEach((key, List<Measure> m) {
-        rows.add([...baseItems, ...m.expand((e) => e.toExcelRow())]);
-      });
-    } else {
-      rows.add(baseItems);
-    }
-
+    List<List<CellValue>> rows = addMeasuresToRow(baseItems);
     return rows;
   }
 
@@ -272,7 +261,6 @@ TextCellValue('species'),
       TextCellValue('discover_date'),
       TextCellValue('last_modified_by'),
       TextCellValue('last_modified'),
-      TextCellValue('egg_count'),
       TextCellValue('first_egg_date'),
       TextCellValue("days_since_first_egg"),
       TextCellValue('experiments'),
@@ -314,10 +302,11 @@ TextCellValue('species'),
                 Navigator.pushNamed(context, '/map',
                     arguments: {'nest_ids': [id]});
               }),
+          SizedBox(width: 10),
           IconButton( icon: Icon(Icons.edit, color: Colors.black87),
     style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(Colors.grey)),
               onPressed: () {
-            Navigator.pushNamed(context, '/nestManage', arguments: {"sihtkoht": id});
+            Navigator.pushNamed(context, '/nestManage', arguments: {"nest": this});
           }),
         ],
       ),

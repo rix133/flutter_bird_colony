@@ -62,15 +62,15 @@ class Measure implements Comparable<Measure>{
   List<CellValue> toExcelRow(){
     double? vd = isNumber ? double.tryParse(value) : null;
     return [
-      DateTimeCellValue(year: modified.year, month: modified.month, day: modified.day, hour: modified.hour, minute: modified.minute, second: modified.second),
-      (isNumber && vd != null) ? DoubleCellValue(vd) : TextCellValue(value)
+      (isNumber && vd != null) ? DoubleCellValue(vd) : TextCellValue(value),
+      DateTimeCellValue(year: modified.year, month: modified.month, day: modified.day, hour: modified.hour, minute: modified.minute, second: modified.second)
     ];
   }
 
   List<TextCellValue> toExcelRowHeader() {
     return [
-      TextCellValue('measure_time'),
-      TextCellValue(name + "_" + unit)
+      TextCellValue(name + "_" + unit),
+      TextCellValue(name + '_time')
     ];
   }
 

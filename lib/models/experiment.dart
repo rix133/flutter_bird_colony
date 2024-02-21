@@ -329,6 +329,7 @@ class Experiment implements FirestoreItem {
       DateTimeCellValue(year: last_modified?.year ?? 1900, month: last_modified?.month ?? 1, day: last_modified?.day ?? 1, hour: last_modified?.hour ?? 0, minute: last_modified?.minute ?? 0),
       DateCellValue(year: created?.year ?? 1900, month: created?.month ?? 1, day: created?.day ?? 1),
     ];
+
     if (hasNests()){
       for (String nest in nests!){
         List<CellValue> items = List.from(baseItems);

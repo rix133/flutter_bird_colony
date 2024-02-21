@@ -1,3 +1,4 @@
+import 'package:excel/excel.dart';
 import 'package:kakrarahu/models/experiment.dart';
 
 import 'measure.dart';
@@ -64,12 +65,29 @@ class ExperimentedItem{
       if (!measuresMap.containsKey(measure.name)) {
         measuresMap[measure.name] = [measure];
       } else {
-
         measuresMap[measure.name]!.add(measure);
       }
     }
     return measuresMap;
   }
+
+  List<List<CellValue>> addMeasuresToRow(List<CellValue> baseItems){
+    List<List<CellValue>> rows = [];
+    Map<String, List<Measure>> measuresMap = getMeasuresMap();
+    if(measuresMap.isNotEmpty){
+      measuresMap.forEach((key, List<Measure> m) {
+        List<List<CellValue>> measureItems = m.map((e) => e.toExcelRow()).toList();
+        measureItems.forEach((element) {
+          rows.add([...baseItems, ...element]);
+        });
+      });
+    } else {
+      rows.add(baseItems);
+    }
+    return rows;
+  }
+
+
 
   bool get hasExperiments =>  experiments?.isNotEmpty ?? false;
   bool get hasMeasures =>  measures.isNotEmpty;

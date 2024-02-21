@@ -105,7 +105,6 @@ class Egg extends ExperimentedItem implements FirestoreItem {
 
   @override
   Future<List<List<CellValue>>> toExcelRows() async {
-    List<List<CellValue>> rows = [];
     List<CellValue> baseItems = [
       TextCellValue(getNest() ?? ""),
       TextCellValue(getNr() ?? ""),
@@ -117,15 +116,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       TextCellValue(status),
       TextCellValue(experiments?.map((e) => e.name).join(", ") ?? ""), // Convert experiments to string
     ];
-    Map<String, List<Measure>> measuresMap = getMeasuresMap();
-
-    if(measuresMap.isNotEmpty){
-      measuresMap.forEach((key, List<Measure> m) {
-        rows.add([...baseItems, ...m.expand((e) => e.toExcelRow())]);
-      });
-    } else {
-      rows.add(baseItems);
-    }
+    List<List<CellValue>> rows = addMeasuresToRow(baseItems);
     return rows;
   }
 

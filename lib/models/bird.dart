@@ -452,7 +452,6 @@ class Bird extends ExperimentedItem implements FirestoreItem{
 
   @override
   Future<List<List<CellValue>>> toExcelRows() async {
-    List<List<CellValue>> rows = [];
     List<CellValue> baseItems = [
       TextCellValue(band),
       TextCellValue(color_band ?? ""),
@@ -468,7 +467,9 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       TextCellValue(egg ?? ""),
       // Add more row data as per your requirements
     ];
-    rows.add(baseItems);
+
+    List<List<CellValue>> rows = addMeasuresToRow(baseItems);
+
     return rows;
   }
   factory Bird.fromJson(Map<String, dynamic> json) {
