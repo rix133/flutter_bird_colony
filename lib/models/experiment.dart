@@ -42,6 +42,9 @@ class Experiment implements FirestoreItem {
     this.last_modified,
     this.created});
 
+  @override
+  DateTime get created_date => created ?? DateTime(1900);
+
   Experiment.fromQuerySnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     id = snapshot.id;

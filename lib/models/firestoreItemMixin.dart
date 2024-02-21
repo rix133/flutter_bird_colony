@@ -51,26 +51,21 @@ class FSItemMixin {
         .catchError((error) => UpdateResult.error(message: error.toString())));
   }
 
-  Future<List<List<CellValue>>> createSortedData(List<FirestoreItem> items,
-      {DateTime? start, DateTime? end}) async {
-    if (start == null) {
-      start = DateTime.now();
-    }
-    if (end == null) {
-      end = DateTime(1900);
-    }
-    DateTime? current;
+  Future<Map<String, dynamic>> createSortedData(List<FirestoreItem> items) async {
+    DateTime? start;
+    DateTime? end;
     List<List<TextCellValue>> headers = [];
     List<List<CellValue>> data = [];
     if (items.length > 0) {
       for (var item in items) {
         headers.add(item.toExcelRowHeader());
-        current = item.last_modified;
-        if (current != null && current.isAfter(end!)) {
-          end = current;
+        DateTime? last = item.last_modified;
+        DateTime first = item.created_date;
+        if (start == null || first.isBefore(start)) {
+          start = first;
         }
-        if (current != null && current.isBefore(start!)) {
-          start = current;
+        if (end == null || (last != null && last.isAfter(end))) {
+          end = last;
         }
         data.addAll(await item.toExcelRows());
       }
@@ -78,24 +73,25 @@ class FSItemMixin {
       List<List<CellValue>> sortedData = [uniqueHeaders.toList()];
       for (var i = 0; i < data.length; i++) {
         Map<String, CellValue> rowMap =
-            Map.fromIterables(headers[i].map((h) => h.value), data[i]);
+        Map.fromIterables(headers[i].map((h) => h.value), data[i]);
         List<CellValue> sortedRow = uniqueHeaders
             .map((h) => rowMap.containsKey(h.value)
-                ? rowMap[h.value]!
-                : TextCellValue(""))
+            ? rowMap[h.value]!
+            : TextCellValue(""))
             .toList();
         sortedData.add(sortedRow);
       }
-      return sortedData;
+      return {'start': start, 'end': end, 'sortedData': sortedData};
     } else {
-      return [];
+      return {'start': null, 'end': null, 'sortedData': []};
     }
   }
 
-  Future<void> downloadExcel(List<FirestoreItem> items, String type,
-      {DateTime? start, DateTime? end}) async {
-    List<List<CellValue>> sheetData =
-        await createSortedData(items, start: start, end: end);
+  Future<void> downloadExcel(List<FirestoreItem> items, String type) async {
+    Map<String, dynamic> sortedDataMap = await createSortedData(items);
+    List<List<CellValue>> sheetData = sortedDataMap['sortedData'];
+    DateTime? start = sortedDataMap['start'];
+    DateTime? end = sortedDataMap['end'];
     List<List<List<CellValue>>> sheets = [sheetData];
     List<String> types = [type];
 
@@ -112,8 +108,8 @@ class FSItemMixin {
         if (eggs.docs.isNotEmpty) {
           List<FirestoreItem> eggItems =
               eggs.docs.map((e) => Egg.fromDocSnapshot(e)).toList();
-          List<List<CellValue>> eggSheetData =
-              await createSortedData(eggItems, start: start, end: end);
+          Map<String, dynamic> eggSortedDataMap = await createSortedData(eggItems);
+          List<List<CellValue>> eggSheetData = eggSortedDataMap['sortedData'];
           sheets.add(eggSheetData);
           types.add("egg");
         }

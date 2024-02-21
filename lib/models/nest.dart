@@ -28,6 +28,9 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
 
   String get name => id ?? "New Nest";
 
+  @override
+  DateTime get created_date => discover_date;
+
   Nest({this.id,
     required this.discover_date,
     required this.last_modified,

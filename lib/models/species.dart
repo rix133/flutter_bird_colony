@@ -114,6 +114,9 @@ class Species implements FirestoreItem {
   String? responsible;
 
   @override
+  DateTime get created_date => last_modified ?? DateTime(1900);
+
+  @override
   Future<UpdateResult> delete(
       {CollectionReference<Object?>? otherItems = null,
       bool soft = true,

@@ -55,6 +55,9 @@ class DefaultSettings implements FirestoreItem {
   @override
   String get name => id ?? '';
 
+  @override
+  DateTime get created_date => last_modified ?? DateTime.now();
+
   getCameraPosition() {
     return CameraPosition(
       target: LatLng(defaultLocation.latitude, defaultLocation.longitude),

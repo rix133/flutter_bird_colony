@@ -32,6 +32,8 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   }
 
   String get name => id ?? "New Egg";
+  @override
+  DateTime get created_date => discover_date;
 
   @override
   factory Egg.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {

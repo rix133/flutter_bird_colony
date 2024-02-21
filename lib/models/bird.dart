@@ -32,6 +32,9 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   String get current_nest =>
       (nest_year == DateTime.now().year) ? (nest ?? "") : "";
 
+  @override
+  DateTime get created_date => ringed_date;
+
   Bird({
     this.id,
     required this.ringed_date,
