@@ -14,12 +14,14 @@ class Species implements FirestoreItem {
       this.latin,
       required this.latinCode,
       this.responsible,
+        this.last_modified,
       this.letters = ''});
 
   String? id;
   String local; //name in local langauge
   String english;
   String latinCode;
+  DateTime? last_modified;
   String? latin;
   String letters;
 

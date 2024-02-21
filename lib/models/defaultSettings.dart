@@ -19,6 +19,7 @@ class DefaultSettings implements FirestoreItem {
   bool autoNextBandParent;
   GeoPoint defaultLocation;
   bool biasedRepeatedMeasurements;
+  DateTime? last_modified;
   String settingsType = "default";
   Species defaultSpecies;
 

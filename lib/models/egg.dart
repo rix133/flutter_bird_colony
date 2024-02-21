@@ -16,14 +16,14 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   String? responsible;
   String? ring;
   String status;
-  DateTime last_checked = DateTime.now();
+  DateTime? last_modified;
   List<Object>? changelogs;
 
   Egg({this.id,
     required this.discover_date,
     required this.responsible,
     required this.status,
-    required last_checked,
+    required last_modified,
     this.ring,
     List<Experiment>? experiments,
     required List<Measure> measures
@@ -42,7 +42,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
         discover_date: (json['discover_date'] as Timestamp).toDate(),
         responsible: json["responsible"],
         ring: json['ring'],
-        last_checked: (json['last_checked'] as Timestamp? ?? Timestamp.fromMillisecondsSinceEpoch(0)).toDate(),
+        last_modified: (json['last_modified'] as Timestamp? ?? Timestamp.fromMillisecondsSinceEpoch(0)).toDate(),
         status: json['status'],
         experiments: eitem.experiments,
         measures: eitem.measures
@@ -57,7 +57,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
     if(nestId == null){
       return UpdateResult.error(message: "No nest found");
     } else{
-      last_checked = DateTime.now();
+      last_modified = DateTime.now();
       CollectionReference<Object?> eggCollection =  FirebaseFirestore.instance.collection(discover_date.year.toString()).doc(nestId).collection("egg");
       if(id == null){
         id = nestId + " egg " + (await eggCollection.get()).docs.length.toString();
@@ -111,7 +111,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       TextCellValue(type() ?? ""),
       DateCellValue(year: discover_date.year, month: discover_date.month, day: discover_date.day),
       TextCellValue(responsible ?? ""),
-      DateTimeCellValue(year: last_checked.year, month: last_checked.month, day: last_checked.day, hour: last_checked.hour, minute: last_checked.minute),
+      last_modified != null  ? DateTimeCellValue(year: last_modified!.year, month: last_modified!.month, day: last_modified!.day, hour: last_modified!.hour, minute: last_modified!.minute, second: last_modified!.second) : TextCellValue(""),
       TextCellValue(ring ?? ""),
       TextCellValue(status),
       TextCellValue(experiments?.map((e) => e.name).join(", ") ?? ""), // Convert experiments to string
@@ -207,7 +207,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       'discover_date': discover_date,
       'responsible': responsible,
       'ring': ring,
-      'last_checked': last_checked,
+      'last_modified': last_modified,
       'status': status,
       'experiments': experiments?.map((e) => e.toSimpleJson()).toList(),
       'measures': measures.map((e) => e.toJson()).toList(),

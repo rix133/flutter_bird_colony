@@ -306,7 +306,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     if (egg == null) {
       await eggItemCollection.doc("$nest chick $band").set(Egg(
           discover_date: DateTime(1900),
-          last_checked: DateTime.now(),
+          last_modified: DateTime.now(),
           experiments: experiments,
           measures: [],
           responsible: "unknown",

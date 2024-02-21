@@ -10,6 +10,7 @@ abstract class FirestoreItem{
   String? id;
   String? responsible;
   String get name;
+  DateTime? last_modified;
   Map<String, dynamic> toJson();
 
   factory FirestoreItem.fromDocSnapshot(DocumentSnapshot<Map<String, dynamic>> documentSnapshot){

@@ -31,7 +31,7 @@ class _EditEggState extends State<EditEgg> {
       } else {
         egg = Egg(
             discover_date: DateTime.now(),
-            last_checked: DateTime.now(),
+            last_modified: DateTime.now(),
             responsible: sps!.userName,
             measures: [],
             status: "New");

@@ -202,7 +202,7 @@ class _NestManageState extends State<NestManage> {
                   responsible: sps.userName,
                   measures: [],
                   experiments: nest?.experiments ?? [],
-                  last_checked: DateTime.now(),
+                  last_modified: DateTime.now(),
                   status: "intact",
                   ring: null);
               new_egg_nr = snapshot.data!.docs.length + 1;
@@ -232,7 +232,7 @@ class _NestManageState extends State<NestManage> {
               //this egg has no number as it has no id
               "egg": Egg(
                   discover_date: DateTime.now(),
-                  last_checked: DateTime.now(),
+                  last_modified: DateTime.now(),
                   responsible: sps.userName,
                   measures: [],
                   experiments: nest?.experiments ?? [],

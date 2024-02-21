@@ -1,5 +1,6 @@
 import 'package:excel/excel.dart';
 import 'package:kakrarahu/models/experiment.dart';
+import 'dart:math' as math;
 
 import 'measure.dart';
 
@@ -71,21 +72,26 @@ class ExperimentedItem{
     return measuresMap;
   }
 
-  List<List<CellValue>> addMeasuresToRow(List<CellValue> baseItems){
+  List<List<CellValue>> addMeasuresToRow(List<CellValue> baseItems) {
     List<List<CellValue>> rows = [];
     Map<String, List<Measure>> measuresMap = getMeasuresMap();
-    if(measuresMap.isNotEmpty){
-      measuresMap.forEach((key, List<Measure> m) {
-        List<List<CellValue>> measureItems = m.map((e) => e.toExcelRow()).toList();
-        measureItems.forEach((element) {
-          rows.add([...baseItems, ...element]);
-        });
-      });
+
+      if (measuresMap.isNotEmpty) {
+      int max = measuresMap.values.map((m) => m.length).reduce(math.max);
+      List<List<List<CellValue>>> measures = measuresMap.values.map((m) => m.map((measure) => measure.toExcelRow()).toList()).toList();
+
+      for (int i = 0; i < max; i++) {
+        List<CellValue> row = List.from(baseItems);
+        measures.forEach((measure) => row.addAll(i < measure.length ? measure[i] : [TextCellValue("")]));
+        rows.add(row);
+      }
     } else {
       rows.add(baseItems);
     }
+
     return rows;
   }
+
 
 
 

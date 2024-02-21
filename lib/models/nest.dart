@@ -22,7 +22,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
   String? species;
   bool? completed;
   DateTime discover_date;
-  DateTime last_modified;
+  DateTime? last_modified;
   DateTime? first_egg;
   List<Bird>? parents = [];
 
@@ -51,7 +51,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
     }
     if (range == "Today") {
       var today = DateTime.now().toIso8601String().split("T")[0];
-      return this.last_modified.toIso8601String().split("T")[0].toString() ==
+      return this.last_modified?.toIso8601String().split("T")[0].toString() ==
           today;
     }
     return false;
@@ -104,7 +104,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
   }
 
   checkedToday() {
-    return last_modified.toIso8601String().split("T")[0] ==
+    return last_modified?.toIso8601String().split("T")[0] ==
         DateTime.now().toIso8601String().split("T")[0];
   }
 
@@ -145,7 +145,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
           value: nnest.remark!,
           isNumber: false,
           unit: "",
-          modified: nnest.last_modified));
+          modified: nnest.last_modified ?? DateTime.now()));
     }}
     //add measures from experments to the nest
     nnest.updateMeasuresFromExperiments("nest");
@@ -238,7 +238,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
       TextCellValue(species ?? ""),
       DateCellValue(year: discover_date.year, month: discover_date.month, day: discover_date.day),
       TextCellValue(responsible ?? ""),
-      DateTimeCellValue(year: last_modified.year, month: last_modified.month, day: last_modified.day, hour: last_modified.hour, minute: last_modified.minute),
+      last_modified != null  ? DateTimeCellValue(year: last_modified!.year, month: last_modified!.month, day: last_modified!.day, hour: last_modified!.hour, minute: last_modified!.minute, second: last_modified!.second) : TextCellValue(""),
       first_egg != null
           ? DateCellValue(year: first_egg!.year, month: first_egg!.month, day: first_egg!.day)
           : TextCellValue(''),
@@ -322,7 +322,7 @@ TextCellValue('species'),
               Text("Species: $species"),
               Text("Discover date: ${discover_date.toIso8601String().split("T")[0]}"),
               Text("Responsible: $responsible"),
-              Text("Last modified: ${last_modified.toIso8601String().split("T")[0]}"),
+              Text("Last modified: ${last_modified?.toIso8601String().split("T")[0]}"),
               Text("Completed: ${completed ?? false}"),
               Text("First egg: ${first_egg?.toIso8601String().split("T")[0] ?? ""}"),
               Text("${checkedStr()}"),
@@ -343,7 +343,7 @@ TextCellValue('species'),
   }
 
   Duration chekedAgo() {
-    return DateTime.now().difference(last_modified);
+    return DateTime.now().difference(last_modified??DateTime.now());
   }
 
   String checkedStr() {
