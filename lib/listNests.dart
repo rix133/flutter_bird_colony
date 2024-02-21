@@ -9,7 +9,7 @@ import 'design/yearDropdown.dart';
 import 'models/experiment.dart';
 import 'models/firestoreItemMixin.dart';
 import 'models/nest.dart';
-import 'models/speciesRawAutocomplete.dart';
+import 'design/speciesRawAutocomplete.dart';
 
 class ListNests extends StatefulWidget {
   const ListNests({Key? key}) : super(key: key);
@@ -257,7 +257,7 @@ class _ListNestsState extends State<ListNests> {
                     setState(() {});
                   },
                   species: Species(english: _selectedSpecies?? "", local: '', latinCode: ''),
-                  speciesList: sps?.defaultSpeciesList ?? [],
+                  speciesList: sps?.speciesList ?? LocalSpeciesList(),
                   borderColor: Colors.white38,
                   bgColor: Colors.amberAccent,
                   labelColor: Colors.grey),

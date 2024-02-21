@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/models/nest.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:provider/provider.dart';
 import 'models/species.dart';
 
 class Statistics extends StatefulWidget {
@@ -17,6 +19,8 @@ class Statistics extends StatefulWidget {
 class _StatisticsState extends State<Statistics> {
   var today = DateTime.now().toIso8601String().split("T")[0];
   int _selectedYear = DateTime.now().year;
+  SharedPreferencesService? sps;
+  LocalSpeciesList _speciesList = LocalSpeciesList();
 
   CollectionReference lind = FirebaseFirestore.instance.collection('Birds');
   late CollectionReference pesa;
@@ -36,6 +40,15 @@ class _StatisticsState extends State<Statistics> {
   ];
   String dropdownValuePeople = "Everybody";
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      sps = Provider.of<SharedPreferencesService>(context, listen: false);
+      _speciesList = sps!.speciesList;
+      setState(() {});
+    });
+  }
 
   @override
   void dispose() {
@@ -144,7 +157,7 @@ class _StatisticsState extends State<Statistics> {
                                 title: Text("Total nests"),
                                 trailing: Text(nests.length.toString())),
                             getNestListTile("Common Gull", nests, experimental: true),
-                            ...SpeciesList.english.map((Species sp) => getNestListTile(sp.english, nests)).toList(),
+                            ..._speciesList.species.map((Species sp) => getNestListTile(sp.english, nests)).toList(),
                             getNestListTile("", nests),
                           ],
                         );
@@ -175,7 +188,7 @@ class _StatisticsState extends State<Statistics> {
                             ListTile(
                                 title: Text("Total ringed"),
                                 trailing: Text(birds.length.toString())),
-                            ...SpeciesList.english.map((Species sp) => getBirdsListTile(sp.english, birds)).toList(),
+                            ..._speciesList.species.map((Species sp) => getBirdsListTile(sp.english, birds)).toList(),
                           ],
                         );
                       } else {

@@ -50,7 +50,7 @@ class Experiment implements FirestoreItem {
     responsible = json['responsible'];
     year = json['year'];
     measures = (json['measures'] as List<dynamic>?)
-        ?.map((e) => measureFromJson(e))
+        ?.map((e) => Measure.FromJson(e))
         .toList() ??
         [];
     nests = List<String>.from(json['nests'] ?? []);
@@ -358,24 +358,21 @@ Experiment experimentFromSimpleJson(Map<String, dynamic> json) {
       id: json['id'],
       name: json['name'],
       measures: (json['measures'] as List<dynamic>?)
-          ?.map((e) => measureFromFormJson(e))
+          ?.map((e) => Measure.FromFormJson(e))
           .toList() ??
           [],
       color: Color(int.parse(json['color'])));
   return e;
 }
 
-Widget listExperiments(ExperimentedItem item) {
-  if (item.experiments == null) {
+Container listExperiments(ExperimentedItem item) {
+  if (!item.hasExperiments) {
     return Container();
   }
-  if (item.experiments!.isEmpty) {
-    return Container();
-  }
-  return Padding(
-      padding: EdgeInsets.all(8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
+  return Container(
+    padding: EdgeInsets.all(8.0),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Text("Exp. "),
           ...?item.experiments?.map((e) =>
@@ -386,6 +383,8 @@ Widget listExperiments(ExperimentedItem item) {
                   backgroundColor: MaterialStateProperty.all(e.color),
                 ),
               )),
-        ],
-      ));
+          //add experiment button
+              ],
+      ),
+  );
 }

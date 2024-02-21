@@ -151,10 +151,10 @@ class Egg extends ExperimentedItem implements FirestoreItem {
     return txt;
   }
 
-  List<Row> getEggForm(BuildContext context, String userName, FocusNode _focusNode, Function setState, Function(Measure) addMeasure){
+  List<Widget> getEggForm(Function(Measure) addMeasure, bool hideValue){
     return [
       //statusField(_focusNode),
-      ...measures.map((e) => e.getMeasureFormWithAddButton(addMeasure)).toList(),
+      ...measures.map((e) => e.getMeasureForm(addMeasure, hideValue)).toList(),
     ];
 
   }
@@ -193,7 +193,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   }
 
   String? type(){
-    return(id?.split(" ")[1] ?? null);;
+    return(id?.split(" ")[1] ?? null);
   }
 
   Padding getAgeRow() {

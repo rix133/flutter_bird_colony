@@ -9,7 +9,7 @@ import 'design/experimentDropdown.dart';
 import 'design/yearDropdown.dart';
 import 'models/experiment.dart';
 import 'models/firestoreItemMixin.dart';
-import 'models/speciesRawAutocomplete.dart';
+import 'design/speciesRawAutocomplete.dart';
 
 class ListBirds extends StatefulWidget {
   const ListBirds({Key? key}) : super(key: key);
@@ -25,7 +25,6 @@ class _ListBirdsState extends State<ListBirds> {
   int? _selectedAge;
   FocusNode _focusNode = FocusNode();
   List<Experiment> allExperiments = [];
-  List<Species> allSpecies = SpeciesList.english;
 
 
   SharedPreferencesService? sps;
@@ -124,7 +123,7 @@ class _ListBirdsState extends State<ListBirds> {
                         setState(() {});
                       },
                       species: Species(english: _selectedSpecies?? "", local: '', latinCode: ''),
-                      speciesList: sps?.defaultSpeciesList ?? [],
+                      speciesList: sps?.speciesList ?? LocalSpeciesList(),
                       borderColor: Colors.white38,
                       bgColor: Colors.amberAccent,
                       labelColor: Colors.grey),

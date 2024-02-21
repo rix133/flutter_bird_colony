@@ -3,7 +3,7 @@ import 'package:kakrarahu/models/species.dart';
 
 class SpeciesRawAutocomplete extends StatefulWidget {
   final Function(Species) returnFun;
-  final List<Species> speciesList;
+  final LocalSpeciesList speciesList;
   final String labelTxt;
   final Species species;
   final Color bgColor;
@@ -110,10 +110,7 @@ class _SpeciesRawAutocompleteState extends State<SpeciesRawAutocomplete> {
           onFieldSubmitted: (String value) {
             onFieldSubmitted();
             //search the value in the species list
-            Species species = widget.speciesList.firstWhere(
-                    (Species element) =>
-                element.english.toLowerCase() == value.toLowerCase(),
-                orElse: () => Species(english: '', local: '', latinCode: ''));
+            Species species = widget.speciesList.getSpecies(value);
 
             if (species.english.isEmpty) {
               showDialog(
@@ -155,9 +152,10 @@ class _SpeciesRawAutocompleteState extends State<SpeciesRawAutocomplete> {
         if (textEditingValue.text == '') {
           return const Iterable<Species>.empty();
         }
-        return widget.speciesList.where((Species option) {
+        return widget.speciesList.species.map((Species option) {
+          return option;
+        }).where((Species option) {
           return option.english
-              .toString()
               .toLowerCase()
               .contains(textEditingValue.text.toLowerCase());
         });

@@ -130,7 +130,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
         completed: json['completed'] as bool? ?? false,
         parents: json['parents'] != null
             ? (json['parents'] as List<dynamic>)
-            .map((e) => birdFromJson(e))
+            .map((e) => Bird.fromJson(e))
             .toList()
             : [],
         species: json['species'] as String? ?? '',

@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/defaultSettings.dart';
 import '../models/species.dart';
+import 'dart:convert';
 
 class SharedPreferencesService extends ChangeNotifier {
   SharedPreferencesService(this._sharedPreferences);
@@ -76,7 +78,8 @@ class SharedPreferencesService extends ChangeNotifier {
 
 
   void recentBand(String speciesEng, String value) {
-    String bandGroup = SpeciesList.english.firstWhere((species) => species.english == speciesEng).getBandLetters();
+
+    String bandGroup = speciesList.species.firstWhere((species) => species.english == speciesEng).getBandLetters();
 
     // Save the band for the species to SharedPreferences
     _sharedPreferences.setString(bandGroup, value);
@@ -84,7 +87,7 @@ class SharedPreferencesService extends ChangeNotifier {
   }
 
   String getRecentMetalBand(String speciesEng) {
-    String bandGroup = SpeciesList.english.firstWhere((species) => species.english == speciesEng).getBandLetters();
+    String bandGroup = speciesList.species.firstWhere((species) => species.english == speciesEng).getBandLetters();
 
     // Retrieve the band for the species from SharedPreferences
     return _sharedPreferences.getString(bandGroup) ?? bandGroup;
@@ -104,12 +107,16 @@ class SharedPreferencesService extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<Species> get defaultSpeciesList {
-    return SpeciesList.english;
+  LocalSpeciesList get speciesList {
+    return LocalSpeciesList.fromSpeciesList(
+   _sharedPreferences.getStringList('defaultSpeciesList')?.map((e) => Species.fromJson(jsonDecode(e))).toList() ??
+            []);
   }
 
-  set defaultSpeciesList(List<Species> value) {
-    _sharedPreferences.setStringList('defaultSpeciesList', value.map((e) => e.english).toList());
+
+  set speciesList(LocalSpeciesList value) {
+    List<String> speciesJsonList = value.species.map((e) => jsonEncode(e.toJson())).toList();
+    _sharedPreferences.setStringList('defaultSpeciesList', speciesJsonList);
     notifyListeners();
   }
 
@@ -126,10 +133,23 @@ class SharedPreferencesService extends ChangeNotifier {
   }
 
   void clearAllMetalBands() {
-    SpeciesList.english.forEach((species) {
+    speciesList.species.forEach((species) {
       String bandGroup = species.getBandLetters();
       _sharedPreferences.remove(bandGroup);
     });
+    notifyListeners();
+  }
+
+  CameraPosition get defaultLocation {
+    double lat = _sharedPreferences.getDouble('defaultLocationLat') ?? 0;
+    double long = _sharedPreferences.getDouble('defaultLocationLong') ?? 0;
+    return CameraPosition(target: LatLng(lat, long),  bearing: 270,
+      zoom: 16.35);
+  }
+
+  set defaultLocation(CameraPosition value) {
+    _sharedPreferences.setDouble('defaultLocationLat', value.target.latitude);
+    _sharedPreferences.setDouble('defaultLocationLong', value.target.longitude);
     notifyListeners();
   }
 
@@ -140,6 +160,7 @@ class SharedPreferencesService extends ChangeNotifier {
     autoNextBandParent = defaultSettings.autoNextBandParent;
     biasedRepeatedMeasures = defaultSettings.biasedRepeatedMeasurements;
     defaultSpecies = defaultSettings.defaultSpecies.english;
+    defaultLocation = defaultSettings.getCameraPosition();
     notifyListeners();
   }
 }

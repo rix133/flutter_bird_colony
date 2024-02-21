@@ -3,16 +3,18 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:kakrarahu/design/modifingButtons.dart';
-import 'package:kakrarahu/design/speciesInput.dart';
+import 'package:kakrarahu/design/experimentDropdown.dart';
+import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/nest.dart';
+import 'package:kakrarahu/models/species.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 import 'package:kakrarahu/models/bird.dart';
 
+import 'design/modifingButtons.dart';
 import 'models/egg.dart';
 
 class NestManage extends StatefulWidget {
@@ -23,21 +25,19 @@ class NestManage extends StatefulWidget {
 }
 
 class _NestManageState extends State<NestManage> {
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  final FocusNode _focusNode = FocusNode();
-  final species = new TextEditingController();
-
+  Species species = Species.empty();
   int new_egg_nr = 1;
   Position? position;
   List<Bird> parents = [];
+  LocalSpeciesList speciesList = LocalSpeciesList();
   double _desiredAccuracy = 1;
   Nest? nest;
-  late CollectionReference nests;
+  CollectionReference nests = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
+  Query experimentsQuery = FirebaseFirestore.instance.collection("experiments").where("year", isEqualTo: DateTime.now().year);
   Stream<QuerySnapshot> _eggStream = Stream.empty();
   late SharedPreferencesService sps;
 
-  String get _year => DateTime.now().year.toString();
   var map = <String, dynamic>{};
 
   void addItem(value, String key) {
@@ -48,46 +48,49 @@ class _NestManageState extends State<NestManage> {
 
   @override
   void dispose() {
-    _focusNode.dispose();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    nests = FirebaseFirestore.instance.collection(_year);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       _desiredAccuracy = sps.desiredAccuracy;
       var data = ModalRoute.of(context)?.settings.arguments as Map;
+      speciesList = sps.speciesList;
+      if(data["sihtkoht"] != null) {
+        nests.doc(data["sihtkoht"]).get().then((value) {
+          if (value.exists) {
+              nest = Nest.fromDocSnapshot(value);
+          }
+        });
+      }
+      if(data["nest"] != null){
+        nest = data["nest"] as Nest;
+      }
 
+      if(nest != null) {
+        species = speciesList.getSpecies(nest!.species);
+        _eggStream = FirebaseFirestore.instance
+            .collection(nest!.discover_date.year.toString())
+            .doc(nest!.id)
+            .collection("egg")
+            .snapshots();
+        position = Position(longitude: nest!.coordinates.longitude,
+            latitude: nest!.coordinates.latitude,
+            timestamp: nest!.discover_date,
+            accuracy: nest!.getAccuracy(),
+            altitude: 0.0,
+            altitudeAccuracy: 0.0,
+            heading: 0.0,
+            headingAccuracy: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0);
 
-      nests.doc(data["sihtkoht"]).get().then((value) {
-        if (value.exists) {
-          setState(() {
-            nest = Nest.fromDocSnapshot(value);
-            species.text = nest!.species ?? "";
-            _eggStream = FirebaseFirestore.instance
-                .collection(nest!.discover_date.year.toString())
-                .doc(nest!.id)
-                .collection("egg")
-                .snapshots();
-            if(nest != null) {
-              position = Position(longitude: nest!.coordinates.longitude,
-                  latitude: nest!.coordinates.latitude,
-                  timestamp: nest!.discover_date,
-                  accuracy: nest!.getAccuracy(),
-                  altitude: 0.0,
-                  altitudeAccuracy: 0.0,
-                  heading: 0.0,
-                  headingAccuracy: 0.0,
-                  speed: 0.0,
-                  speedAccuracy: 0.0);
-            }
-          });
-        }
-      });
+        setState(() {   });
+      }
     });
   }
 
@@ -124,7 +127,7 @@ class _NestManageState extends State<NestManage> {
 
   Nest getNest(BuildContext context) {
     if (nest != null) {
-      nest!.species = species.text;
+      nest!.species = species.english;
       nest!.responsible = sps.userName;
       return nest!;
     }
@@ -249,6 +252,49 @@ class _NestManageState extends State<NestManage> {
       SizedBox(height: 15),
     ];
   }
+  _addNewExperiment() async {
+    String? selectedExperiment;
+    List<String> existingExperiments = nest!.experiments?.map((e) => e.name).toList() ?? [];
+    experimentsQuery.get().then((value) {
+      List<Experiment> exps = value.docs
+          .map((DocumentSnapshot e) => Experiment.fromQuerySnapshot(e))
+          .where((Experiment e) => existingExperiments.contains(e.name) == false)
+          .toList();
+      showDialog(context: context, builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Add new experiment"),
+          backgroundColor: Colors.black87,
+          content: ExperimentDropdown(
+            allExperiments: exps,
+            selectedExperiment: selectedExperiment,
+            onChanged: (String? e) {
+              selectedExperiment = e;
+            },
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("Cancel", style: TextStyle(color: Colors.black)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if(selectedExperiment != null){
+                  Experiment exp = exps.firstWhere((element) => element.name == selectedExperiment);
+                  if(exp.nests == null){
+                    exp.nests = [];
+                  }
+                  exp.nests!.add(nest!.name);
+                  exp.save().then((v) => Navigator.popAndPushNamed(context, "/nestManage", arguments: {"sihtkoht": nest!.id}));
+                }
+              },
+              child: Text("Add", style: TextStyle(color: Colors.red)),
+            ),],
+        );
+      });
+    });
+  }
 
   void gotoParent() {
     Navigator.pushNamed(context, "/editParent", arguments: {
@@ -285,9 +331,7 @@ class _NestManageState extends State<NestManage> {
                           backgroundColor: MaterialStateProperty.all(
                               _getParentButtonColor())),
                       onPressed: gotoParent,
-                      icon: Icon(
-                        Icons.add,
-                      ),
+                      icon: Icon(Icons.add),
                       label: Text("add parent"))
                   : IconButton(
                       icon: Icon(Icons.add),
@@ -326,24 +370,26 @@ class _NestManageState extends State<NestManage> {
     return DateTime.now().difference(nest!.first_egg ?? DateTime.now()).inDays;
   }
 
-  Row getTitleRow() {
-    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+  GestureDetector getTitleRow() {
+    return GestureDetector(
+      onLongPress: _addNewExperiment,
+    child:
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
       Text(
         nest!.name,
         style: TextStyle(fontSize: 30, fontStyle: FontStyle.italic),
       ),
-      Align(
-        alignment: Alignment.bottomLeft,
-        child: Text(
-          nest!.checkedStr(),
-          style: TextStyle(
-              fontSize: 14.0,
-              color: nest!.chekedAgo().inDays == 0
-                  ? Colors.green
-                  : Colors.yellow.shade700),
-        ),
-      ),
-    ]);
+     SizedBox(width: 5,),
+     Column(children: [
+    Text(
+    nest!.checkedStr(),
+    style: TextStyle(
+    fontSize: 14.0,
+    color: nest!.chekedAgo().inDays == 0
+    ? Colors.green
+        : Colors.yellow.shade700),
+    ),
+    Text("(long press to add experiment)", style: TextStyle(fontSize: 10))])]));
   }
 
   Widget build(BuildContext context) {
@@ -374,16 +420,20 @@ class _NestManageState extends State<NestManage> {
                 getTitleRow(),
                 listExperiments(nest!), //list of experiments
                 SizedBox(height: 15),
-                Row(children:[Expanded(child:speciesRawAutocomplete(species, _focusNode, (String value) {
-                  setState(() {
-                    nest!.species = value;
-                  });
-                })),
+                Row(children:[Expanded(child:SpeciesRawAutocomplete(
+                  speciesList: speciesList,
+                  species: species,
+                  returnFun: (Species s) {
+                    setState(() {
+                      species = speciesList.getSpecies(s.english);
+                    });
+                  },
+                )),
                   locationButton(),]),
                 SizedBox(height: 15),
                 ...nest!.measures
                     .map((Measure m) =>
-                        m.getMeasureFormWithAddButton(addMeasure))
+                        m.getMeasureForm(addMeasure, sps.biasedRepeatedMeasures))
                     .toList(),
                 SizedBox(height: 15),
                 _getParentsRow(nest!.parents, context),

@@ -23,7 +23,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'map.dart';
-import 'editChick.dart';
 import 'mapforcreate.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -117,7 +116,6 @@ class MyApp extends StatelessWidget {
         '/statistics':(context)=> Statistics(),
         '/mapforcreate':(context)=>MapForCreate(),
         '/findNest':(context)=>FindNest(),
-        '/editChick':(context)=>EditChick(),
         '/editParent':(context)=>EditBird(),
         '/listBirds':(context)=>ListBirds(),
         '/listExperiments':(context)=>ListExperiments(),

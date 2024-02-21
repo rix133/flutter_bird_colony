@@ -19,7 +19,7 @@ class ExperimentedItem{
     if (json['measures'] != null) {
       measures = [];
       json['measures'].forEach((v) {
-        measures.add(measureFromJson(v));
+        measures.add(Measure.FromJson(v));
       });
     }
   }
@@ -52,13 +52,7 @@ class ExperimentedItem{
     });
     //add empty note if it does not exist
     if(measures.where((element) => element.name == "note").isEmpty){
-      measures.add(Measure(
-          name: "note",
-          type: "nest",
-          value: "",
-          isNumber: false,
-          unit: "",
-          modified: DateTime.now()));
+      measures.add(Measure.note());
     }
 
     measures.sort();
@@ -77,6 +71,6 @@ class ExperimentedItem{
     return measuresMap;
   }
 
-
-
+  bool get hasExperiments =>  experiments?.isNotEmpty ?? false;
+  bool get hasMeasures =>  measures.isNotEmpty;
 }

@@ -6,6 +6,8 @@ import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import 'models/species.dart';
+
 class SettingsPage extends StatefulWidget {
   @override
   _SettingsPageState createState() => _SettingsPageState();
@@ -193,6 +195,14 @@ class _SettingsPageState extends State<SettingsPage> {
 
       }
     });
+    _updateSpeciesList();
+  }
+
+  _updateSpeciesList() {
+    FirebaseFirestore.instance.collection('settings').doc('default').collection("species").get().then((value) {
+      List<Species> speciesList = value.docs.map((e) => Species.fromDocSnapshot(e)).toList();
+      sharedPreferencesService?.speciesList = LocalSpeciesList.fromSpeciesList(speciesList);
+    });
   }
 
 
@@ -207,38 +217,27 @@ class _SettingsPageState extends State<SettingsPage> {
           sharedPreferencesService?.userName = user.displayName ?? '';
           sharedPreferencesService?.userEmail = user.email ?? '';
           _setDefaultSettings();
-          if(!_isAdmin) {
-            Navigator.popAndPushNamed(context, '/');
-          }
-          else {
-            FirebaseFirestore.instance.collection('users').get().then((value) {
-              value.docs.forEach((element) {
-                _allowedUsers.add(element.id);
-              });
-              setState(() {
-                _isLoggedIn = true;
-                _userName = user.displayName;
-                _userEmail = user.email;
-              });
-            });
-          }
+          Navigator.popAndPushNamed(context, '/');
         } else {
-          AlertDialog(
-            title: Text('Not authorized'),
-            content: Text('You are not authorized to use this app, request access from the admin.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('OK'),
-              ),
-            ],
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Not authorized', style: TextStyle(color: Colors.red)),
+                content: Text('You are not authorized to use this app, request access from the admin(s).', style: TextStyle(color: Colors.black),),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('OK'),
+                  ),
+                ],
+              );
+            },
           );
         }
       });
-
-
     }
   }
 
@@ -275,6 +274,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ],
       ),
+      SizedBox(height: 10),
     Row(
         children: <Widget>[
           Text('Guess next metal band for parents:'),
@@ -286,6 +286,17 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ],
       ),
+      SizedBox(height: 10),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          ElevatedButton.icon(
+            onPressed:  _updateSpeciesList(),
+            label: Padding(child:Text('Refresh autocomplete species'), padding: EdgeInsets.all(10)),
+            icon: Icon(Icons.refresh),
+          ),
+        ],
+      )
     ] : [];
   }
 

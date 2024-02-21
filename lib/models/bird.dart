@@ -471,17 +471,17 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     rows.add(baseItems);
     return rows;
   }
+  factory Bird.fromJson(Map<String, dynamic> json) {
+    return Bird(
+        ringed_date: (json['ringed_date'] as Timestamp).toDate(),
+        ringed_as_chick: json['ringed_as_chick'] ?? true,
+        band: json['band'],
+        measures: (json['measures'] as List<dynamic>?)
+            ?.map((e) => Measure.FromJson(e))
+            .toList() ??
+            [],
+        color_band: json['color_band']);
+  }
 
 }
 
-Bird birdFromJson(Map<String, dynamic> json) {
-  return Bird(
-      ringed_date: (json['ringed_date'] as Timestamp).toDate(),
-      ringed_as_chick: json['ringed_as_chick'] ?? true,
-      band: json['band'],
-      measures: (json['measures'] as List<dynamic>?)
-              ?.map((e) => measureFromJson(e))
-              .toList() ??
-          [],
-      color_band: json['color_band']);
-}

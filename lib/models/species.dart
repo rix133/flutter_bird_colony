@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/textFormItem.dart';
 import 'package:kakrarahu/models/firestoreItem.dart';
@@ -23,6 +22,14 @@ class Species implements FirestoreItem {
   String latinCode;
   String? latin;
   String letters;
+
+  factory Species.empty() {
+    return Species(
+      english: '',
+      local: '',
+      latinCode: '',
+    );
+  }
 
   factory Species.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
@@ -230,45 +237,54 @@ class Species implements FirestoreItem {
   }
 }
 
+class LocalSpeciesList {
+  List<Species> species = <Species>[];
+
+  LocalSpeciesList();
+
+  factory LocalSpeciesList.fromStringList(List<String> species) {
+    LocalSpeciesList list = LocalSpeciesList();
+    for (String specie in species) {
+      list.species.add(Species(english: specie, local: '', latinCode: ''));
+    }
+    return list;
+  }
+  factory LocalSpeciesList.fromSpeciesList(List<Species> species) {
+    LocalSpeciesList list = LocalSpeciesList();
+    list.species = species;
+    return list;
+  }
+  factory LocalSpeciesList.fromMap(Map<String, dynamic> json) {
+    LocalSpeciesList list = LocalSpeciesList();
+    json.forEach((key, value) {
+      list.species.add(Species.fromJson(value));
+    });
+    return list;
+  }
+
+  getSp(Species? s) {
+    if(s == null) {
+      return Species.empty();
+    }
+    return species.firstWhere(
+            (Species element) =>
+        element.english.toLowerCase() == s.english.toLowerCase(),
+        orElse: () => Species.empty());
+  }
+
+  Species getSpecies(String? english) {
+    if(english == null) {
+      return Species.empty();
+    }
+    return species.firstWhere(
+            (Species element) =>
+        element.english.toLowerCase() == english.toLowerCase(),
+        orElse: () => Species.empty());
+  }
 
 
-
-
-class SpeciesList {
-  SpeciesList._();
-
-  static List<Species> english = <Species>[
-    Species(english: 'Common Gull', local: 'kalakajakas', latinCode: 'larcan'),
-    Species(
-        english: 'European Herring Gull',
-        local: 'hõbekajakas',
-        latinCode: 'lararg'),
-    Species(
-        english: 'Lesser Black-backed Gull',
-        local: 'tõmmukajakas',
-        latinCode: 'larfus'),
-    Species(
-        english: 'Great Black-backed Gull',
-        local: 'merikajakas',
-        latinCode: 'larmar'),
-    Species(english: 'Common Tern', local: 'jõgitiir', latinCode: 'stehir'),
-    Species(english: 'Arctic Tern', local: 'randtiir', latinCode: 'steaea'),
-    Species(english: 'Great Cormorant', local: 'kormoran', latinCode: 'phacar'),
-    Species(
-        english: 'Eurasian Oystercatcher',
-        local: 'merisk',
-        latinCode: 'haeost'),
-    Species(
-        english: 'Common Ringed Plover',
-        local: 'liivatüll',
-        latinCode: 'chahia'),
-    Species(english: 'Mute Swan', local: 'kühmnokk-luik', latinCode: 'cygolo'),
-    Species(
-        english: 'Black-Headed Gull',
-        local: 'naerukajakas',
-        latinCode: 'larrid'),
-    Species(english: 'Greylag goose', local: 'hallhani', latinCode: 'ansans'),
-    Species(english: 'Mallard', local: 'sinikael-part', latinCode: 'anapla'),
-    Species(english: 'Little Gull', local: 'väikekajakas', latinCode: 'hydmin'),
-  ];
 }
+
+
+
+

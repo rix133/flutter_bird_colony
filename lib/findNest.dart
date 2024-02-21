@@ -3,6 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/buildForm.dart';
 
+import 'models/nest.dart';
+
 class FindNest extends StatefulWidget {
   const FindNest({Key? key}) : super(key: key);
 
@@ -11,46 +13,59 @@ class FindNest extends StatefulWidget {
 }
 
 class _FindNestState extends State<FindNest> {
-  CollectionReference pesa = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
+  CollectionReference nests = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
   bool enableBtn = true;
   void submitForm(){
-    enableBtn = false;
+    setState(() {
+      enableBtn = false;
+    });
     searchNest(nestID.text);
   }
 
   void searchNest(String target) async {
-      var exists = await pesa.doc(target).get();
-      if (exists.exists==true) {
-        Navigator.pushNamed(
-            context, "/nestManage",
-            arguments: {
-              "sihtkoht": target,
-            });
-        nestID.text="";
-      }
-      else {
-        AlertDialog(
-          title: Text("nest does not exist",
-              style: TextStyle(color: Colors.deepPurpleAccent)
-          ),
-          content: Text("Please check the nest ID",
-              style: TextStyle(color: Colors.deepPurpleAccent)
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                enableBtn = true;
-                Navigator.pop(context);
-              },
-              child: Text("OK"),
-            ),
-          ],
-        );
-      }
-      enableBtn = true;
+    DocumentSnapshot data = await nests.doc(target).get();
+    print(target);
+    if (data.exists) {
+      Navigator.pushNamed(
+          context, "/nestManage",
+          arguments: {
+            "nest": Nest.fromDocSnapshot(data),
+          });
+      nestID.text="";
     }
+    else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          // Start the timer when the dialog is built
+          Future.delayed(Duration(seconds: 2), () {
+            Navigator.of(context).pop();
+          });
+          return AlertDialog(
+            title: Text("Nest ${nestID.text} does not exist",
+                style: TextStyle(color: Colors.red)
+            ),
+            content: Text("Please check the nest ID",
+                style: TextStyle(color: Colors.black)
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
 
-  List list=[];
+                  Navigator.pop(context);
+                },
+                child: Text("OK"),
+              ),
+            ],
+          );
+        },
+      );
+    }
+    setState(() {
+      enableBtn = true;
+    });
+  }
+
   final nestID = TextEditingController();
   @override
   Widget build(BuildContext context) {

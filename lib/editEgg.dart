@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -50,10 +50,8 @@ class _EditEggState extends State<EditEgg> {
   }
 
   void addMeasure(Measure m) {
-    egg.measures =
-        egg.measures.map((e) => e..value = e.valueCntr.text).toList();
     setState(() {
-      egg.measures.add(m);
+      egg.measures.add(Measure.empty(m));
       egg.measures.sort();
     });
   }
@@ -190,7 +188,7 @@ class _EditEggState extends State<EditEgg> {
                         SizedBox(height: 10),
                         statusField(),
                         SizedBox(height: 10),
-                        ...egg.measures.map((e) => e.getMeasureFormWithAddButton(addMeasure)).toList(),
+                        ...egg.measures.map((e) => e.getMeasureForm(addMeasure, sps?.biasedRepeatedMeasures ?? false)).toList(),
                         //...egg.getEggForm(context, sps!.userName, _focusNode,  setState, addMeasure),
                         SizedBox(height: 20),
                         modifingButtons(context,setState, getEgg, "egg", null, silentOverwrite: true),

@@ -2,9 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kakrarahu/models/firestoreItem.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
-import 'package:kakrarahu/models/speciesRawAutocomplete.dart';
+import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 
@@ -52,6 +53,13 @@ class DefaultSettings implements FirestoreItem {
 
   @override
   String get name => id ?? '';
+
+  getCameraPosition() {
+    return CameraPosition(
+      target: LatLng(defaultLocation.latitude, defaultLocation.longitude),
+      zoom: 14.4746,
+    );
+  }
 
   @override
   factory DefaultSettings.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
@@ -125,7 +133,7 @@ class DefaultSettings implements FirestoreItem {
             setState(() {});
           },
           species: defaultSpecies,
-          speciesList: sps?.defaultSpeciesList ?? [],
+          speciesList: sps?.speciesList ?? LocalSpeciesList(),
           borderColor: Colors.white38,
           bgColor: Colors.amberAccent,
           labelTxt: 'Default species',

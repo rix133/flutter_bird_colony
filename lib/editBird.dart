@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/design/speciesInput.dart';
+import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/bird.dart';
 import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/measure.dart';
@@ -10,6 +10,7 @@ import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:provider/provider.dart';
 
 import 'models/egg.dart';
+import 'models/species.dart';
 
 class EditBird extends StatefulWidget {
   const EditBird({Key? key}) : super(key: key);
@@ -21,9 +22,9 @@ class EditBird extends StatefulWidget {
 class _EditBirdState extends State<EditBird> {
   TextEditingController band_letCntr = TextEditingController();
   TextEditingController band_numCntr = TextEditingController();
-  TextEditingController speciesCntr = TextEditingController();
-  FocusNode _focusNode = FocusNode();
   SharedPreferencesService? sps;
+  Species _species = Species.empty();
+  LocalSpeciesList _speciesList = LocalSpeciesList();
   String _recentMetalBand = "";
   bool buttonsDisabled = false;
 
@@ -49,14 +50,6 @@ class _EditBirdState extends State<EditBird> {
     type: "bird",
     isNumber: true,
     unit: "mm",
-    modified: DateTime.now(),
-  );
-  Measure note = Measure(
-    name: "note",
-    value: "",
-    type: "any",
-    isNumber: false,
-    unit: "text",
     modified: DateTime.now(),
   );
 
@@ -113,8 +106,9 @@ class _EditBirdState extends State<EditBird> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
+      _speciesList = sps?.speciesList ?? LocalSpeciesList();
       var map = ModalRoute.of(context)?.settings.arguments;
-      List<Measure> allMeasures = [note, head, gland, age];
+      List<Measure> allMeasures = [Measure.note(), head, gland, age];
       if (map != null) {
         map = map as Map<String, dynamic>;
         if (map["nest"] != null) {
@@ -160,7 +154,7 @@ class _EditBirdState extends State<EditBird> {
             responsible: sps?.userName ?? "unknown",
             nest: nest.name,
             nest_year: nest.discover_date.year,
-            measures: [note],
+            measures: [Measure.note()],
             experiments: nest.experiments,
             // Add other fields as necessary
           );
@@ -181,7 +175,7 @@ class _EditBirdState extends State<EditBird> {
         }
 
         bird.measures.sort();
-        speciesCntr.text = bird.species ?? "";
+        _species = _speciesList.getSpecies(bird.species);
         nestnr.setValue(bird.nest);
         color_band.setValue(bird.color_band);
         setState(() {});
@@ -303,8 +297,6 @@ class _EditBirdState extends State<EditBird> {
   }
 
   void addMeasure(Measure m) {
-    bird.measures =
-        bird.measures.map((e) => e..value = e.valueCntr.text).toList();
     setState(() {
       bird.measures.add(m);
       bird.measures.sort();
@@ -335,7 +327,6 @@ class _EditBirdState extends State<EditBird> {
 
   Bird getBird(BuildContext context) {
     //ensure UI is updated
-    bird.species = speciesCntr.text;
     bird.nest = nestnr.valueCntr.text;
     bird.color_band = color_band.valueCntr.text.toUpperCase();
 
@@ -382,17 +373,18 @@ class _EditBirdState extends State<EditBird> {
                       style: TextStyle(fontSize: 30, color: Colors.yellow)),
                   SizedBox(height: 10),
                   listExperiments(bird),
-                  speciesRawAutocomplete(speciesCntr, _focusNode, (String sp) {
+                  SpeciesRawAutocomplete(species: _species, returnFun: (Species sp) {
                     setState(() {
-                      bird.species = sp;
-                      _recentMetalBand = sps?.getRecentMetalBand(sp) ?? "";
+                      _species = sp;
+                      bird.species = sp.english;
+                      _recentMetalBand = sps?.getRecentMetalBand(sp.english) ?? "";
                       autoAssignNextMetalBand(_recentMetalBand);
                     });
-                  }),
-                  nestnr.getMeasureForm(),
+                  }, speciesList: sps?.speciesList ?? LocalSpeciesList()),
+                  nestnr.getSimpleMeasureForm(),
                   metalBand(),
                   bird.isChick() ? Container() : SizedBox(height: 10),
-                  bird.isChick() ? Container() : color_band.getMeasureForm(),
+                  bird.isChick() ? Container() : color_band.getSimpleMeasureForm(),
                   modifingButtons(context,setState, getBird, ageType, nests,
                       silentOverwrite: (ageType == "parent"),
                       onSaveOK: saveOk, onDeleteOK: deleteOk),
@@ -401,7 +393,7 @@ class _EditBirdState extends State<EditBird> {
                   bird.ringed_as_chick ? getAgeRow() : Container(),
                   ...bird.measures
                       .map((Measure m) => bird.band.isNotEmpty
-                          ? m.getMeasureFormWithAddButton(addMeasure)
+                          ? m.getMeasureForm(addMeasure, sps?.biasedRepeatedMeasures ?? false)
                           : Container())
                       .toList(),
                 ]),

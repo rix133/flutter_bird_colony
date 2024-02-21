@@ -8,19 +8,33 @@ class Measure implements Comparable<Measure>{
   bool isNumber = false;
   DateTime modified = DateTime.now();
   String unit = "";
+  bool repeated = false;
   String type=  "any";
 
-  Measure({required this.name, required this.value, required this.isNumber, required this.unit, required  this.modified, required this.type}){
+  Measure({required this.name, required this.value, required this.isNumber, required this.unit, required  this.modified, required this.type, this.repeated = false}){
       this.valueCntr.text = value;
   }
 
-  Measure.numeric({required this.name, required this.value, required this.unit, required this.modified}){
+  Measure.note({this.value = ""}){
+    this.unit = "";
+    this.name = "note";
+    this.isNumber = false;
+    this.repeated = true;
+    this.valueCntr.text = value;
+  }
+
+
+  Measure.numeric({required this.name, value ="", required this.unit, required this.modified, this.repeated = false}){
     this.isNumber = true;
     this.valueCntr.text = value;
   }
-  Measure.text({required this.name, required this.value, required this.unit, required this.modified}){
+  Measure.text({required this.name, value ="", unit ="", required this.modified, this.repeated = false}){
     this.isNumber = false;
     this.valueCntr.text = value;
+  }
+
+  factory Measure.empty(Measure m){
+    return Measure(name: m.name, value: "", isNumber: m.isNumber, unit: m.unit, modified: DateTime.now(), type: m.type, repeated: m.repeated);
   }
 
   toJson() {
@@ -30,7 +44,8 @@ class Measure implements Comparable<Measure>{
       'value': value,
       'isNumber': isNumber,
       'unit': unit,
-      'modified': modified.toIso8601String()
+      'modified': modified.toIso8601String(),
+      'repeated': repeated
     };
   }
 
@@ -39,6 +54,7 @@ class Measure implements Comparable<Measure>{
       'name': name,
       'type': type,
       'isNumber': isNumber,
+      'repeated': repeated,
       'unit': unit
     };
   }
@@ -116,12 +132,30 @@ class Measure implements Comparable<Measure>{
               });
             },
           ),
+          SwitchListTile(
+            title: const Text('Repeated'),
+            value: this.repeated,
+            onChanged: (bool value) {
+              setState(() {
+                this.repeated = value;
+              });
+            },
+          ),
         ],
       ),
     );
   }
 
-  Padding getMeasureForm(){
+  Widget getMeasureForm(Function(Measure) onPressed, bool showValue){
+    bool hideValue = !showValue;
+    if(name.contains("note")){
+      hideValue = false;
+    }
+    return repeated ? getMeasureFormWithAddButton(onPressed, hideValue) : getSimpleMeasureForm();
+  }
+
+
+  Padding getSimpleMeasureForm(){
     return Padding(
         padding: EdgeInsets.all(10),
         child: TextFormField(
@@ -199,13 +233,22 @@ class Measure implements Comparable<Measure>{
       ),
     );
   }
-  Row getMeasureFormWithAddButton(Function(Measure) onPressed){
+  Row getMeasureFormWithAddButton(Function(Measure) onPressed, bool hideValue){
+
     String label = name + (unit == "" ? "" : " (" + unit + ")");
     if(modified.year == DateTime.now().year && value.isNotEmpty){
-      label = label + DateFormat('d MMM yyyy').format(modified);
+      label = label + " " + DateFormat('d MMM yyyy').format(modified);
     } else if(value.isNotEmpty){
-      label = label + DateFormat('d MMM HH:mm').format(modified);
+      label = label + " " + DateFormat('d MMM HH:mm').format(modified);
     }
+    if(value.isEmpty){
+      hideValue = false;
+    } else{
+      if(hideValue){
+        valueCntr.text = "???";
+      }
+    }
+
     return Row(
       children: [
         Expanded(
@@ -213,8 +256,9 @@ class Measure implements Comparable<Measure>{
             controller: valueCntr,
             keyboardType: isNumber?TextInputType.number:TextInputType.text,
             textAlign: TextAlign.center,
+            readOnly: hideValue,
             onChanged: (value) {
-              this.value = value;
+              hideValue ? null : this.value = value;
             },
             decoration: InputDecoration(
               labelText: label,
@@ -240,36 +284,39 @@ class Measure implements Comparable<Measure>{
             backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
           ),
           onPressed: () {
-            Measure newMeasure = Measure(name: name, value: "", isNumber: isNumber, type:  type, unit: unit, modified: DateTime.now());
+            Measure newMeasure = Measure.empty(this);
             onPressed(newMeasure);
           },
         )
       ],
     );
   }
+  factory Measure.FromJson(Map<String, dynamic> json) {
+    Measure m = Measure(
+        name: json['name'],
+        value: json['value'],
+        isNumber: json['isNumber'],
+        unit: json['unit'],
+        type: json['type'] ?? "any",
+        modified: json['modified'] != null ? DateTime.parse(json['modified']) : DateTime.now(),
+        repeated: json['repeated'] ?? false
+    );
+    return m;
+  }
+
+  factory Measure.FromFormJson(Map<String, dynamic> json) {
+    Measure m = Measure(
+        name: json['name'],
+        value: "",
+        isNumber: json['isNumber'],
+        unit: json['unit'],
+        type: json['type'] ?? "any",
+        modified: DateTime.now(),
+        repeated: json['repeated'] ?? false
+    );
+    return m;
+  }
 
 }
 
-Measure measureFromJson(Map<String, dynamic> json) {
-  Measure m = Measure(
-      name: json['name'],
-      value: json['value'],
-      isNumber: json['isNumber'],
-      unit: json['unit'],
-      type: json['type'] ?? "any",
-      modified: json['modified'] != null ? DateTime.parse(json['modified']) : DateTime.now()
-  );
-  return m;
-}
 
-Measure measureFromFormJson(Map<String, dynamic> json) {
-  Measure m = Measure(
-      name: json['name'],
-      value: "",
-      isNumber: json['isNumber'],
-      unit: json['unit'],
-      type: json['type'] ?? "any",
-      modified: DateTime.now()
-  );
-  return m;
-}
