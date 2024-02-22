@@ -131,7 +131,7 @@ class _nestCreateState extends State<nestCreate> {
                         label: 'enter nest ID',
                         initialValue: nest.id ?? "",
                         isNumber: true,
-                        changeFun: (value) => setState(() => nest.id = value))),
+                        changeFun: (value) =>  nest.id = value)),
                 SizedBox(width: 5),
                 _nextNestButton(),
               ]),

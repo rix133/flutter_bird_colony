@@ -151,13 +151,13 @@ class Experiment implements FirestoreItem {
   }
   gotoBird(String bird, BuildContext context){
     return () => {
-      Navigator.pushNamed(context, "/editParent", arguments: {'bird': {'band': bird}})
+      Navigator.pushNamed(context, "/editBird", arguments: {'bird': {'band': bird}})
     };
   }
 
   String get titleString => '$name${description?.isNotEmpty == true ? ' - $description' : ''}';
 
-  Widget getListTile(BuildContext context, String person) {
+  Widget getListTile(BuildContext context) {
     String subtitleNests = hasNests() ? "Nests: " + nests!.join(", ") : "";
     String subtitleBirds = hasBirds() ? "Birds: " + birds!.join(", ") : "";
     return Padding(
@@ -329,7 +329,7 @@ class Experiment implements FirestoreItem {
       TextCellValue(responsible ?? ""),
       IntCellValue(year ?? 1900),
       TextCellValue(type),
-      DateTimeCellValue(year: last_modified?.year ?? 1900, month: last_modified?.month ?? 1, day: last_modified?.day ?? 1, hour: last_modified?.hour ?? 0, minute: last_modified?.minute ?? 0),
+      last_modified != null ? DateTimeCellValue.fromDateTime(last_modified!) : TextCellValue(""),
       DateCellValue(year: created?.year ?? 1900, month: created?.month ?? 1, day: created?.day ?? 1),
     ];
 

@@ -80,16 +80,7 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
             : false);
   }
 
-  @override
-  ListView listAllItems(BuildContext context, AsyncSnapshot<QuerySnapshot<Object?>> snapshot) {
-    exps = getFilteredItems(snapshot);
-    return ListView.builder(
-        itemCount: exps.length,
-        itemBuilder: (context, index) {
-          return exps[index].getListTile(context, sps?.userName ?? "");
-        });
-  }
-  @override
+
   bool filterByYear(Experiment e) {
     return e.year == selectedYear;
   }

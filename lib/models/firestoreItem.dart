@@ -1,6 +1,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
+import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
 abstract class FirestoreItem{
@@ -26,6 +27,8 @@ abstract class FirestoreItem{
   Future<List<List<CellValue>>> toExcelRows();
 
   List<TextCellValue> toExcelRowHeader();
+
+  Widget getListTile(BuildContext context);
 
 
 

@@ -93,15 +93,6 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
         });
   }
 
-  @override
-  listAllItems(BuildContext context, AsyncSnapshot snapshot) {
-    nests = getFilteredNests(snapshot);
-    return ListView.builder(
-        itemCount: nests.length,
-        itemBuilder: (context, index) {
-          return nests[index].getListTile(context);
-        });
-  }
 
   updateMinEggAge(String value) {
     setState(() {
@@ -214,7 +205,7 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
     return eggCount > _minEggs! - 1 && eggCount < _maxEggs! - 1;
   }
 
-    List<Nest> getFilteredNests(AsyncSnapshot snapshot) {
+    List<Nest> getFilteredItems(AsyncSnapshot snapshot) {
     List<Nest> nests =
         snapshot.data!.docs.map<Nest>((e) => Nest.fromDocSnapshot(e)).toList();
 

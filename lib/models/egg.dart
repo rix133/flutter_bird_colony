@@ -113,7 +113,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       TextCellValue(type() ?? ""),
       DateCellValue(year: discover_date.year, month: discover_date.month, day: discover_date.day),
       TextCellValue(responsible ?? ""),
-      last_modified != null  ? DateTimeCellValue(year: last_modified!.year, month: last_modified!.month, day: last_modified!.day, hour: last_modified!.hour, minute: last_modified!.minute, second: last_modified!.second) : TextCellValue(""),
+      last_modified != null ? DateTimeCellValue.fromDateTime(last_modified!) : TextCellValue(""),
       TextCellValue(ring ?? ""),
       TextCellValue(status),
       TextCellValue(experiments?.map((e) => e.name).join(";\r") ?? ""), // Convert experiments to string
@@ -171,7 +171,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       },
       onLongPress: () {
         Navigator.pushNamed(
-            context, "/editParent",
+            context, "/editBird",
             arguments: {
               "nest": nest,
               "egg": this,
@@ -214,5 +214,16 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       'experiments': experiments?.map((e) => e.toSimpleJson()).toList(),
       'measures': measures.map((e) => e.toJson()).toList(),
     };
+  }
+
+  @override
+  Widget getListTile(BuildContext context) {
+    return ListTile(
+      title: Text(name),
+      subtitle: Text(statusText()),
+      onTap: () {
+        Navigator.pushNamed(context, '/editEgg', arguments: this);
+      },
+    );
   }
 }

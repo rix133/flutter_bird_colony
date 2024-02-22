@@ -116,7 +116,7 @@ class MyApp extends StatelessWidget {
         '/statistics':(context)=> Statistics(),
         '/mapforcreate':(context)=>MapForCreate(),
         '/findNest':(context)=>FindNest(),
-        '/editParent':(context)=>EditBird(),
+        '/editBird':(context)=>EditBird(),
         '/listBirds':(context)=>ListBirds(),
         '/listExperiments':(context)=>ListExperiments(),
         '/listNests':(context)=>ListNests(),

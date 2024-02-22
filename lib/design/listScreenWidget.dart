@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/experimentedItem.dart';
+import 'package:kakrarahu/models/firestoreItem.dart';
 import 'package:provider/provider.dart';
 import '../models/experiment.dart';
 import '../services/sharedPreferencesService.dart';
@@ -25,7 +26,7 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
 
   SharedPreferencesService? sps;
-  List<T> items = [];
+  List<FirestoreItem> items = [];
 
   @override
   void dispose() {
@@ -181,7 +182,18 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
   void openFilterDialog(BuildContext context);
 
-  ListView listAllItems(BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot);
+
+
+  List<FirestoreItem> getFilteredItems(AsyncSnapshot<QuerySnapshot> snapshot);
+
+  ListView listAllItems(BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+    items = getFilteredItems(snapshot);
+    return ListView.builder(
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          return items[index].getListTile(context);
+        });
+  }
 
 
   Widget experimentInput(BuildContext context) {

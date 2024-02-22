@@ -170,7 +170,9 @@ class Species implements FirestoreItem {
       TextCellValue('Local'),
       TextCellValue('Latin'),
       TextCellValue('Latin Code'),
-      TextCellValue('Responsible')
+      TextCellValue('Responsible'),
+      TextCellValue("Letters"),
+      TextCellValue("Last Modified"),
     ];
   }
 
@@ -183,6 +185,8 @@ class Species implements FirestoreItem {
         TextCellValue(latin ?? ''),
         TextCellValue(latinCode),
         TextCellValue(responsible ?? ''),
+        TextCellValue(letters),
+        DateTimeCellValue.fromDateTime(last_modified ?? DateTime.now()),
       ]
     ]);
   }

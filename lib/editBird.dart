@@ -8,6 +8,8 @@ import 'package:kakrarahu/models/nest.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:provider/provider.dart';
+import 'dart:io' show Platform;
+
 
 import 'models/egg.dart';
 import 'models/species.dart';
@@ -73,7 +75,7 @@ class _EditBirdState extends State<EditBird> {
 
   Egg? egg;
 
-  String ageType = "parent";
+  String ageType = "any";
 
   Bird bird = Bird(
     species: "",
@@ -101,97 +103,128 @@ class _EditBirdState extends State<EditBird> {
       FirebaseFirestore.instance.collection(DateTime.now().year.toString());
   CollectionReference birds = FirebaseFirestore.instance.collection("Birds");
 
+
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      sps = Provider.of<SharedPreferencesService>(context, listen: false);
-      _speciesList = sps?.speciesList ?? LocalSpeciesList();
+      initializeServices();
       var map = ModalRoute.of(context)?.settings.arguments;
       List<Measure> allMeasures = [Measure.note(), head, gland, age];
       if (map != null) {
         map = map as Map<String, dynamic>;
-        if (map["nest"] != null) {
-          nest = map["nest"] as Nest;
-        }
-        if (map["bird"] != null) {
-          bird = map["bird"] as Bird;
-          //does the bird exist in firestore
-          if (bird.band.isNotEmpty && (bird.id == null)) {
-            //reload from firestore this comes from nest and has firestore instance
-            bird = await birds.doc(bird.band).get().then(
-                (DocumentSnapshot value) => Bird.fromDocSnapshot(value));
-            bird.addNonExistingExperiments(nest.experiments, bird.isChick() ? "chick" : "parent");
-          } else {
-            if (map["nest"] != null) {
-              bird.nest = nest.name;
-              bird.nest_year = nest.discover_date.year;
-              bird.species = nest.species;
-            } else {
-              if (bird.nest_year != DateTime.now().year) {
-                bird.nest = "";
-              }
-            }
-          }
-
-          for (Measure m in allMeasures) {
-            if (!bird.measures.map((e) => e.name).contains(m.name)) {
-              bird.measures.add(m);
-            }
-          }
-        }
-
-        //its hatching time
-        else if (map["egg"] != null) {
-          ageType = "chick";
-          egg = map["egg"] as Egg;
-          bird = Bird(
-            species: nest.species,
-            ringed_date: DateTime.now(),
-            ringed_as_chick: true,
-            egg: egg?.getNr(),
-            band: "",
-            responsible: sps?.userName ?? "unknown",
-            nest: nest.name,
-            nest_year: nest.discover_date.year,
-            measures: [Measure.note()],
-            experiments: nest.experiments,
-            // Add other fields as necessary
-          );
-        }
-        else {
-          bird = Bird(
-            species: nest.species,
-            ringed_date: DateTime.now(),
-            ringed_as_chick: false,
-            band: "",
-            responsible: sps?.userName ?? "unknown",
-            nest: nest.name,
-            nest_year: nest.discover_date.year,
-            measures: allMeasures,
-            experiments: nest.experiments,
-            // Add other fields as necessary
-          );
-        }
-
-        bird.measures.sort();
-        _species = _speciesList.getSpecies(bird.species);
-        nestnr.setValue(bird.nest);
-        color_band.setValue(bird.color_band);
-        setState(() {});
+        handleMap(map, allMeasures);
       } else {
-        bird.measures = allMeasures;
-        //remove age from measures if ringed as chick
-        if (bird.ringed_as_chick) {
-          bird.measures.removeWhere((element) => element.name == "age");
-        }
-        bird.measures.sort();
+        handleNoMap(allMeasures);
       }
-      _recentMetalBand = sps?.getRecentMetalBand(bird.species ?? "") ?? "";
       autoAssignNextMetalBand(_recentMetalBand);
       setState(() {});
     });
   }
+
+  void initializeServices() {
+    sps = Provider.of<SharedPreferencesService>(context, listen: false);
+    _speciesList = sps?.speciesList ?? LocalSpeciesList();
+  }
+
+  void handleMap(Map<String, dynamic> map, List<Measure> allMeasures) {
+    if (map["nest"] != null) {
+      nest = map["nest"] as Nest;
+    }
+    if (map["bird"] != null) {
+      //ageType is set within handleBird
+      handleBird(map, allMeasures);
+    } else if (map["egg"] != null) {
+      ageType = "chick";
+      handleEgg(map);
+    } else {
+      //only nest this means ita a prent
+      ageType = "parent";
+      handleNoBirdNoEgg(allMeasures);
+    }
+    bird.measures.sort();
+    _species = _speciesList.getSpecies(bird.species);
+    nestnr.setValue(bird.nest);
+    color_band.setValue(bird.color_band);
+  }
+
+  void handleBird(Map<String, dynamic> map, List<Measure> allMeasures) {
+    bird = map["bird"] as Bird;
+    if (bird.band.isNotEmpty && (bird.id == null)) {
+      reloadBirdFromFirestore();
+    } else {
+      if (map["nest"] != null) {
+        updateBirdWithNestInfo();
+      } else {
+        if (bird.nest_year != DateTime.now().year) {
+          bird.nest = "";
+        }
+      }
+    }
+    addMissingMeasuresToBird(allMeasures);
+  }
+
+  void reloadBirdFromFirestore() async {
+    bird = await birds.doc(bird.band).get().then(
+            (DocumentSnapshot value) => Bird.fromDocSnapshot(value));
+    ageType = bird.isChick() ? "chick" : "parent";
+    bird.addNonExistingExperiments(nest.experiments, ageType);
+  }
+
+  void updateBirdWithNestInfo() {
+    bird.nest = nest.name;
+    bird.nest_year = nest.discover_date.year;
+    bird.species = nest.species;
+  }
+
+  void addMissingMeasuresToBird(List<Measure> allMeasures) {
+    for (Measure m in allMeasures) {
+      if (!bird.measures.map((e) => e.name).contains(m.name)) {
+        bird.measures.add(m);
+      }
+    }
+  }
+
+  void handleEgg(Map<String, dynamic> map) {
+    egg = map["egg"] as Egg;
+    bird = Bird(
+      species: nest.species,
+      ringed_date: DateTime.now(),
+      ringed_as_chick: true,
+      egg: egg?.getNr(),
+      band: "",
+      responsible: sps?.userName ?? "unknown",
+      nest: nest.name,
+      nest_year: nest.discover_date.year,
+      measures: [Measure.note()],
+      experiments: nest.experiments,
+    );
+  }
+
+  void handleNoBirdNoEgg(List<Measure> allMeasures) {
+    bird = Bird(
+      species: nest.species,
+      ringed_date: DateTime.now(),
+      ringed_as_chick: false,
+      band: "",
+      responsible: sps?.userName ?? "unknown",
+      nest: nest.name,
+      nest_year: nest.discover_date.year,
+      measures: allMeasures,
+      experiments: nest.experiments,
+    );
+  }
+
+  void handleNoMap(List<Measure> allMeasures) {
+    bird.measures = allMeasures;
+    if (bird.ringed_as_chick) {
+      bird.measures.removeWhere((element) => element.name == "age");
+    }
+    bird.measures.sort();
+    _recentMetalBand = sps?.getRecentMetalBand(bird.species ?? "") ?? "";
+  }
+
 
   Row metalBand() {
     if(bird.id != null){
@@ -225,11 +258,11 @@ class _EditBirdState extends State<EditBird> {
             controller: band_letCntr,
             textAlign: TextAlign.center,
             onChanged: (String value) {
-              band_letCntr.text = band_letCntr.text.toUpperCase();
-              bird.band = (band_letCntr.text + band_numCntr.text);
-              setState(() {
-
-              });
+              //check if on web and ios
+              if (!Platform.isIOS) {
+                band_letCntr.text = band_letCntr.text.toUpperCase();
+              }
+              bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
             },
             decoration: InputDecoration(
               labelText: "Letters",
@@ -256,8 +289,6 @@ class _EditBirdState extends State<EditBird> {
             controller: band_numCntr,
             onChanged: (String value) {
               bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
-              setState(() {
-              });
             },
             textAlign: TextAlign.center,
             decoration: InputDecoration(

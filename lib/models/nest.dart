@@ -241,9 +241,9 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
       TextCellValue(species ?? ""),
       DateCellValue(year: discover_date.year, month: discover_date.month, day: discover_date.day),
       TextCellValue(responsible ?? ""),
-      last_modified != null  ? DateTimeCellValue(year: last_modified!.year, month: last_modified!.month, day: last_modified!.day, hour: last_modified!.hour, minute: last_modified!.minute, second: last_modified!.second) : TextCellValue(""),
+      last_modified != null  ? DateTimeCellValue.fromDateTime(last_modified!) : TextCellValue(""),
       first_egg != null
-          ? DateCellValue(year: first_egg!.year, month: first_egg!.month, day: first_egg!.day)
+          ? DateCellValue.fromDateTime(first_egg!)
           : TextCellValue(''),
       IntCellValue(DateTime.now().difference(first_egg ?? DateTime(2200)).inDays),
       TextCellValue(experiments?.map((e) => e.name).join(";\r") ?? ""),

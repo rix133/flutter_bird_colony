@@ -119,12 +119,32 @@ class DefaultSettings implements FirestoreItem {
 
   @override
   List<TextCellValue> toExcelRowHeader() {
-    throw UnimplementedError();
+    return [
+      TextCellValue('Desired accuracy'),
+      TextCellValue('Selected year'),
+      TextCellValue('Auto next band'),
+      TextCellValue('Auto next band parent'),
+      TextCellValue('Default location'),
+      TextCellValue('Biased repeated measurements'),
+      TextCellValue('Default species'),
+      TextCellValue('Responsible'),
+    ];
   }
 
   @override
   Future<List<List<CellValue>>> toExcelRows() {
-    throw UnimplementedError();
+    return Future.value([
+      [
+        TextCellValue(desiredAccuracy.toString()),
+        TextCellValue(selectedYear.toString()),
+        TextCellValue(autoNextBand.toString()),
+        TextCellValue(autoNextBandParent.toString()),
+        TextCellValue(defaultLocation.toString()),
+        TextCellValue(biasedRepeatedMeasurements.toString()),
+        TextCellValue(defaultSpecies.toString()),
+        TextCellValue(responsible ?? ''),
+      ]
+    ]);
   }
 
   List<Widget> getDefaultSettingsForm(
@@ -226,5 +246,16 @@ class DefaultSettings implements FirestoreItem {
         },
       ),
     ]);
+  }
+
+  @override
+  Widget getListTile(BuildContext context) {
+    return ListTile(
+      title: Text(name),
+      subtitle: Text('Default settings'),
+      onTap: () {
+        Navigator.pushNamed(context, '/editDefaultSettings', arguments: this);
+      },
+    );
   }
 }

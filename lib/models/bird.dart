@@ -94,7 +94,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all<Color>(Colors.grey)),
         onPressed: () {
-          Navigator.pushNamed(context, '/editParent',
+          Navigator.pushNamed(context, '/editBird',
               arguments: {'bird': this});
         },
       ),
@@ -255,6 +255,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     if (nest?.isEmpty ?? true) {
       return UpdateResult.saveOK(item: this);
     } else if (isParent) {
+      print("saving parent at _updateNest on Bird");
       return updateNestParent(nestsItemCollection);
     } else {
       return _updateNestEgg(nestsItemCollection);
@@ -344,7 +345,6 @@ class Bird extends ExperimentedItem implements FirestoreItem{
 
   Future<UpdateResult> _write2Firestore(CollectionReference birds,
       CollectionReference? nestsItemCollection, bool isParent) async {
-    // take ony those measures where value is not empty
     if (nest != null) {
       if (nest!.isNotEmpty && nestsItemCollection != null) {
         nestsItemCollection = isParent
@@ -352,6 +352,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
             : nestsItemCollection.doc(nest).collection("egg");
       }
     }
+    // take ony those measures where value is not empty
     measures = measures.where((Measure m) => m.value.isNotEmpty).toList();
     // the modified date is assigned at write time
     last_modified = DateTime.now();
@@ -466,7 +467,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       TextCellValue(species ?? ""),
       DateCellValue(year: ringed_date.year, month: ringed_date.month, day: ringed_date.day),
       BoolCellValue(ringed_as_chick),
-      DateTimeCellValue(year: last_modified?.year ?? 0, month: last_modified?.month ?? 0, day: last_modified?.day ?? 0, hour: last_modified?.hour ?? 0, minute: last_modified?.minute ?? 0),
+      last_modified != null ? DateTimeCellValue.fromDateTime(last_modified!) : TextCellValue(""),
       TextCellValue(egg ?? ""),
       // Add more row data as per your requirements
     ];

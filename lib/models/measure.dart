@@ -63,8 +63,7 @@ class Measure implements Comparable<Measure>{
     double? vd = isNumber ? double.tryParse(value) : null;
     return [
       (isNumber && vd != null) ? DoubleCellValue(vd) : TextCellValue(value),
-      DateTimeCellValue(year: modified.year, month: modified.month, day: modified.day, hour: modified.hour, minute: modified.minute, second: modified.second)
-    ];
+      DateTimeCellValue.fromDateTime(modified)];
   }
 
   List<TextCellValue> toExcelRowHeader() {
