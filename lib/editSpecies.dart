@@ -41,7 +41,7 @@ class _EditSpeciesState extends State<EditSpecies> {
       super.dispose();
     }
 
-    Species getSpecies(BuildContext context) {
+    Species getSpecies() {
       species.responsible = sps?.userName ?? species.responsible;
       return species;
     }
@@ -57,7 +57,7 @@ class _EditSpeciesState extends State<EditSpecies> {
         children: [
     ...species.getSpeciesForm(context, setState),
     SizedBox(height: 20),
-    modifingButtons(context, setState, getSpecies, type, null)
+          ModifyingButtons(context:context, setState:setState, getItem: getSpecies, type:type, otherItems: null)
           ]))));
   }
 }

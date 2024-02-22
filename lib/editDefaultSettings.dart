@@ -71,7 +71,7 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
         children: [
     ...defaultSettings.getDefaultSettingsForm(context, setState, sps),
     SizedBox(height: 30),
-    modifingButtons(context, setState, (context) => defaultSettings, type, null)
+          ModifyingButtons(context: context, setState: setState, getItem: () => defaultSettings, type:type, otherItems: null)
           ]))));
   }
 }

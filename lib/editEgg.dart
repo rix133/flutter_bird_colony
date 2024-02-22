@@ -67,7 +67,7 @@ class _EditEggState extends State<EditEgg> {
     });
   }
 
-   Egg getEgg(BuildContext context) {
+   Egg getEgg() {
     //ensure UI is updated
     return egg;
   }
@@ -191,7 +191,7 @@ class _EditEggState extends State<EditEgg> {
                         ...egg.measures.map((e) => e.getMeasureForm(addMeasure, sps?.biasedRepeatedMeasures ?? false)).toList(),
                         //...egg.getEggForm(context, sps!.userName, _focusNode,  setState, addMeasure),
                         SizedBox(height: 20),
-                        modifingButtons(context,setState, getEgg, "egg", null, silentOverwrite: true),
+                        ModifyingButtons(context:context,setState:setState, getItem:getEgg, type:"egg", otherItems: null, silentOverwrite: true),
                       ],
                     ),
                   )))

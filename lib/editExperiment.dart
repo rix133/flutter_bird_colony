@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/experiment.dart';
-import 'package:kakrarahu/models/firestoreItem.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 import 'package:kakrarahu/models/dataSearch.dart';
@@ -108,7 +107,7 @@ class _EditExperimentState extends State<EditExperiment> {
 
   void addMeasure() {
     setState(() {
-      experiment.measures!.add(Measure(name: "", unit: "", type: "any", isNumber: false, value: '', modified: DateTime.now()));
+      experiment.measures.add(Measure(name: "", unit: "", type: "any", isNumber: false, value: '', modified: DateTime.now()));
     });
   }
 
@@ -131,7 +130,7 @@ class _EditExperimentState extends State<EditExperiment> {
       ],
     );
   }
-  Experiment getExperiment(BuildContext context) {
+  Experiment getExperiment() {
     experiment.last_modified = DateTime.now();
     otherCollection = getOtherItems(experiment.type);
     return experiment;
@@ -210,9 +209,9 @@ class _EditExperimentState extends State<EditExperiment> {
               backgroundColor: MaterialStateProperty.all(Colors.grey),
             ),
           ),
-          ...experiment.measures!.map((e) => e.createMeasureForm(setState)),
+          ...experiment.measures.map((e) => e.createMeasureForm(setState)),
           SizedBox(height:30),
-          modifingButtons(context, setState, getExperiment, experiment.type, otherCollection, onSaveOK: saveDeleteOk, onDeleteOK: saveDeleteOk),
+          ModifyingButtons(context:context, setState:setState, getItem:getExperiment, type:experiment.type, otherItems: otherCollection, onSaveOK: saveDeleteOk, onDeleteOK: saveDeleteOk),
 
         ],
       )),

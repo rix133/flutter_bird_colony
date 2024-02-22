@@ -125,7 +125,7 @@ class _NestManageState extends State<NestManage> {
     ));
   }
 
-  Nest getNest(BuildContext context) {
+  Nest getNest() {
     if (nest != null) {
       nest!.species = species.english;
       nest!.responsible = sps.userName;
@@ -439,7 +439,7 @@ class _NestManageState extends State<NestManage> {
                 _getParentsRow(nest!.parents, context),
                 _getEggsStream(_eggStream),
                 SizedBox(height: 30),
-                modifingButtons(context,  setState, getNest, "modify", null, silentOverwrite: true),
+                ModifyingButtons(context: context,  setState:setState, getItem:getNest, type:"modify", otherItems: null, silentOverwrite: true),
               ],
             ),
           ))),

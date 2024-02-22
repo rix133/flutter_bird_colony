@@ -325,8 +325,7 @@ class _EditBirdState extends State<EditBird> {
     );
   }
 
-  Bird getBird(BuildContext context) {
-    //ensure UI is updated
+  Bird getBird() {
     bird.nest = nestnr.valueCntr.text;
     bird.color_band = color_band.valueCntr.text.toUpperCase();
 
@@ -385,7 +384,7 @@ class _EditBirdState extends State<EditBird> {
                   metalBand(),
                   bird.isChick() ? Container() : SizedBox(height: 10),
                   bird.isChick() ? Container() : color_band.getSimpleMeasureForm(),
-                  modifingButtons(context,setState, getBird, ageType, nests,
+                  ModifyingButtons(context:context,setState:setState, getItem:getBird, type:ageType, otherItems:nests,
                       silentOverwrite: (ageType == "parent"),
                       onSaveOK: saveOk, onDeleteOK: deleteOk),
                   SizedBox(height: 10),
