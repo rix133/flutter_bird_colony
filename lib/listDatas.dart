@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:line_icons/line_icons.dart';
+import 'package:kakrarahu/icons/my_flutter_app_icons.dart';
 
 import 'listBirds.dart';
 import 'listExperiments.dart';
@@ -17,7 +17,7 @@ class ListDatas extends StatelessWidget {
             tabs: [
               Tab(icon: Icon(Icons.science), text: "Experiments"),
               Tab(icon: Icon(Icons.home), text: "Nests"),
-              Tab(icon: Icon(LineIcons.twitter), text: "Birds"),
+              Tab(icon: Icon(MyFlutterApp.bird), text: "Birds"),
             ],
           ),
         ),

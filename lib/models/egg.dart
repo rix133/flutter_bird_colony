@@ -90,7 +90,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   List<TextCellValue> toExcelRowHeader() {
     List<TextCellValue> baseItems = [
       TextCellValue('nest'),
-      TextCellValue('nr'),
+      TextCellValue('egg_nr'),
       TextCellValue("type"),
       TextCellValue('discover_date'),
       TextCellValue('last_checked_by'),
@@ -116,7 +116,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       last_modified != null  ? DateTimeCellValue(year: last_modified!.year, month: last_modified!.month, day: last_modified!.day, hour: last_modified!.hour, minute: last_modified!.minute, second: last_modified!.second) : TextCellValue(""),
       TextCellValue(ring ?? ""),
       TextCellValue(status),
-      TextCellValue(experiments?.map((e) => e.name).join(", ") ?? ""), // Convert experiments to string
+      TextCellValue(experiments?.map((e) => e.name).join(";\r") ?? ""), // Convert experiments to string
     ];
     List<List<CellValue>> rows = addMeasuresToRow(baseItems);
     return rows;

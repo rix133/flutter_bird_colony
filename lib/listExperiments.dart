@@ -2,115 +2,26 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:provider/provider.dart';
 
 
-class ListExperiments extends StatefulWidget {
-  const ListExperiments({Key? key}) : super(key: key);
+import 'design/listScreenWidget.dart';
+
+
+
+class ListExperiments extends ListScreenWidget<Experiment> {
+  const ListExperiments({Key? key}) : super(key: key, title: 'experiments with nests and eggs', icon: Icons.science);
 
   @override
-  State<ListExperiments> createState() => _ListExperimentsState();
+  ListScreenWidgetState<Experiment> createState() => _ListExperimentsState();
 }
 
-class _ListExperimentsState extends State<ListExperiments> {
-  int _selectedYear = DateTime.now().year;
-  late SharedPreferencesService sps;
-  CollectionReference experiments = FirebaseFirestore.instance.collection('experiments');
-  TextEditingController searchController = TextEditingController();
-  Stream<QuerySnapshot> _experimentsStream = Stream.empty();
+class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
+
   List<Experiment> exps = [];
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      sps = Provider.of<SharedPreferencesService>(context, listen: false);
-     _experimentsStream = experiments.snapshots();
-      setState(() {});
-    });
-  }
+  CollectionReference? collection = FirebaseFirestore.instance.collection('experiments');
 
-  @override
-  void dispose() {
-    super.dispose();
-    searchController.dispose();
-  }
 
-  Widget build(BuildContext context) {
-    return Container(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            child: Column(
-              children: [
-                Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text('Select year:'),
-                      Container(width: 8),
-                      DropdownButton<int>(
-                        value: _selectedYear,
-                        items: List<int>.generate(DateTime.now().year - 2022 + 1, (int index) => index + 2022)
-                            .map((int year) {
-                          return DropdownMenuItem<int>(
-                            value: year,
-                            child: Text(year.toString(), style: TextStyle(color: Colors.deepPurpleAccent)),
-                          );
-                        }).toList(),
-                        onChanged: (int? newValue) {
-                          setState(() {
-                            _selectedYear = newValue!;
-                          });
-                        },
-                      )
-                    ]),
-                TextField(
-                  controller: searchController,
-                  onChanged: (String value) {
-                    setState(() {});
-                  },
-                  decoration: InputDecoration(
-                    labelText: "Search",
-                    hintText: "Search by name or nests",
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                    ),
-                  ),
-                ),
-                Expanded(
-                    child: StreamBuilder(
-                        stream: _experimentsStream,
-                        builder:
-                            (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                          if (snapshot.hasData) {
-                            exps = snapshot.data!.docs
-                                .map((DocumentSnapshot e) => Experiment.fromQuerySnapshot(e))
-                                 .where((Experiment e) => e.year == _selectedYear)
-                                .where((Experiment e) => e.name.toLowerCase().contains(searchController.text.toLowerCase()) || (e.nests?.contains(searchController.text) ?? false))
-                                .toList();
-                            return ListView(
-                              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                              children: [
-                                ...exps.map((Experiment e)=>e.getListTile(context, sps.userName))
-                              ],
-                            );
-                          } else {
-                            return Container(
-                                padding: EdgeInsets.all(40.0),
-                                child: Text("loading experiments..."));
-                          }
-                        })),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                    child:Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    getAddButton(context),
-                    getDownloadButton(context)
-                  ],))
-              ]),
-            );
-  }
 
   getAddButton(BuildContext context) {
     return Padding(
@@ -128,19 +39,96 @@ class _ListExperimentsState extends State<ListExperiments> {
     );
   }
 
-  getDownloadButton(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(18.0),
-      child: IconButton(
-          onPressed: () {
-            FSItemMixin().downloadExcel(exps, "experiments");
-          },
-          icon: Icon(Icons.download),
-     style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.grey)
-          )
-      ),
-    );
+  @override
+  Future<void> executeDownload() {
+    //get how many different year experiments are requested
+    Set<int?> totalYears = exps.map((e) => e.year).toSet();
+
+    if(totalYears.length > 1){
+      return showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Colors.black87,
+              title: Text("Download"),
+              content: Text("Please select only one year to download"),
+              actions: [
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text("Close", style: TextStyle(color: Colors.black))),
+              ],
+            );
+          });
+    } else {
+      DateTime? start = totalYears.isNotEmpty ? DateTime(totalYears.first!) : null;
+      return(FSItemMixin().downloadExcel(exps, "experiments", start: start));
+    }
+
   }
+
+  bool filterByText(Experiment e) {
+    return e.name.toLowerCase().contains(searchController.text.toLowerCase()) ||
+        e.measures.any((element) =>
+        !element.isNumber &&
+            element.value.toLowerCase().contains(
+                searchController.text.toLowerCase())) || // search note texts
+        (e.nests != null
+            ? e.nests!.any((element) => element.toLowerCase()
+            .contains(searchController.text.toLowerCase()))
+            : false);
+  }
+
+  @override
+  ListView listAllItems(BuildContext context, AsyncSnapshot<QuerySnapshot<Object?>> snapshot) {
+    exps = getFilteredItems(snapshot);
+    return ListView.builder(
+        itemCount: exps.length,
+        itemBuilder: (context, index) {
+          return exps[index].getListTile(context, sps?.userName ?? "");
+        });
+  }
+  @override
+  bool filterByYear(Experiment e) {
+    return e.year == selectedYear;
+  }
+  updateYearFilter(int value) {
+    setState(() {
+      selectedYear = value;
+    });
+  }
+
+  getFilteredItems(AsyncSnapshot<QuerySnapshot<Object?>> snapshot) {
+    exps = snapshot.data!.docs
+        .map<Experiment>((DocumentSnapshot<Object?> e) => Experiment.fromDocSnapshot(e))
+        .toList();
+    exps = exps.where(filterByText).toList();
+    exps = exps.where(filterByYear).toList();
+    return exps;
+  }
+
+  void openFilterDialog(BuildContext context){
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Colors.black87,
+            title: Text("Filter"),
+            content: SingleChildScrollView(child:Column(
+                children: [
+                  yearInput(context),
+                ])),
+            actions: [
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text("Close"))
+            ],
+          );
+        });
+  }
+
 
 }

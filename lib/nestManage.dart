@@ -257,7 +257,7 @@ class _NestManageState extends State<NestManage> {
     List<String> existingExperiments = nest!.experiments?.map((e) => e.name).toList() ?? [];
     experimentsQuery.get().then((value) {
       List<Experiment> exps = value.docs
-          .map((DocumentSnapshot e) => Experiment.fromQuerySnapshot(e))
+          .map((DocumentSnapshot e) => Experiment.fromDocSnapshot(e))
           .where((Experiment e) => existingExperiments.contains(e.name) == false)
           .toList();
       showDialog(context: context, builder: (BuildContext context) {

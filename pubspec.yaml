@@ -40,7 +40,6 @@ dependencies:
   share_plus:
   path_provider:
   excel: ^4.0.2
-  line_icons: ^2.0.3
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -62,6 +61,7 @@ flutter_native_splash:
 flutter:
   assets:
     - assets/icons/
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -96,5 +96,9 @@ flutter:
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
   #
+  fonts:
+    - family: MyFlutterApp
+      fonts:
+        - asset: assets/fonts/MyFlutterApp.ttf
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

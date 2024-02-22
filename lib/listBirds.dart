@@ -1,58 +1,33 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/bird.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/models/species.dart';
-import 'package:provider/provider.dart';
-
-import 'design/experimentDropdown.dart';
-import 'design/yearDropdown.dart';
-import 'models/experiment.dart';
+import 'design/listScreenWidget.dart';
 import 'models/firestoreItemMixin.dart';
 import 'design/speciesRawAutocomplete.dart';
 
-class ListBirds extends StatefulWidget {
-  const ListBirds({Key? key}) : super(key: key);
+class ListBirds extends ListScreenWidget<Bird> {
+  const ListBirds({Key? key}) : super(key: key, title: 'birds', icon: Icons.nat_sharp);
 
   @override
-  State<ListBirds> createState() => _ListBirdsState();
+  ListScreenWidgetState<Bird> createState() => _ListBirdsState();
 }
 
-class _ListBirdsState extends State<ListBirds> {
-  int _selectedYear = DateTime.now().year;
-  String? _selectedExperiments;
+class _ListBirdsState extends ListScreenWidgetState<Bird> {
+
   String? _selectedSpecies;
   int? _selectedAge;
-  FocusNode _focusNode = FocusNode();
-  List<Experiment> allExperiments = [];
 
-
-  SharedPreferencesService? sps;
   List<Bird> birds = [];
-  CollectionReference birdCollection =
+  CollectionReference? collection =
       FirebaseFirestore.instance.collection('Birds');
-  TextEditingController searchController = TextEditingController();
-  Stream<QuerySnapshot> _birdsStream = Stream.empty();
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      sps = Provider.of<SharedPreferencesService>(context, listen: false);
-      _birdsStream = birdCollection.snapshots();
-      FirebaseFirestore.instance.collection('experiments').get().then((value) {
-        allExperiments = value.docs.map((e) => Experiment.fromQuerySnapshot(e)).toList();
-      });
 
-      setState(() {});
-    });
-  }
+
 
   @override
   void dispose() {
     super.dispose();
-    searchController.dispose();
-    _focusNode.dispose();
   }
 
   getAddButton(BuildContext context) {
@@ -69,34 +44,7 @@ class _ListBirdsState extends State<ListBirds> {
     );
   }
 
-  getDownloadButton(BuildContext context, SharedPreferencesService? sps) {
-    if(sps == null){return Container();}
-    if(sps.isAdmin == false){return Container();}
-    return Padding(
-      padding: const EdgeInsets.all(18.0),
-      child: IconButton(
-          onPressed: () {
-            FSItemMixin().downloadExcel(birds, "birds");
-          },
-          icon: Icon(Icons.download),
-          style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.grey)
-          )
-      ),
-    );
-  }
 
-  updateYearFilter(int year) {
-    setState(() {
-      _selectedYear = year;
-    });
-  }
-
-  updateExperimentFilter(String? experiment) {
-    setState(() {
-      _selectedExperiments = experiment;
-    });
-  }
 
   void openFilterDialog(BuildContext context){
      showDialog(
@@ -107,16 +55,8 @@ class _ListBirdsState extends State<ListBirds> {
               title: Text("Filter"),
               content: SingleChildScrollView(child:Column(
                 children: [
-                YearDropdown(
-                selectedYear: _selectedYear,
-                onChanged: updateYearFilter,
-              ),
-
-                  ExperimentDropdown(
-                    allExperiments: allExperiments,
-                    selectedExperiment: _selectedExperiments,
-                    onChanged: updateExperimentFilter,
-                  ),
+                yearInput(context),
+                  experimentInput(context),
                   SpeciesRawAutocomplete(
                       returnFun: (Species s) {
                         _selectedSpecies = s.english;
@@ -139,8 +79,23 @@ class _ListBirdsState extends State<ListBirds> {
           });
   }
 
+  @override
   bool filterByYear(Bird e) {
-    return e.nest_year == _selectedYear || e.ringed_date.year == _selectedYear;
+    return e.nest_year == selectedYear || e.ringed_date.year == selectedYear;
+  }
+  updateYearFilter(int value) {
+    setState(() {
+      selectedYear = value;
+    });
+  }
+
+  @override
+  void clearFilters() {
+    super.clearFilters();
+    setState(() {
+      _selectedSpecies = null;
+      _selectedAge = null;
+    });
   }
 
   bool filterByText(Bird e) {
@@ -148,10 +103,6 @@ class _ListBirdsState extends State<ListBirds> {
         (e.color_band != null ? e.color_band!.toLowerCase().contains(searchController.text.toLowerCase()) : false);
   }
 
-  bool filterByExperiments(Bird e) {
-    if(_selectedExperiments == null) return true;
-    return e.experiments?.map((e) => e.name).contains(_selectedExperiments) ?? false;
-  }
   bool filterBySpecies(Bird e) {
     if(_selectedSpecies == null) return true;
     return e.species == _selectedSpecies;
@@ -161,70 +112,31 @@ class _ListBirdsState extends State<ListBirds> {
     return e.ageInYears() == _selectedAge;
   }
 
-  Widget build(BuildContext context) {
-    return Container(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            child: Column(
-              children: [
-                SizedBox(height: 20,),
-                Row(children:[Expanded(child:TextField(
-                  controller: searchController,
-                  onChanged: (value) {
-                    setState(() {});
-                  },
-                  decoration: InputDecoration(
-                    labelText: "Search",
-                    hintText: "Search by band or nests",
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                    ),
-                  ),
-                )),
-                  ElevatedButton.icon(
-                      onPressed: () => openFilterDialog(context),
-                      icon: Icon(Icons.filter_alt),
-                      label: Padding(child:Text("Filter", style: TextStyle(fontSize: 18)), padding: EdgeInsets.all(12)),
-                      style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all(Colors.grey)
-                      )
-                  ),
-                ]),
-                SizedBox(height: 20,),
-                Expanded(
-                    child: StreamBuilder(
-                        stream: _birdsStream,
-                        builder:
-                            (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                          if (snapshot.hasData) {
-                            birds = snapshot.data!.docs
-                                .map((DocumentSnapshot e) => Bird.fromDocSnapshot(e))
-                                .where(filterByYear)
-                                .where(filterByText)
-                                .where(filterByExperiments)
-                                .where(filterBySpecies)
-                                .where(filterByAge)
-                                .toList();
-                            return ListView(
-                              children: [
-                                ...birds.map((Bird e) => e.getListTile(context))
-                              ],
-                            );
-                          } else {
-                            return Container(
-                                padding: EdgeInsets.all(40.0),
-                                child: Text("loading birds..."));
-                          }
-                        })),
-                SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child:Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        getAddButton(context),
-                        getDownloadButton(context, sps)
-                      ],)),
-              ],
-            ));
+  @override
+  Future<void> executeDownload() {
+    return(FSItemMixin().downloadExcel(birds, "birds"));
   }
+
+  List<Bird> getFilteredItems(AsyncSnapshot snapshot) {
+    birds = snapshot.data!.docs.map<Bird>((DocumentSnapshot document) => Bird.fromDocSnapshot(document)).toList();
+
+    birds = birds.where(filterByText).toList();
+    birds = birds.where(filterByExperiments).toList();
+    birds = birds.where(filterByYear).toList();
+    birds = birds.where(filterBySpecies).toList();
+    birds = birds.where(filterByAge).toList();
+
+    return birds;
+  }
+
+  @override
+  listAllItems(BuildContext context, AsyncSnapshot snapshot) {
+    birds = getFilteredItems(snapshot);
+    return ListView.builder(
+        itemCount: birds.length,
+        itemBuilder: (context, index) {
+          return birds[index].getListTile(context);
+        });
+  }
+
 }

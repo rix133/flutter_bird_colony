@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:kakrarahu/models/experiment.dart';
 import 'package:kakrarahu/models/firestoreItem.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 import 'dart:io';
@@ -9,6 +10,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:share_plus/share_plus.dart';
 
 import 'egg.dart';
+import 'nest.dart';
 
 class FSItemMixin {
   // Workaround Way to run functions on firestoreitems
@@ -56,9 +58,9 @@ class FSItemMixin {
     DateTime? end;
     List<List<TextCellValue>> headers = [];
     List<List<CellValue>> data = [];
+    List<List<CellValue>> itemRows = [];
     if (items.length > 0) {
       for (var item in items) {
-        headers.add(item.toExcelRowHeader());
         DateTime? last = item.last_modified;
         DateTime first = item.created_date;
         if (start == null || first.isBefore(start)) {
@@ -67,19 +69,25 @@ class FSItemMixin {
         if (end == null || (last != null && last.isAfter(end))) {
           end = last;
         }
-        data.addAll(await item.toExcelRows());
+        itemRows = await item.toExcelRows();
+        //ensure data and headers have the same length
+        for(var i = 0; i < itemRows.length; i++){
+          headers.add(item.toExcelRowHeader());
+        }
+        data.addAll(itemRows);
       }
       Set<TextCellValue> uniqueHeaders = headers.expand((e) => e).toSet();
+
       List<List<CellValue>> sortedData = [uniqueHeaders.toList()];
       for (var i = 0; i < data.length; i++) {
-        Map<String, CellValue> rowMap =
-        Map.fromIterables(headers[i].map((h) => h.value), data[i]);
-        List<CellValue> sortedRow = uniqueHeaders
-            .map((h) => rowMap.containsKey(h.value)
-            ? rowMap[h.value]!
-            : TextCellValue(""))
-            .toList();
-        sortedData.add(sortedRow);
+          Map<String, CellValue> rowMap =
+          Map.fromIterables(headers[i].map((h) => h.value), data[i]);
+          List<CellValue> sortedRow = uniqueHeaders
+              .map((h) => rowMap.containsKey(h.value)
+              ? rowMap[h.value]!
+              : TextCellValue(""))
+              .toList();
+          sortedData.add(sortedRow);
       }
       return {'start': start, 'end': end, 'sortedData': sortedData};
     } else {
@@ -87,15 +95,38 @@ class FSItemMixin {
     }
   }
 
-  Future<void> downloadExcel(List<FirestoreItem> items, String type) async {
+  Future<void> downloadExcel(List<FirestoreItem> items, String type, {DateTime? start}) async {
     Map<String, dynamic> sortedDataMap = await createSortedData(items);
     List<List<CellValue>> sheetData = sortedDataMap['sortedData'];
-    DateTime? start = sortedDataMap['start'];
+    if(start == null){
+      start = sortedDataMap['start'];
+    }
     DateTime? end = sortedDataMap['end'];
     List<List<List<CellValue>>> sheets = [sheetData];
     List<String> types = [type];
 
-    if (type == "nest") {
+    if(type == "experiments"){
+      String year = start!.year.toString();
+      List<String> allExpNests = [];
+      allExpNests.addAll(items.expand((e) => (e as Experiment).nests ?? []).cast<String>().toList());
+        if(allExpNests.isNotEmpty){
+        QuerySnapshot nests = await FirebaseFirestore.instance.collection(year)
+            .where(FieldPath.documentId, whereIn: allExpNests)
+            .get();
+        if(nests.docs.isNotEmpty){
+          List<FirestoreItem> nestItems = nests.docs.map((e) => Nest.fromDocSnapshot(e)).toList();
+          Map<String, dynamic> nestSortedDataMap = await createSortedData(nestItems);
+          List<List<CellValue>> nestSheetData = nestSortedDataMap['sortedData'];
+          start = nestSortedDataMap['start'];
+          end = nestSortedDataMap['end'];
+          sheets.add(nestSheetData);
+          types.add("nests");
+          type="nests";
+        }
+      }
+    }
+
+    if (type == "nests") {
       if (start != null && end != null) {
         Timestamp startTimestamp = Timestamp.fromDate(start);
         Timestamp endTimestamp = Timestamp.fromDate(end);
@@ -115,6 +146,7 @@ class FSItemMixin {
         }
       }
     }
+
     if (sheets.isNotEmpty) {
       return await saveAsExcel(sheets, types);
     } else {

@@ -1,26 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:kakrarahu/design/listScreenWidget.dart';
 import 'package:kakrarahu/models/species.dart';
-import 'package:provider/provider.dart';
 
-import 'design/experimentDropdown.dart';
-import 'design/yearDropdown.dart';
-import 'models/experiment.dart';
 import 'models/firestoreItemMixin.dart';
 import 'models/nest.dart';
 import 'design/speciesRawAutocomplete.dart';
 
-class ListNests extends StatefulWidget {
-  const ListNests({Key? key}) : super(key: key);
+class ListNests extends ListScreenWidget<Nest> {
+  const ListNests({Key? key}) : super(key: key, title: 'nests with eggs', icon: Icons.home);
 
   @override
-  State<ListNests> createState() => _ListNestsState();
+  ListScreenWidgetState<Nest> createState() => _ListNestsState();
 }
 
-class _ListNestsState extends State<ListNests> {
-  int _selectedYear = DateTime.now().year;
-  String? _selectedExperiments;
+
+class _ListNestsState extends ListScreenWidgetState<Nest> {
   String? _selectedSpecies;
   double? _minNestAge;
   double? _maxNestAge;
@@ -28,41 +23,22 @@ class _ListNestsState extends State<ListNests> {
   double? _maxEggAge;
   int? _minEggs;
   int? _maxEggs;
-  List<Experiment> allExperiments = [];
   double? _minLocationAccuracy;
   double? _maxLocationAccuracy;
-  FocusNode _focusNode = FocusNode();
 
-  SharedPreferencesService? sps;
+
   List<Nest> nests = [];
-  CollectionReference nestCollection =
-      FirebaseFirestore.instance.collection(DateTime.now().year.toString());
-  TextEditingController searchController = TextEditingController();
-  Stream<QuerySnapshot> _nestsStream = Stream.empty();
+ CollectionReference? collection = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      sps = Provider.of<SharedPreferencesService>(context, listen: false);
-      _nestsStream = nestCollection.snapshots();
-      FirebaseFirestore.instance.collection('experiments').get().then((value) {
-        allExperiments =
-            value.docs.map((e) => Experiment.fromQuerySnapshot(e)).toList();
-      });
 
-      setState(() {});
-    });
-  }
 
   @override
   void dispose() {
     super.dispose();
-    searchController.dispose();
-    _focusNode.dispose();
 
   }
 
+  @override
   getAddButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(18.0),
@@ -79,71 +55,52 @@ class _ListNestsState extends State<ListNests> {
     );
   }
 
-  getDownloadButton(BuildContext context, SharedPreferencesService? sps) {
-    if (sps == null) {
-      return Container();
-    }
-    if (sps.isAdmin == false) {
-      return Container();
-    }
-    return Padding(
-      padding: const EdgeInsets.all(18.0),
-      child: IconButton(
-          onPressed: () {
-            FSItemMixin().downloadExcel(nests, "nests");
-          },
-          icon: Icon(Icons.download),
-          style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.grey))),
-    );
+
+
+  void openFilterDialog(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Colors.black87,
+            title: Text("Filter"),
+            content: SingleChildScrollView(child:Column(children: [
+              yearInput(context),
+              experimentInput(context),
+              SpeciesRawAutocomplete(
+                  returnFun: (Species s) {
+                    _selectedSpecies = s.english;
+                    setState(() {});
+                  },
+                  species: Species(english: _selectedSpecies?? "", local: '', latinCode: ''),
+                  speciesList: sps?.speciesList ?? LocalSpeciesList(),
+                  borderColor: Colors.white38,
+                  bgColor: Colors.amberAccent,
+                  labelColor: Colors.grey),
+              getMinMaxInput(context, "First egg age", updateMinEggAge, updateMaxEggAge, _minEggAge, _maxEggAge),
+              getMinMaxInput(context, "Nest age", updateMinNestAge, updateMaxNestAge, _minNestAge, _maxNestAge),
+              getMinMaxInput(context, "Loc accuracy", updateMinLocationAccuracy, updateMaxLocationAccuracy, _minLocationAccuracy, _maxLocationAccuracy),
+
+            ])),
+            actions: [
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text("Close"))
+            ],
+          );
+        });
   }
 
-  Padding getMinMaxInput(BuildContext context, String label, Function(String) minFun, Function(String) maxFun, double? min, double? max) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(children: [
-        Text(label),
-        SizedBox(width: 10),
-        Expanded(child:TextFormField(
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: "Min",
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(25.0)),
-            ),
-          ),
-          initialValue: min?.toString() ?? "",
-          onChanged: minFun
-        )),
-        SizedBox(width: 10),
-        Expanded(child:TextFormField(
-          keyboardType: TextInputType.number,
-            initialValue: max?.toString() ?? "",
-          decoration: InputDecoration(
-            labelText: "Max",
-
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(25.0)),
-            ),
-          ),
-          onChanged: maxFun
-        )),
-      ]),
-    );
-  }
-
-  updateYearFilter(int value) {
-   nestCollection =
-    FirebaseFirestore.instance.collection(value.toString());
-    setState(() {
-      _nestsStream = nestCollection.snapshots();
-      _selectedYear = value;
-    });
-  }
-  updateExperimentFilter(String? value) {
-    setState(() {
-      _selectedExperiments = value;
-    });
+  @override
+  listAllItems(BuildContext context, AsyncSnapshot snapshot) {
+    nests = getFilteredNests(snapshot);
+    return ListView.builder(
+        itemCount: nests.length,
+        itemBuilder: (context, index) {
+          return nests[index].getListTile(context);
+        });
   }
 
   updateMinEggAge(String value) {
@@ -177,10 +134,18 @@ class _ListNestsState extends State<ListNests> {
     });
   }
 
+  updateYearFilter(int value) {
+    collection =
+        FirebaseFirestore.instance.collection(value.toString());
+    setState(() {
+      stream = collection?.snapshots() ?? Stream.empty();
+      selectedYear = value;
+    });
+  }
+
   void clearFilters() {
     setState(() {
-      _selectedYear = DateTime.now().year;
-      _selectedExperiments = null;
+      super.clearFilters();
       _selectedSpecies = null;
       _minNestAge = null;
       _maxNestAge = null;
@@ -192,90 +157,7 @@ class _ListNestsState extends State<ListNests> {
     });
   }
 
-  Widget yearInput() {
-    return DropdownButton<int>(
-      value: _selectedYear,
-      style: TextStyle(color: Colors.deepPurpleAccent),
-      items: List<int>.generate(DateTime.now().year - 2022 + 1,
-          (int index) => index + 2022).map((int year) {
-        return DropdownMenuItem<int>(
-          value: year,
-          child: Text(year.toString(),
-              style: TextStyle(color: Colors.deepPurpleAccent)),
-        );
-      }).toList(),
-      onChanged: (int? newValue) {
-        setState(() {
-          _selectedYear = newValue!;
-        });
-      },
-    );
-  }
 
-  Widget experimentInput() {
-    return DropdownButton<String>(
-      value: _selectedExperiments,
-      style: TextStyle(color: Colors.deepPurpleAccent),
-      items: allExperiments.map((Experiment e) {
-        return DropdownMenuItem<String>(
-          value: e.name,
-          child: Text(e.name,
-              style: TextStyle(color: Colors.deepPurpleAccent)),
-        );
-      }).toList(),
-      onChanged: (String? newValue) {
-        setState(() {
-          _selectedExperiments = newValue;
-        });
-      },
-    );
-  }
-
-
-  void openFilterDialog(BuildContext context) {
-
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            backgroundColor: Colors.black87,
-            title: Text("Filter"),
-            content: SingleChildScrollView(child:Column(children: [
-              YearDropdown(
-                selectedYear: _selectedYear,
-                onChanged: updateYearFilter,
-              ),
-
-              ExperimentDropdown(
-                allExperiments: allExperiments,
-                selectedExperiment: _selectedExperiments,
-                onChanged: updateExperimentFilter,
-              ),
-              SpeciesRawAutocomplete(
-                  returnFun: (Species s) {
-                    _selectedSpecies = s.english;
-                    setState(() {});
-                  },
-                  species: Species(english: _selectedSpecies?? "", local: '', latinCode: ''),
-                  speciesList: sps?.speciesList ?? LocalSpeciesList(),
-                  borderColor: Colors.white38,
-                  bgColor: Colors.amberAccent,
-                  labelColor: Colors.grey),
-             getMinMaxInput(context, "First egg age", updateMinEggAge, updateMaxEggAge, _minEggAge, _maxEggAge),
-              getMinMaxInput(context, "Nest age", updateMinNestAge, updateMaxNestAge, _minNestAge, _maxNestAge),
-              getMinMaxInput(context, "Loc accuracy", updateMinLocationAccuracy, updateMaxLocationAccuracy, _minLocationAccuracy, _maxLocationAccuracy),
-
-            ])),
-            actions: [
-              ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text("Close"))
-            ],
-          );
-        });
-  }
 
   bool filterByText(Nest e) {
     return e.name.toLowerCase().contains(searchController.text.toLowerCase()) ||
@@ -290,11 +172,6 @@ class _ListNestsState extends State<ListNests> {
             : false);
   }
 
-  bool filterByExperiments(Nest e) {
-    if (_selectedExperiments == null) return true;
-    return e.experiments?.map((e) => e.name).contains(_selectedExperiments) ??
-        false;
-  }
 
   bool filterBySpecies(Nest e) {
     if (_selectedSpecies == null) return true;
@@ -360,69 +237,9 @@ class _ListNestsState extends State<ListNests> {
     return nests.toList();
   }
 
-  Widget build(BuildContext context) {
-    return  Container(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            child: Column(
-              children: [
-                SizedBox(height: 20,),
-                Row(children: [
-                  Expanded(
-                      child: TextField(
-                    controller: searchController,
-                    onChanged: (value) {
-                      setState(() {});
-                    },
-                    decoration: InputDecoration(
-                      labelText: "Search",
-                      hintText: "Search by nest or experiment",
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                      ),
-                    ),
-                  )),
-                  ElevatedButton.icon(
-                      onPressed: () => openFilterDialog(context),
-                      icon: Icon(Icons.filter_alt),
-                      label: Padding(
-                          child: Text("Filter", style: TextStyle(fontSize: 18)),
-                          padding: EdgeInsets.all(12)),
-                      style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all(Colors.grey))),
-                ]),
-                SizedBox(
-                  height: 20,
-                ),
-                Expanded(
-                    child: StreamBuilder(
-                        stream: _nestsStream,
-                        builder: (context, AsyncSnapshot snapshot) {
-                          if (snapshot.hasData) {
-                            nests = getFilteredNests(snapshot);
-                            return ListView(
-                              children: [
-                                ...nests.map((Nest e) => e.getListTile(context))
-                              ],
-                            );
-                          } else {
-                            return Container(
-                                padding: EdgeInsets.all(40.0),
-                                child: Text("loading nests..."));
-                          }
-                        })),
-                SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        getAddButton(context),
-                        getDownloadButton(context, sps)
-                      ],
-                    )),
-              ],
-            ));
+  @override
+  Future<void> executeDownload() {
+    return(FSItemMixin().downloadExcel(nests, "nests"));
   }
 }
 

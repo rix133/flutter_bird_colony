@@ -45,7 +45,7 @@ class Experiment implements FirestoreItem {
   @override
   DateTime get created_date => created ?? DateTime(1900);
 
-  Experiment.fromQuerySnapshot(DocumentSnapshot<Object?> snapshot) {
+  Experiment.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     id = snapshot.id;
     name = json['name'] ?? "Untitled experiment";
