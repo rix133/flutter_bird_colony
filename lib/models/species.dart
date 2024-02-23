@@ -224,9 +224,9 @@ class Species implements FirestoreItem {
   }
 
   Widget getListTile(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
-      child: Container(
+    return
+      Container(
+        padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
         child: ListTile(
           title: Text(english +  (latin != null ? ' (' + latin! + ')' : '')),
           subtitle: Text(local),
@@ -241,7 +241,6 @@ class Species implements FirestoreItem {
                 },
               ),
         ),
-      ),
     );
   }
 }

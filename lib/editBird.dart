@@ -30,6 +30,7 @@ class _EditBirdState extends State<EditBird> {
   String _recentMetalBand = "";
   bool buttonsDisabled = false;
   FocusNode _lettersFocus = FocusNode();
+  String? previousRouteName;
 
   Measure age = Measure(
     name: "age",
@@ -129,7 +130,7 @@ class _EditBirdState extends State<EditBird> {
       List<Measure> allMeasures = [Measure.note(), head, gland, age];
       if (map != null) {
         map = map as Map<String, dynamic>;
-        handleMap(map, allMeasures);
+        await handleMap(map, allMeasures);
       } else {
         handleNoMap(allMeasures);
       }
@@ -143,13 +144,16 @@ class _EditBirdState extends State<EditBird> {
     _speciesList = sps?.speciesList ?? LocalSpeciesList();
   }
 
-  void handleMap(Map<String, dynamic> map, List<Measure> allMeasures) {
+  Future<void> handleMap(Map<String, dynamic> map, List<Measure> allMeasures) async {
+   if (map["route"] != null) {
+      previousRouteName = map["route"];
+    }
     if (map["nest"] != null) {
       nest = map["nest"] as Nest;
     }
     if (map["bird"] != null) {
       //ageType is set within handleBird
-      handleBird(map, allMeasures);
+      await handleBird(map, allMeasures);
     } else if (map["egg"] != null) {
       ageType = "chick";
       handleEgg(map);
@@ -164,10 +168,11 @@ class _EditBirdState extends State<EditBird> {
     color_band.setValue(bird.color_band);
   }
 
-  void handleBird(Map<String, dynamic> map, List<Measure> allMeasures) {
+  Future<void> handleBird(Map<String, dynamic> map, List<Measure> allMeasures) async {
     bird = map["bird"] as Bird;
-    if (bird.band.isNotEmpty && (bird.id == null)) {
-      reloadBirdFromFirestore();
+    if (bird.band.isNotEmpty) {
+      print(bird.band);
+      await reloadBirdFromFirestore();
     } else {
       if (map["nest"] != null) {
         updateBirdWithNestInfo();
@@ -180,7 +185,7 @@ class _EditBirdState extends State<EditBird> {
     addMissingMeasuresToBird(allMeasures);
   }
 
-  void reloadBirdFromFirestore() async {
+  Future<void> reloadBirdFromFirestore() async {
     bird = await birds.doc(bird.band).get().then(
             (DocumentSnapshot value) => Bird.fromDocSnapshot(value));
     ageType = bird.isChick() ? "chick" : "parent";
@@ -363,20 +368,22 @@ class _EditBirdState extends State<EditBird> {
   }
 
   void saveOk() {
-    sps?.recentBand(bird.species ?? '', bird.band);
-    String? previousRouteName = ModalRoute.of(context)?.settings.name;
-    if (previousRouteName == "/listBirds") {
+    print("saveOk at editBird on ageType: $ageType, time: ${DateTime.now()}");
+    sps?.setRecentBand(bird.species ?? '', bird.band);
+    if(previousRouteName == "/nestManage" && ageType == "parent"){
+      Navigator.popAndPushNamed(context, "/nestManage", arguments: {"nest_id": nest.name});
+    } else {
       Navigator.pop(context);
     }
-    Navigator.popAndPushNamed(context, "/nestManage", arguments: {"nest_id": bird.nest});
   }
 
   void deleteOk() {
-    String? previousRouteName = ModalRoute.of(context)?.settings.name;
-    if (previousRouteName == "/listBirds") {
-      Navigator.pop(context);
-    }
-    Navigator.popAndPushNamed(context, "/nestManage", arguments: {"nest_id": bird.nest});
+   if(previousRouteName == "/nestManage" && ageType == "parent"){
+      //update the nest manage page
+      Navigator.popAndPushNamed(context, "/nestManage", arguments: {"nest_id": nest.name});
+    }  else {
+     Navigator.pop(context);
+   }
   }
 
   Padding getAgeRow() {
@@ -396,7 +403,6 @@ class _EditBirdState extends State<EditBird> {
   Bird getBird() {
     bird.nest = nestnr.valueCntr.text;
     bird.color_band = color_band.valueCntr.text.toUpperCase();
-
     return bird;
   }
 

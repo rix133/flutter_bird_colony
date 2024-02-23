@@ -77,7 +77,7 @@ class SharedPreferencesService extends ChangeNotifier {
   }
 
 
-  void recentBand(String speciesEng, String value) {
+  void setRecentBand(String speciesEng, String value) {
 
     String bandGroup = speciesList.species.firstWhere((species) => species.english == speciesEng).getBandLetters();
 

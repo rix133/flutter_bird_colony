@@ -46,7 +46,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
   }
 
   Stack getButtons(BuildContext context, String type, CollectionReference? otherItems, {bool silentOverwrite = false, Function? onSaveOK = null, Function? onDeleteOK = null}){
-      return Stack(
+    return Stack(
       children: [
         Opacity(
           opacity: _isLoading ? 0.3 : 1, // Dim the UI when loading
@@ -62,6 +62,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                         MaterialStateProperty.all(
                             Colors.red[900])),
                     onPressed: (item.id == null) ? null : () {
+                      item = widget.getItem();
                       showDialog<String>(
                         barrierColor: Colors.black,
                         context: context,
@@ -82,6 +83,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                                 ),
                                 TextButton(
                                   onPressed: () async {
+                                    Navigator.pop(context);
                                     setState(() {
                                       _isLoading = true;
                                     });
@@ -112,9 +114,12 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                                       setState(() {
                                         _isLoading = false;
                                       });
-                                      //close delete confirmation dialog
-                                      Navigator.pop(context);
-                                      onDeleteOK?.call();
+                                      //close the item page and go back where it was opened from
+                                      if(onDeleteOK != null){
+                                        onDeleteOK();
+                                      } else{
+                                        Navigator.pop(context);
+                                      }
                                     }
 
                                   },
@@ -131,6 +136,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                     label: Text("delete")),
                 ElevatedButton.icon(
                     onPressed:  () async {
+                      item = widget.getItem();
                       setState(() {
                         _isLoading = true;
                       });
@@ -186,8 +192,12 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                                     }
                                     else{
                                       _isLoading = false;
-                                      Navigator.pop(context);
-                                      onSaveOK?.call();
+                                      if(onSaveOK != null){
+                                        onSaveOK();
+                                      } else{
+                                        print("pop");
+                                        Navigator.pop(context);
+                                      }
                                     }
                                   },
                                   child: const Text('Overwrite', style: TextStyle(color: Colors.red)),
@@ -197,8 +207,12 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                       }
                       else{
                         _isLoading = false;
-                        onSaveOK?.call();
-                        Navigator.pop(context);
+                        if(onSaveOK != null){
+                          onSaveOK();
+                        } else{
+                          print("pop");
+                          Navigator.pop(context);
+                        }
                       }
                     },
                     icon: Icon(

@@ -216,7 +216,6 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   }
 
   Future<UpdateResult> _saveBirdToFirestore(CollectionReference birds, CollectionReference? nestsItemCollection) async {
-    print("getting bird from firestore");
     Bird? prevBird = await birds.doc(band).get().then((value) {
       if (!value.exists) {
 
@@ -246,19 +245,16 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   }
 
   Future<void> _saveToChangelog(CollectionReference birds) async {
-    print("saving to changelog");
     await birds.doc(band).collection("changelog").doc(last_modified.toString()).set(toJson());
-    print("saved to changelog");
   }
 
   Future<UpdateResult> _updateNest(CollectionReference nestsItemCollection, bool isParent) async {
     if (nest?.isEmpty ?? true) {
       return UpdateResult.saveOK(item: this);
     } else if (isParent) {
-      print("saving parent at _updateNest on Bird");
-      return updateNestParent(nestsItemCollection);
+      return await updateNestParent(nestsItemCollection);
     } else {
-      return _updateNestEgg(nestsItemCollection);
+      return await _updateNestEgg(nestsItemCollection);
     }
   }
 
@@ -291,7 +287,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         }
       }
       // update the nest with the new parents
-      return(nestsItemCollection.doc(nest).update({'parents': nestObj.parents!.map((e) => e.toSimpleJson()).toList()}).then((value) => UpdateResult.saveOK(item: this))
+      print("update the nest with the new parents time: ${DateTime.now()}");
+      return(await nestsItemCollection.doc(nest).update({'parents': nestObj.parents!.map((e) => e.toSimpleJson()).toList()}).then((value) => UpdateResult.saveOK(item: this))
       );
     } catch (error) {
       return UpdateResult.error(message: "Error saving bird");
@@ -331,6 +328,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
           return ur;
         }
       if(nestsItemCollection != null){
+        print("update nest at bird time: ${DateTime.now()}");
         ur = await _updateNest(nestsItemCollection, isParent);
         if(!ur.success) {
           return ur;
@@ -364,6 +362,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       {CollectionReference<Object?>? otherItems = null,
       bool allowOverwrite = false,
       type = "parent"}) async {
+    print(toJson());
     if (band.isEmpty && name.isEmpty) {
       return UpdateResult.error(
           message: "Can't save bird without metal band and color band");
@@ -385,9 +384,9 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       if (allowOverwrite) {
         return await _write2Firestore(birds, otherItems, isParent);
       } else {
-        return await birds.doc(band).get().then((value) {
+        return await birds.doc(band).get().then((value) async {
           if (!value.exists) {
-            return _write2Firestore(birds, otherItems, isParent);
+            return  await _write2Firestore(birds, otherItems, isParent);
           } else {
             return UpdateResult.error(message: " Bird with this band already exists! ");
           }

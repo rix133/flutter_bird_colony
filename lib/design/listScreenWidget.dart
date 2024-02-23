@@ -218,7 +218,8 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Scaffold(
+        body:Container(
         color: Theme.of(context).scaffoldBackgroundColor,
         child: Column(
           children: [
@@ -270,6 +271,6 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
                     getDownloadButton(context, sps)
                   ],)),
           ],
-        ));
+        )));
   }
 }

@@ -193,7 +193,8 @@ class _nestCreateState extends State<nestCreate> {
                         setState(() {});
                         _saveNewNest().then((value) {
                           if (value.success) {
-                            Navigator.pop(context);
+                            Navigator.popAndPushNamed(context, '/nestManage',
+                                arguments: {"nest": value.item});
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                 content: Text(value.message),

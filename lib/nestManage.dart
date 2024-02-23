@@ -54,6 +54,29 @@ class _NestManageState extends State<NestManage> {
     super.dispose();
   }
 
+  _updateControllers() {
+    if(nest != null) {
+      species = speciesList.getSpecies(nest!.species);
+      _eggStream = FirebaseFirestore.instance
+          .collection(nest!.discover_date.year.toString())
+          .doc(nest!.id)
+          .collection("egg")
+          .snapshots();
+      position = Position(longitude: nest!.coordinates.longitude,
+          latitude: nest!.coordinates.latitude,
+          timestamp: nest!.discover_date,
+          accuracy: nest!.getAccuracy(),
+          altitude: 0.0,
+          altitudeAccuracy: 0.0,
+          heading: 0.0,
+          headingAccuracy: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0);
+
+      setState(() {   });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -67,34 +90,15 @@ class _NestManageState extends State<NestManage> {
         nests.doc(data["nest_id"]).get().then((value) {
           if (value.exists) {
               nest = Nest.fromDocSnapshot(value);
-              setState(() {   });
+              _updateControllers();
           }
         });
       }
       if(data["nest"] != null){
         nest = data["nest"] as Nest;
+        _updateControllers();
       }
 
-      if(nest != null) {
-        species = speciesList.getSpecies(nest!.species);
-        _eggStream = FirebaseFirestore.instance
-            .collection(nest!.discover_date.year.toString())
-            .doc(nest!.id)
-            .collection("egg")
-            .snapshots();
-        position = Position(longitude: nest!.coordinates.longitude,
-            latitude: nest!.coordinates.latitude,
-            timestamp: nest!.discover_date,
-            accuracy: nest!.getAccuracy(),
-            altitude: 0.0,
-            altitudeAccuracy: 0.0,
-            heading: 0.0,
-            headingAccuracy: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0);
-
-        setState(() {   });
-      }
     });
   }
 
@@ -186,11 +190,10 @@ class _NestManageState extends State<NestManage> {
     if (!snapshot.hasData) {
       return [Text('No data')];
     }
-    int amount = snapshot.data!.docs
-        .map((e) => Egg.fromDocSnapshot(e))
-        .where((e) =>
-            e.ring != null && e.discover_date.year != DateTime.now().year)
-        .length;
+    List<Egg> eggs = snapshot.data!.docs.map((e) => Egg.fromDocSnapshot(e)).toList();
+    int amount = eggs.where((e) => e.ring != null && e.discover_date.year != DateTime.now().year).length;
+    int new_egg_nr = eggs.where((e) => e.type() == "egg").length + 1;
+
     return [
       Text(
         "Ringed ($amount)",
@@ -200,7 +203,6 @@ class _NestManageState extends State<NestManage> {
           style: ButtonStyle(
               backgroundColor: MaterialStateProperty.all(Colors.grey)),
           onPressed: () {
-            if (snapshot.data!.docs.isNotEmpty) {
               Egg egg = Egg(
                   discover_date: DateTime.now(),
                   responsible: sps.userName,
@@ -209,7 +211,6 @@ class _NestManageState extends State<NestManage> {
                   last_modified: DateTime.now(),
                   status: "intact",
                   ring: null);
-              new_egg_nr = snapshot.data!.docs.length + 1;
               if (new_egg_nr == 1) {
                 nest!.first_egg = DateTime.now();
               }
@@ -224,7 +225,7 @@ class _NestManageState extends State<NestManage> {
                       .collection("changelog")
                       .doc(DateTime.now().toString())
                       .set(egg.toJson()));
-            }
+
           },
           icon: Icon(
             Icons.egg,
@@ -233,6 +234,7 @@ class _NestManageState extends State<NestManage> {
           onLongPress: () {
             Navigator.pushNamed(context, "/editBird", arguments: {
               "nest": nest,
+              "route": "/nestManage",
               //this egg has no number as it has no id
               "egg": Egg(
                   discover_date: DateTime.now(),
@@ -290,6 +292,7 @@ class _NestManageState extends State<NestManage> {
                     exp.nests = [];
                   }
                   exp.nests!.add(nest!.name);
+                  Navigator.pop(context);
                   exp.save().then((v) => Navigator.popAndPushNamed(context, "/nestManage", arguments: {"nest_id": nest!.id}));
                 }
               },
@@ -303,6 +306,7 @@ class _NestManageState extends State<NestManage> {
   void addParent() {
     Navigator.pushNamed(context, "/editBird", arguments: {
       "nest": nest,
+      "route": "/nestManage",
     });
   }
 
@@ -321,6 +325,7 @@ class _NestManageState extends State<NestManage> {
                     Navigator.pushNamed(context, "/editBird", arguments: {
                       "bird": b,
                       "nest": nest,
+                      "route": "/nestManage",
                     });
                   },
                   child: Text(b.name),

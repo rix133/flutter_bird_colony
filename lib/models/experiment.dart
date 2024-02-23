@@ -16,9 +16,7 @@ class Experiment implements FirestoreItem {
   String? description;
   String? responsible;
   Color color = Colors.grey;
-  int? year = DateTime
-      .now()
-      .year;
+  int? year = DateTime.now().year;
   List<String>? nests = [];
   List<String>? birds = [];
   List<Measure> measures = [];
@@ -29,18 +27,19 @@ class Experiment implements FirestoreItem {
   List<String> previousNests = [];
   List<String> previousBirds = [];
 
-  Experiment({this.id,
-    required this.name,
-    this.description,
-    this.responsible,
-    this.year,
-    this.nests,
-    this.type = "nest",
-    this.measures = const [],
-    this.birds,
-    this.color = Colors.blue,
-    this.last_modified,
-    this.created});
+  Experiment(
+      {this.id,
+      required this.name,
+      this.description,
+      this.responsible,
+      this.year,
+      this.nests,
+      this.type = "nest",
+      this.measures = const [],
+      this.birds,
+      this.color = Colors.blue,
+      this.last_modified,
+      this.created});
 
   @override
   DateTime get created_date => created ?? DateTime(1900);
@@ -53,8 +52,8 @@ class Experiment implements FirestoreItem {
     responsible = json['responsible'];
     year = json['year'];
     measures = (json['measures'] as List<dynamic>?)
-        ?.map((e) => Measure.FromJson(e))
-        .toList() ??
+            ?.map((e) => Measure.FromJson(e))
+            .toList() ??
         [];
     nests = List<String>.from(json['nests'] ?? []);
     birds = List<String>.from(json['birds'] ?? []);
@@ -67,7 +66,12 @@ class Experiment implements FirestoreItem {
   }
 
   Map<String, dynamic> toSimpleJson() {
-    return {'id': id, 'name': name, 'color': color.value.toString(), 'measures': measures.map((e) => e.toFormJson()).toList()};
+    return {
+      'id': id,
+      'name': name,
+      'color': color.value.toString(),
+      'measures': measures.map((e) => e.toFormJson()).toList()
+    };
   }
 
   @override
@@ -86,18 +90,18 @@ class Experiment implements FirestoreItem {
     };
   }
 
-  bool hasNests(){
-    if(nests != null){
-      if(nests!.isNotEmpty){
+  bool hasNests() {
+    if (nests != null) {
+      if (nests!.isNotEmpty) {
         return true;
       }
     }
     return false;
   }
 
-  bool hasBirds(){
-    if(birds != null){
-      if(birds!.isNotEmpty){
+  bool hasBirds() {
+    if (birds != null) {
+      if (birds!.isNotEmpty) {
         return true;
       }
     }
@@ -106,158 +110,199 @@ class Experiment implements FirestoreItem {
 
   Column getItemsList(BuildContext context, Function setState) {
     List<Padding> items = [];
-    if(hasNests()){
-      items.addAll(nests?.map((e) => Padding(padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),  child: Container(
-        decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(5)),
-          child:ListTile(
-        title: Text('Nest ID: $e'),
-        onTap: gotoNest(e, context),
-        trailing: IconButton(
-          icon: Icon(Icons.close, color: Colors.redAccent),
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
-          ),
-          onPressed: () {
-            setState(() {
-            nests!.remove(e);
-            });
-          },
-        ),
-      )))).toList() ?? []);
+    if (hasNests()) {
+      items.addAll(nests
+              ?.map((e) => Padding(
+                  padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
+                  child: Container(
+                      decoration: BoxDecoration(
+                          color: Colors.white12,
+                          borderRadius: BorderRadius.circular(5)),
+                      child: ListTile(
+                        title: Text('Nest ID: $e'),
+                        onTap: gotoNest(e, context),
+                        trailing: IconButton(
+                          icon: Icon(Icons.close, color: Colors.redAccent),
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                                Colors.white60),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              nests!.remove(e);
+                            });
+                          },
+                        ),
+                      ))))
+              .toList() ??
+          []);
     }
-    if(hasBirds()){
-      items.addAll(birds?.map((e) => Padding(padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),  child: Container(
-        decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(5)),
-          child:ListTile(
-        title: Text('Bird ID: $e'),
-        onTap: gotoBird(e, context),
-            trailing: IconButton(
-              icon: Icon(Icons.close, color: Colors.redAccent),
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
-              ),
-          onPressed: () {
-            setState(() {
-            birds!.remove(e);
-            });
-          },
-        ),
-      )))).toList() ?? []);
+    if (hasBirds()) {
+      items.addAll(birds
+              ?.map((e) => Padding(
+                  padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
+                  child: Container(
+                      decoration: BoxDecoration(
+                          color: Colors.white12,
+                          borderRadius: BorderRadius.circular(5)),
+                      child: ListTile(
+                        title: Text('Bird ID: $e'),
+                        onTap: gotoBird(e, context),
+                        trailing: IconButton(
+                          icon: Icon(Icons.close, color: Colors.redAccent),
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all<Color>(
+                                Colors.white60),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              birds!.remove(e);
+                            });
+                          },
+                        ),
+                      ))))
+              .toList() ??
+          []);
     }
     return Column(
       children: items,
     );
   }
 
-
-  gotoNest(String nest, BuildContext context){
+  gotoNest(String nest, BuildContext context) {
     return () => {
-      Navigator.pushNamed(context, "/nestManage", arguments: {'nest_id': nest})
-    };
-  }
-  gotoBird(String bird, BuildContext context){
-    return () => {
-      Navigator.pushNamed(context, "/editBird", arguments: {'bird': {'band': bird}})
-    };
+          Navigator.pushNamed(context, "/nestManage",
+              arguments: {'nest_id': nest})
+        };
   }
 
-  dispose(){
+  gotoBird(String bird, BuildContext context) {
+    return () => {
+          Navigator.pushNamed(context, "/editBird", arguments: {
+            'bird': {'band': bird}
+          })
+        };
+  }
+
+  dispose() {
     measures.forEach((m) {
       m.dispose();
     });
   }
 
-  String get titleString => '$name${description?.isNotEmpty == true ? ' - $description' : ''}';
+  String get titleString =>
+      '$name${description?.isNotEmpty == true ? ' - $description' : ''}';
 
   Widget getListTile(BuildContext context) {
     String subtitleNests = hasNests() ? "Nests: " + nests!.join(", ") : "";
     String subtitleBirds = hasBirds() ? "Birds: " + birds!.join(", ") : "";
-    return Padding(
+    return Container(
       padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
-      child: Container(
-        child: ListTile(
-          title: Text(titleString, style: TextStyle(fontSize: 20)),
-          subtitle: Text(subtitleNests + subtitleBirds, style: TextStyle(color: Colors.grey, fontSize: 12)),
-          onTap: (){
-            showNestMap(context);
-          },
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(icon:Icon(Icons.map, color: Colors.black87),
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(Colors.grey)),
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/map',
-                        arguments: {'nest_ids': nests});
-                  }),
-              IconButton(
-                icon: Icon(Icons.edit, color: Colors.black),
+      child: ListTile(
+        title: Text(titleString, style: TextStyle(fontSize: 20)),
+        subtitle: Text(subtitleNests + subtitleBirds,
+            style: TextStyle(color: Colors.grey, fontSize: 12)),
+        onTap: () {
+          showNestMap(context);
+        },
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+                icon: Icon(Icons.map, color: Colors.black87),
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
-                ),
+                    backgroundColor:
+                        MaterialStateProperty.all<Color>(Colors.grey)),
                 onPressed: () {
-                  Navigator.pushNamed(context, '/editExperiment', arguments: {'experiment': this});
-                },
+                  Navigator.pushNamed(context, '/map',
+                      arguments: {'nest_ids': nests});
+                }),
+            IconButton(
+              icon: Icon(Icons.edit, color: Colors.black),
+              style: ButtonStyle(
+                backgroundColor:
+                    MaterialStateProperty.all<Color>(Colors.white60),
               ),
-            ],
-          ),
+              onPressed: () {
+                Navigator.pushNamed(context, '/editExperiment',
+                    arguments: {'experiment': this});
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 
-
   void showNestMap(BuildContext context) {
     Navigator.pushNamed(context, "/map", arguments: {'nests_ids': nests});
   }
 
-
-  Future<UpdateResult> _updateNestCollection(List<String>? items, {bool delete = false}) async {
-    CollectionReference nestCollection =  FirebaseFirestore.instance.collection(year.toString());
-    if(items != null){
+  Future<UpdateResult> _updateNestCollection(List<String>? items,
+      {bool delete = false}) async {
+    CollectionReference nestCollection =
+        FirebaseFirestore.instance.collection(year.toString());
+    if (items != null) {
       Nest n;
-      for(String i in items){
-         await nestCollection.doc(i).get().then((DocumentSnapshot value) => {
-          if(value.exists){
-            n = Nest.fromDocSnapshot(value),
-            n.experiments = n.experiments?.where((element) => element.id != id).toList(),
-            if(!delete){
-              n.experiments?.add(this),
-            },
-            nestCollection.doc(i).update({'experiments': n.experiments?.map((e) => e.toSimpleJson()).toList()})
-          }
-        });
+      for (String i in items) {
+        await nestCollection.doc(i).get().then((DocumentSnapshot value) => {
+              if (value.exists)
+                {
+                  n = Nest.fromDocSnapshot(value),
+                  n.experiments = n.experiments
+                      ?.where((element) => element.id != id)
+                      .toList(),
+                  if (!delete)
+                    {
+                      n.experiments?.add(this),
+                    },
+                  nestCollection.doc(i).update({
+                    'experiments':
+                        n.experiments?.map((e) => e.toSimpleJson()).toList()
+                  })
+                }
+            });
       }
     }
     return UpdateResult.saveOK(item: this);
   }
 
-  Future<UpdateResult> _updateBirdsCollection(List<String>? items, {bool delete = false}) async {
-    CollectionReference birdCollection =  FirebaseFirestore.instance.collection(year.toString());
-    if(items != null){
+  Future<UpdateResult> _updateBirdsCollection(List<String>? items,
+      {bool delete = false}) async {
+    CollectionReference birdCollection =
+        FirebaseFirestore.instance.collection(year.toString());
+    if (items != null) {
       Bird b;
-      for(String i in items){
-         await birdCollection.doc(i).get().then((DocumentSnapshot value) => {
-          if(value.exists){
-            b = Bird.fromDocSnapshot(value),
-            b.experiments = b.experiments?.where((element) => element.id != id).toList(),
-            if(!delete){
-              b.experiments?.add(this),
-            },
-            birdCollection.doc(i).update({'experiments': b.experiments?.map((e) => e.toSimpleJson()).toList()})
-          }
-        });
+      for (String i in items) {
+        await birdCollection.doc(i).get().then((DocumentSnapshot value) => {
+              if (value.exists)
+                {
+                  b = Bird.fromDocSnapshot(value),
+                  b.experiments = b.experiments
+                      ?.where((element) => element.id != id)
+                      .toList(),
+                  if (!delete)
+                    {
+                      b.experiments?.add(this),
+                    },
+                  birdCollection.doc(i).update({
+                    'experiments':
+                        b.experiments?.map((e) => e.toSimpleJson()).toList()
+                  })
+                }
+            });
       }
     }
     return UpdateResult.saveOK(item: this);
   }
-
 
   @override
-  Future<UpdateResult> delete({CollectionReference<
-      Object?>? otherItems = null, bool soft = true, String type = "default"}) {
-    CollectionReference expCollection =   FirebaseFirestore.instance.collection('experiments');
+  Future<UpdateResult> delete(
+      {CollectionReference<Object?>? otherItems = null,
+      bool soft = true,
+      String type = "default"}) {
+    CollectionReference expCollection =
+        FirebaseFirestore.instance.collection('experiments');
 
     _updateNestCollection(previousNests, delete: true);
     _updateBirdsCollection(previousBirds, delete: true);
@@ -268,33 +313,38 @@ class Experiment implements FirestoreItem {
           .delete()
           .then((value) => UpdateResult.deleteOK(item: this))
           .catchError((error) => UpdateResult.error(message: error.toString()));
-    }  else {
+    } else {
       CollectionReference deletedCollection = FirebaseFirestore.instance
           .collection("deletedItems")
           .doc("experiments")
           .collection("deleted");
 
-      return FSItemMixin().deleteFiresoreItem(this, expCollection, deletedCollection);
+      return FSItemMixin()
+          .deleteFiresoreItem(this, expCollection, deletedCollection);
     }
   }
 
   @override
-  Future<UpdateResult> save({CollectionReference<
-      Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"}) {
-    CollectionReference expCollection =   FirebaseFirestore.instance.collection('experiments');
-
+  Future<UpdateResult> save(
+      {CollectionReference<Object?>? otherItems = null,
+      bool allowOverwrite = false,
+      String type = "default"}) {
+    CollectionReference expCollection =
+        FirebaseFirestore.instance.collection('experiments');
 
     last_modified = DateTime.now();
     //remove duplicate nests
-    if(nests != null){
+    if (nests != null) {
       nests = nests!.toSet().toList();
     }
-    if(birds != null){
+    if (birds != null) {
       birds = birds!.toSet().toList();
     }
     //get items that are missing from otherdata but exist in previousOtherItems
-    List<String> deletedNests = previousNests.where((element) => !nests!.contains(element)).toList();
-    List<String> deletedBirds = previousBirds.where((element) => !birds!.contains(element)).toList();
+    List<String> deletedNests =
+        previousNests.where((element) => !nests!.contains(element)).toList();
+    List<String> deletedBirds =
+        previousBirds.where((element) => !birds!.contains(element)).toList();
 
     if (id == null) {
       created = DateTime.now();
@@ -302,14 +352,18 @@ class Experiment implements FirestoreItem {
     }
 
     //save the experiment data to nests or birds
-    _updateNestCollection(nests, delete: false);
-    _updateNestCollection(deletedNests, delete: true);
-    _updateBirdsCollection(birds, delete: false);
-    _updateBirdsCollection(deletedBirds, delete: true);
-
-      return(expCollection.doc(id).set(toJson()).then((value) => FSItemMixin().saveChangeLog(this, expCollection)).then((value) => UpdateResult.saveOK(item:this))).catchError((onError) => UpdateResult.error(message: onError.toString()));
-
-    }
+    return _updateNestCollection(nests, delete: false)
+        .then((v) => _updateNestCollection(deletedNests, delete: true))
+        .then((v) => _updateBirdsCollection(birds, delete: false))
+        .then((v) => _updateBirdsCollection(deletedBirds, delete: true))
+        .then((v) => expCollection
+            .doc(id)
+            .set(toJson())
+            .then((value) => FSItemMixin().saveChangeLog(this, expCollection))
+            .then((value) => UpdateResult.saveOK(item: this)))
+        .catchError(
+            (onError) => UpdateResult.error(message: onError.toString()));
+  }
 
   @override
   List<TextCellValue> toExcelRowHeader() {
@@ -323,10 +377,10 @@ class Experiment implements FirestoreItem {
       TextCellValue('experiment_created'),
       // Add more headers as per your requirements
     ];
-    if (hasNests()){
+    if (hasNests()) {
       baseHeader.add(TextCellValue('nest'));
     }
-    if (hasBirds()){
+    if (hasBirds()) {
       baseHeader.add(TextCellValue('bird'));
     }
     return baseHeader;
@@ -341,41 +395,44 @@ class Experiment implements FirestoreItem {
       TextCellValue(responsible ?? ""),
       IntCellValue(year ?? 1900),
       TextCellValue(type),
-      last_modified != null ? DateTimeCellValue.fromDateTime(last_modified!) : TextCellValue(""),
-      DateCellValue(year: created?.year ?? 1900, month: created?.month ?? 1, day: created?.day ?? 1),
+      last_modified != null
+          ? DateTimeCellValue.fromDateTime(last_modified!)
+          : TextCellValue(""),
+      DateCellValue(
+          year: created?.year ?? 1900,
+          month: created?.month ?? 1,
+          day: created?.day ?? 1),
     ];
 
-    if (hasNests()){
-      for (String nest in nests!){
+    if (hasNests()) {
+      for (String nest in nests!) {
         List<CellValue> items = List.from(baseItems);
         items.add(TextCellValue(nest));
         rows.add(items);
       }
     }
-    if (hasBirds()){
-      for (String bird in birds!){
+    if (hasBirds()) {
+      for (String bird in birds!) {
         List<CellValue> items = List.from(baseItems);
         items.add(TextCellValue(bird));
         rows.add(items);
       }
     }
 
-    if(!hasNests() && !hasBirds()){
+    if (!hasNests() && !hasBirds()) {
       rows.add(baseItems);
     }
     return rows;
   }
-
-
 }
 
 Experiment experimentFromSimpleJson(Map<String, dynamic> json) {
-  Experiment e =  Experiment(
+  Experiment e = Experiment(
       id: json['id'],
       name: json['name'],
       measures: (json['measures'] as List<dynamic>?)
-          ?.map((e) => Measure.FromFormJson(e))
-          .toList() ??
+              ?.map((e) => Measure.FromFormJson(e))
+              .toList() ??
           [],
       color: Color(int.parse(json['color'])));
   return e;
@@ -389,18 +446,17 @@ Container listExperiments(ExperimentedItem item) {
     padding: EdgeInsets.all(8.0),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Text("Exp. "),
-          ...?item.experiments?.map((e) =>
-              ElevatedButton(
-                onPressed: () => null,
-                child: Text(e.name),
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(e.color),
-                ),
-              )),
-          //add experiment button
-              ],
-      ),
+      children: [
+        Text("Exp. "),
+        ...?item.experiments?.map((e) => ElevatedButton(
+              onPressed: () => null,
+              child: Text(e.name),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(e.color),
+              ),
+            )),
+        //add experiment button
+      ],
+    ),
   );
 }
