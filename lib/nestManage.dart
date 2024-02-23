@@ -34,6 +34,7 @@ class _NestManageState extends State<NestManage> {
   double _desiredAccuracy = 1;
   Nest? nest;
   CollectionReference nests = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
+  CollectionReference? eggCollection;
   Query experimentsQuery = FirebaseFirestore.instance.collection("experiments").where("year", isEqualTo: DateTime.now().year);
   Stream<QuerySnapshot> _eggStream = Stream.empty();
   late SharedPreferencesService sps;
@@ -57,11 +58,11 @@ class _NestManageState extends State<NestManage> {
   _updateControllers() {
     if(nest != null) {
       species = speciesList.getSpecies(nest!.species);
-      _eggStream = FirebaseFirestore.instance
-          .collection(nest!.discover_date.year.toString())
-          .doc(nest!.id)
-          .collection("egg")
-          .snapshots();
+      nests = FirebaseFirestore.instance.collection(nest!.discover_date.year.toString());
+      if(nest!.id != null){
+        eggCollection = nests.doc(nest!.id).collection("egg");
+      }
+      _eggStream = eggCollection?.snapshots() ?? Stream.empty();
       position = Position(longitude: nest!.coordinates.longitude,
           latitude: nest!.coordinates.latitude,
           timestamp: nest!.discover_date,
@@ -215,13 +216,9 @@ class _NestManageState extends State<NestManage> {
                 nest!.first_egg = DateTime.now();
               }
               String eggID = nest!.name + " egg " + new_egg_nr.toString();
-              nests
-                  .doc(nest!.id)
-                  .collection("egg")
-                  .doc(eggID)
+              eggCollection?.doc(eggID)
                   .set(egg.toJson())
-                  .whenComplete(() => nests
-                      .doc(eggID)
+                  .whenComplete(() => eggCollection?.doc(eggID)
                       .collection("changelog")
                       .doc(DateTime.now().toString())
                       .set(egg.toJson()));
