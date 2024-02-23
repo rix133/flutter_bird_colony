@@ -26,6 +26,7 @@ class _nestCreateState extends State<nestCreate> {
   SharedPreferencesService? sps;
   Stream<DocumentSnapshot> _idStream = Stream.empty();
   LocalSpeciesList _speciesList = LocalSpeciesList();
+  bool _disableButtons = false;
 
   Nest nest = Nest(
     coordinates: GeoPoint(0, 0),
@@ -38,12 +39,19 @@ class _nestCreateState extends State<nestCreate> {
 
 
   void _getCurrentLocation() async {
+    setState(() {
+      _disableButtons = true;
+    });
     final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best);
     if (mounted) {
       setState(() {
-        nest.coordinates = GeoPoint(position.latitude, position.longitude);
-        nest.accuracy = position.accuracy.toStringAsFixed(2) + "m";
+        //update only if the new location is more accurate
+        if(nest.getAccuracy() > position.accuracy){
+          nest.coordinates = GeoPoint(position.latitude, position.longitude);
+          nest.accuracy = position.accuracy.toStringAsFixed(2) + "m";
+        }
+        _disableButtons = false;
       });
     }
   }
@@ -51,6 +59,7 @@ class _nestCreateState extends State<nestCreate> {
   @override
   void dispose() {
     // Clean up the controller when the widget is disposed.
+    nest.dispose();
     super.dispose();
   }
 
@@ -72,6 +81,9 @@ class _nestCreateState extends State<nestCreate> {
   }
 
   Future<UpdateResult> _saveNewNest() {
+    if (nest.id == null) {
+      return Future.value(UpdateResult.error(message: "Nest ID is empty"));
+    }
     return nests.doc(nest.id).get().then((value) {
       if (value.exists) {
         return UpdateResult.error(message: "Nest ${nest.id} already exists");
@@ -151,6 +163,11 @@ class _nestCreateState extends State<nestCreate> {
                   (Measure m) => setState(() => nest.measures.add(Measure.empty(e))),
                   true)),
               SizedBox(height: 15),
+    Opacity(
+    opacity: _disableButtons ? 0.3 : 1, // Dim the UI when loading
+    child: AbsorbPointer(
+    absorbing: _disableButtons, // Disable interaction when loading
+    child:
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -170,8 +187,22 @@ class _nestCreateState extends State<nestCreate> {
                     ],
                   ),
                   //Location nupp+täpsusinfo
-                  new ElevatedButton.icon(
-                      onPressed: _saveNewNest,
+                  ElevatedButton.icon(
+                      onPressed: () {
+                        _disableButtons = true;
+                        setState(() {});
+                        _saveNewNest().then((value) {
+                          if (value.success) {
+                            Navigator.pop(context);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text(value.message),
+                                backgroundColor: Colors.red));
+                            _disableButtons = false;
+                            setState(() {});
+                          }
+                        });
+                      },
                       icon: Icon(
                         Icons.save,
                         color: Colors.black87,
@@ -179,7 +210,7 @@ class _nestCreateState extends State<nestCreate> {
                       ),
                       label: Text("add nest")),
                 ],
-              ), //asukoht ja save nupp
+              ))),
             ],
           ),
         ),

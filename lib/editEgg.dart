@@ -46,6 +46,7 @@ class _EditEggState extends State<EditEgg> {
   @override
   dispose() {
     _focusNode.dispose();
+    egg.dispose();
     super.dispose();
   }
 

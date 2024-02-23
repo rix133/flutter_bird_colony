@@ -179,7 +179,7 @@ class _NestsNearbyState extends State<NestsNearby>{
                                             onPressed: () {
                                               Navigator.pushNamed(
                                                   context, "/nestManage",arguments: {
-                                                "sihtkoht": map[index]["id"].toString(),
+                                                "nest_id": map[index]["id"].toString(),
                                               });
                                             },
                                           ),

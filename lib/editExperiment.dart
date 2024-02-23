@@ -50,6 +50,7 @@ class _EditExperimentState extends State<EditExperiment> {
 
   @override
   void dispose() {
+    experiment.dispose();
     super.dispose();
   }
 
@@ -90,13 +91,15 @@ class _EditExperimentState extends State<EditExperiment> {
             );
             print(selected);
             if (selected != null) {
-              setState(() {
-              if(experiment.type == "nest"){
-                experiment.nests!.add(selected);
-              } else if(experiment.type == "bird"){
-                experiment.birds!.add(selected);
+              if (selected.isNotEmpty) {
+                setState(() {
+                  if (experiment.type == "nest") {
+                    experiment.nests!.add(selected);
+                  } else if (experiment.type == "bird") {
+                    experiment.birds!.add(selected);
+                  }
+                });
               }
-              });
             }
 
           },

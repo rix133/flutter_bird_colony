@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/species.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:provider/provider.dart';
 
 
 import 'design/listScreenWidget.dart';
@@ -21,12 +23,14 @@ class _ListSpeciesState extends ListScreenWidgetState<Species> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      sps = Provider.of<SharedPreferencesService>(context, listen: false);
       collection = FirebaseFirestore.instance
           .collection('settings')
           .doc(sps?.settingsType)
           .collection("species");
-      setState(() {});
+      stream = collection?.snapshots() ?? Stream.empty();
 
+      setState(() {});
     });
   }
 

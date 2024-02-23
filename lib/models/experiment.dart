@@ -110,10 +110,13 @@ class Experiment implements FirestoreItem {
       items.addAll(nests?.map((e) => Padding(padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),  child: Container(
         decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(5)),
           child:ListTile(
-        title: Text(e),
+        title: Text('Nest ID: $e'),
         onTap: gotoNest(e, context),
         trailing: IconButton(
-          icon: Icon(Icons.delete, color: Colors.redAccent),
+          icon: Icon(Icons.close, color: Colors.redAccent),
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
+          ),
           onPressed: () {
             setState(() {
             nests!.remove(e);
@@ -126,10 +129,13 @@ class Experiment implements FirestoreItem {
       items.addAll(birds?.map((e) => Padding(padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),  child: Container(
         decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(5)),
           child:ListTile(
-        title: Text(e),
+        title: Text('Bird ID: $e'),
         onTap: gotoBird(e, context),
-        trailing: IconButton(
-          icon: Icon(Icons.delete, color: Colors.redAccent),
+            trailing: IconButton(
+              icon: Icon(Icons.close, color: Colors.redAccent),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
+              ),
           onPressed: () {
             setState(() {
             birds!.remove(e);
@@ -146,13 +152,19 @@ class Experiment implements FirestoreItem {
 
   gotoNest(String nest, BuildContext context){
     return () => {
-      Navigator.pushNamed(context, "/nestManage", arguments: {'sihtkoht': nest})
+      Navigator.pushNamed(context, "/nestManage", arguments: {'nest_id': nest})
     };
   }
   gotoBird(String bird, BuildContext context){
     return () => {
       Navigator.pushNamed(context, "/editBird", arguments: {'bird': {'band': bird}})
     };
+  }
+
+  dispose(){
+    measures.forEach((m) {
+      m.dispose();
+    });
   }
 
   String get titleString => '$name${description?.isNotEmpty == true ? ' - $description' : ''}';

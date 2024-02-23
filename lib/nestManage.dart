@@ -48,6 +48,9 @@ class _NestManageState extends State<NestManage> {
 
   @override
   void dispose() {
+    if(nest != null){
+      nest!.dispose();
+    }
     super.dispose();
   }
 
@@ -60,10 +63,11 @@ class _NestManageState extends State<NestManage> {
       _desiredAccuracy = sps.desiredAccuracy;
       var data = ModalRoute.of(context)?.settings.arguments as Map;
       speciesList = sps.speciesList;
-      if(data["sihtkoht"] != null) {
-        nests.doc(data["sihtkoht"]).get().then((value) {
+      if(data["nest_id"] != null) {
+        nests.doc(data["nest_id"]).get().then((value) {
           if (value.exists) {
               nest = Nest.fromDocSnapshot(value);
+              setState(() {   });
           }
         });
       }
@@ -227,7 +231,7 @@ class _NestManageState extends State<NestManage> {
             size: 45,
           ),
           onLongPress: () {
-            Navigator.pushNamed(context, "/editParent", arguments: {
+            Navigator.pushNamed(context, "/editBird", arguments: {
               "nest": nest,
               //this egg has no number as it has no id
               "egg": Egg(
@@ -286,7 +290,7 @@ class _NestManageState extends State<NestManage> {
                     exp.nests = [];
                   }
                   exp.nests!.add(nest!.name);
-                  exp.save().then((v) => Navigator.popAndPushNamed(context, "/nestManage", arguments: {"sihtkoht": nest!.id}));
+                  exp.save().then((v) => Navigator.popAndPushNamed(context, "/nestManage", arguments: {"nest_id": nest!.id}));
                 }
               },
               child: Text("Add", style: TextStyle(color: Colors.red)),
@@ -296,8 +300,8 @@ class _NestManageState extends State<NestManage> {
     });
   }
 
-  void gotoParent() {
-    Navigator.pushNamed(context, "/editParent", arguments: {
+  void addParent() {
+    Navigator.pushNamed(context, "/editBird", arguments: {
       "nest": nest,
     });
   }
@@ -314,7 +318,7 @@ class _NestManageState extends State<NestManage> {
               ...?_parents?.map((Bird b) {
                 return ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, "/editParent", arguments: {
+                    Navigator.pushNamed(context, "/editBird", arguments: {
                       "bird": b,
                       "nest": nest,
                     });
@@ -330,12 +334,12 @@ class _NestManageState extends State<NestManage> {
                       style: ButtonStyle(
                           backgroundColor: MaterialStateProperty.all(
                               _getParentButtonColor())),
-                      onPressed: gotoParent,
+                      onPressed: addParent,
                       icon: Icon(Icons.add),
                       label: Text("add parent"))
                   : IconButton(
                       icon: Icon(Icons.add),
-                      onPressed: gotoParent,
+                      onPressed: addParent,
                       style: ButtonStyle(
                         backgroundColor:
                             MaterialStateProperty.all<Color>(Colors.white60),
@@ -391,6 +395,7 @@ class _NestManageState extends State<NestManage> {
     ),
     Text("(long press to add experiment)", style: TextStyle(fontSize: 10))])]));
   }
+
 
   Widget build(BuildContext context) {
     if (nest == null) {

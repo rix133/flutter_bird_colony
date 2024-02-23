@@ -34,7 +34,7 @@ class _EggsState extends State<Eggs> {
     final data = ModalRoute.of(context)?.settings.arguments as Map;
     final egg = FirebaseFirestore.instance
         .collection(_year)
-        .doc(data["sihtkoht"])
+        .doc(data["nest_id"])
         .collection("egg")
         .doc(data["egg"]);
     egg.get().then((value) {

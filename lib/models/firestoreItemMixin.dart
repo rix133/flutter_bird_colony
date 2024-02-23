@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:share_plus/share_plus.dart';
 
+import 'bird.dart';
 import 'egg.dart';
 import 'nest.dart';
 
@@ -121,12 +122,25 @@ class FSItemMixin {
           end = nestSortedDataMap['end'];
           sheets.add(nestSheetData);
           types.add("nests");
-          type="nests";
+        }
+      }
+      List<String> allExpsBirds = [];
+      allExpsBirds.addAll(items.expand((e) => (e as Experiment).birds ?? []).cast<String>().toList());
+      if(allExpsBirds.isNotEmpty){
+        QuerySnapshot birds = await FirebaseFirestore.instance.collection("Bird")
+            .where(FieldPath.documentId, whereIn: allExpsBirds)
+            .get();
+        if(birds.docs.isNotEmpty){
+          List<FirestoreItem> birdItems = birds.docs.map((e) => Bird.fromDocSnapshot(e)).toList();
+          Map<String, dynamic> birdSortedDataMap = await createSortedData(birdItems);
+          List<List<CellValue>> birdSheetData = birdSortedDataMap['sortedData'];
+          sheets.add(birdSheetData);
+          types.add("birds");
         }
       }
     }
 
-    if (type == "nests") {
+    if (type == "nests" || type == "experiments") {
       if (start != null && end != null) {
         Timestamp startTimestamp = Timestamp.fromDate(start);
         Timestamp endTimestamp = Timestamp.fromDate(end);

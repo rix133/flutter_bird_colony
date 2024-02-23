@@ -73,6 +73,9 @@ class Measure implements Comparable<Measure>{
     ];
   }
 
+  void dispose() {
+    valueCntr.dispose();
+  }
 
   TextEditingController valueCntr = TextEditingController();
 

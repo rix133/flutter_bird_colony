@@ -29,6 +29,7 @@ class _EditBirdState extends State<EditBird> {
   LocalSpeciesList _speciesList = LocalSpeciesList();
   String _recentMetalBand = "";
   bool buttonsDisabled = false;
+  FocusNode _lettersFocus = FocusNode();
 
   Measure age = Measure(
     name: "age",
@@ -103,11 +104,25 @@ class _EditBirdState extends State<EditBird> {
       FirebaseFirestore.instance.collection(DateTime.now().year.toString());
   CollectionReference birds = FirebaseFirestore.instance.collection("Birds");
 
-
+ @override
+ dispose() {
+   band_letCntr.dispose();
+   band_numCntr.dispose();
+   _lettersFocus.dispose();
+   bird.dispose();
+   super.dispose();
+ }
 
   @override
   void initState() {
     super.initState();
+    _lettersFocus.addListener(() {
+      if (!_lettersFocus.hasFocus) {
+        band_letCntr.text = band_letCntr.text.toUpperCase();
+        bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
+        setState(() {  });
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       initializeServices();
       var map = ModalRoute.of(context)?.settings.arguments;
@@ -257,12 +272,19 @@ class _EditBirdState extends State<EditBird> {
           child: TextFormField(
             controller: band_letCntr,
             textAlign: TextAlign.center,
+            focusNode: _lettersFocus,
             onChanged: (String value) {
               //check if on web and ios
               if (!Platform.isIOS) {
                 band_letCntr.text = band_letCntr.text.toUpperCase();
               }
               bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
+            },
+            onEditingComplete: () {
+              band_letCntr.text = band_letCntr.text.toUpperCase();
+              bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
+              setState(() {
+              });
             },
             decoration: InputDecoration(
               labelText: "Letters",
@@ -289,6 +311,12 @@ class _EditBirdState extends State<EditBird> {
             controller: band_numCntr,
             onChanged: (String value) {
               bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
+            },
+            onEditingComplete: () {
+              band_letCntr.text = band_letCntr.text.toUpperCase();
+              bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
+              setState(() {
+              });
             },
             textAlign: TextAlign.center,
             decoration: InputDecoration(
@@ -335,11 +363,20 @@ class _EditBirdState extends State<EditBird> {
   }
 
   void saveOk() {
-      sps?.recentBand(bird.species ?? '', bird.band);
-      Navigator.popAndPushNamed(context, "/nestManage", arguments: {"sihtkoht": bird.nest});
+    sps?.recentBand(bird.species ?? '', bird.band);
+    String? previousRouteName = ModalRoute.of(context)?.settings.name;
+    if (previousRouteName == "/listBirds") {
+      Navigator.pop(context);
+    }
+    Navigator.popAndPushNamed(context, "/nestManage", arguments: {"nest_id": bird.nest});
   }
+
   void deleteOk() {
-      Navigator.popAndPushNamed(context, "/nestManage", arguments: {"sihtkoht": bird.nest});
+    String? previousRouteName = ModalRoute.of(context)?.settings.name;
+    if (previousRouteName == "/listBirds") {
+      Navigator.pop(context);
+    }
+    Navigator.popAndPushNamed(context, "/nestManage", arguments: {"nest_id": bird.nest});
   }
 
   Padding getAgeRow() {

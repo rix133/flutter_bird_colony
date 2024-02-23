@@ -21,7 +21,13 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
 
   CollectionReference? collection = FirebaseFirestore.instance.collection('experiments');
 
-
+  @override
+  void dispose() {
+    exps.forEach((element) {
+      element.dispose();
+    });
+    super.dispose();
+  }
 
   getAddButton(BuildContext context) {
     return Padding(

@@ -26,6 +26,15 @@ class ExperimentedItem{
     }
   }
 
+  void dispose(){
+    experiments?.forEach((element) {
+      element.dispose();
+    });
+    measures.forEach((element) {
+      element.dispose();
+    });
+  }
+
   addNonExistingExperiments(List<Experiment>? exps, String selType){
     if(exps == null) return;
     bool added = false;

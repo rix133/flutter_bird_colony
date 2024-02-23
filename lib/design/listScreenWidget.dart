@@ -39,7 +39,6 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
-      print(sps!.userEmail);
       stream = collection?.snapshots() ?? Stream.empty();
       FirebaseFirestore.instance.collection('experiments').get().then((value) {
         allExperiments =
@@ -49,6 +48,7 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
       setState(() {});
     });
   }
+
 
   void clearFilters() {
     setState(() {

@@ -27,6 +27,9 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
 
   @override
   void dispose() {
+    birds.forEach((element) {
+      element.dispose();
+    });
     super.dispose();
   }
 
@@ -79,7 +82,6 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
           });
   }
 
-  @override
   bool filterByYear(Bird e) {
     return e.nest_year == selectedYear || e.ringed_date.year == selectedYear;
   }

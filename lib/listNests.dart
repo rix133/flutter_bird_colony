@@ -34,8 +34,10 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
 
   @override
   void dispose() {
+    nests.forEach((n) {
+      n.dispose();
+    });
     super.dispose();
-
   }
 
   @override

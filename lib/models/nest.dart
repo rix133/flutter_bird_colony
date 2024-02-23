@@ -76,7 +76,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
         infoWindow: InfoWindow(
             title: id,
             onTap: () => Navigator.pushNamed(context, "/nestManage",
-                arguments: {"sihtkoht": id})),
+                arguments: {"nest_id": id})),
         consumeTapEvents: false,
         visible: visibility,
         markerId: MarkerId(id!),
