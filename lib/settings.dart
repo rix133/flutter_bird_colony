@@ -265,11 +265,14 @@ class _SettingsPageState extends State<SettingsPage> {
     return _isLoggedIn ? [
       Row(
         children: <Widget>[
-          Text('Guess next metal band for chicks:'),
+          Text('Auto set guessed metal band for chicks:'),
           Switch(
             value: sharedPreferencesService?.autoNextBand ?? false,
             onChanged: (value) {
               sharedPreferencesService?.autoNextBand = value;
+              setState(() {
+
+              });
             },
           ),
         ],
@@ -277,11 +280,14 @@ class _SettingsPageState extends State<SettingsPage> {
       SizedBox(height: 10),
     Row(
         children: <Widget>[
-          Text('Guess next metal band for parents:'),
+          Text('Auto set guessed metal band for parents:'),
           Switch(
             value: sharedPreferencesService?.autoNextBandParent ?? false,
             onChanged: (value) {
               sharedPreferencesService?.autoNextBandParent = value;
+              setState(() {
+
+              });
             },
           ),
         ],
@@ -291,7 +297,7 @@ class _SettingsPageState extends State<SettingsPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           ElevatedButton.icon(
-            onPressed:  _updateSpeciesList(),
+            onPressed:  _updateSpeciesList,
             label: Padding(child:Text('Refresh autocomplete species'), padding: EdgeInsets.all(10)),
             icon: Icon(Icons.refresh),
           ),

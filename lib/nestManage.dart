@@ -292,8 +292,8 @@ class _NestManageState extends State<NestManage> {
                     exp.nests = [];
                   }
                   exp.nests!.add(nest!.name);
-                  Navigator.pop(context);
-                  exp.save().then((v) => Navigator.popAndPushNamed(context, "/nestManage", arguments: {"nest_id": nest!.id}));
+                  exp.save().then((v) => Navigator.pushNamedAndRemoveUntil(context, "/nestManage", ModalRoute.withName('/findNest'), arguments: {"nest_id": nest!.name})
+                  );
                 }
               },
               child: Text("Add", style: TextStyle(color: Colors.red)),

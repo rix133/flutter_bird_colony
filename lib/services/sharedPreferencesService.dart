@@ -80,7 +80,8 @@ class SharedPreferencesService extends ChangeNotifier {
   void setRecentBand(String speciesEng, String value) {
 
     String bandGroup = speciesList.species.firstWhere((species) => species.english == speciesEng).getBandLetters();
-
+    print('Setting recent band for $speciesEng to $value');
+    print('Band group is $bandGroup');
     // Save the band for the species to SharedPreferences
     _sharedPreferences.setString(bandGroup, value);
     notifyListeners();

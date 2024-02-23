@@ -151,6 +151,9 @@ class Bird extends ExperimentedItem implements FirestoreItem{
 
   @override
   factory Bird.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
+    if(snapshot.data() == null) {
+      throw Exception("Document does not exist");
+    }
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     ExperimentedItem eitem = ExperimentedItem.fromJson(json);
     Bird nbird = Bird(
@@ -296,7 +299,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   }
 
   bool isChick() {
-    return ringed_as_chick == true && ringed_date.year == nest_year;
+    return (ringed_as_chick == true && ringed_date.year == nest_year) && (color_band?.isEmpty ?? true);
   }
 
   int ageInYears() {
@@ -362,7 +365,6 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       {CollectionReference<Object?>? otherItems = null,
       bool allowOverwrite = false,
       type = "parent"}) async {
-    print(toJson());
     if (band.isEmpty && name.isEmpty) {
       return UpdateResult.error(
           message: "Can't save bird without metal band and color band");
@@ -393,6 +395,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         });
       }
     }
+
+    print(type);
     throw UnimplementedError();
   }
 

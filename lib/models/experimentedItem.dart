@@ -27,12 +27,16 @@ class ExperimentedItem{
   }
 
   void dispose(){
+    //I think I can't dispose these alway because they are sometimes
+    //passed around
+    /*
     experiments?.forEach((element) {
       element.dispose();
     });
     measures.forEach((element) {
       element.dispose();
     });
+     */
   }
 
   addNonExistingExperiments(List<Experiment>? exps, String selType){

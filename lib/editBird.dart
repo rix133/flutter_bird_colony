@@ -164,6 +164,7 @@ class _EditBirdState extends State<EditBird> {
     }
     bird.measures.sort();
     _species = _speciesList.getSpecies(bird.species);
+   _recentMetalBand = sps?.getRecentMetalBand(bird.species ?? "") ?? "";
     nestnr.setValue(bird.nest);
     color_band.setValue(bird.color_band);
   }
@@ -171,10 +172,13 @@ class _EditBirdState extends State<EditBird> {
   Future<void> handleBird(Map<String, dynamic> map, List<Measure> allMeasures) async {
     bird = map["bird"] as Bird;
     if (bird.band.isNotEmpty) {
-      print(bird.band);
       await reloadBirdFromFirestore();
     } else {
       if (map["nest"] != null) {
+        if(bird.color_band?.isNotEmpty ?? false){
+          ageType = "parent";
+
+        }
         updateBirdWithNestInfo();
       } else {
         if (bird.nest_year != DateTime.now().year) {
@@ -187,9 +191,28 @@ class _EditBirdState extends State<EditBird> {
 
   Future<void> reloadBirdFromFirestore() async {
     bird = await birds.doc(bird.band).get().then(
-            (DocumentSnapshot value) => Bird.fromDocSnapshot(value));
+            (DocumentSnapshot value) => Bird.fromDocSnapshot(value)).catchError(onSnapshotError);
     ageType = bird.isChick() ? "chick" : "parent";
     bird.addNonExistingExperiments(nest.experiments, ageType);
+  }
+
+  Bird onSnapshotError(error) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text("Error getting bird from firestore: $error"),
+      backgroundColor: Colors.red,
+      duration: Duration(seconds: 5),
+    ));
+    return Bird(
+      species: nest.species,
+      ringed_date: DateTime.now(),
+      ringed_as_chick: false,
+      band: "",
+      responsible: sps?.userName ?? "unknown",
+      nest: nest.name,
+      nest_year: nest.discover_date.year,
+      measures: [Measure.note()],
+      experiments: nest.experiments,
+    );
   }
 
   void updateBirdWithNestInfo() {
@@ -242,7 +265,6 @@ class _EditBirdState extends State<EditBird> {
       bird.measures.removeWhere((element) => element.name == "age");
     }
     bird.measures.sort();
-    _recentMetalBand = sps?.getRecentMetalBand(bird.species ?? "") ?? "";
   }
 
 
@@ -289,6 +311,8 @@ class _EditBirdState extends State<EditBird> {
               band_letCntr.text = band_letCntr.text.toUpperCase();
               bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
               setState(() {
+                //close the keyboard
+                FocusScope.of(context).unfocus();
               });
             },
             decoration: InputDecoration(
@@ -321,6 +345,7 @@ class _EditBirdState extends State<EditBird> {
               band_letCntr.text = band_letCntr.text.toUpperCase();
               bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
               setState(() {
+                FocusScope.of(context).unfocus();
               });
             },
             textAlign: TextAlign.center,
@@ -368,10 +393,9 @@ class _EditBirdState extends State<EditBird> {
   }
 
   void saveOk() {
-    print("saveOk at editBird on ageType: $ageType, time: ${DateTime.now()}");
     sps?.setRecentBand(bird.species ?? '', bird.band);
     if(previousRouteName == "/nestManage" && ageType == "parent"){
-      Navigator.popAndPushNamed(context, "/nestManage", arguments: {"nest_id": nest.name});
+      Navigator.pushNamedAndRemoveUntil(context, "/nestManage", ModalRoute.withName('/findNest'), arguments: {"nest_id": nest.name});
     } else {
       Navigator.pop(context);
     }
@@ -380,7 +404,8 @@ class _EditBirdState extends State<EditBird> {
   void deleteOk() {
    if(previousRouteName == "/nestManage" && ageType == "parent"){
       //update the nest manage page
-      Navigator.popAndPushNamed(context, "/nestManage", arguments: {"nest_id": nest.name});
+     Navigator.pushNamedAndRemoveUntil(context, "/nestManage", ModalRoute.withName('/findNest'), arguments: {"nest_id": nest.name});
+
     }  else {
      Navigator.pop(context);
    }
@@ -454,7 +479,6 @@ class _EditBirdState extends State<EditBird> {
                       autoAssignNextMetalBand(_recentMetalBand);
                     });
                   }, speciesList: sps?.speciesList ?? LocalSpeciesList()),
-                  nestnr.getSimpleMeasureForm(),
                   metalBand(),
                   bird.isChick() ? Container() : SizedBox(height: 10),
                   bird.isChick() ? Container() : color_band.getSimpleMeasureForm(),
@@ -462,6 +486,7 @@ class _EditBirdState extends State<EditBird> {
                       silentOverwrite: (ageType == "parent"),
                       onSaveOK: saveOk, onDeleteOK: deleteOk),
                   SizedBox(height: 10),
+                  nestnr.getSimpleMeasureForm(),
                   //show age in years if ringed as chick
                   bird.ringed_as_chick ? getAgeRow() : Container(),
                   ...bird.measures

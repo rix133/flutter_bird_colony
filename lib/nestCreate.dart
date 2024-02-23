@@ -74,7 +74,7 @@ class _nestCreateState extends State<nestCreate> {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       _speciesList = sps!.speciesList;
       nest.responsible = sps!.userName;
-      nest.species = sps!.defaultSpecies;
+      //nest.species = sps!.defaultSpecies; //to set the default species automatically all the time
       _idStream = recent.snapshots();
       setState(() {});
     });
