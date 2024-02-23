@@ -45,7 +45,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
     });
   }
 
-  Stack getButtons(BuildContext context, String type, CollectionReference? otherItems, {bool silentOverwrite = false, Function? onSaveOK = null, Function? onDeleteOK = null}){
+  Stack getButtons(BuildContext superContext, String type, CollectionReference? otherItems, {bool silentOverwrite = false, Function? onSaveOK = null, Function? onDeleteOK = null}){
     return Stack(
       children: [
         Opacity(
@@ -118,7 +118,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                                       if(onDeleteOK != null){
                                         onDeleteOK();
                                       } else{
-                                        Navigator.pop(context);
+                                        Navigator.pop(superContext);
                                       }
                                     }
 
@@ -195,8 +195,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                                       if(onSaveOK != null){
                                         onSaveOK();
                                       } else{
-                                        print("pop");
-                                        Navigator.pop(context);
+                                        Navigator.pop(superContext);
                                       }
                                     }
                                   },
@@ -210,8 +209,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                         if(onSaveOK != null){
                           onSaveOK();
                         } else{
-                          print("pop");
-                          Navigator.pop(context);
+                          Navigator.pop(superContext);
                         }
                       }
                     },
@@ -234,7 +232,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
   @override
   Widget build(BuildContext context) {
     item = widget.getItem();
-    return getButtons(context, widget.type, widget.otherItems, silentOverwrite: widget.silentOverwrite, onSaveOK: widget.onSaveOK, onDeleteOK: widget.onDeleteOK);
+    return getButtons(widget.context, widget.type, widget.otherItems, silentOverwrite: widget.silentOverwrite, onSaveOK: widget.onSaveOK, onDeleteOK: widget.onDeleteOK);
   }
 }
 

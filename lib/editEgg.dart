@@ -57,16 +57,6 @@ class _EditEggState extends State<EditEgg> {
     });
   }
 
-  void saveOk() {
-    setState(() {
-      
-    });
-  }
-  void deleteOk() {
-    setState(() {
-      
-    });
-  }
 
    Egg getEgg() {
     //ensure UI is updated
