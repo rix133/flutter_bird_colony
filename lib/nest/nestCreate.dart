@@ -9,8 +9,8 @@ import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
-import 'models/nest.dart';
-import 'models/species.dart';
+import '../models/nest.dart';
+import '../models/species.dart';
 
 class nestCreate extends StatefulWidget {
   const nestCreate({Key? key}) : super(key: key);

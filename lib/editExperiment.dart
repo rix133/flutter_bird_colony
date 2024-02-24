@@ -7,6 +7,7 @@ import 'package:kakrarahu/models/dataSearch.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
+import 'listMeasures.dart';
 import 'models/measure.dart';
 
 class EditExperiment extends StatefulWidget {
@@ -139,6 +140,12 @@ class _EditExperimentState extends State<EditExperiment> {
     return experiment;
   }
 
+  measuresUpdated(List<Measure> measures) {
+    setState(() {
+      experiment.measures = measures;
+    });
+  }
+
   saveDeleteOk() {
     Navigator.popAndPushNamed(context, '/experiments');
   }
@@ -201,20 +208,6 @@ class _EditExperimentState extends State<EditExperiment> {
               backgroundColor: MaterialStateProperty.all(experiment.color),
             ),
           ),
-          SizedBox(height:15),
-          ElevatedButton.icon(
-            icon: Icon(Icons.add),
-            onPressed: () {
-              addMeasure();
-            },
-            label: Padding(child: Text("Add Measure"), padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15)),
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.grey),
-            ),
-          ),
-          ...experiment.measures.map((e) => e.createMeasureForm(setState)),
-          SizedBox(height:30),
-          ModifyingButtons(context:context, setState:setState, getItem:getExperiment, type:experiment.type, otherItems: otherCollection, onSaveOK: saveDeleteOk, onDeleteOK: saveDeleteOk),
 
         ],
       )),
@@ -222,6 +215,7 @@ class _EditExperimentState extends State<EditExperiment> {
   }
 
   Widget build(BuildContext context) {
+    bool spsOK = sps != null;
     return Scaffold(
         appBar: AppBar(
           title: Text("Edit Experiment", style: TextStyle(color: Colors.black)),
@@ -231,7 +225,11 @@ class _EditExperimentState extends State<EditExperiment> {
             color: Theme.of(context).scaffoldBackgroundColor,
             child: SingleChildScrollView(child:Column(
               children: [
-                sps != null ? getExperimentForm(context) : Container(),
+                spsOK ? getExperimentForm(context) : Container(),
+                SizedBox(height:15),
+                spsOK ? ListMeasures(measures: experiment.measures,onMeasuresUpdated: measuresUpdated) : Container(),
+                SizedBox(height:30),
+                spsOK ? ModifyingButtons(context:context, setState:setState, getItem:getExperiment, type:experiment.type, otherItems: otherCollection, onSaveOK: saveDeleteOk, onDeleteOK: saveDeleteOk) : Container(),
               ])),
             ));
   }

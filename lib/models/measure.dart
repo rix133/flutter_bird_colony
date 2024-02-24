@@ -2,7 +2,7 @@ import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class Measure implements Comparable<Measure>{
+class Measure implements Comparable<Measure> {
   String name = "";
   String value = "";
   bool isNumber = false;
@@ -84,10 +84,10 @@ class Measure implements Comparable<Measure>{
     this.valueCntr.text = value ?? "";
   }
 
-  Form createMeasureForm(Function setState){
+  Widget createMeasureForm(Function setState){
     TextEditingController nameCntr = TextEditingController(text: name);
     TextEditingController unitCntr = TextEditingController(text: unit);
-    return Form(
+    return SingleChildScrollView(
       child: Column(
         children: [
           TextFormField(
@@ -191,9 +191,47 @@ class Measure implements Comparable<Measure>{
 
 
 
-  ListTile getMeasureTile(){
+  ListTile getListTile(BuildContext context, onSaved, onRemoved){
     return ListTile(
       title: Text(name + ": " + value + (unit == "" ? "" : " " + unit)),
+      subtitle: Text(type + (repeated ? " (repeated)" : "")),
+      trailing: ElevatedButton.icon(
+          onPressed:  () => showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Colors.black87,
+              title: Text('Edit Measure'),
+              content: StatefulBuilder(  // Add this
+                builder: (BuildContext context, StateSetter alertDialogSetState) {
+                  return createMeasureForm(alertDialogSetState);  // Pass alertDialogSetState here
+                },
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    onRemoved(this);
+                    Navigator.pop(context);
+                  },
+                  child: Text('Remove'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    onSaved(this);
+                    Navigator.pop(context);
+                  },
+                  child: Text('Save'),
+                ),
+              ],
+            );
+          }
+          ),
+        icon: Icon(Icons.edit, color: Colors.black),
+        label: Text("Edit"),
+        style: ButtonStyle(
+          backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
+        ),
+      ),
     );
   }
 

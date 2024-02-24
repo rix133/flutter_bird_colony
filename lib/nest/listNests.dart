@@ -2,10 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/listScreenWidget.dart';
 import 'package:kakrarahu/models/species.dart';
+import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 
-import 'models/firestoreItemMixin.dart';
-import 'models/nest.dart';
-import 'design/speciesRawAutocomplete.dart';
+import '../models/firestoreItemMixin.dart';
+import '../models/nest.dart';
+
 
 class ListNests extends ListScreenWidget<Nest> {
   const ListNests({Key? key}) : super(key: key, title: 'nests with eggs', icon: Icons.home);

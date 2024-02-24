@@ -11,11 +11,12 @@ import 'package:kakrarahu/models/nest.dart';
 import 'package:kakrarahu/models/species.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
+import 'package:kakrarahu/design//modifingButtons.dart';
+import 'package:kakrarahu/models/egg.dart';
 
 import 'package:kakrarahu/models/bird.dart';
 
-import 'design/modifingButtons.dart';
-import 'models/egg.dart';
+
 
 class NestManage extends StatefulWidget {
   const NestManage({Key? key}) : super(key: key);
