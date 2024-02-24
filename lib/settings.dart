@@ -17,6 +17,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   String? _userName;
   String? _userEmail;
+  String? _userPassword;
   bool _isLoggedIn = false;
   bool _isAdmin = false;
   List<String> _allowedUsers = [];
@@ -139,7 +140,107 @@ class _SettingsPageState extends State<SettingsPage> {
     ) : Container();
   }
 
+  Future<User?> signInWithNewEmail() async {
+    if(_userEmail == null || _userPassword == null) return null;
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _userEmail!,
+          password: _userPassword!
+      );
+      userCredential.user!.updateDisplayName(_userEmail!.split('@').first);
+      return userCredential.user;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Weak password', style: TextStyle(color: Colors.red)),
+              content: Text('The password provided is too weak.', style: TextStyle(color: Colors.black),),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      } else if (e.code == 'email-already-in-use') {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Email already in use', style: TextStyle(color: Colors.red)),
+              content: Text('The account already exists for that email.', style: TextStyle(color: Colors.black),),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+      return null;
+    }
+  }
 
+  Future<User?> signInWithExistingEmail() async {
+    if(_userEmail == null || _userPassword == null) return null;
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _userEmail!,
+          password: _userPassword!
+      );
+      userCredential.user!.updateDisplayName(_userEmail!.split('@').first);
+      return userCredential.user;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('User not found', style: TextStyle(color: Colors.red)),
+              content: Text('No user found for that email.', style: TextStyle(color: Colors.black),),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      } else if (e.code == 'wrong-password') {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Wrong password', style: TextStyle(color: Colors.red)),
+              content: Text('Wrong password provided for that user.', style: TextStyle(color: Colors.black),),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+      return null;
+    }
+  }
 
   Future<User?> signInWithGoogle() async {
     try {
@@ -206,19 +307,45 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
 
-  _login() async {
-    final user = await signInWithGoogle();
+  _login(String loginType) async {
+    User? user;
+    if (loginType == 'google') {
+      user = await signInWithGoogle();
+    }
+     if(loginType == 'existingEmail') {
+       if(_userEmail != null || _userPassword != null) {
+          user = await signInWithExistingEmail();
+        }
+     }
+     if(loginType == 'newEmail') {
+       user = await signInWithNewEmail();
+     }
+
     if (user != null) {
-      FirebaseFirestore.instance.collection('users').doc(user.email).get().then((value) {
+      FirebaseFirestore.instance.collection('users').doc(user.email).get().then((value) async {
         if (value.exists) {
           _isAdmin = value['isAdmin'];
           sharedPreferencesService?.isAdmin = value['isAdmin'];
           sharedPreferencesService?.isLoggedIn = true;
-          sharedPreferencesService?.userName = user.displayName ?? '';
-          sharedPreferencesService?.userEmail = user.email ?? '';
+          sharedPreferencesService?.userName = user!.displayName ?? '';
+          sharedPreferencesService?.userEmail = user!.email ?? '';
           _setDefaultSettings();
           Navigator.popAndPushNamed(context, '/');
         } else {
+          int userCount = await FirebaseFirestore.instance.collection('users').get().then((value) => value.docs.length);
+          //if no users, the first user is admin
+          if (userCount == 0) {
+            FirebaseFirestore.instance.collection('users').doc(user!.email).set({'isAdmin': true});
+            sharedPreferencesService?.isAdmin = true;
+            sharedPreferencesService?.isLoggedIn = true;
+            sharedPreferencesService?.userName = user.displayName ?? '';
+            sharedPreferencesService?.userEmail = user.email ?? '';
+            _setDefaultSettings();
+            Navigator.popAndPushNamed(context, '/');
+          } else {
+            await _googleSignIn.signOut().then((value) =>
+                FirebaseAuth.instance.signOut());
+            reset();
           showDialog(
             context: context,
             builder: (BuildContext context) {
@@ -237,7 +364,27 @@ class _SettingsPageState extends State<SettingsPage> {
             },
           );
         }
+      }
       });
+    }
+    else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Login failed', style: TextStyle(color: Colors.red)),
+            content: Text('Login failed, please try again.', style: TextStyle(color: Colors.black),),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
@@ -260,6 +407,64 @@ class _SettingsPageState extends State<SettingsPage> {
 
 
   }
+  _openEmailLoginDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: Text('Login with email', style: TextStyle(color: Colors.black)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    style: TextStyle(color: Colors.black),
+                    decoration: InputDecoration(hintText: 'Email', hintStyle: TextStyle(color: Colors.deepPurpleAccent)),
+                    onChanged: (value) {
+                      _userEmail = value;
+                    },
+                  ),
+                  TextField(
+                    style: TextStyle(color: Colors.black),
+                    decoration: InputDecoration(hintText: 'Password', hintStyle: TextStyle(color: Colors.deepPurpleAccent)),
+                    onChanged: (value) {
+                      _userPassword = value;
+                    },
+                  ),
+                  SizedBox(height: 10),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _login('existingEmail');
+                    },
+                    label: Padding(child:Text('Login'), padding: EdgeInsets.all(10)),
+                    icon: Icon(Icons.account_circle),
+                  ),
+                  SizedBox(height: 10),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _login('newEmail');
+                    },
+                    label: Padding(child:Text('Create new account'), padding: EdgeInsets.all(10)),
+                    icon: Icon(Icons.account_circle),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('Cancel'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
 
   List<Widget> getSettings(_isLoggedIn) {
     return _isLoggedIn ? [
@@ -306,6 +511,35 @@ class _SettingsPageState extends State<SettingsPage> {
     ] : [];
   }
 
+  Widget _getLoginButtons() {
+    return !_isLoggedIn ? Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ElevatedButton.icon(
+          onPressed: () {
+            _login('google');
+          },
+          label: Padding(child:Text('Login with Google'), padding: EdgeInsets.all(10)),
+          icon: Icon(Icons.account_circle),
+        ),
+        SizedBox(height: 10),
+        ElevatedButton.icon(
+          onPressed: () {
+            _openEmailLoginDialog();
+          },
+          label: Padding(child:Text('Login with email'), padding: EdgeInsets.all(10)),
+          icon: Icon(Icons.email),
+        ),
+        SizedBox(height: 10),
+      ],
+    ) : //make logout button
+    ElevatedButton.icon(
+      onPressed: _logout,
+      label: Padding(child:Text('Logout'), padding: EdgeInsets.all(10)),
+      icon: Icon(Icons.account_circle),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -320,11 +554,7 @@ class _SettingsPageState extends State<SettingsPage> {
             if (_isLoggedIn)
               Text('Logged in as $_userName ($_userEmail)'),
             SizedBox(height: 5),
-            ElevatedButton(
-              child: Text(_isLoggedIn ? 'Logout' : 'Login with Google'),
-
-              onPressed: _isLoggedIn ? _logout : _login,
-            ),
+            _getLoginButtons(),
             SizedBox(height: 20),
             ...getSettings(_isLoggedIn),
             SizedBox(height: 20),
