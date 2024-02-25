@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/defaultSettings.dart';
+import '../models/measure.dart';
 import '../models/species.dart';
 import 'dart:convert';
 
@@ -73,6 +74,17 @@ class SharedPreferencesService extends ChangeNotifier {
 
   set userEmail(String value) {
     _sharedPreferences.setString('userEmail', value);
+    notifyListeners();
+  }
+
+  List<Measure> get defaultMeasures {
+    List<String> measureJsonList = _sharedPreferences.getStringList('defaultMeasures') ?? [];
+    return measureJsonList.map((e) => Measure.fromFormJson(jsonDecode(e))).toList();
+  }
+
+  set defaultMeasures(List<Measure> value) {
+    List<String> measureJsonList = value.map((e) => jsonEncode(e.toFormJson())).toList();
+    _sharedPreferences.setStringList('defaultMeasures', measureJsonList);
     notifyListeners();
   }
 
@@ -162,6 +174,7 @@ class SharedPreferencesService extends ChangeNotifier {
     biasedRepeatedMeasures = defaultSettings.biasedRepeatedMeasurements;
     defaultSpecies = defaultSettings.defaultSpecies.english;
     defaultLocation = defaultSettings.getCameraPosition();
+    defaultMeasures = defaultSettings.measures;
     notifyListeners();
   }
 }

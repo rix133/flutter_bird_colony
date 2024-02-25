@@ -485,7 +485,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         ringed_as_chick: json['ringed_as_chick'] ?? true,
         band: json['band'],
         measures: (json['measures'] as List<dynamic>?)
-            ?.map((e) => Measure.FromJson(e))
+            ?.map((e) => Measure.fromJson(e))
             .toList() ??
             [],
         color_band: json['color_band']);

@@ -186,7 +186,7 @@ class _nestCreateState extends State<nestCreate> {
                       Text("Accuracy: " + nest.accuracy),
                     ],
                   ),
-                  //Location nupp+täpsusinfo
+                  //Location accuracy
                   ElevatedButton.icon(
                       onPressed: () {
                         _disableButtons = true;

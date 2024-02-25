@@ -331,7 +331,7 @@ class Measure implements Comparable<Measure> {
       ],
     );
   }
-  factory Measure.FromJson(Map<String, dynamic> json) {
+  factory Measure.fromJson(Map<String, dynamic> json) {
     Measure m = Measure(
         name: json['name'],
         value: json['value'],
@@ -344,7 +344,7 @@ class Measure implements Comparable<Measure> {
     return m;
   }
 
-  factory Measure.FromFormJson(Map<String, dynamic> json) {
+  factory Measure.fromFormJson(Map<String, dynamic> json) {
     Measure m = Measure(
         name: json['name'],
         value: "",

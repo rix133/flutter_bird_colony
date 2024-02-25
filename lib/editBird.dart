@@ -127,7 +127,7 @@ class _EditBirdState extends State<EditBird> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       initializeServices();
       var map = ModalRoute.of(context)?.settings.arguments;
-      List<Measure> allMeasures = [Measure.note(), head, gland, age];
+      List<Measure> allMeasures = sps?.defaultMeasures ?? [];
       if (map != null) {
         map = map as Map<String, dynamic>;
         await handleMap(map, allMeasures);
@@ -222,11 +222,8 @@ class _EditBirdState extends State<EditBird> {
   }
 
   void addMissingMeasuresToBird(List<Measure> allMeasures) {
-    for (Measure m in allMeasures) {
-      if (!bird.measures.map((e) => e.name).contains(m.name)) {
-        bird.measures.add(m);
-      }
-    }
+   //filter for bird type measures
+    bird.addMissingMeasures(allMeasures, ageType);
   }
 
   void handleEgg(Map<String, dynamic> map) {

@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kakrarahu/models/firestoreItem.dart';
@@ -9,6 +8,7 @@ import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 
+import 'measure.dart';
 import 'species.dart';
 
 class DefaultSettings implements FirestoreItem {
@@ -19,6 +19,7 @@ class DefaultSettings implements FirestoreItem {
   bool autoNextBandParent;
   GeoPoint defaultLocation;
   bool biasedRepeatedMeasurements;
+  List<Measure> measures = [];
   DateTime? last_modified;
   String settingsType = "default";
   Species defaultSpecies;
@@ -36,6 +37,7 @@ class DefaultSettings implements FirestoreItem {
       required this.biasedRepeatedMeasurements,
       required this.settingsType,
       required this.defaultSpecies,
+      required this.measures,
       this.responsible});
 
   @override
@@ -48,6 +50,7 @@ class DefaultSettings implements FirestoreItem {
       'defaultLocation': defaultLocation,
       'biasedRepeatedMeasurements': biasedRepeatedMeasurements,
       'defaultSpecies': defaultSpecies.toJson(),
+      'measures': measures.map((e) => e.toFormJson()).toList(),
       'responsible': responsible ?? ''
     };
   }
@@ -80,6 +83,11 @@ class DefaultSettings implements FirestoreItem {
         defaultLocation: json['defaultLocation'],
         biasedRepeatedMeasurements: json['biasedRepeatedMeasurements'],
         settingsType: snapshot.id,
+        measures: json['measures'] == null
+            ? []
+            : (json['measures'] as List<dynamic>)
+                .map((e) => Measure.fromFormJson(e))
+                .toList(),
         defaultSpecies: defaultSpecies,
         responsible: json['responsible']);
   }

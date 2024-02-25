@@ -21,7 +21,7 @@ class ExperimentedItem{
     if (json['measures'] != null) {
       measures = [];
       json['measures'].forEach((v) {
-        measures.add(Measure.FromJson(v));
+        measures.add(Measure.fromJson(v));
       });
     }
   }
@@ -71,6 +71,18 @@ class ExperimentedItem{
     }
 
     measures.sort();
+  }
+
+  void addMissingMeasures(List<Measure>? allMeasures, String? type) {
+    if(allMeasures == null) return;
+    //filter for type measures
+    allMeasures = allMeasures.where((element) => element.type == type || element.type == "any").toList();
+    for (Measure m in allMeasures) {
+      //add if one with this name does not exist
+      if (measures.where((element) => element.name == m.name).isEmpty) {
+        measures.add(m);
+      }
+    }
   }
 
   Map<String, List<Measure>> getMeasuresMap(){

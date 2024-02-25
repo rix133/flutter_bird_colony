@@ -52,7 +52,7 @@ class Experiment implements FirestoreItem {
     responsible = json['responsible'];
     year = json['year'];
     measures = (json['measures'] as List<dynamic>?)
-            ?.map((e) => Measure.FromJson(e))
+            ?.map((e) => Measure.fromJson(e))
             .toList() ??
         [];
     nests = List<String>.from(json['nests'] ?? []);
@@ -431,7 +431,7 @@ Experiment experimentFromSimpleJson(Map<String, dynamic> json) {
       id: json['id'],
       name: json['name'],
       measures: (json['measures'] as List<dynamic>?)
-              ?.map((e) => Measure.FromFormJson(e))
+              ?.map((e) => Measure.fromFormJson(e))
               .toList() ??
           [],
       color: Color(int.parse(json['color'])));

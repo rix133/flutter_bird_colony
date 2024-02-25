@@ -74,7 +74,7 @@ class _NestManageState extends State<NestManage> {
           headingAccuracy: 0.0,
           speed: 0.0,
           speedAccuracy: 0.0);
-
+      nest!.addMissingMeasures(sps.defaultMeasures, "nest");
       setState(() {   });
     }
   }

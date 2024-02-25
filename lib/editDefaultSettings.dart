@@ -3,10 +3,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
+import 'package:kakrarahu/listMeasures.dart';
 import 'package:kakrarahu/models/defaultSettings.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/models/species.dart';
 import 'package:provider/provider.dart';
+
+import 'models/measure.dart';
 
 class EditDefaultSettings extends StatefulWidget {
 const EditDefaultSettings({Key? key}) : super(key: key);
@@ -28,6 +31,7 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
       defaultLocation: GeoPoint(58.766218, 23.430432),
       biasedRepeatedMeasurements: false,
       settingsType: "default",
+      measures: [Measure.note()],
       defaultSpecies: Species(english: "", latinCode: "", local: ""),
     );
 
@@ -70,6 +74,11 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
       child:SingleChildScrollView(child:Column(
         children: [
     ...defaultSettings.getDefaultSettingsForm(context, setState, sps),
+    ListMeasures(measures: defaultSettings.measures, onMeasuresUpdated: (measures) {
+      setState(() {
+        defaultSettings.measures = measures;
+      });
+    }),
     SizedBox(height: 30),
           ModifyingButtons(context: context, setState: setState, getItem: () => defaultSettings, type:type, otherItems: null)
           ]))));

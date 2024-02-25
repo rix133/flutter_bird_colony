@@ -36,7 +36,7 @@ class _EditEggState extends State<EditEgg> {
             measures: [],
             status: "New");
       }
-
+      egg.addMissingMeasures(sps?.defaultMeasures, "egg");
       setState(() {
         isInit = true;
       });
