@@ -32,14 +32,7 @@ class _EditBirdState extends State<EditBird> {
   FocusNode _lettersFocus = FocusNode();
   String? previousRouteName;
 
-  Measure age = Measure(
-    name: "age",
-    value: "",
-    isNumber: true,
-    type: "bird",
-    unit: "years",
-    modified: DateTime.now(),
-  );
+
   Measure color_band = Measure(
     name: "color ring",
     value: "",
@@ -48,23 +41,7 @@ class _EditBirdState extends State<EditBird> {
     unit: "",
     modified: DateTime.now(),
   );
-  Measure head = Measure(
-    name: "head length",
-    value: "",
-    type: "bird",
-    isNumber: true,
-    unit: "mm",
-    modified: DateTime.now(),
-  );
 
-  Measure gland = Measure(
-    name: "gland",
-    value: "",
-    type: "bird",
-    isNumber: true,
-    unit: "mm",
-    modified: DateTime.now(),
-  );
 
   Measure nestnr = Measure(
     name: "nest",
