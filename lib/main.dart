@@ -28,7 +28,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 late FirebaseApp firebaseApp;
-const bool useEmulator = true;
+const bool useEmulator = false;
 
 
 

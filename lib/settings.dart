@@ -272,7 +272,7 @@ class _SettingsPageState extends State<SettingsPage> {
       //sign out from google
       await GoogleSignIn().signOut();
       // Create a new credential
-      
+
       return null;
     }
   }
@@ -307,7 +307,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
 
-  _login(String loginType) async {
+  Future<bool> _login(String loginType) async {
     User? user;
     if (loginType == 'google') {
       user = await signInWithGoogle();
@@ -315,6 +315,7 @@ class _SettingsPageState extends State<SettingsPage> {
      if(loginType == 'existingEmail') {
        if(_userEmail != null || _userPassword != null) {
           user = await signInWithExistingEmail();
+          print(user?.email);
         }
      }
      if(loginType == 'newEmail') {
@@ -330,7 +331,9 @@ class _SettingsPageState extends State<SettingsPage> {
           sharedPreferencesService?.userName = user!.displayName ?? '';
           sharedPreferencesService?.userEmail = user!.email ?? '';
           _setDefaultSettings();
-          Navigator.popAndPushNamed(context, '/');
+          //pop all and go to homepage
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+          return true;
         } else {
           int userCount = await FirebaseFirestore.instance.collection('users').get().then((value) => value.docs.length);
           //if no users, the first user is admin
@@ -341,30 +344,32 @@ class _SettingsPageState extends State<SettingsPage> {
             sharedPreferencesService?.userName = user.displayName ?? '';
             sharedPreferencesService?.userEmail = user.email ?? '';
             _setDefaultSettings();
-            Navigator.popAndPushNamed(context, '/');
+            Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            return true;
           } else {
             await _googleSignIn.signOut().then((value) =>
                 FirebaseAuth.instance.signOut());
             reset();
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Text('Not authorized', style: TextStyle(color: Colors.red)),
-                content: Text('You are not authorized to use this app, request access from the admin(s).', style: TextStyle(color: Colors.black),),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text('Not authorized', style: TextStyle(color: Colors.red)),
+                  content: Text('You are not authorized to use this app, request access from the admin(s).', style: TextStyle(color: Colors.black),),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text('OK'),
+                    ),
+                  ],
+                );
+              },
+            );
+            return false;
+          }
         }
-      }
       });
     }
     else {
@@ -385,7 +390,9 @@ class _SettingsPageState extends State<SettingsPage> {
           );
         },
       );
+      return false;
     }
+    return false;
   }
 
   Widget _goToEditDefaultSettings() {
@@ -408,14 +415,22 @@ class _SettingsPageState extends State<SettingsPage> {
 
   }
   _openEmailLoginDialog() {
+    bool _disable = false;
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
-            return AlertDialog(
+            return Opacity(
+                opacity: _disable ? 0.5 : 1,
+                child:
+                AbsorbPointer(
+                    absorbing: _disable,
+                    child:AlertDialog(
               title: Text('Login with email', style: TextStyle(color: Colors.black)),
-              content: SingleChildScrollView(child:Column(
+              content: SingleChildScrollView(child:
+
+              Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
@@ -434,16 +449,30 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   SizedBox(height: 10),
                   ElevatedButton.icon(
-                    onPressed: () {
-                      _login('existingEmail');
+                    onPressed: () async {
+                      setState(() {
+                        _disable = true;
+                      });
+                      await _login('existingEmail');
+                      setState(() {
+                        _disable = false;
+                      });
+                      Navigator.pop(context);
                     },
                     label: Padding(child:Text('Login'), padding: EdgeInsets.all(10)),
                     icon: Icon(Icons.account_circle),
                   ),
                   SizedBox(height: 10),
                   ElevatedButton.icon(
-                    onPressed: () {
-                      _login('newEmail');
+                    onPressed: () async {
+                      setState(() {
+                        _disable = true;
+                      });
+                      await _login('newEmail');
+                      setState(() {
+                        _disable = false;
+                      });
+                      Navigator.pop(context);
                     },
                     label: Padding(child:Text('Create new account'), padding: EdgeInsets.all(10)),
                     icon: Icon(Icons.account_circle),
@@ -458,7 +487,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Text('Cancel'),
                 ),
               ],
-            );
+            )));
           },
         );
       },

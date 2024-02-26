@@ -1,20 +1,27 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 
 class AuthService {
 
   static AuthService instance = AuthService();
 
+
+
   Future<bool> isUserSignedIn() async {
-    // Trigger the authentication flow
-    final GoogleSignIn googleSignIn = GoogleSignIn();
-    GoogleSignInAccount? googleUser = await googleSignIn.signInSilently();
-    if (googleUser != null) {return true;};
-    return(await googleSignIn.isSignedIn());
+    // Check if user is signed in with email
+    final User? firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser != null) {
+      return true;
+    }
+
+    return false;
   }
+
+
+
 
   Future<bool> determinePosition(BuildContext context, bool locOK) async {
     if(locOK) return true;
