@@ -3,7 +3,8 @@ import 'package:kakrarahu/design/homepageButton.dart';
 import 'package:kakrarahu/services/authService.dart';
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key}) : super(key: key);
+  final String title;
+  MyHomePage({Key? key, required this.title}) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -21,7 +22,7 @@ class _MyHomePageState extends State<MyHomePage> {
             // User is signed in. Return the home page
             return Scaffold(
               appBar: AppBar(
-                title: Text('Kakrarahu nests'),
+                title: Text(widget.title),
                 actions: <Widget>[
                   IconButton(
                     icon: Icon(Icons.settings),
@@ -44,7 +45,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           HomePageButton(route: "/map", icon: Icons.map_outlined, label: "map", color: Colors.green[800]!),
-                          HomePageButton(route: "/mapforcreate", icon: Icons.add, label: "add new", color: Colors.purple[800]!),
+                          HomePageButton(route: "/mapforcreate", icon: Icons.add, label: "add nest", color: Colors.purple[800]!),
                         ],
                       ),
                     ),
@@ -62,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               ],
                             ),
                           ),
-                          HomePageButton(route: "/findNest", icon: Icons.search, label: "find", color: Colors.red[900]!),
+                          HomePageButton(route: "/findNest", icon: Icons.search, label: "find nest", color: Colors.red[900]!),
                         ],
                       ),
                     ),

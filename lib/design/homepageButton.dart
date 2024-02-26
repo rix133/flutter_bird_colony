@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:provider/provider.dart';
+import 'package:kakrarahu/services/authService.dart';
 
 class HomePageButton extends StatelessWidget {
   final String route;
@@ -12,60 +11,67 @@ class HomePageButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sharedPreferencesService = Provider.of<SharedPreferencesService>(context);
-    final isLoggedIn = sharedPreferencesService.isLoggedIn;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: isLoggedIn ? () {
-          Navigator.pushNamed(context, route);
-        } : () {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Text('Not Logged In', style: TextStyle(color: Colors.redAccent)),
-                content: Text('Please log in to access features.', style: TextStyle(color: Colors.black)),
-                actions: <Widget>[
-                  TextButton(
-                    child: Text('Go to Settings'),
-                    onPressed: () {
-                      // pop all and push settings
-                      Navigator.pushNamedAndRemoveUntil(context, '/settings', (Route<dynamic> route) => false);
-                    },
+    return FutureBuilder<bool>(
+      future: AuthService.instance.isUserSignedIn(),
+      builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator(); // Show loading spinner while waiting for future to complete
+        } else {
+          bool isLoggedIn = snapshot.data ?? false; // Default to false if snapshot.data is null
+          return Expanded(
+            child: GestureDetector(
+              onTap: isLoggedIn ? () {
+                Navigator.pushNamed(context, route);
+              } : () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('Not Logged In', style: TextStyle(color: Colors.redAccent)),
+                      content: Text('Please log in to access features.', style: TextStyle(color: Colors.black)),
+                      actions: <Widget>[
+                        TextButton(
+                          child: Text('Go to Settings'),
+                          onPressed: () {
+                            // pop all and push settings
+                            Navigator.pushNamedAndRemoveUntil(context, '/settings', (Route<dynamic> route) => false);
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(3.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isLoggedIn ? color : Colors.grey,
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
                   ),
-                ],
-              );
-            },
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(3.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: isLoggedIn ? color : Colors.grey,
-              borderRadius: BorderRadius.all(Radius.circular(20)),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 70,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        icon,
+                        size: 70,
+                      ),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 30,
+                        ),
+                      )
+                    ],
+                  ),
                 ),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 30,
-                  ),
-                )
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
+          );
+        }
+      },
     );
   }
 }

@@ -29,6 +29,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 late FirebaseApp firebaseApp;
 const bool useEmulator = false;
+const String appName = 'Kakrarahu nests';
 
 
 
@@ -84,7 +85,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context)=>MyHomePage(),
+        '/': (context)=>MyHomePage(title: appName),
         '/editEgg': (context)=>const EditEgg(),
         '/nestCreate':(context)=>const nestCreate(),
         //'/nestsNearby':(context)=> const NestsNearby(),
