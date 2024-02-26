@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/homepageButton.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:kakrarahu/services/authService.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key? key}) : super(key: key);
@@ -9,19 +9,12 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-Future<bool> isUserSignedIn() async {
-  // Trigger the authentication flow
-  final GoogleSignIn googleSignIn = GoogleSignIn();
-  GoogleSignInAccount? googleUser = await googleSignIn.signInSilently();
-  if (googleUser != null) {return true;};
-  return(await googleSignIn.isSignedIn());
-}
 
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: isUserSignedIn(),
+      future: AuthService.instance.isUserSignedIn(),
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.data == true) {

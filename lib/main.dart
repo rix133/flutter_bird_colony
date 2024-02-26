@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/editDefaultSettings.dart';
 import 'package:kakrarahu/editEgg.dart';
@@ -18,7 +19,6 @@ import 'services/sharedPreferencesService.dart';
 import 'design/styles.dart';
 import 'findNest.dart';
 import 'nest/nestCreate.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -26,6 +26,42 @@ import 'nestsMap.dart';
 import 'mapforcreate.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+late FirebaseApp firebaseApp;
+const bool useEmulator = true;
+
+
+
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  firebaseApp = await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform);
+  if (useEmulator) {
+    try {
+      // Firestore
+      FirebaseFirestore.instanceFor(app: firebaseApp)
+          .useFirestoreEmulator('localhost', 8080);
+      // Auth
+      FirebaseAuth.instanceFor(app: firebaseApp)
+          .useAuthEmulator('localhost', 9099);
+    } catch (e) {
+      print('Error using emulators: $e');
+    }
+  }
+
+  final sharedPreferences = await SharedPreferences.getInstance();
+
+  FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    handleAuthStateChanges(user, sharedPreferences);
+  });
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => SharedPreferencesService(sharedPreferences),
+      child: MyApp(),
+    ),
+  );
+}
 
 void handleAuthStateChanges(User? user, SharedPreferences sharedPreferences) {
   if (user == null) {
@@ -39,69 +75,11 @@ void handleAuthStateChanges(User? user, SharedPreferences sharedPreferences) {
 }
 
 
-void main() async{
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  final sharedPreferences = await SharedPreferences.getInstance();
-
-
-  FirebaseAuth.instance.authStateChanges().listen((User? user) {
-    handleAuthStateChanges(user, sharedPreferences);
-  });
-
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => SharedPreferencesService(sharedPreferences),
-      child: MyApp(),
-    ),
-  );
-}
 class MyApp extends StatelessWidget {
-
-
-  Future<Position> _determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Test if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      // Location services are not enabled don't continue
-      // accessing the position and request users of the
-      // App to enable the location services.
-      return Future.error('Location services are disabled.');
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        // Permissions are denied, next time you could try
-        // requesting permissions again (this is also where
-        // Android's shouldShowRequestPermissionRationale
-        // returned true. According to Android guidelines
-        // your App should show an explanatory UI now.
-        return Future.error('Location permissions are denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      // Permissions are denied forever, handle appropriately.
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
-    }
-
-    // When we reach here, permissions are granted and we can
-    // continue accessing the position of the device.
-    return await Geolocator.getCurrentPosition();
-  }
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    _determinePosition();
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       initialRoute: '/',

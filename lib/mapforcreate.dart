@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:kakrarahu/services/authService.dart';
 import 'dart:async';
 
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -49,12 +50,21 @@ class _MapForCreateState extends State<MapForCreate> {
   };
   final focus = FocusNode();
   Set<Marker> markers = {};
+  AuthService auth = AuthService();
+  bool _locOK = false;
 
   StreamSubscription<Position>? _positionStreamSubscription;
 
   @override
   void initState() {
     super.initState();
+    auth.isUserSignedIn().then((value) {
+      if (value == false) {
+        Navigator.pushReplacementNamed(context, "/settings");
+      }
+    });
+    auth.determinePosition(context, _locOK).then((value) => _locOK);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       camPos = sps!.defaultLocation;

@@ -53,7 +53,7 @@ class _SettingsPageState extends State<SettingsPage> {
           builder: (BuildContext context, StateSetter setState) {
             return AlertDialog(
               title: Text('New user', style: TextStyle(color: Colors.black)),
-              content: Column(
+              content: SingleChildScrollView(child:Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
@@ -69,7 +69,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       style: TextStyle(color: Colors.red),
                     ),
                 ],
-              ),
+              )),
               actions: [
                 TextButton(
                   onPressed: () {
@@ -415,7 +415,7 @@ class _SettingsPageState extends State<SettingsPage> {
           builder: (BuildContext context, StateSetter setState) {
             return AlertDialog(
               title: Text('Login with email', style: TextStyle(color: Colors.black)),
-              content: Column(
+              content: SingleChildScrollView(child:Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
@@ -449,7 +449,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     icon: Icon(Icons.account_circle),
                   ),
                 ],
-              ),
+              )),
               actions: [
                 TextButton(
                   onPressed: () {
