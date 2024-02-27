@@ -103,36 +103,6 @@ void main() async{
     );
   });
 
-  Future<WidgetTester> runLoginFlow(WidgetTester tester) async {
-    await tester.pumpWidget(myApp);
-
-    //wait for redirects to complete
-    await Future.delayed(Duration(seconds: 5));
-
-    await tester.pumpAndSettle();
-    expect(find.text('Settings'), findsOneWidget);
-
-    // Tap the 'Login with email' button
-    await tester.tap(find.text('Login with email'));
-    await tester.pumpAndSettle();
-
-    // Enter email and password
-    await tester.enterText(find.widgetWithText(TextField, 'Email'), 'testuser@example.com');
-    await tester.enterText(find.widgetWithText(TextField, 'Password'), 'testpassword123');
-    await tester.pumpAndSettle();
-
-
-    // Tap the 'Login' button
-    await tester.tap(find.byKey(Key('loginButton')));
-    await tester.pumpAndSettle();
-
-    // Wait for the login flow to complete
-    await Future.delayed(Duration(seconds: 5));
-    await tester.pumpAndSettle();
-    expect(find.text('Kakrarahu nests'), findsOneWidget);
-
-  return tester;
-  }
 
   testWidgets("FindNest: search for a nest that does not exist", (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
