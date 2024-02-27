@@ -23,7 +23,6 @@ class _FindNestState extends State<FindNest> {
 
   void searchNest(String target) async {
     DocumentSnapshot data = await nests.doc(target).get();
-    print(target);
     if (data.exists) {
       Navigator.pushNamed(
           context, "/nestManage",
