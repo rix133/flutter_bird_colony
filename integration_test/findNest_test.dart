@@ -158,6 +158,8 @@ void main() async{
 
     await tester.enterText(find.byType(TextField), '1');
     await tester.tap(find.text("Find nest"));
+
+    await tester.pump(Duration(seconds: 2));
     await tester.pumpAndSettle();
     //check if routed to nestManage
     expect(find.text('(long press for chick)'), findsOneWidget);
