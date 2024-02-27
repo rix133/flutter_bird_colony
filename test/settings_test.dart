@@ -53,5 +53,19 @@ void main() {
       expect(find.text('Manage species'), findsNothing);
     });
 
+  testWidgets('Login with email button pressed', (WidgetTester tester) async {
+    authService.isLoggedIn = false;
+    await tester.pumpWidget(myApp);
+
+    await tester.pumpAndSettle();
+
+    // Tap the login with email button
+    await tester.tap(find.text('Login with email'));
+    await tester.pumpAndSettle();
+
+    // Check if the login page is displayed
+    expect(find.text('Login'), findsOneWidget);
+  });
+
   }
 

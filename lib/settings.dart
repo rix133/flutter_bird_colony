@@ -449,6 +449,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   SizedBox(height: 10),
                   ElevatedButton.icon(
+                    key: Key('loginButton'),
                     onPressed: () async {
                       setState(() {
                         _disable = true;
