@@ -4,21 +4,35 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:kakrarahu/editBird.dart';
+import 'package:kakrarahu/editDefaultSettings.dart';
+import 'package:kakrarahu/editEgg.dart';
+import 'package:kakrarahu/editExperiment.dart';
+import 'package:kakrarahu/editSpecies.dart';
 import 'package:kakrarahu/findNest.dart';
 import 'package:kakrarahu/firebase_options.dart';
 import 'package:kakrarahu/homepage.dart';
+import 'package:kakrarahu/listBirds.dart';
+import 'package:kakrarahu/listDatas.dart';
+import 'package:kakrarahu/listExperiments.dart';
+import 'package:kakrarahu/listSpecies.dart';
+import 'package:kakrarahu/mapforcreate.dart';
 import 'package:kakrarahu/models/nest.dart';
+import 'package:kakrarahu/nest/listNests.dart';
+import 'package:kakrarahu/nest/nestCreate.dart';
 import 'package:kakrarahu/nest/nestManage.dart';
+import 'package:kakrarahu/nestsMap.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/settings.dart';
+import 'package:kakrarahu/statistics.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 //run emulator with the following command:
 //firebase emulators:start --only firestore,auth
 //to run the test, run the following command in the terminal:
-//flutter drive --driver=test_driver/integration_test.dart --target=integration_test/findNest_test.dart -d web-server
+//flutter drive --driver=test_driver/integration_test.dart --target=integration_test/mainUsageFlows_test.dart -d web-server
 
 late FirebaseApp firebaseApp;
 const String appName = 'Kakrarahu nests';
@@ -93,12 +107,26 @@ void main() async{
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         initialRoute: '/',
-        routes: {
-          '/': (context)=>MyHomePage(title: appName),
-          '/settings':(context)=> SettingsPage(),
-          '/findNest':(context)=>FindNest(),
-          '/nestManage':(context)=> NestManage(),
-        },
+          routes: {
+            '/': (context) => MyHomePage(title: appName),
+            '/editEgg': (context) => const EditEgg(),
+            '/nestCreate': (context) => const nestCreate(),
+            '/nestManage': (context) => const NestManage(),
+            '/settings': (context) => SettingsPage(),
+            '/map': (context) => NestsMap(),
+            '/statistics': (context) => Statistics(),
+            '/mapforcreate': (context) => MapForCreate(),
+            '/findNest': (context) => FindNest(),
+            '/editBird': (context) => EditBird(),
+            '/listBirds': (context) => ListBirds(),
+            '/listExperiments': (context) => ListExperiments(),
+            '/listNests': (context) => ListNests(),
+            '/editExperiment': (context) => EditExperiment(),
+            '/editDefaultSettings': (context) => EditDefaultSettings(),
+            '/listDatas': (context) => ListDatas(),
+            '/listSpecies': (context) => ListSpecies(),
+            '/editSpecies': (context) => EditSpecies(),
+          }
       ),
     );
   });
@@ -134,6 +162,20 @@ void main() async{
     //check if routed to nestManage
     expect(find.text('(long press for chick)'), findsOneWidget);
 
+
+  });
+
+  testWidgets("New nest creation", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    //find the add nest button on homepage
+    await tester.tap(find.text("add nest"));
+    await tester.pumpAndSettle();
+
+    //allow location access
+    //await tester.tap(find.text("Allow"));
+    //await tester.pumpAndSettle();
 
   });
 
