@@ -53,6 +53,7 @@ dev_dependencies:
     sdk: flutter
   mockito:
   fake_cloud_firestore:
+  firebase_auth_mocks:
   flutter_native_splash:
 
 flutter_native_splash:

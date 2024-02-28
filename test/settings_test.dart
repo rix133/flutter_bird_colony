@@ -38,6 +38,7 @@ void main() {
 
   testWidgets('User is redirected to settings page when not signed in', (WidgetTester tester) async {
     authService.isLoggedIn = false;
+    sharedPreferencesService.isAdmin = false;
     await tester.pumpWidget(myApp);
 
     await tester.pumpAndSettle();
@@ -46,6 +47,7 @@ void main() {
 
     testWidgets('Login buttons are displayed when user is not logged in', (WidgetTester tester) async {
       authService.isLoggedIn = false;
+      sharedPreferencesService.isAdmin = false;
       await tester.pumpWidget(myApp);
 
       await tester.pumpAndSettle();
@@ -62,6 +64,7 @@ void main() {
 
   testWidgets('Login with email button pressed', (WidgetTester tester) async {
     authService.isLoggedIn = false;
+    sharedPreferencesService.isAdmin = false;
     await tester.pumpWidget(myApp);
 
     await tester.pumpAndSettle();
@@ -92,6 +95,37 @@ void main() {
     expect(find.text('Edit default settings'), findsNothing);
     expect(find.text('Manage species'), findsNothing);
   });
+
+  testWidgets('Admin buttons are displayed when admin is logged in', (WidgetTester tester) async {
+    authService.isLoggedIn = true;
+    sharedPreferencesService.isAdmin = true;
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    //go to settings page
+    await tester.tap(find.byIcon(Icons.settings));
+    await tester.pumpAndSettle();
+
+    // Check if the admin buttons are displayed
+    expect(find.text('Logout'), findsOneWidget);
+    expect(find.text('Edit default settings'), findsOneWidget);
+    expect(find.text('Manage species'), findsOneWidget);
+
+    // Check if other buttons are not displayed
+    expect(find.text('Login with Google'), findsNothing);
+    expect(find.text('Login with email'), findsNothing);
+  });
+
+  testWidgets("login with email is triggered", (WidgetTester tester) async {
+    authService.isLoggedIn = false;
+    sharedPreferencesService.isAdmin = false;
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Login with email'));
+    await tester.pumpAndSettle();
+    expect(find.text('Login'), findsOneWidget);
+  });
+
 
   }
 
