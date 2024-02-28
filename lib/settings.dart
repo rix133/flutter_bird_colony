@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/defaultSettings.dart';
+import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -9,6 +10,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'models/species.dart';
 
 class SettingsPage extends StatefulWidget {
+  final FirebaseFirestore firestore;
+
+  const SettingsPage({super.key, required this.firestore});
   @override
   _SettingsPageState createState() => _SettingsPageState();
 }
@@ -27,12 +31,12 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
-    _isLoggedIn = sharedPreferencesService!.isLoggedIn;
+    AuthService.instance.isUserSignedIn().then((value) => setState(() {_isLoggedIn = value; }));
     _userName = sharedPreferencesService!.userName;
     _userEmail = sharedPreferencesService!.userEmail;
     _isAdmin = sharedPreferencesService!.isAdmin;
     if(_isAdmin) {
-      FirebaseFirestore.instance.collection('users').get().then((value) {
+      widget.firestore.collection('users').get().then((value) {
         value.docs.forEach((element) {
           _allowedUsers.add(element.id);
         });
@@ -83,7 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     if (email.isNotEmpty &&
                         !_allowedUsers.contains(email) &&
                         RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9_%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$").hasMatch(email)) {
-                      FirebaseFirestore.instance.collection('users').doc(email).set({'isAdmin': false});
+                      widget.firestore.collection('users').doc(email).set({'isAdmin': false});
                       Navigator.pop(context);
                     } else {
                       setState(() {
@@ -289,7 +293,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   }
   _setDefaultSettings() {
-    FirebaseFirestore.instance.collection('settings').doc('default').get().then((value) {
+    widget.firestore.collection('settings').doc('default').get().then((value) {
       if (value.exists) {
         DefaultSettings defaultSettings = DefaultSettings.fromDocSnapshot(value);
         sharedPreferencesService?.setFromDefaultSettings(defaultSettings);
@@ -300,7 +304,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   _updateSpeciesList() {
-    FirebaseFirestore.instance.collection('settings').doc('default').collection("species").get().then((value) {
+    widget.firestore.collection('settings').doc('default').collection("species").get().then((value) {
       List<Species> speciesList = value.docs.map((e) => Species.fromDocSnapshot(e)).toList();
       sharedPreferencesService?.speciesList = LocalSpeciesList.fromSpeciesList(speciesList);
     });
@@ -323,7 +327,7 @@ class _SettingsPageState extends State<SettingsPage> {
      }
 
     if (user != null) {
-      FirebaseFirestore.instance.collection('users').doc(user.email).get().then((value) async {
+      widget.firestore.collection('users').doc(user.email).get().then((value) async {
         if (value.exists) {
           _isAdmin = value['isAdmin'];
           sharedPreferencesService?.isAdmin = value['isAdmin'];
@@ -335,10 +339,10 @@ class _SettingsPageState extends State<SettingsPage> {
           Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
           return true;
         } else {
-          int userCount = await FirebaseFirestore.instance.collection('users').get().then((value) => value.docs.length);
+          int userCount = await widget.firestore.collection('users').get().then((value) => value.docs.length);
           //if no users, the first user is admin
           if (userCount == 0) {
-            FirebaseFirestore.instance.collection('users').doc(user!.email).set({'isAdmin': true});
+            widget.firestore.collection('users').doc(user!.email).set({'isAdmin': true});
             sharedPreferencesService?.isAdmin = true;
             sharedPreferencesService?.isLoggedIn = true;
             sharedPreferencesService?.userName = user.displayName ?? '';

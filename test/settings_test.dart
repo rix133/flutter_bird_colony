@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kakrarahu/homepage.dart';
@@ -14,16 +16,21 @@ void main() {
   final authService = MockAuthService();
   final sharedPreferencesService = MockSharedPreferencesService();
   late Widget myApp;
+  final adminEmail = "admin@example.com";
+  final userEmail = "test@example.com";
 
-  setUpAll(() {
+  setUpAll(() async {
     AuthService.instance = authService;
+    FirebaseFirestore firestore = FakeFirebaseFirestore();
+    await firestore.collection('users').doc(adminEmail).set({'isAdmin': true});
+    await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
     myApp = ChangeNotifierProvider<SharedPreferencesService>(
       create: (_) => sharedPreferencesService,
       child: MaterialApp(
           initialRoute: '/',
           routes: {
             '/': (context) => MyHomePage(title: "Nest app"),
-            '/settings': (context) => SettingsPage(),
+            '/settings': (context) => SettingsPage(firestore: firestore),
           }
       ),
     );
@@ -65,6 +72,25 @@ void main() {
 
     // Check if the login page is displayed
     expect(find.text('Login'), findsOneWidget);
+  });
+
+  testWidgets('Log out button is displayed when user is logged in', (WidgetTester tester) async {
+    authService.isLoggedIn = true;
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    //go to settings page
+    await tester.tap(find.byIcon(Icons.settings));
+    await tester.pumpAndSettle();
+
+    // Check if the logout button is displayed
+    expect(find.text('Logout'), findsOneWidget);
+
+    // Check if other buttons are not displayed
+    expect(find.text('Login with Google'), findsNothing);
+    expect(find.text('Login with email'), findsNothing);
+    expect(find.text('Edit default settings'), findsNothing);
+    expect(find.text('Manage species'), findsNothing);
   });
 
   }

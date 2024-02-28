@@ -22,7 +22,6 @@ class AuthService {
 
 
 
-
   Future<bool> determinePosition(BuildContext context, bool locOK) async {
     if(locOK) return true;
     bool serviceEnabled;

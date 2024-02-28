@@ -102,6 +102,7 @@ void main() async{
 
     // Set up the app
     AuthService.instance = authService;
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
     myApp = ChangeNotifierProvider<SharedPreferencesService>(
       create: (_) => sharedPreferencesService,
       child: MaterialApp(
@@ -112,7 +113,7 @@ void main() async{
             '/editEgg': (context) => const EditEgg(),
             '/nestCreate': (context) => const nestCreate(),
             '/nestManage': (context) => const NestManage(),
-            '/settings': (context) => SettingsPage(),
+            '/settings': (context) => SettingsPage(firestore: firestore),
             '/map': (context) => NestsMap(),
             '/statistics': (context) => Statistics(),
             '/mapforcreate': (context) => MapForCreate(),

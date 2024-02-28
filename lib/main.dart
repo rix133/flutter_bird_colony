@@ -28,7 +28,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 late FirebaseApp firebaseApp;
-const bool useEmulator = true;
+const bool useEmulator = false; // Set to true to use emulators not the real Production Firestore
 const String appName = 'Kakrarahu nests';
 
 
@@ -51,6 +51,7 @@ void main() async{
   }
 
   final sharedPreferences = await SharedPreferences.getInstance();
+  final firestore = FirebaseFirestore.instance;
 
   FirebaseAuth.instance.authStateChanges().listen((User? user) {
     handleAuthStateChanges(user, sharedPreferences);
@@ -59,7 +60,7 @@ void main() async{
   runApp(
     ChangeNotifierProvider(
       create: (_) => SharedPreferencesService(sharedPreferences),
-      child: MyApp(),
+      child: MyApp(firestore: firestore),
     ),
   );
 }
@@ -77,7 +78,8 @@ void handleAuthStateChanges(User? user, SharedPreferences sharedPreferences) {
 
 
 class MyApp extends StatelessWidget {
-
+  final FirebaseFirestore firestore;
+  MyApp({Key? key, required this.firestore}) : super(key: key);
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -90,7 +92,7 @@ class MyApp extends StatelessWidget {
         '/nestCreate':(context)=>const nestCreate(),
         //'/nestsNearby':(context)=> const NestsNearby(),
         '/nestManage':(context)=> const NestManage(),
-        '/settings':(context)=>  SettingsPage(),
+        '/settings':(context)=>  SettingsPage(firestore: firestore),
         '/map':(context)=> NestsMap(),
         '/statistics':(context)=> Statistics(),
         '/mapforcreate':(context)=>MapForCreate(),

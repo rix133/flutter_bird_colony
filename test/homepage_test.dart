@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kakrarahu/design/homepageButton.dart';
@@ -19,13 +21,14 @@ void main() {
 
   setUpAll(() {
     AuthService.instance = authService;
+    FirebaseFirestore firestore = FakeFirebaseFirestore();
     myApp = ChangeNotifierProvider<SharedPreferencesService>(
       create: (_) => sharedPreferencesService,
       child: MaterialApp(
           initialRoute: '/',
           routes: {
             '/': (context) => MyHomePage(title: "Kakrarahu nests"),
-            '/settings': (context) => SettingsPage(),
+            '/settings': (context) => SettingsPage(firestore: firestore),
           }
       ),
     );
