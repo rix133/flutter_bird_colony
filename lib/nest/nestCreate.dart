@@ -12,14 +12,14 @@ import 'package:provider/provider.dart';
 import '../models/nest.dart';
 import '../models/species.dart';
 
-class nestCreate extends StatefulWidget {
-  const nestCreate({Key? key}) : super(key: key);
+class NestCreate extends StatefulWidget {
+  const NestCreate({Key? key}) : super(key: key);
 
   @override
-  _nestCreateState createState() => _nestCreateState();
+  _NestCreateState createState() => _NestCreateState();
 }
 
-class _nestCreateState extends State<nestCreate> {
+class _NestCreateState extends State<NestCreate> {
   CollectionReference nests = FirebaseFirestore.instance
       .collection(DateTime(DateTime.now().year).toString());
   DocumentReference recent = FirebaseFirestore.instance.collection('recent').doc("nest");
@@ -70,6 +70,7 @@ class _nestCreateState extends State<nestCreate> {
       var data = ModalRoute.of(context)?.settings.arguments;
       if (data != null) {
         nest = data as Nest;
+        print(nest.species);
       }
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       _speciesList = sps!.speciesList;

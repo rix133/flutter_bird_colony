@@ -1,3 +1,4 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kakrarahu/models/species.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:mockito/mockito.dart';
@@ -14,6 +15,13 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
 
   @override
   String get userEmail => 'test@example.com';
+
+  @override
+  CameraPosition get defaultLocation => CameraPosition(
+    target: LatLng(58.766218, 23.430432),
+    bearing: 270,
+    zoom: 16.35,
+  );
 
 
 

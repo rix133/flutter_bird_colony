@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kakrarahu/services/authService.dart';
+import 'package:kakrarahu/services/locationService.dart';
 import 'dart:async';
 
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -13,7 +14,8 @@ import 'models/nest.dart';
 
 
 class MapForCreate extends StatefulWidget {
-  const MapForCreate({Key? key}) : super(key: key);
+  final FirebaseFirestore firestore;
+  const MapForCreate({Key? key, required this.firestore}) : super(key: key);
 
   @override
   State<MapForCreate> createState() => _MapForCreateState();
@@ -28,7 +30,7 @@ class _MapForCreateState extends State<MapForCreate> {
 
   SharedPreferencesService? sps;
 
- DocumentReference<Map<String, dynamic>> lastId = FirebaseFirestore.instance.collection('recent').doc("nest");
+ late DocumentReference<Map<String, dynamic>> lastId;
 
   Nest nest = Nest(
     coordinates: GeoPoint(0, 0),
@@ -40,7 +42,7 @@ class _MapForCreateState extends State<MapForCreate> {
   );
 
 
-  late GoogleMapController _googleMapController;
+  GoogleMapController? _googleMapController;
   var today = DateTime.now().day;
 
   Set<Circle> circle = {
@@ -50,10 +52,11 @@ class _MapForCreateState extends State<MapForCreate> {
   };
   final focus = FocusNode();
   Set<Marker> markers = {};
-  AuthService auth = AuthService();
   bool _locOK = false;
 
   StreamSubscription<Position>? _positionStreamSubscription;
+  LocationService location = LocationService.instance;
+  AuthService auth = AuthService.instance;
 
   @override
   void initState() {
@@ -63,16 +66,13 @@ class _MapForCreateState extends State<MapForCreate> {
         Navigator.pushReplacementNamed(context, "/settings");
       }
     });
-    auth.determinePosition(context, _locOK).then((value) => _locOK);
+    location.determinePosition(context, _locOK).then((value) => _locOK);
+    lastId = widget.firestore.collection('recent').doc("nest");
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       camPos = sps!.defaultLocation;
-      _positionStreamSubscription = Geolocator.getPositionStream(
-          locationSettings: LocationSettings(
-            accuracy: LocationAccuracy.best,
-          )
-      ).listen((Position position) {
+      _positionStreamSubscription = location.getPositionStream().listen((Position position) {
         if (mounted) {
           nest.accuracy = position.accuracy.toStringAsFixed(2) + "m";
           nest.coordinates = GeoPoint(position.latitude, position.longitude);
@@ -86,7 +86,7 @@ class _MapForCreateState extends State<MapForCreate> {
               )
             };
           });
-          _googleMapController.animateCamera(
+          _googleMapController?.animateCamera(
               CameraUpdate.newCameraPosition(CameraPosition(
                 target: LatLng(position.latitude, position.longitude),
                 bearing: 270,
@@ -96,11 +96,7 @@ class _MapForCreateState extends State<MapForCreate> {
         }
       });
     });
-    _positionStreamSubscription = Geolocator.getPositionStream(
-        locationSettings: LocationSettings(
-          accuracy: LocationAccuracy.best,
-        )
-    ).listen((Position position) {
+    _positionStreamSubscription = location.getPositionStream().listen((Position position) {
       if (mounted) {
         setState(() {
           circle = {
@@ -112,7 +108,7 @@ class _MapForCreateState extends State<MapForCreate> {
             )
           };
         });
-        _googleMapController.animateCamera(
+        _googleMapController?.animateCamera(
             CameraUpdate.newCameraPosition(CameraPosition(
               target: LatLng(position.latitude, position.longitude),
               bearing: 270,
@@ -126,7 +122,7 @@ class _MapForCreateState extends State<MapForCreate> {
   @override
   void dispose() {
     _positionStreamSubscription?.cancel();
-    _googleMapController.dispose();
+    _googleMapController?.dispose();
     focus.dispose();
     super.dispose();
   }
@@ -160,10 +156,10 @@ class _MapForCreateState extends State<MapForCreate> {
           FloatingActionButton(
             heroTag: "RefreshLocation",
             onPressed: ()  {
-              Geolocator.getCurrentPosition(
+                 location.getCurrentPosition(
                   desiredAccuracy: LocationAccuracy.best)
                   .then((value) {
-                _googleMapController.animateCamera(
+                _googleMapController?.animateCamera(
                     CameraUpdate.newCameraPosition(CameraPosition(
                       target: LatLng(value.latitude, value.longitude),
                       bearing: 270,
@@ -189,8 +185,7 @@ class _MapForCreateState extends State<MapForCreate> {
           FloatingActionButton(
             heroTag: "zoomIn",
             onPressed: () {
-              _googleMapController
-                  .animateCamera(CameraUpdate.newCameraPosition(camPos));
+              _googleMapController?.animateCamera(CameraUpdate.newCameraPosition(camPos));
               focus.unfocus();
             },
             child: const Icon(Icons.zoom_out_map),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kakrarahu/services/authService.dart';
+import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
@@ -43,6 +44,7 @@ class _NestsMapState extends State<NestsMap> {
   ValueNotifier<Set<Marker>> markersToShow = ValueNotifier<Set<Marker>>({});
   Set <Nest> nests = {};
   Query? query;
+  LocationService location = LocationService.instance;
   AuthService auth = AuthService.instance;
 
   @override
@@ -54,7 +56,7 @@ class _NestsMapState extends State<NestsMap> {
           Navigator.pushReplacementNamed(context, "/settings");
         }
       });
-      auth.determinePosition(context, _locOK).then((value) => _locOK);
+      location.determinePosition(context, _locOK).then((value) => _locOK);
       var map = ModalRoute.of(context)!.settings.arguments;
       if(map != null){
         map = map as Map<String, dynamic>;
