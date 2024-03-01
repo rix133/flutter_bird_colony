@@ -15,7 +15,8 @@ import 'models/egg.dart';
 import 'models/species.dart';
 
 class EditBird extends StatefulWidget {
-  const EditBird({Key? key}) : super(key: key);
+  final FirebaseFirestore firestore;
+  const EditBird({Key? key, required this.firestore})  : super(key: key);
 
   @override
   State<EditBird> createState() => _EditBirdState();
@@ -78,9 +79,8 @@ class _EditBirdState extends State<EditBird> {
     measures: [],
   );
 
-  CollectionReference nests =
-      FirebaseFirestore.instance.collection(DateTime.now().year.toString());
-  CollectionReference birds = FirebaseFirestore.instance.collection("Birds");
+  CollectionReference? nests;
+  CollectionReference? birds;
 
  @override
  dispose() {
@@ -94,6 +94,8 @@ class _EditBirdState extends State<EditBird> {
   @override
   void initState() {
     super.initState();
+    nests =   widget.firestore.collection(DateTime.now().year.toString());
+    birds = widget.firestore.collection("Birds");
     _lettersFocus.addListener(() {
       if (!_lettersFocus.hasFocus) {
         band_letCntr.text = band_letCntr.text.toUpperCase();
@@ -167,7 +169,8 @@ class _EditBirdState extends State<EditBird> {
   }
 
   Future<void> reloadBirdFromFirestore() async {
-    bird = await birds.doc(bird.band).get().then(
+   if(birds == null) return;
+    bird = await birds!.doc(bird.band).get().then(
             (DocumentSnapshot value) => Bird.fromDocSnapshot(value)).catchError(onSnapshotError);
     ageType = bird.isChick() ? "chick" : "parent";
     bird.addNonExistingExperiments(nest.experiments, ageType);
@@ -243,6 +246,7 @@ class _EditBirdState extends State<EditBird> {
 
 
   Row metalBand() {
+   List<String> recentBand = guessNextMetalBand(_recentMetalBand);
     if(bird.id != null){
       //give unmodifiable row with the band if the bird is from firestore
       int lastLetter = bird.band.lastIndexOf(RegExp(r'[A-Z]'));
@@ -344,15 +348,15 @@ class _EditBirdState extends State<EditBird> {
         //add button to assign next metal band
         SizedBox(width: 10),
         ElevatedButton(
-          onPressed: () {
+          onPressed: _recentMetalBand.isNotEmpty ? () {
             setState(() {
               assignNextMetalBand(_recentMetalBand);
             });
-          },
+          } : null,
           child: Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 1.0, vertical: 16.0),
-            child: Text("Guess"),
+            child:  _recentMetalBand.isNotEmpty ? Text(recentBand.join()) : Text("?????"),
           ),
         ),
       ],
@@ -405,19 +409,33 @@ class _EditBirdState extends State<EditBird> {
     return bird;
   }
 
+ List<String> guessNextMetalBand(String recentBand) {
+   String letters = "";
+   String numbers = "";
+   if (recentBand.isNotEmpty) {
+     int lastLetter = recentBand.lastIndexOf(RegExp(r'[A-Z]'));
+     if (lastLetter != -1) {
+       letters = recentBand.substring(0, lastLetter + 1);
+       int? nr = int.tryParse(recentBand.substring(lastLetter + 1));
+       numbers = nr != null ? (nr + 1).toString() : "";
+     } else {
+       letters = '';
+       int? nr = int.tryParse(recentBand.substring(lastLetter + 1));
+       numbers = nr != null ? (nr + 1).toString() : "";
+     }
+     return [letters, numbers];
+   } else{
+     return [letters, numbers];
+   }
+  }
+
+
 
   assignNextMetalBand(String recentBand) {
+   List<String> nextBand = guessNextMetalBand(recentBand);
     if (recentBand.isNotEmpty) {
-      int lastLetter = recentBand.lastIndexOf(RegExp(r'[A-Z]'));
-      if (lastLetter != -1) {
-        band_letCntr.text = recentBand.substring(0, lastLetter + 1);
-        int? nr = int.tryParse(recentBand.substring(lastLetter + 1));
-        band_numCntr.text = nr != null ? (nr + 1).toString() : "";
-      } else {
-        band_letCntr.text = '';
-        int? nr = int.tryParse(recentBand.substring(lastLetter + 1));
-        band_numCntr.text = nr != null ? (nr + 1).toString() : "";
-      }
+      band_letCntr.text = nextBand[0];
+      band_numCntr.text =nextBand[1];
       bird.band = (band_letCntr.text + band_numCntr.text).toUpperCase();
     }
   }
@@ -456,7 +474,7 @@ class _EditBirdState extends State<EditBird> {
                   metalBand(),
                   bird.isChick() ? Container() : SizedBox(height: 10),
                   bird.isChick() ? Container() : color_band.getSimpleMeasureForm(),
-                  ModifyingButtons(context:context,setState:setState, getItem:getBird, type:ageType, otherItems:nests,
+                  ModifyingButtons(firestore: widget.firestore, context:context,setState:setState, getItem:getBird, type:ageType, otherItems:nests,
                       silentOverwrite: (ageType == "parent"),
                       onSaveOK: saveOk, onDeleteOK: deleteOk),
                   SizedBox(height: 10),

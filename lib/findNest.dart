@@ -5,14 +5,15 @@ import 'package:kakrarahu/design/buildForm.dart';
 import 'models/nest.dart';
 
 class FindNest extends StatefulWidget {
-  const FindNest({Key? key}) : super(key: key);
+  final FirebaseFirestore firestore;
+  const FindNest({Key? key, required this.firestore})  : super(key: key);
 
   @override
   State<FindNest> createState() => _FindNestState();
 }
 
 class _FindNestState extends State<FindNest> {
-  CollectionReference nests = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
+  CollectionReference? nests;
   bool enableBtn = true;
   void submitForm(){
     setState(() {
@@ -21,8 +22,31 @@ class _FindNestState extends State<FindNest> {
     searchNest(nestID.text);
   }
 
+  @override
+  void initState() {
+    super.initState();
+    nests = widget.firestore.collection(DateTime.now().year.toString());
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   void searchNest(String target) async {
-    DocumentSnapshot data = await nests.doc(target).get();
+    if(target.isEmpty){
+      setState(() {
+        enableBtn = true;
+      });
+      return;
+    }
+    if(nests == null){
+      setState(() {
+        enableBtn = true;
+      });
+      return;
+    }
+    DocumentSnapshot data = await nests!.doc(target).get();
     if (data.exists) {
       Navigator.pushNamed(
           context, "/nestManage",

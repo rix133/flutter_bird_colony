@@ -167,7 +167,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
   }
 
   @override
-  Future<UpdateResult> save({CollectionReference<Object?>? otherItems = null,
+  Future<UpdateResult> save(FirebaseFirestore firestore,{CollectionReference<Object?>? otherItems = null,
     bool allowOverwrite = false,
     type = "default"}) async {
     if (name.isEmpty) {
@@ -177,7 +177,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
     measures.removeWhere((element) => element.value.isEmpty);
 
     CollectionReference nests =
-    FirebaseFirestore.instance.collection(DateTime
+    firestore.collection(DateTime
         .now()
         .year
         .toString());
@@ -189,7 +189,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
     }
 
   @override
-  Future<UpdateResult> delete({CollectionReference<Object?>? otherItems = null,
+  Future<UpdateResult> delete(FirebaseFirestore firestore,{CollectionReference<Object?>? otherItems = null,
     bool soft = true,
     type = "default"}) async {
     // delete from the bird as well if asked for
@@ -203,7 +203,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
       });
     }
     CollectionReference items =
-    FirebaseFirestore.instance.collection(DateTime.now().year.toString());
+    firestore.collection(DateTime.now().year.toString());
     if (!soft) {
       return await items
           .doc(id)
@@ -211,7 +211,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
           .then((value) => UpdateResult.deleteOK(item: this))
           .catchError((error) => UpdateResult.error(message: error.toString()));
     } else {
-      CollectionReference deletedCollection = FirebaseFirestore.instance
+      CollectionReference deletedCollection = firestore
           .collection("deletedItems")
           .doc("Nests_" + DateTime.now().year.toString())
           .collection("deleted");
@@ -361,18 +361,18 @@ TextCellValue('species'),
     return "";
   }
 
-  Future<int> eggCount() async {
-    List<Egg> eggs = await this.eggs();
+  Future<int> eggCount(FirebaseFirestore firestore) async {
+    List<Egg> eggs = await this.eggs(firestore);
     return eggs.where((egg) => egg.type() == 'egg').length;
   }
 
-  Future<List<Egg>> eggs() {
+  Future<List<Egg>> eggs(FirebaseFirestore firestore) {
     if (id == null) {
       return Future.value([]);
     }
     String year = discover_date.year.toString();
     CollectionReference eggs =
-    FirebaseFirestore.instance.collection(year).doc(id).collection("egg");
+    firestore.collection(year).doc(id).collection("egg");
     return eggs.get().then((value) => value.docs.map((e) => Egg.fromDocSnapshot(e)).toList());
 
   }

@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import 'design/listScreenWidget.dart';
 
 class ListSpecies extends ListScreenWidget<Species> {
-  const ListSpecies({Key? key}) : super(key: key, title: 'species', icon: Icons.nat_rounded);
+  const ListSpecies({Key? key, required FirebaseFirestore firestore})  : super(key: key, title: 'species', icon: Icons.nat_rounded, firestore: firestore);
 
   @override
   ListScreenWidgetState<Species> createState() => _ListSpeciesState();
@@ -24,7 +24,7 @@ class _ListSpeciesState extends ListScreenWidgetState<Species> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
-      collection = FirebaseFirestore.instance
+      collection = widget.firestore
           .collection('settings')
           .doc(sps?.settingsType)
           .collection("species");

@@ -117,7 +117,7 @@ class Species implements FirestoreItem {
   DateTime get created_date => last_modified ?? DateTime(1900);
 
   @override
-  Future<UpdateResult> delete(
+  Future<UpdateResult> delete(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
       bool soft = true,
       String type = "default"}) {
@@ -126,11 +126,11 @@ class Species implements FirestoreItem {
     }
     return (FSItemMixin().deleteFiresoreItem(
         this,
-        FirebaseFirestore.instance
+        firestore
             .collection('settings')
             .doc(type)
             .collection("species"),
-        FirebaseFirestore.instance
+        firestore
             .collection('settings')
             .doc(type)
             .collection("deletedSpecies")));
@@ -140,12 +140,12 @@ class Species implements FirestoreItem {
   String get name => local.isEmpty ? english : local;
 
   @override
-  Future<UpdateResult> save(
+  Future<UpdateResult> save(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
       bool allowOverwrite = false,
       String type = "default"}) {
     if (id == null) {
-      return (FirebaseFirestore.instance
+      return (firestore
           .collection('settings')
           .doc(type)
           .collection("species")
@@ -153,7 +153,7 @@ class Species implements FirestoreItem {
           .then((value) => UpdateResult.saveOK(item: this))
           .catchError((error) => UpdateResult.error(message: error)));
     }
-    return (FirebaseFirestore.instance
+    return (firestore
         .collection('settings')
         .doc(type)
         .collection("species")

@@ -238,10 +238,10 @@ class Experiment implements FirestoreItem {
     Navigator.pushNamed(context, "/map", arguments: {'nests_ids': nests});
   }
 
-  Future<UpdateResult> _updateNestCollection(List<String>? items,
+  Future<UpdateResult> _updateNestCollection(FirebaseFirestore firestore, List<String>? items,
       {bool delete = false}) async {
     CollectionReference nestCollection =
-        FirebaseFirestore.instance.collection(year.toString());
+        firestore.collection(year.toString());
     if (items != null) {
       Nest n;
       for (String i in items) {
@@ -267,10 +267,10 @@ class Experiment implements FirestoreItem {
     return UpdateResult.saveOK(item: this);
   }
 
-  Future<UpdateResult> _updateBirdsCollection(List<String>? items,
+  Future<UpdateResult> _updateBirdsCollection(FirebaseFirestore firestore, List<String>? items,
       {bool delete = false}) async {
     CollectionReference birdCollection =
-        FirebaseFirestore.instance.collection(year.toString());
+        firestore.collection(year.toString());
     if (items != null) {
       Bird b;
       for (String i in items) {
@@ -297,15 +297,15 @@ class Experiment implements FirestoreItem {
   }
 
   @override
-  Future<UpdateResult> delete(
+  Future<UpdateResult> delete(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
       bool soft = true,
       String type = "default"}) {
     CollectionReference expCollection =
-        FirebaseFirestore.instance.collection('experiments');
+        firestore.collection('experiments');
 
-    _updateNestCollection(previousNests, delete: true);
-    _updateBirdsCollection(previousBirds, delete: true);
+    _updateNestCollection(firestore, previousNests, delete: true);
+    _updateBirdsCollection(firestore, previousBirds, delete: true);
 
     if (!soft) {
       return expCollection
@@ -314,7 +314,7 @@ class Experiment implements FirestoreItem {
           .then((value) => UpdateResult.deleteOK(item: this))
           .catchError((error) => UpdateResult.error(message: error.toString()));
     } else {
-      CollectionReference deletedCollection = FirebaseFirestore.instance
+      CollectionReference deletedCollection = firestore
           .collection("deletedItems")
           .doc("experiments")
           .collection("deleted");
@@ -325,12 +325,12 @@ class Experiment implements FirestoreItem {
   }
 
   @override
-  Future<UpdateResult> save(
+  Future<UpdateResult> save(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
       bool allowOverwrite = false,
       String type = "default"}) {
     CollectionReference expCollection =
-        FirebaseFirestore.instance.collection('experiments');
+        firestore.collection('experiments');
 
     last_modified = DateTime.now();
     //remove duplicate nests
@@ -352,10 +352,10 @@ class Experiment implements FirestoreItem {
     }
 
     //save the experiment data to nests or birds
-    return _updateNestCollection(nests, delete: false)
-        .then((v) => _updateNestCollection(deletedNests, delete: true))
-        .then((v) => _updateBirdsCollection(birds, delete: false))
-        .then((v) => _updateBirdsCollection(deletedBirds, delete: true))
+    return _updateNestCollection(firestore, nests, delete: false)
+        .then((v) => _updateNestCollection(firestore, deletedNests, delete: true))
+        .then((v) => _updateBirdsCollection(firestore, birds, delete: false))
+        .then((v) => _updateBirdsCollection(firestore, deletedBirds, delete: true))
         .then((v) => expCollection
             .doc(id)
             .set(toJson())

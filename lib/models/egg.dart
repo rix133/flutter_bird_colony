@@ -54,13 +54,13 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   }
 
   @override
-  Future <UpdateResult> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, type = "default"}) async {
+  Future <UpdateResult> save(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, type = "default"}) async {
     String? nestId = getNest();
     if(nestId == null){
       return UpdateResult.error(message: "No nest found");
     } else{
       last_modified = DateTime.now();
-      CollectionReference<Object?> eggCollection =  FirebaseFirestore.instance.collection(discover_date.year.toString()).doc(nestId).collection("egg");
+      CollectionReference<Object?> eggCollection =  firestore.collection(discover_date.year.toString()).doc(nestId).collection("egg");
       if(id == null){
         id = nestId + " egg " + (await eggCollection.get()).docs.length.toString();
         eggCollection.doc(id).set(toJson()).then((value) => FSItemMixin().saveChangeLog(this, eggCollection)).catchError((e) => UpdateResult.error(message: e.toString()));
@@ -72,12 +72,12 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   }
 
   @override
-  Future <UpdateResult> delete({CollectionReference<Object?>? otherItems = null, bool soft = true, type = "default"}) async {
+  Future <UpdateResult> delete(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool soft = true, type = "default"}) async {
     String? nestId = getNest();
     if(nestId == null){
       return UpdateResult.error(message: "No nest found");
     } else{
-      CollectionReference<Object?> eggCollection =  FirebaseFirestore.instance.collection(discover_date.year.toString()).doc(nestId).collection("egg");
+      CollectionReference<Object?> eggCollection =  firestore.collection(discover_date.year.toString()).doc(nestId).collection("egg");
       if(id != null){
         return eggCollection.doc(id).delete().then((value) => UpdateResult.deleteOK(item:this)).catchError((e) => UpdateResult.error(message: e.toString()));
       } else {

@@ -1,4 +1,5 @@
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -8,7 +9,8 @@ import 'models/egg.dart';
 import 'models/measure.dart';
 
 class EditEgg extends StatefulWidget {
-  const EditEgg({Key? key}) : super(key: key);
+  final FirebaseFirestore firestore;
+  const EditEgg({Key? key, required this.firestore})  : super(key: key);
 
   @override
   State<EditEgg> createState() => _EditEggState();
@@ -182,7 +184,7 @@ class _EditEggState extends State<EditEgg> {
                         ...egg.measures.map((e) => e.getMeasureForm(addMeasure, sps?.biasedRepeatedMeasures ?? false)).toList(),
                         //...egg.getEggForm(context, sps!.userName, _focusNode,  setState, addMeasure),
                         SizedBox(height: 20),
-                        ModifyingButtons(context:context,setState:setState, getItem:getEgg, type:"egg", otherItems: null, silentOverwrite: true),
+                        ModifyingButtons(firestore: widget.firestore, context:context,setState:setState, getItem:getEgg, type:"egg", otherItems: null, silentOverwrite: true),
                       ],
                     ),
                   )))

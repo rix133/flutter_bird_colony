@@ -19,9 +19,9 @@ abstract class FirestoreItem{
     throw UnimplementedError('fromDocSnapshot() must be implemented in subclasses');
   }
 
-  Future <UpdateResult> save({CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"});
+  Future <UpdateResult> save(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"});
 
-  Future <UpdateResult> delete({CollectionReference<Object?>? otherItems = null, bool soft = true, String type = "default"});
+  Future <UpdateResult> delete(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool soft = true, String type = "default"});
 
   //get a row in an excel table
   Future<List<List<CellValue>>> toExcelRows();

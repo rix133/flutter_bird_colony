@@ -12,7 +12,8 @@ import 'package:provider/provider.dart';
 import 'models/nest.dart';
 
 class NestsMap extends StatefulWidget {
-  const NestsMap({Key? key}) : super(key: key);
+  final FirebaseFirestore firestore;
+  const NestsMap({Key? key, required this.firestore})  : super(key: key);
 
   @override
   State<NestsMap> createState() => _NestsMapState();
@@ -32,8 +33,7 @@ class _NestsMapState extends State<NestsMap> {
   String visible = "";
   SharedPreferencesService? sps;
 
-  CollectionReference pesa =
-      FirebaseFirestore.instance.collection(DateTime.now().year.toString());
+  CollectionReference? nestsCollection;
   Set<Circle> circle = {
     Circle(
       circleId: CircleId("myLocEmpty"),
@@ -50,6 +50,7 @@ class _NestsMapState extends State<NestsMap> {
   @override
   initState() {
     super.initState();
+    nestsCollection =  widget.firestore.collection(DateTime.now().year.toString());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       auth.isUserSignedIn().then((value) {
         if (value == false) {
@@ -60,13 +61,15 @@ class _NestsMapState extends State<NestsMap> {
       var map = ModalRoute.of(context)!.settings.arguments;
       if(map != null){
         map = map as Map<String, dynamic>;
-        if(map["nest_ids"] != null){
-          print(map["nest_ids"]);
-          query = pesa.where(FieldPath.documentId, whereIn: map["nest_ids"]);
+        if(map["nest_ids"] != null) {
+          if (nestsCollection != null && map["nest_ids"].length > 0) {
+            query = nestsCollection!.where(
+                FieldPath.documentId, whereIn: map["nest_ids"]);
+          }
         }
       }
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
-      _nestStream = query?.snapshots() ?? pesa.snapshots();
+      _nestStream = query?.snapshots() ?? nestsCollection?.snapshots() ?? Stream.empty();
       loc = Geolocator.getPositionStream(
           locationSettings: LocationSettings(
         accuracy: LocationAccuracy.best,

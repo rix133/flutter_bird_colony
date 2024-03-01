@@ -7,7 +7,7 @@ import 'models/firestoreItemMixin.dart';
 import 'design/speciesRawAutocomplete.dart';
 
 class ListBirds extends ListScreenWidget<Bird> {
-  const ListBirds({Key? key}) : super(key: key, title: 'birds', icon: Icons.nat_sharp);
+  const ListBirds({Key? key, required FirebaseFirestore firestore})  : super(key: key, title: 'birds', icon: Icons.nat_sharp, firestore: firestore);
 
   @override
   ListScreenWidgetState<Bird> createState() => _ListBirdsState();

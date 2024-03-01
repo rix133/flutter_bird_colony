@@ -16,10 +16,14 @@ import 'package:kakrarahu/models/egg.dart';
 
 import 'package:kakrarahu/models/bird.dart';
 
+import '../services/locationService.dart';
+
 
 
 class NestManage extends StatefulWidget {
-  const NestManage({Key? key}) : super(key: key);
+  final FirebaseFirestore firestore;
+
+  const NestManage({super.key, required this.firestore});
 
   @override
   State<NestManage> createState() => _NestManageState();
@@ -34,11 +38,13 @@ class _NestManageState extends State<NestManage> {
   LocalSpeciesList speciesList = LocalSpeciesList();
   double _desiredAccuracy = 1;
   Nest? nest;
-  CollectionReference nests = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
+  CollectionReference? nests;
   CollectionReference? eggCollection;
-  Query experimentsQuery = FirebaseFirestore.instance.collection("experiments").where("year", isEqualTo: DateTime.now().year);
+  Query? experimentsQuery;
   Stream<QuerySnapshot> _eggStream = Stream.empty();
   late SharedPreferencesService sps;
+  LocationService location = LocationService.instance;
+  //AuthService auth = AuthService.instance;
 
   var map = <String, dynamic>{};
 
@@ -59,9 +65,9 @@ class _NestManageState extends State<NestManage> {
   _updateControllers() {
     if(nest != null) {
       species = speciesList.getSpecies(nest!.species);
-      nests = FirebaseFirestore.instance.collection(nest!.discover_date.year.toString());
+      nests = widget.firestore.collection(nest!.discover_date.year.toString());
       if(nest!.id != null){
-        eggCollection = nests.doc(nest!.id).collection("egg");
+        eggCollection = nests?.doc(nest!.id).collection("egg");
       }
       _eggStream = eggCollection?.snapshots() ?? Stream.empty();
       position = Position(longitude: nest!.coordinates.longitude,
@@ -82,6 +88,8 @@ class _NestManageState extends State<NestManage> {
   @override
   void initState() {
     super.initState();
+    nests = widget.firestore.collection(DateTime.now().year.toString());
+    experimentsQuery = widget.firestore.collection("experiments").where("year", isEqualTo: DateTime.now().year);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
@@ -89,7 +97,7 @@ class _NestManageState extends State<NestManage> {
       var data = ModalRoute.of(context)?.settings.arguments as Map;
       speciesList = sps.speciesList;
       if(data["nest_id"] != null) {
-        nests.doc(data["nest_id"]).get().then((value) {
+        nests?.doc(data["nest_id"]).get().then((value) {
           if (value.exists) {
               nest = Nest.fromDocSnapshot(value);
               _updateControllers();
@@ -110,9 +118,9 @@ class _NestManageState extends State<NestManage> {
     }
     double accuracyDiff = (position?.accuracy ?? 999999) - _desiredAccuracy;
     Future<void> updateFun() async {
-      position = await Geolocator.getCurrentPosition(
+      position = await location.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.best);
-      if((position?.accuracy ?? 999999) < _desiredAccuracy){
+      if((position?.accuracy ?? 999999) < nest!.getAccuracy()){
         nest!.coordinates = GeoPoint(position!.latitude, position!.longitude);
         nest!.accuracy = position!.accuracy.toStringAsFixed(2) + "m";
       }
@@ -259,7 +267,7 @@ class _NestManageState extends State<NestManage> {
   _addNewExperiment() async {
     String? selectedExperiment;
     List<String> existingExperiments = nest!.experiments?.map((e) => e.name).toList() ?? [];
-    experimentsQuery.get().then((value) {
+    experimentsQuery?.get().then((value) {
       List<Experiment> exps = value.docs
           .map((DocumentSnapshot e) => Experiment.fromDocSnapshot(e))
           .where((Experiment e) => existingExperiments.contains(e.name) == false)
@@ -290,7 +298,7 @@ class _NestManageState extends State<NestManage> {
                     exp.nests = [];
                   }
                   exp.nests!.add(nest!.name);
-                  exp.save().then((v) => Navigator.pushNamedAndRemoveUntil(context, "/nestManage", ModalRoute.withName('/findNest'), arguments: {"nest_id": nest!.name})
+                  exp.save(widget.firestore).then((v) => Navigator.pushNamedAndRemoveUntil(context, "/nestManage", ModalRoute.withName('/findNest'), arguments: {"nest_id": nest!.name})
                   );
                 }
               },
@@ -447,7 +455,7 @@ class _NestManageState extends State<NestManage> {
                 _getParentsRow(nest!.parents, context),
                 _getEggsStream(_eggStream),
                 SizedBox(height: 30),
-                ModifyingButtons(context: context,  setState:setState, getItem:getNest, type:"modify", otherItems: null, silentOverwrite: true),
+                ModifyingButtons(firestore: widget.firestore, context: context,  setState:setState, getItem:getNest, type:"modify", otherItems: null, silentOverwrite: true),
               ],
             ),
           ))),

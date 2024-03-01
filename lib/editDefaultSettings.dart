@@ -12,7 +12,8 @@ import 'package:provider/provider.dart';
 import 'models/measure.dart';
 
 class EditDefaultSettings extends StatefulWidget {
-const EditDefaultSettings({Key? key}) : super(key: key);
+  final FirebaseFirestore firestore;
+  const EditDefaultSettings({Key? key, required this.firestore})  : super(key: key);
 
 @override
 State<EditDefaultSettings> createState() => _EditDefaultSettingsState();
@@ -48,7 +49,7 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
             setState(() {  });
           }
         } else {
-          FirebaseFirestore.instance.collection('settings').doc(type).get().then((value) {
+          widget.firestore.collection('settings').doc(type).get().then((value) {
             if (value.exists) {
               defaultSettings = DefaultSettings.fromDocSnapshot(value);
             }
@@ -80,7 +81,7 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
       });
     }),
     SizedBox(height: 30),
-          ModifyingButtons(context: context, setState: setState, getItem: () => defaultSettings, type:type, otherItems: null)
+          ModifyingButtons(firestore: widget.firestore, context: context, setState: setState, getItem: () => defaultSettings, type:type, otherItems: null)
           ]))));
   }
 }

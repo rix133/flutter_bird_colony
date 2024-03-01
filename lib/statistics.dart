@@ -10,7 +10,9 @@ import 'package:provider/provider.dart';
 import 'models/species.dart';
 
 class Statistics extends StatefulWidget {
-  const Statistics({Key? key}) : super(key: key);
+  final FirebaseFirestore firestore;
+  const Statistics({Key? key, required this.firestore})  : super(key: key);
+
 
   @override
   State<Statistics> createState() => _StatisticsState();
@@ -22,8 +24,11 @@ class _StatisticsState extends State<Statistics> {
   SharedPreferencesService? sps;
   LocalSpeciesList _speciesList = LocalSpeciesList();
 
-  CollectionReference lind = FirebaseFirestore.instance.collection('Birds');
-  late CollectionReference pesa;
+  CollectionReference? birds;
+  CollectionReference? nests;
+  Query? birdsQuery;
+  Stream<QuerySnapshot> _nestsStream =  Stream.empty();
+  Stream<QuerySnapshot> _birdsStream = Stream.empty();
 
   String username = "";
 
@@ -43,9 +48,17 @@ class _StatisticsState extends State<Statistics> {
   @override
   void initState() {
     super.initState();
+    birds = widget.firestore.collection('Birds');
+    nests = widget.firestore.collection(_selectedYear.toString());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       _speciesList = sps!.speciesList;
+      FirebaseAuth.instance.authStateChanges().listen((User? user) {
+        if (user == null) {
+        } else {
+          username = user.displayName.toString();
+        }
+      });
       setState(() {});
     });
   }
@@ -55,27 +68,28 @@ class _StatisticsState extends State<Statistics> {
     super.dispose();
   }
 
-  Widget build(BuildContext context) {
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      if (user == null) {
-      } else {
-        username = user.displayName.toString();
-      }
-    });
+  _refreshStreams() {
     if(_selectedYear == 2022){
-      pesa = FirebaseFirestore.instance.collection("Nest");
+      nests = widget.firestore.collection("Nest");
     } else {
-      pesa = FirebaseFirestore.instance.collection(_selectedYear.toString());
+      nests = widget.firestore.collection(_selectedYear.toString());
     }
     DateTime startDate = DateTime(_selectedYear);
     DateTime endDate = DateTime(_selectedYear + 1);
 
-    Query birds = lind
-        .where("ringed_date", isGreaterThanOrEqualTo: startDate)
-        .where("ringed_date", isLessThan: endDate);
+    if(birds != null){
+      birdsQuery = birds!
+          .where("ringed_date", isGreaterThanOrEqualTo: startDate)
+          .where("ringed_date", isLessThan: endDate);
+    }
 
-    Stream<QuerySnapshot> _nestsStream = pesa.snapshots();
-    Stream<QuerySnapshot> _birdsStream = birds.snapshots();
+
+    _nestsStream = nests?.snapshots() ?? Stream.empty();
+    _birdsStream = birdsQuery?.snapshots() ?? Stream.empty();
+  }
+
+  Widget build(BuildContext context) {
+    _refreshStreams();
 
     return Scaffold(
         appBar: AppBar(

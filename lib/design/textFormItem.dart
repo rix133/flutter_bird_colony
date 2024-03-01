@@ -11,7 +11,7 @@ TextFormItem({
   required this.initialValue,
   this.isNumber = false,
   required this.changeFun,
-});
+}) : super(key: Key(label));
 
 @override
 _TextFormItemState createState() => _TextFormItemState();

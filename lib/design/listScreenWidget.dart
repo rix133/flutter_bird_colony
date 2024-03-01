@@ -9,7 +9,8 @@ import '../services/sharedPreferencesService.dart';
 abstract class ListScreenWidget<T> extends StatefulWidget {
   final String title;
   final IconData icon;
-  const ListScreenWidget({Key? key, required this.title, required this.icon}) : super(key: key);
+  final FirebaseFirestore firestore;
+  const ListScreenWidget({Key? key, required this.title, required this.icon, required this.firestore}) : super(key: key);
 
   @override
   ListScreenWidgetState<T> createState();
@@ -40,7 +41,7 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       stream = collection?.snapshots() ?? Stream.empty();
-      FirebaseFirestore.instance.collection('experiments').get().then((value) {
+      widget.firestore.collection('experiments').get().then((value) {
         allExperiments =
             value.docs.map((e) => Experiment.fromDocSnapshot(e)).toList();
       });

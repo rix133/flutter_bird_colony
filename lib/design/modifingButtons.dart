@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 class ModifyingButtons extends StatefulWidget {
   final BuildContext context;
   final Function setState;
+  final FirebaseFirestore firestore;
   final FirestoreItem Function() getItem;
   final String type;
   final CollectionReference? otherItems;
@@ -17,6 +18,7 @@ class ModifyingButtons extends StatefulWidget {
   final Function? onDeleteOK;
 
   ModifyingButtons({
+    required this.firestore,
     required this.context,
     required this.setState,
     required this.getItem,
@@ -87,7 +89,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                                     setState(() {
                                       _isLoading = true;
                                     });
-                                    ur = await item.delete(otherItems: otherItems, type: type);
+                                    ur = await item.delete(widget.firestore, otherItems: otherItems, type: type);
                                     if(!ur.success){
                                       setState(() {
                                         _isLoading = false;
@@ -141,7 +143,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                         _isLoading = true;
                       });
                       item.responsible = sps?.userName ?? item.responsible;
-                      ur = await item.save(otherItems: otherItems, allowOverwrite: silentOverwrite, type: type);
+                      ur = await item.save(widget.firestore, otherItems: otherItems, allowOverwrite: silentOverwrite, type: type);
                       if(!ur.success){
                         setState(() {
                           _isLoading = false;
@@ -166,7 +168,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                                     setState(() {
                                       _isLoading = true;
                                     });
-                                    ur = await item.save(otherItems: otherItems, allowOverwrite: true, type: type);
+                                    ur = await item.save(widget.firestore, otherItems: otherItems, allowOverwrite: true, type: type);
                                     if(!ur.success){
                                       setState(() {
                                         _isLoading = false;

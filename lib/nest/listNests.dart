@@ -9,7 +9,8 @@ import '../models/nest.dart';
 
 
 class ListNests extends ListScreenWidget<Nest> {
-  const ListNests({Key? key}) : super(key: key, title: 'nests with eggs', icon: Icons.home);
+  const ListNests({Key? key, required FirebaseFirestore firestore})
+      : super(key: key, title: 'nests with eggs', icon: Icons.home, firestore: firestore);
 
   @override
   ListScreenWidgetState<Nest> createState() => _ListNestsState();
@@ -29,7 +30,6 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
 
 
   List<Nest> nests = [];
- CollectionReference? collection = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
 
 
 
@@ -39,6 +39,11 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
       n.dispose();
     });
     super.dispose();
+  }
+  @override
+  void initState() {
+    collection = widget.firestore.collection(DateTime.now().year.toString());
+    super.initState();
   }
 
   @override
@@ -130,7 +135,7 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
 
   updateYearFilter(int value) {
     collection =
-        FirebaseFirestore.instance.collection(value.toString());
+        widget.firestore.collection(value.toString());
     setState(() {
       stream = collection?.snapshots() ?? Stream.empty();
       selectedYear = value;
@@ -202,7 +207,7 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
 
   Future<bool> filterByEggCount(Nest e) async {
     if (_minEggs == null && _maxEggs == null) return true;
-    int? eggCount = await e.eggCount();
+    int? eggCount = await e.eggCount(widget.firestore);
     if (_minEggs == null) return eggCount < _maxEggs! - 1;
     if (_maxEggs == null) return eggCount > _minEggs! - 1;
     return eggCount > _minEggs! - 1 && eggCount < _maxEggs! - 1;

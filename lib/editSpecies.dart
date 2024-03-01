@@ -1,5 +1,6 @@
 
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -7,7 +8,9 @@ import 'package:kakrarahu/models/species.dart';
 import 'package:provider/provider.dart';
 
 class EditSpecies extends StatefulWidget {
-const EditSpecies({Key? key}) : super(key: key);
+  final FirebaseFirestore firestore;
+  const EditSpecies({Key? key, required this.firestore})  : super(key: key);
+
 
 @override
 State<EditSpecies> createState() => _EditSpeciesState();
@@ -57,7 +60,7 @@ class _EditSpeciesState extends State<EditSpecies> {
         children: [
     ...species.getSpeciesForm(context, setState),
     SizedBox(height: 20),
-          ModifyingButtons(context:context, setState:setState, getItem: getSpecies, type:type, otherItems: null)
+          ModifyingButtons(firestore: widget.firestore, context:context, setState:setState, getItem: getSpecies, type:type, otherItems: null)
           ]))));
   }
 }

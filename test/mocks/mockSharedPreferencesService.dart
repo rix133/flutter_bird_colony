@@ -1,4 +1,5 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/species.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:mockito/mockito.dart';
@@ -9,6 +10,10 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
   bool autoNextBand = false;
   bool autoNextBandParent = false;
   LocalSpeciesList speciesList = LocalSpeciesList();
+  List<Measure> defaultMeasures = [Measure.note()];
+  bool biasedRepeatedMeasures = false;
+
+  double get desiredAccuracy => 4;
 
   @override
   String get userName => 'Test User';

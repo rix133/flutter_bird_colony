@@ -11,22 +11,26 @@ import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 import '../models/nest.dart';
 import '../models/species.dart';
+import '../services/locationService.dart';
 
 class NestCreate extends StatefulWidget {
-  const NestCreate({Key? key}) : super(key: key);
+  final FirebaseFirestore firestore;
+  const NestCreate({super.key, required this.firestore});
 
   @override
   _NestCreateState createState() => _NestCreateState();
 }
 
 class _NestCreateState extends State<NestCreate> {
-  CollectionReference nests = FirebaseFirestore.instance
-      .collection(DateTime(DateTime.now().year).toString());
-  DocumentReference recent = FirebaseFirestore.instance.collection('recent').doc("nest");
+  CollectionReference? nests;
+  DocumentReference? recent;
   SharedPreferencesService? sps;
   Stream<DocumentSnapshot> _idStream = Stream.empty();
   LocalSpeciesList _speciesList = LocalSpeciesList();
   bool _disableButtons = false;
+
+  LocationService location = LocationService.instance;
+  //AuthService auth = AuthService.instance;
 
   Nest nest = Nest(
     coordinates: GeoPoint(0, 0),
@@ -42,9 +46,8 @@ class _NestCreateState extends State<NestCreate> {
     setState(() {
       _disableButtons = true;
     });
-    final position = await Geolocator.getCurrentPosition(
+    final position = await location.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best);
-    if (mounted) {
       setState(() {
         //update only if the new location is more accurate
         if(nest.getAccuracy() > position.accuracy){
@@ -53,7 +56,6 @@ class _NestCreateState extends State<NestCreate> {
         }
         _disableButtons = false;
       });
-    }
   }
 
   @override
@@ -65,33 +67,35 @@ class _NestCreateState extends State<NestCreate> {
 
   @override
   void initState() {
+    nests = widget.firestore.collection(DateTime.now().year.toString());
+    recent = widget.firestore.collection('recent').doc("nest");
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       var data = ModalRoute.of(context)?.settings.arguments;
       if (data != null) {
         nest = data as Nest;
-        print(nest.species);
       }
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       _speciesList = sps!.speciesList;
       nest.responsible = sps!.userName;
       //nest.species = sps!.defaultSpecies; //to set the default species automatically all the time
-      _idStream = recent.snapshots();
+      _idStream = recent?.snapshots() ?? Stream.empty();
       setState(() {});
     });
   }
 
   Future<UpdateResult> _saveNewNest() {
-    if (nest.id == null) {
+    if (nest.id == null || nest.id == "") {
       return Future.value(UpdateResult.error(message: "Nest ID is empty"));
     }
-    return nests.doc(nest.id).get().then((value) {
+
+    return nests!.doc(nest.id).get().then((value) {
       if (value.exists) {
         return UpdateResult.error(message: "Nest ${nest.id} already exists");
       } else {
-        recent.set({"id": nest.id});
+        recent?.set({"id": nest.id});
         return (nest
-            .save()
+            .save(widget.firestore)
             .then((value) => UpdateResult.saveOK(item: nest))
             .catchError(
                 (error) => UpdateResult.error(message: error.toString())));
@@ -109,9 +113,9 @@ class _NestCreateState extends State<NestCreate> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return CircularProgressIndicator();
           }
-          Map<String, dynamic>? data = snapshot.data?.data() as Map<String, dynamic>;
+          Map<String, dynamic>? data = snapshot.data?.data() as Map<String, dynamic>?;
 
-            int? next = int.tryParse(data['id']);
+            int? next = int.tryParse(data?['id'] ?? "0");
             if (next != null) {
               next = next + 1;
               return ElevatedButton(
@@ -175,9 +179,7 @@ class _NestCreateState extends State<NestCreate> {
                   Column(
                     children: [
                       new ElevatedButton.icon(
-                          onPressed: () {
-                            _getCurrentLocation();
-                          },
+                          onPressed:  _getCurrentLocation,
                           icon: Icon(
                             Icons.my_location,
                             color: Colors.black87,

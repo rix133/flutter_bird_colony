@@ -11,7 +11,8 @@ import 'listMeasures.dart';
 import 'models/measure.dart';
 
 class EditExperiment extends StatefulWidget {
-  const EditExperiment({Key? key}) : super(key: key);
+  final FirebaseFirestore firestore;
+  const EditExperiment({Key? key, required this.firestore})  : super(key: key);
 
   @override
   State<EditExperiment> createState() => _EditExperimentState();
@@ -19,9 +20,9 @@ class EditExperiment extends StatefulWidget {
 
 class _EditExperimentState extends State<EditExperiment> {
   SharedPreferencesService? sps;
-  CollectionReference experiments = FirebaseFirestore.instance.collection('experiments');
-  CollectionReference nestsCollection = FirebaseFirestore.instance.collection(DateTime.now().year.toString());
-  CollectionReference birdsCollection = FirebaseFirestore.instance.collection('Birds');
+  CollectionReference? experiments;
+  CollectionReference? nestsCollection;
+  CollectionReference? birdsCollection;
   CollectionReference? otherCollection;
   Experiment experiment = Experiment(
     name: "",
@@ -35,6 +36,9 @@ class _EditExperimentState extends State<EditExperiment> {
   @override
   void initState() {
     super.initState();
+     experiments = widget.firestore.collection('experiments');
+     nestsCollection = widget.firestore.collection(DateTime.now().year.toString());
+     birdsCollection = widget.firestore.collection('Birds');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       var map = ModalRoute.of(context)?.settings.arguments;
@@ -229,7 +233,7 @@ class _EditExperimentState extends State<EditExperiment> {
                 SizedBox(height:15),
                 spsOK ? ListMeasures(measures: experiment.measures,onMeasuresUpdated: measuresUpdated) : Container(),
                 SizedBox(height:30),
-                spsOK ? ModifyingButtons(context:context, setState:setState, getItem:getExperiment, type:experiment.type, otherItems: otherCollection, onSaveOK: saveDeleteOk, onDeleteOK: saveDeleteOk) : Container(),
+                spsOK ? ModifyingButtons(firestore: widget.firestore, context:context, setState:setState, getItem:getExperiment, type:experiment.type, otherItems: otherCollection, onSaveOK: saveDeleteOk, onDeleteOK: saveDeleteOk) : Container(),
               ])),
             ));
   }

@@ -361,7 +361,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   }
 
   @override
-  Future<UpdateResult> save(
+  Future<UpdateResult> save(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
       bool allowOverwrite = false,
       type = "parent"}) async {
@@ -381,7 +381,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
             message: "Can't save bird without metal band");
       }
       CollectionReference birds =
-          FirebaseFirestore.instance.collection("Birds");
+          firestore.collection("Birds");
 
       if (allowOverwrite) {
         return await _write2Firestore(birds, otherItems, isParent);
@@ -401,7 +401,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   }
 
   @override
-  Future<UpdateResult> delete(
+  Future<UpdateResult> delete(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
       bool soft = true,
       type = "parent"}) async {
@@ -409,7 +409,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     if (otherItems != null && type == "parent") {
       await updateNestParent(otherItems, delete: true);
     }
-    CollectionReference items = FirebaseFirestore.instance.collection("Birds");
+    CollectionReference items = firestore.collection("Birds");
     //check if the item exists
     UpdateResult ur = await items.doc(id).get().then((doc)  {
       if (!doc.exists) {
@@ -427,7 +427,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
           .then((value) => UpdateResult.deleteOK(item: this))
           .catchError((error) => UpdateResult.error(message: error.toString()));
     } else {
-      CollectionReference deletedCollection = FirebaseFirestore.instance
+      CollectionReference deletedCollection = firestore
           .collection("deletedItems")
           .doc("Birds")
           .collection("deleted");

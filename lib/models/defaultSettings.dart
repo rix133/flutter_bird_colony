@@ -93,14 +93,14 @@ class DefaultSettings implements FirestoreItem {
   }
 
   @override
-  Future<UpdateResult> save(
+  Future<UpdateResult> save(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
       bool allowOverwrite = false,
       String type = "default"}) {
     if (id == null) {
       id = type;
     }
-    return (FirebaseFirestore.instance
+    return (firestore
         .collection("settings")
         .doc(id)
         .set(toJson())
@@ -109,7 +109,7 @@ class DefaultSettings implements FirestoreItem {
   }
 
   @override
-  Future<UpdateResult> delete(
+  Future<UpdateResult> delete(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
       bool soft = true,
       String type = "default"}) {
@@ -118,8 +118,8 @@ class DefaultSettings implements FirestoreItem {
     }
     return (FSItemMixin().deleteFiresoreItem(
         this,
-        FirebaseFirestore.instance.collection('settings'),
-        FirebaseFirestore.instance
+        firestore.collection('settings'),
+        firestore
             .collection('settings')
             .doc(type)
             .collection("deletedSettings")));

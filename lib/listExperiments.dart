@@ -9,7 +9,7 @@ import 'design/listScreenWidget.dart';
 
 
 class ListExperiments extends ListScreenWidget<Experiment> {
-  const ListExperiments({Key? key}) : super(key: key, title: 'experiments with nests and eggs', icon: Icons.science);
+  const ListExperiments({Key? key, required FirebaseFirestore firestore}) : super(key: key, title: 'experiments with nests and eggs', icon: Icons.science, firestore: firestore);
 
   @override
   ListScreenWidgetState<Experiment> createState() => _ListExperimentsState();
@@ -19,7 +19,7 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
 
   List<Experiment> exps = [];
 
-  CollectionReference? collection = FirebaseFirestore.instance.collection('experiments');
+  CollectionReference? collection;
 
   @override
   void dispose() {
@@ -27,6 +27,12 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
       element.dispose();
     });
     super.dispose();
+  }
+
+  @override
+  initState() {
+    collection = widget.firestore.collection('experiments');
+    super.initState();
   }
 
   getAddButton(BuildContext context) {
