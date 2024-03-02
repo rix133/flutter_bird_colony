@@ -9,9 +9,9 @@ import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
-import '../models/nest.dart';
-import '../models/species.dart';
-import '../services/locationService.dart';
+import 'package:kakrarahu/models/firestore/nest.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
+import 'package:kakrarahu/services/locationService.dart';
 
 class NestCreate extends StatefulWidget {
   final FirebaseFirestore firestore;

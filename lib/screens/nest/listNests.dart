@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/listScreenWidget.dart';
-import 'package:kakrarahu/models/species.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 
-import '../models/firestoreItemMixin.dart';
-import '../models/nest.dart';
+import 'package:kakrarahu/models/firestoreItemMixin.dart';
+import 'package:kakrarahu/models/firestore/nest.dart';
 
 
 class ListNests extends ListScreenWidget<Nest> {

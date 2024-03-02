@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/models/experiment.dart';
+import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
 
 
-import 'design/listScreenWidget.dart';
+import 'package:kakrarahu/design/listScreenWidget.dart';
 
 
 

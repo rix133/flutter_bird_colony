@@ -5,18 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:kakrarahu/design/experimentDropdown.dart';
 import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
-import 'package:kakrarahu/models/experiment.dart';
+import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/models/measure.dart';
-import 'package:kakrarahu/models/nest.dart';
-import 'package:kakrarahu/models/species.dart';
+import 'package:kakrarahu/models/firestore/nest.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 import 'package:kakrarahu/design//modifingButtons.dart';
-import 'package:kakrarahu/models/egg.dart';
+import 'package:kakrarahu/models/firestore/egg.dart';
 
-import 'package:kakrarahu/models/bird.dart';
+import 'package:kakrarahu/models/firestore/bird.dart';
 
-import '../services/locationService.dart';
+import 'package:kakrarahu/services/locationService.dart';
 
 
 

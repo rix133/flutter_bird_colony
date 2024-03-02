@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/models/experiment.dart';
+import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 import 'package:kakrarahu/models/dataSearch.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
-import 'listMeasures.dart';
-import 'models/measure.dart';
+import '../listMeasures.dart';
+import '../../models/measure.dart';
 
 class EditExperiment extends StatefulWidget {
   final FirebaseFirestore firestore;

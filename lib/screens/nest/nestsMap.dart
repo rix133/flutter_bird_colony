@@ -9,7 +9,7 @@ import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
-import 'models/nest.dart';
+import '../../models/firestore/nest.dart';
 
 class NestsMap extends StatefulWidget {
   final FirebaseFirestore firestore;

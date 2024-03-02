@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:kakrarahu/models/experiment.dart';
-import 'package:kakrarahu/models/firestoreItem.dart';
+import 'package:kakrarahu/models/firestore/experiment.dart';
+import 'package:kakrarahu/models/firestore/firestoreItem.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 import 'dart:io';
 import 'package:path/path.dart';
@@ -9,9 +9,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:share_plus/share_plus.dart';
 
-import 'bird.dart';
-import 'egg.dart';
-import 'nest.dart';
+import 'firestore/bird.dart';
+import 'firestore/egg.dart';
+import 'firestore/nest.dart';
 
 class FSItemMixin {
   // Workaround Way to run functions on firestoreitems

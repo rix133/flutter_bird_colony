@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/icons/my_flutter_app_icons.dart';
 
-import 'listBirds.dart';
-import 'listExperiments.dart';
-import 'nest/listNests.dart';
+import 'package:kakrarahu/screens/bird/listBirds.dart';
+import 'package:kakrarahu/screens/experiment/listExperiments.dart';
+import 'package:kakrarahu/screens/nest/listNests.dart';
 
 class ListDatas extends StatelessWidget {
   final FirebaseFirestore firestore;

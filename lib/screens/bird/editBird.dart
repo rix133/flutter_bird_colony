@@ -1,18 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
-import 'package:kakrarahu/models/bird.dart';
-import 'package:kakrarahu/models/experiment.dart';
+import 'package:kakrarahu/models/firestore/bird.dart';
+import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/models/measure.dart';
-import 'package:kakrarahu/models/nest.dart';
+import 'package:kakrarahu/models/firestore/nest.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:provider/provider.dart';
 import 'dart:io' show Platform;
 
 
-import 'models/egg.dart';
-import 'models/species.dart';
+import 'package:kakrarahu/models/firestore/egg.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
 
 class EditBird extends StatefulWidget {
   final FirebaseFirestore firestore;

@@ -3,13 +3,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
-import 'package:kakrarahu/listMeasures.dart';
-import 'package:kakrarahu/models/defaultSettings.dart';
+import 'package:kakrarahu/screens/listMeasures.dart';
+import 'package:kakrarahu/models/firestore/defaultSettings.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:kakrarahu/models/species.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:provider/provider.dart';
 
-import 'models/measure.dart';
+import 'package:kakrarahu/models/measure.dart';
 
 class EditDefaultSettings extends StatefulWidget {
   final FirebaseFirestore firestore;

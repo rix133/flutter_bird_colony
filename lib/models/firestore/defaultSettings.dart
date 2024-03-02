@@ -2,14 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:kakrarahu/models/firestoreItem.dart';
+import 'package:kakrarahu/models/firestore/firestoreItem.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/updateResult.dart';
+import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 
-import 'measure.dart';
-import 'species.dart';
+
 
 class DefaultSettings implements FirestoreItem {
   String? id;

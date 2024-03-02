@@ -4,12 +4,12 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/findNest.dart';
+import 'package:kakrarahu/screens/nest/findNest.dart';
 
-import 'package:kakrarahu/homepage.dart';
+import 'package:kakrarahu/screens/homepage.dart';
 import 'package:kakrarahu/models/measure.dart';
-import 'package:kakrarahu/models/nest.dart';
-import 'package:kakrarahu/nest/nestManage.dart';
+import 'package:kakrarahu/models/firestore/nest.dart';
+import 'package:kakrarahu/screens/nest/nestManage.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';

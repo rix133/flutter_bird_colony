@@ -1,6 +1,6 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kakrarahu/models/measure.dart';
-import 'package:kakrarahu/models/species.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:mockito/mockito.dart';
 

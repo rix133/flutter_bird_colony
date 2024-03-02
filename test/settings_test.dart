@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/homepage.dart';
+import 'package:kakrarahu/screens/homepage.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:kakrarahu/settings.dart';
+import 'package:kakrarahu/screens/settings/settings.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';

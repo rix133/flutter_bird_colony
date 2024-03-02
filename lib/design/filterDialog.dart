@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/models/firestoreItem.dart';
+import 'package:kakrarahu/models/firestore/firestoreItem.dart';
 
 class FilterDialog extends StatefulWidget {
   final Map<String, FilteredItem> initialFilters;

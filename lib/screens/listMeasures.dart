@@ -1,8 +1,8 @@
 // Purpose: List all measures to define, edit or delete them allow to add new ones
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'models/measure.dart';
-import 'services/sharedPreferencesService.dart';
+import '../models/measure.dart';
+import '../services/sharedPreferencesService.dart';
 
 class ListMeasures extends StatefulWidget {
   final List<Measure> measures;

@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:kakrarahu/homepage.dart';
-import 'package:kakrarahu/mapforcreate.dart';
-import 'package:kakrarahu/nest/nestCreate.dart';
-import 'package:kakrarahu/nest/nestManage.dart';
+import 'package:kakrarahu/screens/homepage.dart';
+import 'package:kakrarahu/screens/nest/mapforcreate.dart';
+import 'package:kakrarahu/screens/nest/nestCreate.dart';
+import 'package:kakrarahu/screens/nest/nestManage.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:kakrarahu/settings.dart';
+import 'package:kakrarahu/screens/settings/settings.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';

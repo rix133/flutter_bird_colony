@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/models/bird.dart';
-import 'package:kakrarahu/models/species.dart';
-import 'design/listScreenWidget.dart';
-import 'models/firestoreItemMixin.dart';
-import 'design/speciesRawAutocomplete.dart';
+import 'package:kakrarahu/models/firestore/bird.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
+import '../../design/listScreenWidget.dart';
+import '../../models/firestoreItemMixin.dart';
+import '../../design/speciesRawAutocomplete.dart';
 
 class ListBirds extends ListScreenWidget<Bird> {
   const ListBirds({Key? key, required FirebaseFirestore firestore})  : super(key: key, title: 'birds', icon: Icons.nat_sharp, firestore: firestore);

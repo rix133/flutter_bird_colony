@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/buildForm.dart';
 
-import 'models/nest.dart';
+import 'package:kakrarahu/models/firestore/nest.dart';
 
 class FindNest extends StatefulWidget {
   final FirebaseFirestore firestore;

@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/models/experiment.dart';
-import 'package:kakrarahu/models/firestoreItem.dart';
+import 'package:kakrarahu/models/firestore/experiment.dart';
+import 'package:kakrarahu/models/firestore/firestoreItem.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
-import 'package:kakrarahu/models/nest.dart';
+import 'package:kakrarahu/models/firestore/nest.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
-import 'experimentedItem.dart';
-import 'measure.dart';
+import '../experimentedItem.dart';
+import '../measure.dart';
 
 class Egg extends ExperimentedItem implements FirestoreItem {
   String? id;

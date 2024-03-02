@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../models/experiment.dart';
+import '../models/firestore/experiment.dart';
 
 class ExperimentDropdown extends StatefulWidget {
   final List<Experiment> allExperiments;

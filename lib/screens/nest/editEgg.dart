@@ -5,8 +5,8 @@ import 'package:kakrarahu/design/modifingButtons.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
-import 'models/egg.dart';
-import 'models/measure.dart';
+import '../../models/firestore/egg.dart';
+import '../../models/measure.dart';
 
 class EditEgg extends StatefulWidget {
   final FirebaseFirestore firestore;

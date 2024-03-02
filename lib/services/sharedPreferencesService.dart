@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/defaultSettings.dart';
-import '../models/measure.dart';
-import '../models/species.dart';
+import 'package:kakrarahu/models/firestore/defaultSettings.dart';
+import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
 import 'dart:convert';
 
 class SharedPreferencesService extends ChangeNotifier {

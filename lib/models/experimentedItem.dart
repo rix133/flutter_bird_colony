@@ -1,5 +1,5 @@
 import 'package:excel/excel.dart';
-import 'package:kakrarahu/models/experiment.dart';
+import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'dart:math' as math;
 
 import 'measure.dart';

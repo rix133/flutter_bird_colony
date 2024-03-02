@@ -1,13 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/models/defaultSettings.dart';
+import 'package:kakrarahu/models/firestore/defaultSettings.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import 'models/species.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
 
 class SettingsPage extends StatefulWidget {
   final FirebaseFirestore firestore;

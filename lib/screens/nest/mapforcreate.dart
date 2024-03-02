@@ -9,8 +9,8 @@ import 'dart:async';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
-import 'models/measure.dart';
-import 'models/nest.dart';
+import '../../models/measure.dart';
+import '../../models/firestore/nest.dart';
 
 
 class MapForCreate extends StatefulWidget {
