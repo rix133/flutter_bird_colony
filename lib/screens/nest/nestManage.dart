@@ -139,7 +139,7 @@ class _NestManageState extends State<NestManage> {
           size: 40,
         ),
         label: Padding(padding:EdgeInsets.symmetric(vertical: 20),
-        child:Text('~ ${position!.accuracy.toStringAsFixed(1)} m')))
+        child:Text('~${position!.accuracy.toStringAsFixed(1)}m')))
     ));
   }
 

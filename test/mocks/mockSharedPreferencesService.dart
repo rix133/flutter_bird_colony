@@ -9,7 +9,7 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
   bool isLoggedIn = false;
   bool autoNextBand = false;
   bool autoNextBandParent = false;
-  LocalSpeciesList speciesList = LocalSpeciesList();
+  LocalSpeciesList speciesList = LocalSpeciesList.fromStringList(["Common gull","Arctic tern"]);
   List<Measure> defaultMeasures = [Measure.note()];
   bool biasedRepeatedMeasures = false;
 

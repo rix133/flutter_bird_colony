@@ -4,6 +4,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/screens/nest/findNest.dart';
 
 import 'package:kakrarahu/screens/homepage.dart';
@@ -34,7 +35,7 @@ void main() {
     last_modified: DateTime.now(),
     discover_date: DateTime.now(),
     responsible: "Admin",
-    species: "test",
+    species: "Common gull",
     measures: [Measure.note()],
   );
 
@@ -55,7 +56,7 @@ void main() {
                 firestore: firestore,
               ),
               settings: RouteSettings(
-                arguments: {'nest': nest}, // initial nest object
+                arguments: {'nest': nest}, // get initial nest from object
               ),
             );
           } else if (settings.name == '/findNest') {
@@ -83,11 +84,43 @@ void main() {
 
   });
 
-  testWidgets("Will display add egg button", (WidgetTester tester) async {
+  testWidgets("Will display add egg and add parent buttons", (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
-    expect(find.text('(long press for chick)'), findsOneWidget);
+    expect(find.text('add egg'), findsOneWidget);
+    expect(find.text('add parent'), findsOneWidget);
+  });
+
+  testWidgets("Will display nest details", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    expect(find.text('~12.2m'), findsOneWidget);
+    expect(find.text('1'), findsOneWidget);
+  });
+
+   testWidgets("Will have listed species in nest details", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    //find that has the species test in textfield
+    // Find the SpeciesRawAutocomplete widget
+    Finder speciesRawAutocompleteFinder = find.byType(SpeciesRawAutocomplete);
+    expect(speciesRawAutocompleteFinder, findsOneWidget);
+
+    // Find the TextField widget which is a descendant of the SpeciesRawAutocomplete widget
+    Finder textFieldFinder = find.descendant(
+      of: speciesRawAutocompleteFinder,
+      matching: find.byType(TextField),
+    );
+    expect(textFieldFinder, findsOneWidget);
+
+    // Get the TextField widget
+    TextField textField = tester.widget(textFieldFinder);
+
+    // Verify if the TextField's controller's text is "Common gull"
+    expect(textField.controller?.text, "Common gull");
   });
 
 }

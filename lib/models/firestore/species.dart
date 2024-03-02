@@ -32,6 +32,13 @@ class Species implements FirestoreItem {
       latinCode: '',
     );
   }
+  factory Species.fromEnglish(String english) {
+    return Species(
+      english: english,
+      local: '',
+      latinCode: '',
+    );
+  }
 
   factory Species.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
@@ -287,7 +294,7 @@ class LocalSpeciesList {
     return species.firstWhere(
             (Species element) =>
         element.english.toLowerCase() == english.toLowerCase(),
-        orElse: () => Species.empty());
+        orElse: () => Species.fromEnglish(english));
   }
 
 
