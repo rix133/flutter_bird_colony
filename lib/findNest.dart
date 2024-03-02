@@ -14,6 +14,7 @@ class FindNest extends StatefulWidget {
 
 class _FindNestState extends State<FindNest> {
   CollectionReference? nests;
+  final FocusNode _focusNode = FocusNode();
   bool enableBtn = true;
   void submitForm(){
     setState(() {
@@ -30,6 +31,7 @@ class _FindNestState extends State<FindNest> {
 
   @override
   void dispose() {
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -56,36 +58,24 @@ class _FindNestState extends State<FindNest> {
       nestID.text="";
     }
     else {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          // Start the timer when the dialog is built
-          Future.delayed(Duration(seconds: 2), () {
-            Navigator.of(context).pop();
-          });
-          return AlertDialog(
-            title: Text("Nest ${nestID.text} does not exist",
-                style: TextStyle(color: Colors.red)
-            ),
-            content: Text("Please check the nest ID",
-                style: TextStyle(color: Colors.black)
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-
-                  Navigator.pop(context);
-                },
-                child: Text("OK"),
-              ),
-            ],
-          );
-        },
+      // Dismiss the keyboard
+      setState(() {
+        enableBtn = true;
+        _focusNode.unfocus();
+      });
+     ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Nest ${nestID.text} does not exist"),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.redAccent,
+        ),
       );
+      // Wait for the SnackBar to close before requesting focus
+      Future.delayed(Duration(seconds: 2), () {
+        _focusNode.requestFocus();
+      });
     }
-    setState(() {
-      enableBtn = true;
-    });
+
   }
 
   final nestID = TextEditingController();
@@ -97,7 +87,7 @@ class _FindNestState extends State<FindNest> {
         child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              buildForm(context, "enter nest ID", null, nestID,true, searchNest),
+              buildForm(context, "enter nest ID", null, nestID,true, searchNest, _focusNode),
               new ElevatedButton.icon(
                   onPressed: enableBtn ? submitForm : null,
                   icon: Icon(

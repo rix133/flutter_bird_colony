@@ -144,6 +144,9 @@ void main() async{
     await tester.enterText(find.byType(TextField), '2');
     await tester.tap(find.text("Find nest"));
     await tester.pump(Duration(seconds: 2));
+    // Check for the SnackBar
+    expect(find.byType(SnackBar), findsOneWidget);
+    // Check the text inside the SnackBar
     expect(find.text('Nest 2 does not exist'), findsOneWidget);
   });
 

@@ -4,13 +4,17 @@ class TextFormItem extends StatefulWidget {
 final String label;
 final String initialValue;
 final bool isNumber;
+final FocusNode? focus;
 final Function(String)? changeFun;
+final Function(String)? submitFun;
 
 TextFormItem({
   required this.label,
   required this.initialValue,
   this.isNumber = false,
-  required this.changeFun,
+  this.focus,
+  this.changeFun,
+  this.submitFun,
 }) : super(key: Key(label));
 
 @override
@@ -24,6 +28,12 @@ class _TextFormItemState extends State<TextFormItem> {
   void initState() {
     super.initState();
     controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
 
@@ -46,9 +56,11 @@ class _TextFormItemState extends State<TextFormItem> {
                   keyboardType: widget.isNumber
                       ? TextInputType.number
                       : TextInputType.text,
+                  focusNode: widget.focus,
                   controller: controller,
                   textAlign: TextAlign.center,
                   onChanged: widget.changeFun,
+                  onFieldSubmitted: widget.submitFun,
                   decoration: InputDecoration(
                     labelText: widget.label,
                     labelStyle: TextStyle(color: Colors.yellow),
