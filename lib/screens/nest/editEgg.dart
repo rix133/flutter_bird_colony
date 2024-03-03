@@ -126,11 +126,6 @@ class _EditEggState extends State<EditEgg> {
             "dead chick",
             "dead egg"
           ].where((element) {
-            print(element
-                .toString()
-                .toLowerCase()
-                .contains(textEditingValue.text.toLowerCase())
-                .toString());
             return element
                 .toString()
                 .toLowerCase()
