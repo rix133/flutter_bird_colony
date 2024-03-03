@@ -32,9 +32,13 @@ $totalLinesCommit1 = (git ls-files | foreach { Get-Content $_ } | Measure-Object
 #Output comparsion date
 Write-Host "Changes since $date" -ForegroundColor Green
 
+$unchanged = $totalLinesCommit1 - $changed
+
 # Output the total lines
 Write-Output "Total lines at ${date}: $totalLinesCommit2"
 Write-Output "Total lines at latest: $totalLinesCommit1"
+Write-Output "Unchanged lines since ${date}: $unchanged"
+
 $added = $totalLinesCommit1 - $totalLinesCommit2
 
 # Calculate percentages
@@ -48,6 +52,7 @@ $changedOrAddedPercent = [Math]::Round(($changedOrAdded / $totalLinesCommit2) * 
 Write-Output "Percentage of lines added: $addedPercent%"
 Write-Output "Percentage of lines changed: $changedPercent%"
 Write-Output "Percentage of lines changed or added: $changedOrAddedPercent%"
+
 
 # Color the last output
 Write-Host "Retained original: $retainedOriginal%" -ForegroundColor Green
