@@ -40,7 +40,7 @@ $added = $totalLinesCommit1 - $totalLinesCommit2
 # Calculate percentages
 $addedPercent = [Math]::Round(($added / $totalLinesCommit2) * 100)
 $changedPercent = [Math]::Round(($changed / $totalLinesCommit2) * 100)
-$retainedOriginal = [Math]::Round((($totalLinesCommit2-$changed) / $totalLinesCommit1) * 100)
+$retainedOriginal = [Math]::Round((($totalLinesCommit1-$changed) / $totalLinesCommit1) * 100)
 $changedOrAdded = $added + $changed 
 $changedOrAddedPercent = [Math]::Round(($changedOrAdded / $totalLinesCommit2) * 100)
 
