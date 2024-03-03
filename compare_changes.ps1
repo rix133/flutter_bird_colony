@@ -32,20 +32,25 @@ $totalLinesCommit1 = (git ls-files | foreach { Get-Content $_ } | Measure-Object
 #Output comparsion date
 Write-Host "Changes since $date" -ForegroundColor Green
 
-$unchanged = $totalLinesCommit1 - $changed
 
 # Output the total lines
 Write-Output "Total lines at ${date}: $totalLinesCommit2"
 Write-Output "Total lines at latest: $totalLinesCommit1"
-Write-Output "Unchanged lines since ${date}: $unchanged"
 
 $added = $totalLinesCommit1 - $totalLinesCommit2
 
 # Calculate percentages
+# Calculate percentages
 $addedPercent = [Math]::Round(($added / $totalLinesCommit2) * 100)
 $changedPercent = [Math]::Round(($changed / $totalLinesCommit2) * 100)
-$retainedOriginal = [Math]::Round((($totalLinesCommit1-$changed) / $totalLinesCommit1) * 100)
-$changedOrAdded = $added + $changed 
+
+# Calculate the number of unchanged lines
+$unchanged = $totalLinesCommit1 - $added - $changed
+
+# Calculate the percentage of unchanged lines
+$unchangedPercent = [Math]::Round(($unchanged / $totalLinesCommit1) * 100)
+
+$changedOrAdded = $added + $changed
 $changedOrAddedPercent = [Math]::Round(($changedOrAdded / $totalLinesCommit2) * 100)
 
 # Output the results
@@ -53,6 +58,6 @@ Write-Output "Percentage of lines added: $addedPercent%"
 Write-Output "Percentage of lines changed: $changedPercent%"
 Write-Output "Percentage of lines changed or added: $changedOrAddedPercent%"
 
+# Output the percentage of unchanged lines
+Write-Output "Percentage of lines unchanged: $unchangedPercent%" -ForegroundColor Green
 
-# Color the last output
-Write-Host "Retained original: $retainedOriginal%" -ForegroundColor Green
