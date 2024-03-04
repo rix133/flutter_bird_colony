@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
+import 'package:kakrarahu/screens/bird/editBird.dart';
 import 'package:kakrarahu/screens/nest/editEgg.dart';
 import 'package:kakrarahu/screens/nest/findNest.dart';
 
@@ -89,6 +90,12 @@ void main() {
               ),
             );
 
+          } else if(settings.name == '/editBird'){
+            return MaterialPageRoute(
+              builder: (context) => EditBird(
+                firestore: firestore,
+              ),
+            );
           }
           // Other routes...
           return MaterialPageRoute(
@@ -211,4 +218,93 @@ testWidgets("will navigate to nest when egg is saved", (WidgetTester tester) asy
         expect(firestore.collection(DateTime.now().year.toString()).doc(nest.id).collection("egg").doc(egg.id).get(), completion((DocumentSnapshot snapshot) => snapshot.exists == false));
       });
 
-}
+  testWidgets("will navigate to find nest when nest is deleted", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.delete));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Removing item"), findsOneWidget);
+
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    expect(firestore.collection(DateTime
+        .now()
+        .year
+        .toString()).doc(nest.id).get(),
+        completion((DocumentSnapshot snapshot) => snapshot.exists == false));
+
+    expect(find.byType(MyHomePage), findsOneWidget);
+
+  });
+  testWidgets(
+      "will add new note on egg when requested", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Egg 1 intact 2 days old'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TextFormField), findsNWidgets(2));
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TextFormField), findsNWidgets(3));
+  });
+
+    testWidgets(
+      "will add new note on nest when requested", (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Find the first IconButton that matches the predicate
+      Finder firstIconButtonFinder = find.byWidgetPredicate(
+            (Widget widget) =>
+        widget is IconButton &&
+            widget.icon is Icon &&
+            (widget.icon as Icon).icon == Icons.add &&
+            widget.onPressed != null,
+      );
+
+      // Ensure that the IconButton is found
+      expect(firstIconButtonFinder, findsOneWidget);
+
+      // Tap on the IconButton
+      await tester.tap(firstIconButtonFinder.first);
+      await tester.pumpAndSettle();
+
+      // Check that a new TextFormField is added
+      expect(find.byType(TextFormField), findsNWidgets(3));
+
+  });
+    testWidgets("will go to edit bird when add parent is pressed", (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('add parent'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EditBird), findsOneWidget);
+    });
+
+  testWidgets("will go to edit bird when egg is long pressed", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('Egg 1 intact 2 days old'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(EditBird), findsOneWidget);
+  });
+
+  testWidgets("will go to edit bird when add egg is long pressed", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('add egg'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(EditBird), findsOneWidget);
+  });
+  }

@@ -20,8 +20,8 @@ class NestsMap extends StatefulWidget {
 }
 
 class _NestsMapState extends State<NestsMap> {
-  var today = DateTime.now().toIso8601String().split("T")[0];
-  static const kakrarahud = CameraPosition(
+  String today = DateTime.now().toIso8601String().split("T")[0];
+  CameraPosition initCamera = CameraPosition(
     target: LatLng(58.766218, 23.430432),
     bearing: 270,
     zoom: 16.35,
@@ -47,6 +47,10 @@ class _NestsMapState extends State<NestsMap> {
   LocationService location = LocationService.instance;
   AuthService auth = AuthService.instance;
 
+  _setDefaultLocation(CameraPosition cameraPosition) {
+    initCamera = cameraPosition;
+  }
+
   @override
   initState() {
     super.initState();
@@ -69,11 +73,9 @@ class _NestsMapState extends State<NestsMap> {
         }
       }
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
+      _setDefaultLocation(sps!.defaultLocation);
       _nestStream = query?.snapshots() ?? nestsCollection?.snapshots() ?? Stream.empty();
-      loc = Geolocator.getPositionStream(
-          locationSettings: LocationSettings(
-        accuracy: LocationAccuracy.best,
-      ));
+      loc = location.getPositionStream();
 
       updateMarkersToShow();
       setState(() {});
@@ -131,6 +133,19 @@ class _NestsMapState extends State<NestsMap> {
     });
   }
 
+  _updateCameraPosition(AsyncSnapshot snapshot, AsyncSnapshot<CompassEvent> snapshot1) {
+    _googleMapController?.animateCamera(
+        CameraUpdate.newCameraPosition(CameraPosition(
+          target: LatLng(
+              snapshot.data?.latitude ?? initCamera.target.latitude,
+              snapshot.data?.longitude ?? initCamera.target.longitude),
+          bearing: snapshot1.hasData
+              ? snapshot1.data!.heading ?? initCamera.bearing
+              : initCamera.bearing,
+          zoom: initCamera.zoom,
+        )));
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       body: StreamBuilder(
@@ -151,7 +166,7 @@ class _NestsMapState extends State<NestsMap> {
                           markers: value,
                           mapType: MapType.satellite,
                           zoomControlsEnabled: false,
-                          initialCameraPosition: kakrarahud,
+                          initialCameraPosition: initCamera,
                           onMapCreated: (controller) =>
                           _googleMapController = controller,
                         );
@@ -184,16 +199,8 @@ class _NestsMapState extends State<NestsMap> {
                           FloatingActionButton(
                             heroTag: "compass",
                             onPressed: () {
-                              _googleMapController?.animateCamera(
-                                  CameraUpdate.newCameraPosition(CameraPosition(
-                                target: LatLng(
-                                    snapshot.data?.latitude ?? 58.766218,
-                                    snapshot.data?.longitude ?? 23.430432),
-                                bearing: snapshot1.hasData
-                                    ? snapshot1.data!.heading ?? 270
-                                    : 270,
-                                zoom: 19.85,
-                              )));
+                              _updateCameraPosition(snapshot, snapshot1);
+                              focus.unfocus();
                             },
                             child: const Icon(Icons.compass_calibration),
                           ),
@@ -201,16 +208,7 @@ class _NestsMapState extends State<NestsMap> {
                           FloatingActionButton(
                             heroTag: "myLoc",
                             onPressed: () {
-                              _googleMapController?.animateCamera(
-                                  CameraUpdate.newCameraPosition(CameraPosition(
-                                target: LatLng(
-                                    snapshot.data?.latitude ?? 58.766218,
-                                    snapshot.data?.longitude ?? 23.430432),
-                                bearing: snapshot1.hasData
-                                    ? snapshot1.data!.heading ?? 270
-                                    : 270,
-                                zoom: 19.85,
-                              )));
+                             _updateCameraPosition(snapshot, snapshot1);
                               if (mounted) {
                                 setState(() {
                                   circle = {
@@ -218,9 +216,8 @@ class _NestsMapState extends State<NestsMap> {
                                       circleId: CircleId("myLoc"),
                                       radius: snapshot.data?.accuracy ?? 200,
                                       center: LatLng(
-                                          snapshot.data?.latitude ?? 58.766218,
-                                          snapshot.data?.longitude ??
-                                              23.430432),
+                                          snapshot.data?.latitude ?? initCamera.target.latitude,
+                                          snapshot.data?.longitude ?? initCamera.target.longitude),
                                       strokeColor: Colors.orange,
                                     )
                                   };
@@ -238,7 +235,7 @@ class _NestsMapState extends State<NestsMap> {
           FloatingActionButton(
             heroTag: "zoomOut",
             onPressed: () {
-              _googleMapController?.animateCamera(CameraUpdate.newCameraPosition(kakrarahud));
+              _googleMapController?.animateCamera(CameraUpdate.newCameraPosition(initCamera));
               focus.unfocus();
             },
             child: const Icon(Icons.zoom_out_map),
@@ -248,7 +245,7 @@ class _NestsMapState extends State<NestsMap> {
             heroTag: "search",
             isExtended: false,
             onPressed: () {
-              _googleMapController?.animateCamera(CameraUpdate.newCameraPosition(kakrarahud));
+              _googleMapController?.animateCamera(CameraUpdate.newCameraPosition(initCamera));
               focus.unfocus();
               showDialog(
                   context: context,

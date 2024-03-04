@@ -58,4 +58,23 @@ void main() {
     TextField textField = tester.widget(textFieldFinder);
     expect(textField.controller?.text, 'intact');
   });
+
+  testWidgets("can tap rawAutoComplete", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    Finder rawAutocompleteFinder = find.byType(RawAutocomplete);
+    Finder textFieldFinder = find.descendant(
+      of: rawAutocompleteFinder,
+      matching: find.byType(TextField),
+    );
+
+    await tester.enterText(textFieldFinder, 'intact');
+    await tester.pumpAndSettle();
+
+    Finder listTileFinder = find.widgetWithText(ListTile, 'intact');
+    await tester.tap(listTileFinder);
+    await tester.pumpAndSettle();
+
+  });
 }

@@ -1,0 +1,163 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:flutter/material.dart';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:kakrarahu/models/firestore/experiment.dart';
+
+
+import 'package:kakrarahu/screens/homepage.dart';
+import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/models/firestore/nest.dart';
+import 'package:kakrarahu/screens/nest/nestCreate.dart';
+import 'package:kakrarahu/screens/nest/nestsMap.dart';
+import 'package:kakrarahu/services/authService.dart';
+import 'package:kakrarahu/services/locationService.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:provider/provider.dart';
+
+import 'mocks/mockAuthService.dart';
+import 'mocks/mockLocationService.dart';
+import 'mocks/mockSharedPreferencesService.dart';
+
+void main() {
+  final authService = MockAuthService();
+  final sharedPreferencesService = MockSharedPreferencesService();
+  final firestore = FakeFirebaseFirestore();
+  MockLocationAccuracy10 locationAccuracy10 = MockLocationAccuracy10();
+  CollectionReference nests = firestore.collection(DateTime.now().year.toString());
+  late Widget myApp;
+  final userEmail = "test@example.com";
+  final Nest nest = Nest(
+    id: "1",
+    coordinates: GeoPoint(58.766218, 23.430432),
+    accuracy: "12.22m",
+    last_modified: DateTime.now(),
+    discover_date: DateTime.now(),
+    responsible: "Admin",
+    species: "Common gull",
+    measures: [Measure.note()],
+  );
+
+  final Experiment experiment = Experiment(
+    id: "1",
+    name: "New Experiment",
+    description: "Test experiment",
+    last_modified: DateTime.now(),
+    created: DateTime.now(),
+    year: DateTime.now().year,
+    responsible: "Admin",
+  );
+
+  setUpAll(() async {
+    AuthService.instance = authService;
+    LocationService.instance = locationAccuracy10;
+
+    await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
+    await firestore.collection('experiments').doc(experiment.id).set(experiment.toJson());
+    myApp = ChangeNotifierProvider<SharedPreferencesService>(
+      create: (_) => sharedPreferencesService,
+      child: MaterialApp(
+        initialRoute: '/map',
+        onGenerateRoute: (settings) {
+          if (settings.name == '/nestCreate') {
+            return MaterialPageRoute(
+              builder: (context) => NestCreate(
+                firestore: firestore,
+              ),
+              settings: RouteSettings(
+                arguments: nest, // get initial nest from firestore
+              ),
+            );
+          } else if (settings.name == '/map') {
+            return MaterialPageRoute(
+              builder: (context) => NestsMap(
+                firestore: firestore,
+              ),
+            );
+          }
+          // Other routes...
+          return MaterialPageRoute(
+            builder: (context) => MyHomePage(title: "Nest app"),
+          );
+        },
+      ),
+    );
+  });
+
+  setUp(() async {
+    //reset the database
+    await firestore.collection('recent').doc("nest").set({"id": "1"});
+    await nests
+        .doc(nest.id)
+        .set(nest.toJson());
+  });
+
+  testWidgets("Will render nest map", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NestsMap), findsOneWidget);
+  });
+
+  testWidgets("Check if Google Map exists", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    Finder googleMap  = find.byType(GoogleMap);
+    expect(googleMap, findsOneWidget);
+  });
+
+  testWidgets("Widget has 5 floating action buttons", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    Finder fab = find.byType(FloatingActionButton);
+    expect(fab, findsNWidgets(5));
+  });
+
+  testWidgets("tap on add floating action button redirects to nest create", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    Finder addNest = find.byIcon(Icons.add);
+    await tester.tap(addNest);
+    await tester.pumpAndSettle();
+    expect(find.byType(NestCreate), findsOneWidget);
+  });
+
+  testWidgets("can search for nests", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+
+    // Find the FloatingActionButton with the "search" hero tag and tap it
+    Finder searchButton = find.byWidgetPredicate(
+          (Widget widget) => widget is FloatingActionButton && widget.heroTag == "search",
+    );
+    await tester.tap(searchButton);
+    await tester.pumpAndSettle();
+
+    // Check if an AlertDialog is present in the widget tree
+    expect(find.byType(AlertDialog), findsOneWidget);
+
+    // Find the TextFormField within the AlertDialog and simulate the "done" action
+    Finder searchField = find.byType(TextFormField);
+    await tester.showKeyboard(searchField);
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    // Check if the AlertDialog is no longer present in the widget tree
+    expect(find.byType(AlertDialog), findsNothing);
+  });
+
+  testWidgets("can update location", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    Finder updateLocation = find.byIcon(Icons.my_location);
+    await tester.tap(updateLocation);
+    await tester.pumpAndSettle();
+  });
+}
