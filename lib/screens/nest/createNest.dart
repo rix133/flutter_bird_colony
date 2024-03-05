@@ -13,15 +13,15 @@ import 'package:kakrarahu/models/firestore/nest.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/services/locationService.dart';
 
-class NestCreate extends StatefulWidget {
+class CreateNest extends StatefulWidget {
   final FirebaseFirestore firestore;
-  const NestCreate({super.key, required this.firestore});
+  const CreateNest({super.key, required this.firestore});
 
   @override
-  _NestCreateState createState() => _NestCreateState();
+  _CreateNestState createState() => _CreateNestState();
 }
 
-class _NestCreateState extends State<NestCreate> {
+class _CreateNestState extends State<CreateNest> {
   CollectionReference? nests;
   DocumentReference? recent;
   SharedPreferencesService? sps;
@@ -196,7 +196,7 @@ class _NestCreateState extends State<NestCreate> {
                         setState(() {});
                         _saveNewNest().then((value) {
                           if (value.success) {
-                            Navigator.popAndPushNamed(context, '/nestManage',
+                            Navigator.popAndPushNamed(context, '/editNest',
                                 arguments: {"nest": value.item});
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(

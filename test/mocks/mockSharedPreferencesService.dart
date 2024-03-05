@@ -13,6 +13,10 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
   List<Measure> defaultMeasures = [Measure.note()];
   bool biasedRepeatedMeasures = false;
 
+  String _band = "AA1234";
+  String getRecentMetalBand(String species) => _band;
+  setRecentMetalBand(String species, String band) => _band = band;
+
   double get desiredAccuracy => 4;
 
   @override

@@ -19,13 +19,16 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
   int? _selectedAge;
 
   List<Bird> birds = [];
-  CollectionReference? collection =
-      FirebaseFirestore.instance.collection('Birds');
-
-
-
+  CollectionReference? collection;
 
   @override
+  void initState() {
+    collection = widget.firestore.collection("Birds");
+    super.initState();
+  }
+
+
+    @override
   void dispose() {
     birds.forEach((element) {
       element.dispose();

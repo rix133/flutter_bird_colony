@@ -9,7 +9,7 @@ import 'package:kakrarahu/screens/bird/listBirds.dart';
 import 'package:kakrarahu/screens/experiment/listExperiments.dart';
 import 'package:kakrarahu/screens/nest/listNests.dart';
 import 'package:kakrarahu/screens/settings/listSpecies.dart';
-import 'package:kakrarahu/screens/nest/nestManage.dart';
+import 'package:kakrarahu/screens/nest/editNest.dart';
 import 'package:kakrarahu/screens/settings/settings.dart';
 import 'package:kakrarahu/screens/statistics.dart';
 import 'screens/settings/editSpecies.dart';
@@ -17,12 +17,12 @@ import 'screens/listDatas.dart';
 import 'services/sharedPreferencesService.dart';
 import 'design/styles.dart';
 import 'package:kakrarahu/screens/nest/findNest.dart';
-import 'package:kakrarahu/screens/nest/nestCreate.dart';
+import 'package:kakrarahu/screens/nest/createNest.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'screens/nest/nestsMap.dart';
-import 'screens/nest/mapforcreate.dart';
+import 'screens/nest/mapNests.dart';
+import 'screens/nest/mapCreateNest.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -88,13 +88,13 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context)=>MyHomePage(title: appName),
         '/editEgg': (context)=>EditEgg(firestore: firestore),
-        '/nestCreate':(context)=> NestCreate(firestore: firestore),
+        '/createNest':(context)=> CreateNest(firestore: firestore),
         //'/nestsNearby':(context)=> const NestsNearby(),
-        '/nestManage':(context)=>  NestManage(firestore: firestore),
+        '/editNest':(context)=>  EditNest(firestore: firestore),
         '/settings':(context)=>  SettingsPage(firestore: firestore),
-        '/map':(context)=> NestsMap(firestore: firestore),
+        '/mapNests':(context)=> MapNests(firestore: firestore),
         '/statistics':(context)=> Statistics(firestore: firestore),
-        '/mapforcreate':(context)=>MapForCreate(firestore: firestore),
+        '/mapCreateNest':(context)=>MapCreateNest(firestore: firestore),
         '/findNest':(context)=>FindNest(firestore: firestore),
         '/editBird':(context)=>EditBird(firestore: firestore),
         '/listBirds':(context)=>ListBirds(firestore: firestore),

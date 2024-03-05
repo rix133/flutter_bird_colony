@@ -9,7 +9,7 @@ import 'package:kakrarahu/screens/nest/findNest.dart';
 import 'package:kakrarahu/screens/homepage.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
-import 'package:kakrarahu/screens/nest/nestManage.dart';
+import 'package:kakrarahu/screens/nest/editNest.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -52,7 +52,7 @@ void main() {
           routes: {
             '/': (context) => MyHomePage(title: "Nest app"),
             '/settings': (context) => SettingsPage(firestore: firestore),
-            '/nestManage':(context)=>NestManage(firestore: firestore),
+            '/editNest':(context)=>EditNest(firestore: firestore),
             '/findNest':(context)=>FindNest(firestore: firestore),
           }
       ),
@@ -81,7 +81,7 @@ void main() {
     await tester.pumpAndSettle();
 
     //check if routed to nestManage
-    expect(find.byType(NestManage), findsOneWidget);
+    expect(find.byType(EditNest), findsOneWidget);
   });
 
   testWidgets("FindNest: search for a nest that does not exist", (WidgetTester tester) async {

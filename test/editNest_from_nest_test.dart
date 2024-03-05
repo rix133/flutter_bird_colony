@@ -14,7 +14,7 @@ import 'package:kakrarahu/screens/nest/findNest.dart';
 import 'package:kakrarahu/screens/homepage.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
-import 'package:kakrarahu/screens/nest/nestManage.dart';
+import 'package:kakrarahu/screens/nest/editNest.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -61,11 +61,11 @@ void main() {
     myApp = ChangeNotifierProvider<SharedPreferencesService>(
       create: (_) => sharedPreferencesService,
       child: MaterialApp(
-        initialRoute: '/nestManage',
+        initialRoute: '/editNest',
         onGenerateRoute: (settings) {
-          if (settings.name == '/nestManage') {
+          if (settings.name == '/editNest') {
             return MaterialPageRoute(
-              builder: (context) => NestManage(
+              builder: (context) => EditNest(
                 firestore: firestore,
               ),
               settings: RouteSettings(
@@ -195,7 +195,7 @@ testWidgets("will navigate to nest when egg is saved", (WidgetTester tester) asy
       await tester.tap(find.byIcon(Icons.save));
       await tester.pumpAndSettle();
 
-      expect(find.byType(NestManage), findsOneWidget);
+      expect(find.byType(EditNest), findsOneWidget);
     });
 
  testWidgets("will navigate to nest when egg is deleted", (WidgetTester tester) async {
@@ -213,7 +213,7 @@ testWidgets("will navigate to nest when egg is saved", (WidgetTester tester) asy
         await tester.tap(find.text('Delete'));
         await tester.pumpAndSettle();
 
-        expect(find.byType(NestManage), findsOneWidget);
+        expect(find.byType(EditNest), findsOneWidget);
         expect(find.text('Egg 1 intact 2 days old'), findsNothing);
         expect(firestore.collection(DateTime.now().year.toString()).doc(nest.id).collection("egg").doc(egg.id).get(), completion((DocumentSnapshot snapshot) => snapshot.exists == false));
       });

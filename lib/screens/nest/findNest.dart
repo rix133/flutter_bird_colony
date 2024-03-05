@@ -51,7 +51,7 @@ class _FindNestState extends State<FindNest> {
     DocumentSnapshot data = await nests!.doc(target).get();
     if (data.exists) {
       Navigator.pushNamed(
-          context, "/nestManage",
+          context, '/editNest',
           arguments: {
             "nest": Nest.fromDocSnapshot(data),
           });

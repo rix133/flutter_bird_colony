@@ -52,7 +52,7 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
       padding: const EdgeInsets.all(18.0),
       child: ElevatedButton.icon(
           onPressed: () {
-            Navigator.pushNamed(context, "/map", arguments: {'nest_ids': nests.map((e) => e.id).toList()});
+            Navigator.pushNamed(context, '/mapNests', arguments: {'nest_ids': nests.map((e) => e.id).toList()});
           },
           icon: Icon(Icons.map),
           label: Padding(
@@ -138,7 +138,6 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
         widget.firestore.collection(value.toString());
     setState(() {
       stream = collection?.snapshots() ?? Stream.empty();
-      selectedYear = value;
     });
   }
 

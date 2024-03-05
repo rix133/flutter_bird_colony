@@ -20,16 +20,16 @@ import 'package:kakrarahu/services/locationService.dart';
 
 
 
-class NestManage extends StatefulWidget {
+class EditNest extends StatefulWidget {
   final FirebaseFirestore firestore;
 
-  const NestManage({super.key, required this.firestore});
+  const EditNest({super.key, required this.firestore});
 
   @override
-  State<NestManage> createState() => _NestManageState();
+  State<EditNest> createState() => _EditNestState();
 }
 
-class _NestManageState extends State<NestManage> {
+class _EditNestState extends State<EditNest> {
 
   Species species = Species.empty();
   int new_egg_nr = 1;
@@ -240,7 +240,7 @@ class _NestManageState extends State<NestManage> {
           onLongPress: () {
             Navigator.pushNamed(context, "/editBird", arguments: {
               "nest": nest,
-              "route": "/nestManage",
+              "route": '/editNest',
               //this egg has no number as it has no id
               "egg": Egg(
                   discover_date: DateTime.now(),
@@ -298,7 +298,7 @@ class _NestManageState extends State<NestManage> {
                     exp.nests = [];
                   }
                   exp.nests!.add(nest!.name);
-                  exp.save(widget.firestore).then((v) => Navigator.pushNamedAndRemoveUntil(context, "/nestManage", ModalRoute.withName('/findNest'), arguments: {"nest_id": nest!.name})
+                  exp.save(widget.firestore).then((v) => Navigator.pushNamedAndRemoveUntil(context, '/editNest', ModalRoute.withName('/findNest'), arguments: {"nest_id": nest!.name})
                   );
                 }
               },
@@ -312,7 +312,7 @@ class _NestManageState extends State<NestManage> {
   void addParent() {
     Navigator.pushNamed(context, "/editBird", arguments: {
       "nest": nest,
-      "route": "/nestManage",
+      "route": '/editNest',
     });
   }
 
@@ -331,7 +331,7 @@ class _NestManageState extends State<NestManage> {
                     Navigator.pushNamed(context, "/editBird", arguments: {
                       "bird": b,
                       "nest": nest,
-                      "route": "/nestManage",
+                      "route": '/editNest',
                     });
                   },
                   child: Text(b.name),

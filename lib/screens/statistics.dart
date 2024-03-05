@@ -255,6 +255,6 @@ class _StatisticsState extends State<Statistics> {
     Set<String?> nestList = nests.map((Nest n) => n.id).toSet();
     //remove nulls
     nestList.removeWhere((element) => element == null);
-    Navigator.pushNamed(context, "/map", arguments: {"nest_ids": nestList});
+    Navigator.pushNamed(context, '/mapNests', arguments: {"nest_ids": nestList});
   }
 }

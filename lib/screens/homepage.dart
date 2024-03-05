@@ -44,8 +44,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          HomePageButton(route: "/map", icon: Icons.map_outlined, label: "map", color: Colors.green[800]!),
-                          HomePageButton(route: "/mapforcreate", icon: Icons.add, label: "add nest", color: Colors.purple[800]!),
+                          HomePageButton(route: '/mapNests', icon: Icons.map_outlined, label: "map", color: Colors.green[800]!),
+                          HomePageButton(route: '/mapCreateNest', icon: Icons.add, label: "add nest", color: Colors.purple[800]!),
                         ],
                       ),
                     ),

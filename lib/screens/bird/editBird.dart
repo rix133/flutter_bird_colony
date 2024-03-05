@@ -372,17 +372,17 @@ class _EditBirdState extends State<EditBird> {
 
   void saveOk() {
     sps?.setRecentBand(bird.species ?? '', bird.band);
-    if(previousRouteName == "/nestManage" && ageType == "parent"){
-      Navigator.pushNamedAndRemoveUntil(context, "/nestManage", ModalRoute.withName('/findNest'), arguments: {"nest_id": nest.name});
+    if(previousRouteName == '/editNest' && ageType == "parent"){
+      Navigator.pushNamedAndRemoveUntil(context, '/editNest', ModalRoute.withName('/findNest'), arguments: {"nest_id": nest.name});
     } else {
       Navigator.pop(context);
     }
   }
 
   void deleteOk() {
-   if(previousRouteName == "/nestManage" && ageType == "parent"){
+   if(previousRouteName == '/editNest' && ageType == "parent"){
       //update the nest manage page
-     Navigator.pushNamedAndRemoveUntil(context, "/nestManage", ModalRoute.withName('/findNest'), arguments: {"nest_id": nest.name});
+     Navigator.pushNamedAndRemoveUntil(context, '/editNest', ModalRoute.withName('/findNest'), arguments: {"nest_id": nest.name});
 
     }  else {
      Navigator.pop(context);

@@ -13,15 +13,15 @@ import '../../models/measure.dart';
 import '../../models/firestore/nest.dart';
 
 
-class MapForCreate extends StatefulWidget {
+class MapCreateNest extends StatefulWidget {
   final FirebaseFirestore firestore;
-  const MapForCreate({Key? key, required this.firestore}) : super(key: key);
+  const MapCreateNest({Key? key, required this.firestore}) : super(key: key);
 
   @override
-  State<MapForCreate> createState() => _MapForCreateState();
+  State<MapCreateNest> createState() => _MapCreateNestState();
 }
 
-class _MapForCreateState extends State<MapForCreate> {
+class _MapCreateNestState extends State<MapCreateNest> {
   CameraPosition camPos = CameraPosition(
     target: LatLng(58.766218, 23.430432),
     bearing: 270,
@@ -203,13 +203,13 @@ class _MapForCreateState extends State<MapForCreate> {
                   //lastId.set({'id': nest.id});
                 }
               nest.species = sps!.defaultSpecies;
-              Navigator.pushNamed(context, "/nestCreate", arguments: nest);
+              Navigator.pushNamed(context, '/createNest', arguments: nest);
             });
             },
             child: FloatingActionButton(
               heroTag: "addNest",
               onPressed: () {
-                Navigator.pushNamed(context, "/nestCreate", arguments: nest);
+                Navigator.pushNamed(context, '/createNest', arguments: nest);
               },
               child: const Icon(Icons.add),
             ),

@@ -11,7 +11,7 @@ import 'package:kakrarahu/screens/nest/findNest.dart';
 import 'package:kakrarahu/screens/homepage.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
-import 'package:kakrarahu/screens/nest/nestManage.dart';
+import 'package:kakrarahu/screens/nest/editNest.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -59,11 +59,11 @@ void main() {
     myApp = ChangeNotifierProvider<SharedPreferencesService>(
       create: (_) => sharedPreferencesService,
       child: MaterialApp(
-        initialRoute: '/nestManage',
+        initialRoute: '/editNest',
         onGenerateRoute: (settings) {
-          if (settings.name == '/nestManage') {
+          if (settings.name == '/editNest') {
             return MaterialPageRoute(
-              builder: (context) => NestManage(
+              builder: (context) => EditNest(
                 firestore: firestore,
               ),
               settings: RouteSettings(

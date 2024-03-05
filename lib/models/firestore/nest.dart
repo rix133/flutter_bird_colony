@@ -75,7 +75,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
     return Marker(
         infoWindow: InfoWindow(
             title: id,
-            onTap: () => Navigator.pushNamed(context, "/nestManage",
+            onTap: () => Navigator.pushNamed(context, '/editNest',
                 arguments: {"nest_id": id})),
         consumeTapEvents: false,
         visible: visibility,
@@ -302,14 +302,14 @@ TextCellValue('species'),
               style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all<Color>(getMarkerColor() == BitmapDescriptor.hueGreen ? Colors.green : Colors.limeAccent)),
               onPressed: () {
-                Navigator.pushNamed(context, '/map',
+                Navigator.pushNamed(context, '/mapNests',
                     arguments: {'nest_ids': [id]});
               }),
           SizedBox(width: 10),
           IconButton( icon: Icon(Icons.edit, color: Colors.black87),
     style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(Colors.grey)),
               onPressed: () {
-            Navigator.pushNamed(context, '/nestManage', arguments: {"nest": this});
+            Navigator.pushNamed(context, '/editNest', arguments: {"nest": this});
           }),
         ],
       ),

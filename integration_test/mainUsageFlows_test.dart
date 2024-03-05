@@ -17,11 +17,11 @@ import 'package:kakrarahu/screens/bird/listBirds.dart';
 import 'package:kakrarahu/screens/listDatas.dart';
 import 'package:kakrarahu/screens/experiment/listExperiments.dart';
 import 'package:kakrarahu/screens/settings/listSpecies.dart';
-import 'package:kakrarahu/screens/nest/mapforcreate.dart';
+import 'package:kakrarahu/screens/nest/mapCreateNest.dart';
 import 'package:kakrarahu/screens/nest/listNests.dart';
-import 'package:kakrarahu/screens/nest/nestCreate.dart';
-import 'package:kakrarahu/screens/nest/nestManage.dart';
-import 'package:kakrarahu/screens/nest/nestsMap.dart';
+import 'package:kakrarahu/screens/nest/createNest.dart';
+import 'package:kakrarahu/screens/nest/editNest.dart';
+import 'package:kakrarahu/screens/nest/mapNests.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/screens/settings/settings.dart';
@@ -111,12 +111,12 @@ void main() async{
           routes: {
             '/': (context) => MyHomePage(title: appName),
             '/editEgg': (context) =>  EditEgg(firestore: firestore),
-            '/nestCreate': (context) =>  NestCreate(firestore: firestore),
-            '/nestManage': (context) =>  NestManage(firestore: firestore),
+            '/createNest': (context) =>  CreateNest(firestore: firestore),
+            '/editNest': (context) =>  EditNest(firestore: firestore),
             '/settings': (context) => SettingsPage(firestore: firestore),
-            '/map': (context) => NestsMap(firestore: firestore),
+            '/mapNests': (context) => MapNests(firestore: firestore),
             '/statistics': (context) => Statistics(firestore: firestore),
-            '/mapforcreate': (context) => MapForCreate(firestore: firestore),
+            '/mapCreateNest': (context) => MapCreateNest(firestore: firestore),
             '/findNest': (context) => FindNest(firestore: firestore),
             '/editBird': (context) => EditBird(firestore: firestore),
             '/listBirds': (context) => ListBirds(firestore: firestore),

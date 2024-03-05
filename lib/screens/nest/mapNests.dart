@@ -11,15 +11,15 @@ import 'package:provider/provider.dart';
 
 import '../../models/firestore/nest.dart';
 
-class NestsMap extends StatefulWidget {
+class MapNests extends StatefulWidget {
   final FirebaseFirestore firestore;
-  const NestsMap({Key? key, required this.firestore})  : super(key: key);
+  const MapNests({Key? key, required this.firestore})  : super(key: key);
 
   @override
-  State<NestsMap> createState() => _NestsMapState();
+  State<MapNests> createState() => _MapNestsState();
 }
 
-class _NestsMapState extends State<NestsMap> {
+class _MapNestsState extends State<MapNests> {
   String today = DateTime.now().toIso8601String().split("T")[0];
   CameraPosition initCamera = CameraPosition(
     target: LatLng(58.766218, 23.430432),
@@ -293,7 +293,7 @@ class _NestsMapState extends State<NestsMap> {
           FloatingActionButton(
             heroTag: "addNest",
             onPressed: () {
-              Navigator.pushNamed(context, "/nestCreate");
+              Navigator.pushNamed(context, '/createNest');
             },
             child: const Icon(Icons.add),
           ),

@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:kakrarahu/screens/homepage.dart';
-import 'package:kakrarahu/screens/nest/mapforcreate.dart';
-import 'package:kakrarahu/screens/nest/nestCreate.dart';
-import 'package:kakrarahu/screens/nest/nestManage.dart';
+import 'package:kakrarahu/screens/nest/mapCreateNest.dart';
+import 'package:kakrarahu/screens/nest/createNest.dart';
+import 'package:kakrarahu/screens/nest/editNest.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -40,9 +40,9 @@ void main() {
           routes: {
             '/': (context) => MyHomePage(title: "Nest app"),
             '/settings': (context) => SettingsPage(firestore: firestore),
-            '/mapforcreate': (context) => MapForCreate(firestore: firestore),
-            '/nestCreate':(context)=>NestCreate(firestore: firestore),
-            '/nestManage':(context)=>NestManage(firestore: firestore),
+            '/mapCreateNest': (context) => MapCreateNest(firestore: firestore),
+            '/createNest':(context)=>CreateNest(firestore: firestore),
+            '/editNest':(context)=>EditNest(firestore: firestore),
           }
       ),
     );
@@ -61,7 +61,7 @@ void main() {
     await tester.tap(find.text("add nest"));
     await tester.pumpAndSettle();
 
-    expect(find.byType(MapForCreate), findsOneWidget);
+    expect(find.byType(MapCreateNest), findsOneWidget);
   });
 
   testWidgets("can refresh position on map", (WidgetTester tester) async {
@@ -91,7 +91,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
 
-    expect(find.byType(NestCreate), findsOneWidget);
+    expect(find.byType(CreateNest), findsOneWidget);
   });
 
   testWidgets("will save the nest to the database", (WidgetTester tester) async {
@@ -125,7 +125,7 @@ void main() {
     await tester.tap(find.text("add nest"));
     await tester.pumpAndSettle();
 
-    expect(find.byType(NestManage), findsOneWidget);
+    expect(find.byType(EditNest), findsOneWidget);
   });
 
   testWidgets("can refresh position on nest create", (WidgetTester tester) async {
@@ -278,10 +278,10 @@ void main() {
     await tester.tap(find.text("add nest"));
     await tester.pumpAndSettle();
 
-    expect(find.byType(NestManage), findsOneWidget);
+    expect(find.byType(EditNest), findsOneWidget);
 
     await tester.tap(find.text("save"));
     await tester.pumpAndSettle();
-    expect(find.byType(MapForCreate), findsOneWidget);
+    expect(find.byType(MapCreateNest), findsOneWidget);
   });
 }

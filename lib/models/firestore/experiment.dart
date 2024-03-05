@@ -171,7 +171,7 @@ class Experiment implements FirestoreItem {
 
   gotoNest(String nest, BuildContext context) {
     return () => {
-          Navigator.pushNamed(context, "/nestManage",
+          Navigator.pushNamed(context, '/editNest',
               arguments: {'nest_id': nest})
         };
   }
@@ -214,7 +214,7 @@ class Experiment implements FirestoreItem {
                     backgroundColor:
                         MaterialStateProperty.all<Color>(Colors.grey)),
                 onPressed: () {
-                  Navigator.pushNamed(context, '/map',
+                  Navigator.pushNamed(context, '/mapNests',
                       arguments: {'nest_ids': nests});
                 }),
             IconButton(
@@ -235,7 +235,7 @@ class Experiment implements FirestoreItem {
   }
 
   void showNestMap(BuildContext context) {
-    Navigator.pushNamed(context, "/map", arguments: {'nests_ids': nests});
+    Navigator.pushNamed(context, '/mapNests', arguments: {'nests_ids': nests});
   }
 
   Future<UpdateResult> _updateNestCollection(FirebaseFirestore firestore, List<String>? items,

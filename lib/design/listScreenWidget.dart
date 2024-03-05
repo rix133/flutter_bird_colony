@@ -80,7 +80,8 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
       }).toList(),
       onChanged: (int? newValue) {
         setState(() {
-          selectedYear = newValue!;
+          selectedYear = newValue ?? selectedYear;
+          updateYearFilter(selectedYear);
           Navigator.pop(context);
         });
       },

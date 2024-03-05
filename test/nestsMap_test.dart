@@ -10,8 +10,8 @@ import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/screens/homepage.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
-import 'package:kakrarahu/screens/nest/nestCreate.dart';
-import 'package:kakrarahu/screens/nest/nestsMap.dart';
+import 'package:kakrarahu/screens/nest/createNest.dart';
+import 'package:kakrarahu/screens/nest/mapNests.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -59,20 +59,20 @@ void main() {
     myApp = ChangeNotifierProvider<SharedPreferencesService>(
       create: (_) => sharedPreferencesService,
       child: MaterialApp(
-        initialRoute: '/map',
+        initialRoute: '/mapNests',
         onGenerateRoute: (settings) {
-          if (settings.name == '/nestCreate') {
+          if (settings.name == '/createNest') {
             return MaterialPageRoute(
-              builder: (context) => NestCreate(
+              builder: (context) => CreateNest(
                 firestore: firestore,
               ),
               settings: RouteSettings(
                 arguments: nest, // get initial nest from firestore
               ),
             );
-          } else if (settings.name == '/map') {
+          } else if (settings.name == '/mapNests') {
             return MaterialPageRoute(
-              builder: (context) => NestsMap(
+              builder: (context) => MapNests(
                 firestore: firestore,
               ),
             );
@@ -98,7 +98,7 @@ void main() {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
-    expect(find.byType(NestsMap), findsOneWidget);
+    expect(find.byType(MapNests), findsOneWidget);
   });
 
   testWidgets("Check if Google Map exists", (WidgetTester tester) async {
@@ -124,7 +124,7 @@ void main() {
     Finder addNest = find.byIcon(Icons.add);
     await tester.tap(addNest);
     await tester.pumpAndSettle();
-    expect(find.byType(NestCreate), findsOneWidget);
+    expect(find.byType(CreateNest), findsOneWidget);
   });
 
   testWidgets("can search for nests", (WidgetTester tester) async {
