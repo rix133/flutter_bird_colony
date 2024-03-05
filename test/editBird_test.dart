@@ -141,10 +141,35 @@ void main() {
     expect(find.byType(EditBird), findsOneWidget);
   });
 
+  testWidgets(
+      "Will load edit bird with nest and parent", (WidgetTester tester) async {
+    myApp = getInitApp({"nest": nest, "bird": parent});
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    expect(find.byType(EditBird), findsOneWidget);
+  });
+
+  testWidgets(
+      "Will load edit bird with nest only", (WidgetTester tester) async {
+    myApp = getInitApp({"nest": nest});
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    expect(find.byType(EditBird), findsOneWidget);
+  });
+
   testWidgets("Will load edit bird with bird", (WidgetTester tester) async {
     myApp = getInitApp({"bird": parent});
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
     expect(find.byType(EditBird), findsOneWidget);
 });
+
+  testWidgets("Will load nest default bird if cant find it from firestore", (WidgetTester tester) async {
+    parent.band = "not in firestore";
+    parent.id = null;
+    myApp = getInitApp({"bird": parent,"nest": nest});
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    expect(find.byType(EditBird), findsOneWidget);
+  });
 }

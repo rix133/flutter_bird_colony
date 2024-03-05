@@ -36,6 +36,7 @@ void main() {
     accuracy: "12.22m",
     last_modified: DateTime.now().subtract(Duration(days: 2)),
     discover_date: DateTime.now().subtract(Duration(days: 2)),
+    first_egg: DateTime.now().subtract(Duration(days: 2)),
     responsible: "Admin",
     species: "Common gull",
     measures: [Measure.note()],
@@ -44,7 +45,7 @@ void main() {
   final Nest nest2 = Nest(
     id: "2",
     coordinates: GeoPoint(0, 0),
-    accuracy: "12.22m",
+    accuracy: "1.22m",
     last_modified: DateTime.now(),
     discover_date: DateTime.now(),
     responsible: "Admin",
@@ -239,6 +240,50 @@ void main() {
     //check if the list of birds is displayed
     expect(find.byType(ListTile), findsNWidgets(1));
   });
+  testWidgets("filter by min and max location accuracy", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the filter button
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(2));
+    //find the min nest age input
+    await tester.enterText(find.byKey(Key("Loc accuracyMin")), "1");
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsNWidgets(2));
+
+    //find the max nest age input
+    await tester.enterText(find.byKey(Key("Loc accuracyMax")), "4");
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(1));
+  });
+
+  testWidgets("filter by min and max first egg age", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the filter button
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(2));
+    //find the min nest age input
+    await tester.enterText(find.byKey(Key("First egg ageMin")), "1");
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsNWidgets(1));
+
+    //find the max nest age input
+    await tester.enterText(find.byKey(Key("First egg ageMax")), "4");
+    await tester.pumpAndSettle();
+    //check if the list of birds is displayed
+    expect(find.byType(ListTile), findsNWidgets(1));
+
+    await tester.enterText(find.byKey(Key("First egg ageMin")), "3");
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsNWidgets(0));
+  });
+
 
   testWidgets("filter by min and max nest age", (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
@@ -259,6 +304,7 @@ void main() {
     //check if the list of birds is displayed
     expect(find.byType(ListTile), findsNWidgets(1));
   });
+
   testWidgets('Test if _downloadConfirmationDialog is shown', (WidgetTester tester) async {
     // Build your app and trigger a frame.
     await tester.pumpWidget(myApp);
