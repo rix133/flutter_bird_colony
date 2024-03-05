@@ -3,6 +3,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
@@ -33,8 +34,8 @@ void main() {
     id: "1",
     coordinates: GeoPoint(0, 0),
     accuracy: "12.22m",
-    last_modified: DateTime.now().subtract(Duration(days: 1)),
-    discover_date: DateTime.now().subtract(Duration(days: 1)),
+    last_modified: DateTime.now().subtract(Duration(days: 2)),
+    discover_date: DateTime.now().subtract(Duration(days: 2)),
     responsible: "Admin",
     species: "Common gull",
     measures: [Measure.note()],
@@ -191,4 +192,137 @@ void main() {
     expect(find.byType(ListTile), findsNWidgets(0));
 
   });
-}
+  testWidgets("will filter nests by species name", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(2));
+    //find the filter button
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    //find the species input
+
+    //find that has the species test in textfield
+    // Find the SpeciesRawAutocomplete widget
+    Finder speciesRawAutocompleteFinder = find.byType(SpeciesRawAutocomplete);
+    expect(speciesRawAutocompleteFinder, findsOneWidget);
+
+    // Find the TextField widget which is a descendant of the SpeciesRawAutocomplete widget
+    Finder textFieldFinder = find.descendant(
+      of: speciesRawAutocompleteFinder,
+      matching: find.byType(TextField),
+    );
+    expect(textFieldFinder, findsOneWidget);
+
+    // Enter the text "Common gull" into the TextField
+    await tester.enterText(textFieldFinder, "Common gull");
+    await tester.pumpAndSettle();
+    // tap the last item in the list its the popup from the autocomplete
+    await tester.tap(find.byType(ListTile).last);
+    await tester.pumpAndSettle();
+
+    //tap the close button
+    await tester.tap(find.text("Close"));
+
+
+    //check if the list of birds is displayed
+    expect(find.byType(ListTile), findsNWidgets(1));
+  });
+
+  testWidgets("will filter nests by nest name", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the search input
+    await tester.enterText(find.byType(TextField), "1");
+    await tester.pumpAndSettle();
+
+    //check if the list of birds is displayed
+    expect(find.byType(ListTile), findsNWidgets(1));
+  });
+
+  testWidgets("filter by min and max nest age", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the filter button
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(2));
+    //find the min nest age input
+    await tester.enterText(find.byKey(Key("Nest ageMin")), "1");
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsNWidgets(1));
+
+    //find the max nest age input
+    await tester.enterText(find.byKey(Key("Nest ageMax")), "4");
+    await tester.pumpAndSettle();
+    //check if the list of birds is displayed
+    expect(find.byType(ListTile), findsNWidgets(1));
+  });
+  testWidgets('Test if _downloadConfirmationDialog is shown', (WidgetTester tester) async {
+    // Build your app and trigger a frame.
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    // Find the download button.
+    var downloadButton = find.byIcon(Icons.download);
+
+    // Verify that the button is in the screen.
+    expect(downloadButton, findsOneWidget);
+
+    // Tap the download button.
+    await tester.tap(downloadButton);
+    await tester.pump();
+
+
+    // Check if the AlertDialog is shown.
+    expect(find.byType(AlertDialog), findsOneWidget);
+
+    //tap the no button
+    await tester.tap(find.text("No"));
+    await tester.pumpAndSettle();
+
+    //chekc that alert dialog is gone
+    expect(find.byType(AlertDialog), findsNothing);
+  });
+  testWidgets("can clear some filters", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the filter button
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    //find the year input dropdown
+    await tester.enterText(find.byKey(Key("Nest ageMin")), "1");
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsNWidgets(1));
+
+
+    Finder speciesRawAutocompleteFinder = find.byType(SpeciesRawAutocomplete);
+    expect(speciesRawAutocompleteFinder, findsOneWidget);
+
+    // Find the TextField widget which is a descendant of the SpeciesRawAutocomplete widget
+    Finder textFieldFinder = find.descendant(
+      of: speciesRawAutocompleteFinder,
+      matching: find.byType(TextField),
+    );
+    expect(textFieldFinder, findsOneWidget);
+
+    // Enter the text "Common gull" into the TextField
+    await tester.enterText(textFieldFinder, "Common gull");
+    await tester.pumpAndSettle();
+    // tap the last item in the list its the popup from the autocomplete
+    await tester.tap(find.byType(ListTile).last);
+    await tester.pumpAndSettle();
+
+    //tap the close button
+    await tester.tap(find.text("Clear all"));
+    await tester.pumpAndSettle();
+
+    //check if the list of birds is displayed
+    expect(find.byType(ListTile), findsNWidgets(2));
+  });
+
+
+
+
+  }

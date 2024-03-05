@@ -91,6 +91,12 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
 
             ])),
             actions: [
+              ElevatedButton(onPressed:
+                  (){
+                Navigator.pop(context);
+                clearFilters();
+              },
+                  child: Text("Clear all")),
               ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
@@ -151,7 +157,6 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
       _maxEggAge = null;
       _minEggs = null;
       _maxEggs = null;
-      searchController.clear();
     });
   }
 

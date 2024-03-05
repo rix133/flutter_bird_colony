@@ -75,6 +75,12 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
                       labelColor: Colors.grey),
                  ])),
               actions: [
+                ElevatedButton(onPressed:
+                  (){
+                    Navigator.pop(context);
+                    clearFilters();
+                  },
+                    child: Text("Clear all")),
                 ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);

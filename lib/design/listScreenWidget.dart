@@ -97,6 +97,7 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
         Text(label),
         SizedBox(width: 10),
         Expanded(child:TextFormField(
+            key: Key(label + "Min"),
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               labelText: "Min",
@@ -109,6 +110,7 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
         )),
         SizedBox(width: 10),
         Expanded(child:TextFormField(
+            key: Key(label + "Max"),
             keyboardType: TextInputType.number,
             initialValue: max?.toString() ?? "",
             decoration: InputDecoration(

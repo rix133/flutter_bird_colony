@@ -3,6 +3,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
@@ -83,6 +84,18 @@ void main() {
       last_modified: DateTime.now().subtract(Duration(days: 3)),
       species: 'Common gull');
 
+  final tern = Bird(
+      ringed_date: DateTime.now().subtract(Duration(days: 3)),
+      band: 'UU1235',
+      ringed_as_chick: true,
+      measures: [Measure.note()],
+      nest: "123",
+      //3 years ago this was the nest
+      nest_year: DateTime.now().year,
+      responsible: 'Admin',
+      last_modified: DateTime.now().subtract(Duration(days: 3)),
+      species: 'Common tern');
+
   setUpAll(() async {
     AuthService.instance = authService;
     LocationService.instance = locationAccuracy10;
@@ -94,6 +107,7 @@ void main() {
         .toString()).doc(nest.id).set(nest.toJson());
     await firestore.collection("Birds").doc(parent.band).set(parent.toJson());
     await firestore.collection("Birds").doc(chick.band).set(chick.toJson());
+    await firestore.collection("Birds").doc(tern.band).set(tern.toJson());
     //add egg to nest
     await firestore.collection(DateTime
         .now()
@@ -127,8 +141,45 @@ void main() {
         await tester.pumpAndSettle();
 
         //check if the list of birds is displayed
-        expect(find.byType(ListTile), findsNWidgets(1));
+        expect(find.byType(ListTile), findsNWidgets(2));
 });
+
+  testWidgets("will filter birds by species name", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(2));
+    //find the filter button
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    //find the species input
+
+    //find that has the species test in textfield
+    // Find the SpeciesRawAutocomplete widget
+    Finder speciesRawAutocompleteFinder = find.byType(SpeciesRawAutocomplete);
+    expect(speciesRawAutocompleteFinder, findsOneWidget);
+
+    // Find the TextField widget which is a descendant of the SpeciesRawAutocomplete widget
+    Finder textFieldFinder = find.descendant(
+      of: speciesRawAutocompleteFinder,
+      matching: find.byType(TextField),
+    );
+    expect(textFieldFinder, findsOneWidget);
+
+    // Enter the text "Common gull" into the TextField
+    await tester.enterText(textFieldFinder, "Common gull");
+    await tester.pumpAndSettle();
+    // tap the last item in the list its the popup from the autocomplete
+    await tester.tap(find.byType(ListTile).last);
+    await tester.pumpAndSettle();
+
+    //tap the close button
+    await tester.tap(find.text("Close"));
+
+
+    //check if the list of birds is displayed
+    expect(find.byType(ListTile), findsNWidgets(1));
+  });
 
   testWidgets(
       "Will load the list of birds from 2022 and display them in a list",  (WidgetTester tester) async {
@@ -165,5 +216,46 @@ void main() {
     //check if the list of birds is displayed
     expect(find.byType(ListTile), findsNWidgets(0));
 
+  });
+
+  testWidgets("can clear all filters", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the filter button
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    //find the year input dropdown
+    await tester.tap(find.text(DateTime.now().year.toString()));
+    await tester.pumpAndSettle();
+    //tap the 2022 year  option
+    await tester.tap(find.text("2022"));
+    await tester.pumpAndSettle();
+    //find the species input
+
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    Finder speciesRawAutocompleteFinder = find.byType(SpeciesRawAutocomplete);
+    expect(speciesRawAutocompleteFinder, findsOneWidget);
+
+    // Find the TextField widget which is a descendant of the SpeciesRawAutocomplete widget
+    Finder textFieldFinder = find.descendant(
+      of: speciesRawAutocompleteFinder,
+      matching: find.byType(TextField),
+    );
+    expect(textFieldFinder, findsOneWidget);
+
+    // Enter the text "Common gull" into the TextField
+    await tester.enterText(textFieldFinder, "Common gull");
+    await tester.pumpAndSettle();
+    // tap the last item in the list its the popup from the autocomplete
+    await tester.tap(find.byType(ListTile).last);
+    await tester.pumpAndSettle();
+
+    //tap the close button
+    await tester.tap(find.text("Clear all"));
+    await tester.pumpAndSettle();
+
+    //check if the list of birds is displayed
+    expect(find.byType(ListTile), findsNWidgets(2));
   });
 }
