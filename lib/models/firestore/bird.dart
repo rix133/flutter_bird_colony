@@ -299,7 +299,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   }
 
   bool isChick() {
-    return (ringed_as_chick == true && ringed_date.year == nest_year) && (color_band?.isEmpty ?? true);
+    return (ringed_as_chick == true && ringed_date.year == nest_year && DateTime.now().year == nest_year) && (color_band?.isEmpty ?? true);
   }
 
   int ageInYears() {
@@ -331,7 +331,6 @@ class Bird extends ExperimentedItem implements FirestoreItem{
           return ur;
         }
       if(nestsItemCollection != null){
-        print("update nest at bird time: ${DateTime.now()}");
         ur = await _updateNest(nestsItemCollection, isParent);
         if(!ur.success) {
           return ur;

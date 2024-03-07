@@ -275,6 +275,7 @@ class _EditBirdState extends State<EditBird> {
       children: [
         Expanded(
           child: TextFormField(
+            key: Key("band_letCntr"),
             controller: band_letCntr,
             textAlign: TextAlign.center,
             focusNode: _lettersFocus,
@@ -314,6 +315,7 @@ class _EditBirdState extends State<EditBird> {
         SizedBox(width: 10),
         Expanded(
           child: TextFormField(
+            key: Key("band_numCntr"),
             keyboardType: TextInputType.number,
             controller: band_numCntr,
             onChanged: (String value) {
