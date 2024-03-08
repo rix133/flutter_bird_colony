@@ -1,10 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kakrarahu/models/firestore/defaultSettings.dart';
-import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
-import 'dart:convert';
+import 'package:kakrarahu/models/measure.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPreferencesService extends ChangeNotifier {
   SharedPreferencesService(this._sharedPreferences);
@@ -18,13 +19,6 @@ class SharedPreferencesService extends ChangeNotifier {
     notifyListeners();
   }
 
-
-  String get email => _sharedPreferences.getString('email') ?? '';
-
-  set email(String value) {
-    _sharedPreferences.setString('email', value);
-    notifyListeners();
-  }
 
   double get desiredAccuracy => _sharedPreferences.getDouble('desiredAccuracy') ?? 4;
 
