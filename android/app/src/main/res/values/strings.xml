@@ -1,1 +1,3 @@
-<string name="google_maps_key" translatable="false">${BuildConfig.MAPS_API_KEY}</string>
+<resources>
+    <string name="google_maps_key" translatable="false">${BuildConfig.MAPS_API_KEY}</string>
+</resources>

@@ -1,13 +1,12 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
 
 class Statistics extends StatefulWidget {
   final FirebaseFirestore firestore;

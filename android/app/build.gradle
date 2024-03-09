@@ -60,7 +60,9 @@ android {
         targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
-        buildConfigField("String", "MAPS_API_KEY", "\"${getMapsApiKey()}\"")
+        def mapsApiKey = getMapsApiKey()
+        //println("Maps API Key: $mapsApiKey")
+        buildConfigField("String", "MAPS_API_KEY", "$mapsApiKey")
     }
     signingConfigs {
         release {

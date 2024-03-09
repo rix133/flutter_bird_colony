@@ -95,8 +95,6 @@ void main() {
       expect(sharedPreferencesService.defaultSpecies, 'Eagle');
     });
 
-// Add more tests for other methods and properties of SharedPreferencesService
-
     // Add more tests for other methods and properties of SharedPreferencesService
   });
 }

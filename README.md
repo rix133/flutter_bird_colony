@@ -29,12 +29,27 @@ the app can be used to manage your colony without understanding the details of t
 ### Setting up the app
 
 To get started with the app install flutter and the flutter command line tools. You can find
-instructions for installing flutter [here](https://flutter.dev/docs/get-started/install).
+instructions for installing [Flutter](https://flutter.dev/docs/get-started/install).
 Then clone the repository and run  `flutter pub get` to install the dependencies.
 Next, create a Firebase project and add  the `google-services.json` file to the `android/app` directory.
-You will also need the `firebase_options.dart` file in the `lib` directory. To generate the `firebase_options.dart` 
-file the firebase command line tools can be used. See the 
-[firebase documentation](https://firebase.flutter.dev/docs/overview) for more information. 
+You will also need the `firebase_options.dart` file in the `lib` directory. To generate the `firebase_options.dart`
+file the firebase command line tools can be used. See the
+[Firebase docs](https://firebase.flutter.dev/docs/overview) for more information.
+
+To run the app you also need to set up the key.properties file in the android directory. The file
+should contain
+the release key information and the Google Maps API key. The file should look something like this:
+
+``` 
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=upload
+storeFile=PATH_TO_YOUR_RELEASE_KEY_FILE/release-key.jks
+MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
+```
+
+You can find more information about setting up the key.properties file
+from [Flutter docs](https://docs.flutter.dev/deployment/android).
 
 ## Dependencies
 
