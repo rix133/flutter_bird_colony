@@ -2,42 +2,57 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MockSharedPreferences extends Fake implements SharedPreferences {
-  String? s;
-  bool? b;
-  double? d;
+  List<Map<String, String>> s = [];
   int? i;
   List<String>? l;
+  String? UA;
+  String? HK;
 
   @override
   String? getString(String key) {
-    return (s);
+    for (int i = 0; i < s.length; i++) {
+      if (s[i].containsKey(key)) {
+        return s[i][key];
+      }
+    }
+    return null;
   }
 
   @override
   Future<bool> setString(String key, String value) {
-    s = value;
+    //if s has key replace it, else add it
+    bool found = false;
+    for (int i = 0; i < s.length; i++) {
+      if (s[i].containsKey(key)) {
+        s[i][key] = value;
+        found = true;
+      }
+    }
+    if (!found) {
+      s.add({key: value});
+    }
     return Future.value(true);
   }
 
   @override
   bool? getBool(String key) {
-    return (b);
+    return bool.tryParse(getString(key) ?? '') ?? null;
   }
 
   @override
   Future<bool> setBool(String key, bool value) {
-    b = value;
+    setString(key, value.toString());
     return Future.value(true);
   }
 
   @override
   double? getDouble(String key) {
-    return (d);
+    return double.tryParse(getString(key) ?? '') ?? null;
   }
 
   @override
   Future<bool> setDouble(String key, double value) {
-    d = value;
+    setString(key, value.toString());
     return Future.value(true);
   }
 
@@ -60,6 +75,18 @@ class MockSharedPreferences extends Fake implements SharedPreferences {
   @override
   Future<bool> setInt(String key, int value) {
     i = value;
+    return Future.value(true);
+  }
+
+  @override
+  Future<bool> remove(String key) {
+    //find the key and remove it
+    for (int i = 0; i < s.length; i++) {
+      if (s[i].containsKey(key)) {
+        s.removeAt(i);
+      }
+    }
+
     return Future.value(true);
   }
 }

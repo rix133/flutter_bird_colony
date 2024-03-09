@@ -1,4 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:kakrarahu/models/firestore/defaultSettings.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
+import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,6 +35,11 @@ void main() {
     test('email should return the set value', () {
       sharedPreferencesService.userEmail = 'test@example.com';
       expect(sharedPreferencesService.userEmail, 'test@example.com');
+    });
+
+    test('username should return the set value', () {
+      sharedPreferencesService.userName = 'Test User';
+      expect(sharedPreferencesService.userName, 'Test User');
     });
 
     test('desiredAccuracy should return 4 if not set', () {
@@ -95,6 +105,95 @@ void main() {
       expect(sharedPreferencesService.defaultSpecies, 'Eagle');
     });
 
-    // Add more tests for other methods and properties of SharedPreferencesService
+    test('should set and get desiredAccuracy', () {
+      sharedPreferencesService.desiredAccuracy = 5;
+      expect(sharedPreferencesService.desiredAccuracy, 5);
+    });
+
+    test('defaultMeasures should return empty list if not set', () {
+      expect(sharedPreferencesService.defaultMeasures, []);
+    });
+
+    test('defaultMeasures should return the set value', () {
+      Measure measure = Measure(
+          name: 'test',
+          value: '',
+          unit: 'test',
+          type: 'nest',
+          isNumber: false,
+          modified: DateTime.now());
+      sharedPreferencesService.defaultMeasures = [measure];
+      expect(sharedPreferencesService.defaultMeasures.length, 1);
+      expect(sharedPreferencesService.defaultMeasures[0].name, 'test');
+    });
+
+    test('should set and get recent band for species', () {
+      sharedPreferencesService.speciesList =
+          LocalSpeciesList.fromStringList(['Common Gull', 'Arctic Tern']);
+      sharedPreferencesService.setRecentBand('Common Gull', '123');
+      expect(sharedPreferencesService.getRecentMetalBand('Common Gull'), '123');
+    });
+
+    test('should set and get localspecieslist', () {
+      sharedPreferencesService.speciesList =
+          LocalSpeciesList.fromStringList(['Common Gull', 'Arctic Tern']);
+      expect(sharedPreferencesService.speciesList.species.length, 2);
+      expect(
+          sharedPreferencesService.speciesList
+              .getSpecies("Common Gull")
+              .english,
+          'Common Gull');
+    });
+
+    test('should get and set biasedRepeatedMeasures', () {
+      expect(sharedPreferencesService.biasedRepeatedMeasures, false);
+      sharedPreferencesService.biasedRepeatedMeasures = true;
+      expect(sharedPreferencesService.biasedRepeatedMeasures, true);
+    });
+
+    test('should clear all metal bands', () {
+      sharedPreferencesService.speciesList =
+          LocalSpeciesList.fromStringList(['Common Gull', 'Arctic Tern']);
+      sharedPreferencesService.setRecentBand('Common Gull', '123');
+      sharedPreferencesService.setRecentBand('Arctic Tern', '456');
+      sharedPreferencesService.clearAllMetalBands();
+      expect(sharedPreferencesService.getRecentMetalBand('Common Gull'), 'UA');
+      expect(sharedPreferencesService.getRecentMetalBand('Arctic Tern'), 'HK');
+    });
+
+    test('should get and set defaultLocation', () {
+      CameraPosition cameraPosition =
+          CameraPosition(target: LatLng(12, 11), bearing: 270, zoom: 10);
+      expect(sharedPreferencesService.defaultLocation.zoom, 16.35);
+      sharedPreferencesService.defaultLocation = cameraPosition;
+      //expect(sharedPreferencesService.defaultLocation.zoom, 10);
+      expect(sharedPreferencesService.defaultLocation.target.latitude, 12);
+      expect(sharedPreferencesService.defaultLocation.target.longitude, 11);
+    });
+
+    test('should set from defaultSettings', () {
+      DefaultSettings defaultSettings = DefaultSettings(
+          id: 'default',
+          desiredAccuracy: 2,
+          selectedYear: 2022,
+          autoNextBand: true,
+          autoNextBandParent: true,
+          defaultLocation: GeoPoint(11, 10),
+          biasedRepeatedMeasurements: true,
+          settingsType: 'default',
+          defaultSpecies: Species(english: 'test', local: '', latinCode: ''),
+          measures: [Measure.note()]);
+
+      sharedPreferencesService.setFromDefaultSettings(defaultSettings);
+      expect(sharedPreferencesService.desiredAccuracy, 2);
+      expect(sharedPreferencesService.selectedYear, 2022);
+      expect(sharedPreferencesService.autoNextBand, true);
+      expect(sharedPreferencesService.autoNextBandParent, true);
+      expect(sharedPreferencesService.defaultLocation.target.latitude, 11);
+      expect(sharedPreferencesService.defaultLocation.target.longitude, 10);
+      expect(sharedPreferencesService.biasedRepeatedMeasures, true);
+      expect(sharedPreferencesService.defaultSpecies, 'test');
+      expect(sharedPreferencesService.defaultMeasures.length, 1);
+    });
   });
 }

@@ -29,6 +29,7 @@ class SharedPreferencesService extends ChangeNotifier {
 
   int get selectedYear => _sharedPreferences.getInt('selectedYear') ?? DateTime.now().year;
 
+  // this is a workaround for legacy DB
   String get selectedYearString => selectedYear == 2022 ? 'Nest' : selectedYear.toString();
 
   set selectedYear(int value) {
@@ -86,8 +87,8 @@ class SharedPreferencesService extends ChangeNotifier {
   void setRecentBand(String speciesEng, String value) {
 
     String bandGroup = speciesList.species.firstWhere((species) => species.english == speciesEng).getBandLetters();
-    print('Setting recent band for $speciesEng to $value');
-    print('Band group is $bandGroup');
+    //print('Setting recent band for $speciesEng to $value');
+    //print('Band group is $bandGroup');
     // Save the band for the species to SharedPreferences
     _sharedPreferences.setString(bandGroup, value);
     notifyListeners();
