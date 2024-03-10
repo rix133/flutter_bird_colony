@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:kakrarahu/design/modifingButtons.dart';
+import 'package:kakrarahu/models/dataSearch.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
-import 'package:kakrarahu/models/dataSearch.dart';
-import 'package:kakrarahu/design/modifingButtons.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
-import '../listMeasures.dart';
 import '../../models/measure.dart';
+import '../listMeasures.dart';
 
 class EditExperiment extends StatefulWidget {
   final FirebaseFirestore firestore;
@@ -31,6 +31,7 @@ class _EditExperimentState extends State<EditExperiment> {
     type: "nest",
     last_modified: DateTime.now(),
     created: DateTime.now(),
+    measures: [],
   );
 
   @override
@@ -43,12 +44,9 @@ class _EditExperimentState extends State<EditExperiment> {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       var map = ModalRoute.of(context)?.settings.arguments;
       if (map != null) {
-        map = map as Map<String, dynamic>;
-        if (map["experiment"] != null) {
-          experiment = map["experiment"] as Experiment;
-          otherCollection = getOtherItems(experiment.type);
-        }
+        experiment = map as Experiment;
       }
+      otherCollection = getOtherItems();
       setState(() {  });
     });
   }
@@ -65,10 +63,11 @@ class _EditExperimentState extends State<EditExperiment> {
     DropdownMenuItem(child: Text("Other", style: TextStyle(color: Colors.deepPurpleAccent)), value: "experiment"),
   ];
 
-  CollectionReference? getOtherItems(String type) {
-    if (type == "nest") {
+  CollectionReference? getOtherItems() {
+    if (experiment.type == "nest") {
+      nestsCollection = widget.firestore.collection(experiment.year.toString());
       return nestsCollection;
-    } else if (type == "bird") {
+    } else if (experiment.type == "bird") {
       return birdsCollection;
     } else {
       return null;
@@ -94,13 +93,14 @@ class _EditExperimentState extends State<EditExperiment> {
               context: context,
               delegate: DataSearch(items, experiment.type),
             );
-            print(selected);
             if (selected != null) {
               if (selected.isNotEmpty) {
                 setState(() {
                   if (experiment.type == "nest") {
+                    if (experiment.nests == null) experiment.nests = [];
                     experiment.nests!.add(selected);
                   } else if (experiment.type == "bird") {
+                    if (experiment.birds == null) experiment.birds = [];
                     experiment.birds!.add(selected);
                   }
                 });
@@ -113,13 +113,6 @@ class _EditExperimentState extends State<EditExperiment> {
     );
   }
 
-  void addMeasure() {
-    setState(() {
-      experiment.measures.add(Measure(name: "", unit: "", type: "any", isNumber: false, value: '', modified: DateTime.now()));
-    });
-  }
-
-
   Row getDropdownWithLabel(String title, CollectionReference? otherItems) {
     return Row(
       children: [
@@ -131,7 +124,7 @@ class _EditExperimentState extends State<EditExperiment> {
           onChanged: (value) {
             setState(() {
               experiment.type = value.toString();
-              otherCollection = getOtherItems(experiment.type);
+              otherCollection = getOtherItems();
             });
           },
         ),
@@ -140,7 +133,7 @@ class _EditExperimentState extends State<EditExperiment> {
   }
   Experiment getExperiment() {
     experiment.last_modified = DateTime.now();
-    otherCollection = getOtherItems(experiment.type);
+    otherCollection = getOtherItems();
     return experiment;
   }
 
@@ -150,21 +143,19 @@ class _EditExperimentState extends State<EditExperiment> {
     });
   }
 
-  saveDeleteOk() {
-    Navigator.popAndPushNamed(context, '/experiments');
-  }
 
   Form getExperimentForm(BuildContext context) {
     experiment.responsible = sps?.userName ?? "";
-    CollectionReference? otherItems = getOtherItems(experiment.type);
+    CollectionReference? otherItems = getOtherItems();
     return Form(
       child: Padding(
         padding: const EdgeInsets.all(15.0),
           child:Column(
         children: [
           TextFormField(
-            initialValue: experiment.name,
-            decoration: InputDecoration(labelText: "Name"),
+                key: Key("experimentNameField"),
+                initialValue: experiment.name,
+                decoration: InputDecoration(labelText: "Name"),
             onChanged: (String? value) => experiment.name = value!,
           ),
           SizedBox(height:5),
@@ -186,8 +177,9 @@ class _EditExperimentState extends State<EditExperiment> {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: const Text('Pick a color!'),
-                    content: SingleChildScrollView(
+                        backgroundColor: Colors.black87,
+                        title: const Text('Pick a color!'),
+                        content: SingleChildScrollView(
                       child: ColorPicker(
                         pickerColor: experiment.color,
                         onColorChanged: (Color value) => experiment.color = value,
@@ -207,9 +199,12 @@ class _EditExperimentState extends State<EditExperiment> {
                 },
               );
             },
-            child: Padding(child: Text("Pick Color"), padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15)),
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(experiment.color),
+                child: Padding(
+                    child: Text("Pick color"),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 20, vertical: 15)),
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(experiment.color),
             ),
           ),
 
@@ -233,9 +228,17 @@ class _EditExperimentState extends State<EditExperiment> {
                 SizedBox(height:15),
                 spsOK ? ListMeasures(measures: experiment.measures,onMeasuresUpdated: measuresUpdated) : Container(),
                 SizedBox(height:30),
-                spsOK ? ModifyingButtons(firestore: widget.firestore, context:context, setState:setState, getItem:getExperiment, type:experiment.type, otherItems: otherCollection, onSaveOK: saveDeleteOk, onDeleteOK: saveDeleteOk) : Container(),
-              ])),
-            ));
+            spsOK
+                ? ModifyingButtons(
+                    firestore: widget.firestore,
+                    context: context,
+                    setState: setState,
+                    getItem: getExperiment,
+                    type: experiment.type,
+                    otherItems: otherCollection)
+                : Container(),
+          ])),
+        ));
   }
 
 }

@@ -193,8 +193,10 @@ class Measure implements Comparable<Measure> {
 
   ListTile getListTile(BuildContext context, onSaved, onRemoved){
     return ListTile(
-      title: Text(name + ": " + value + (unit == "" ? "" : " " + unit)),
-      subtitle: Text(type + (repeated ? " (repeated)" : "")),
+      title: Text(name.isEmpty
+          ? "undefined"
+          : name + (unit == "" ? "" : " (" + unit + ")")),
+      subtitle: Text("on: " + type + (repeated ? " (repeated)" : " (single)")),
       trailing: ElevatedButton.icon(
           onPressed:  () => showDialog(
           context: context,

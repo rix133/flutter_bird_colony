@@ -1,6 +1,7 @@
 // Purpose: List all measures to define, edit or delete them allow to add new ones
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../models/measure.dart';
 import '../services/sharedPreferencesService.dart';
 
@@ -65,13 +66,16 @@ class _ListMeasuresState extends State<ListMeasures>{
     return Padding(
       padding: const EdgeInsets.all(18.0),
       child: ElevatedButton.icon(
+          key: Key("addMeasureButton"),
           onPressed: () {
             Measure newMeasure = Measure(name: "", type: "any", value: "", unit: "", isNumber: false, modified: DateTime.now());
             widget.measures.add(newMeasure);
             onSaved(newMeasure);
           },
           icon: Icon(Icons.add),
-          label: Padding(child:Text("Add Measure", style: TextStyle(fontSize: 18)), padding: EdgeInsets.all(12)),
+          label: Padding(
+              child: Text("Add measure", style: TextStyle(fontSize: 18)),
+              padding: EdgeInsets.all(12)),
           style: ButtonStyle(
               backgroundColor: MaterialStateProperty.all(Colors.grey)
           )

@@ -225,7 +225,7 @@ class Experiment implements FirestoreItem {
               ),
               onPressed: () {
                 Navigator.pushNamed(context, '/editExperiment',
-                    arguments: {'experiment': this});
+                    arguments: this);
               },
             ),
           ],
