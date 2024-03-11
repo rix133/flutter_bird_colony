@@ -2,9 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
+
 import '../../design/listScreenWidget.dart';
-import '../../models/firestoreItemMixin.dart';
 import '../../design/speciesRawAutocomplete.dart';
+import '../../models/firestoreItemMixin.dart';
 
 class ListBirds extends ListScreenWidget<Bird> {
   const ListBirds({Key? key, required FirebaseFirestore firestore})  : super(key: key, title: 'birds', icon: Icons.nat_sharp, firestore: firestore);
@@ -17,8 +18,6 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
 
   String? _selectedSpecies;
   int? _selectedAge;
-
-  List<Bird> birds = [];
   CollectionReference? collection;
 
   @override
@@ -30,9 +29,6 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
 
     @override
   void dispose() {
-    birds.forEach((element) {
-      element.dispose();
-    });
     super.dispose();
   }
 
@@ -125,11 +121,14 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
 
   @override
   Future<void> executeDownload() {
-    return(FSItemMixin().downloadExcel(birds, "birds"));
+    return (FSItemMixin().downloadExcel(items, "birds"));
   }
 
   List<Bird> getFilteredItems(AsyncSnapshot snapshot) {
-    birds = snapshot.data!.docs.map<Bird>((DocumentSnapshot document) => Bird.fromDocSnapshot(document)).toList();
+    List<Bird> birds = snapshot.data!.docs
+        .map<Bird>(
+            (DocumentSnapshot document) => Bird.fromDocSnapshot(document))
+        .toList();
 
     birds = birds.where(filterByText).toList();
     birds = birds.where(filterByExperiments).toList();
@@ -138,16 +137,6 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
     birds = birds.where(filterByAge).toList();
 
     return birds;
-  }
-
-  @override
-  listAllItems(BuildContext context, AsyncSnapshot snapshot) {
-    birds = getFilteredItems(snapshot);
-    return ListView.builder(
-        itemCount: birds.length,
-        itemBuilder: (context, index) {
-          return birds[index].getListTile(context);
-        });
   }
 
 }

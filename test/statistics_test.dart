@@ -13,7 +13,6 @@ void main() {
 
   late Widget myApp;
 
-  group('Statistics', () {
     setUpAll(() {
       myApp = ChangeNotifierProvider<SharedPreferencesService>(
           create: (_) => sharedPreferencesService,
@@ -26,7 +25,6 @@ void main() {
       expect(find.text('Some statistics'), findsOneWidget);
       expect(find.byType(DropdownButton<int>), findsOneWidget);
       expect(find.byType(DropdownButton<String>), findsNWidgets(2));
-    });
 
     // Add more tests for other functionalities of the Statistics widget
   });

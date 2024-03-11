@@ -214,8 +214,7 @@ class Experiment implements FirestoreItem {
                     backgroundColor:
                         MaterialStateProperty.all<Color>(Colors.grey)),
                 onPressed: () {
-                  Navigator.pushNamed(context, '/mapNests',
-                      arguments: {'nest_ids': nests});
+                  showNestMap(context);
                 }),
             IconButton(
               icon: Icon(Icons.edit, color: Colors.black),
@@ -235,7 +234,7 @@ class Experiment implements FirestoreItem {
   }
 
   void showNestMap(BuildContext context) {
-    Navigator.pushNamed(context, '/mapNests', arguments: {'nests_ids': nests});
+    Navigator.pushNamed(context, '/mapNests', arguments: {'nest_ids': nests});
   }
 
   Future<UpdateResult> _updateNestCollection(FirebaseFirestore firestore, List<String>? items,

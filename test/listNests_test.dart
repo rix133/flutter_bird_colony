@@ -1,33 +1,36 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
-
-import 'package:kakrarahu/screens/homepage.dart';
-import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
+import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/screens/homepage.dart';
 import 'package:kakrarahu/screens/nest/editNest.dart';
 import 'package:kakrarahu/screens/nest/listNests.dart';
+import 'package:kakrarahu/screens/nest/mapNests.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
 import 'mocks/mockLocationService.dart';
+import 'mocks/mockNavigatorObserver.dart';
 import 'mocks/mockSharedPreferencesService.dart';
 
 
 void main() {
   final authService = MockAuthService();
+  final mockObserver = MockNavigatorObserver();
   final sharedPreferencesService = MockSharedPreferencesService();
   final firestore = FakeFirebaseFirestore();
   MockLocationAccuracy10 locationAccuracy10 = MockLocationAccuracy10();
+
   late Widget myApp;
   final userEmail = "test@example.com";
   final Nest nest1 = Nest(
@@ -138,7 +141,8 @@ void main() {
             '/': (context) => MyHomePage(title: "Nest app"),
             '/listNests': (context) => ListNests(firestore: firestore),
             '/editNest': (context) => EditNest(firestore: firestore),
-          }
+        '/mapNests': (context) => MapNests(firestore: firestore),
+      }
       ),
     );
 
@@ -368,7 +372,78 @@ void main() {
     expect(find.byType(ListTile), findsNWidgets(2));
   });
 
+  testWidgets("will show all nests on the map", (WidgetTester tester) async {
+    final mapRoute = MaterialPageRoute(builder: (_) => Container());
+    await tester.pumpWidget(
+      ChangeNotifierProvider<SharedPreferencesService>(
+        create: (_) => sharedPreferencesService,
+        child: MaterialApp(
+            home: ListNests(firestore: firestore),
+            navigatorObservers: [mockObserver],
+            onGenerateRoute: (RouteSettings settings) {
+              if (settings.name == '/mapNests') {
+                return mapRoute;
+              }
+              return null;
+            }),
+      ),
+    );
 
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsNWidgets(2));
 
+    // Tap the showFilteredNestButton button
+    await tester.tap(find.byKey(Key("showFilteredNestButton")));
+    await tester.pumpAndSettle();
 
-  }
+    // Capture the arguments of didPush
+
+    when(mockObserver.didPush(mapRoute, captureAny)).thenAnswer((_) {
+      final Route<dynamic> route = _.positionalArguments[0];
+      // Check the arguments
+      expect(route.settings.arguments, {
+        "nest_ids": ["1", "2"]
+      });
+    });
+  });
+
+  testWidgets("will show only filtered nests on the map",
+      (WidgetTester tester) async {
+    final mapRoute = MaterialPageRoute(builder: (_) => Container());
+    await tester.pumpWidget(
+      ChangeNotifierProvider<SharedPreferencesService>(
+        create: (_) => sharedPreferencesService,
+        child: MaterialApp(
+            home: ListNests(firestore: firestore),
+            navigatorObservers: [mockObserver],
+            onGenerateRoute: (RouteSettings settings) {
+              if (settings.name == '/mapNests') {
+                return mapRoute;
+              }
+              return null;
+            }),
+      ),
+    );
+    await tester.pumpAndSettle();
+    //find the search input
+    await tester.enterText(find.byType(TextField), "1");
+    await tester.pumpAndSettle();
+
+    //check if the list of birds is displayed
+    expect(find.byType(ListTile), findsNWidgets(1));
+
+    // Tap the showFilteredNestButton button
+    await tester.tap(find.byKey(Key("showFilteredNestButton")));
+    await tester.pumpAndSettle();
+
+    // Capture the arguments of didPush
+
+    when(mockObserver.didPush(mapRoute, captureAny)).thenAnswer((_) {
+      final Route<dynamic> route = _.positionalArguments[0];
+      // Check the arguments
+      expect(route.settings.arguments, {
+        "nest_ids": ["1"]
+      });
+    });
+  });
+}

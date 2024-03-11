@@ -1,11 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/listScreenWidget.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
-
-import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
+import 'package:kakrarahu/models/firestoreItemMixin.dart';
 
 
 class ListNests extends ListScreenWidget<Nest> {
@@ -29,15 +28,11 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
   double? _maxLocationAccuracy;
 
 
-  List<Nest> nests = [];
 
 
 
   @override
   void dispose() {
-    nests.forEach((n) {
-      n.dispose();
-    });
     super.dispose();
   }
   @override
@@ -51,8 +46,11 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
     return Padding(
       padding: const EdgeInsets.all(18.0),
       child: ElevatedButton.icon(
+          key: Key("showFilteredNestButton"),
           onPressed: () {
-            Navigator.pushNamed(context, '/mapNests', arguments: {'nest_ids': nests.map((e) => e.id).toList()});
+            List<String?> nest_ids = items.map((e) => e.id).toList();
+            Navigator.pushNamed(context, '/mapNests',
+                arguments: {'nest_ids': nest_ids});
           },
           icon: Icon(Icons.map),
           label: Padding(
@@ -242,7 +240,7 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
 
   @override
   Future<void> executeDownload() {
-    return(FSItemMixin().downloadExcel(nests, "nests"));
+    return (FSItemMixin().downloadExcel(items, "nests"));
   }
 }
 

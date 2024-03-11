@@ -1,10 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:kakrarahu/design/listScreenWidget.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
-
-
-import 'package:kakrarahu/design/listScreenWidget.dart';
 
 
 
@@ -16,16 +14,10 @@ class ListExperiments extends ListScreenWidget<Experiment> {
 }
 
 class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
-
-  List<Experiment> exps = [];
-
   CollectionReference? collection;
 
   @override
   void dispose() {
-    exps.forEach((element) {
-      element.dispose();
-    });
     super.dispose();
   }
 
@@ -54,7 +46,7 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
   @override
   Future<void> executeDownload() {
     //get how many different year experiments are requested
-    Set<int?> totalYears = exps.map((e) => e.year).toSet();
+    Set<int?> totalYears = items.map((e) => (e as Experiment).year).toSet();
 
     if(totalYears.length > 1){
       return showDialog(
@@ -75,7 +67,7 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
           });
     } else {
       DateTime? start = totalYears.isNotEmpty ? DateTime(totalYears.first!) : null;
-      return(FSItemMixin().downloadExcel(exps, "experiments", start: start));
+      return (FSItemMixin().downloadExcel(items, "experiments", start: start));
     }
 
   }
@@ -103,7 +95,7 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
   }
 
   getFilteredItems(AsyncSnapshot<QuerySnapshot<Object?>> snapshot) {
-    exps = snapshot.data!.docs
+    List<Experiment> exps = snapshot.data!.docs
         .map<Experiment>((DocumentSnapshot<Object?> e) => Experiment.fromDocSnapshot(e))
         .toList();
     exps = exps.where(filterByText).toList();
