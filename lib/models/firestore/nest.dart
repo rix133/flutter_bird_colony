@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:kakrarahu/models/experimentedItem.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
-import 'package:kakrarahu/models/experimentedItem.dart';
 import 'package:kakrarahu/models/firestore/firestoreItem.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/measure.dart';
@@ -91,8 +91,14 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
         return BitmapDescriptor.hueAzure;
       }
     }
+    if (checkedToday()) {
+      return BitmapDescriptor.hueGreen;
+    }
     if(first_egg != null){
-      if(DateTime.now().difference(first_egg!).inDays > 10){
+      int dayDiff = DateTime.now().difference(first_egg!).inDays;
+      //common gull incubation period is 24-26 days
+      //in most seabirds it is between 11 to 45 days
+      if (dayDiff > 10 && dayDiff < 36) {
         return BitmapDescriptor.hueMagenta;
       }
     }
@@ -103,7 +109,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
     else if (!checkedToday()) {
       return BitmapDescriptor.hueYellow;
     }
-    return BitmapDescriptor.hueGreen;
+    return BitmapDescriptor.hueOrange;
   }
 
   checkedToday() {

@@ -1,4 +1,3 @@
-
 import 'package:kakrarahu/services/authService.dart';
 import 'package:mockito/mockito.dart';
 
@@ -8,5 +7,8 @@ class MockAuthService extends Mock implements AuthService {
   @override
   Future<bool> isUserSignedIn() => Future.value(_isLoggedIn);
 
-
+  @override
+  String? userName() {
+    return "Test User";
+  }
 }

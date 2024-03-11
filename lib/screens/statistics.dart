@@ -1,6 +1,5 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
@@ -52,12 +51,7 @@ class _StatisticsState extends State<Statistics> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       _speciesList = sps!.speciesList;
-      FirebaseAuth.instance.authStateChanges().listen((User? user) {
-        if (user == null) {
-        } else {
-          username = user.displayName.toString();
-        }
-      });
+      username = sps!.userName;
       setState(() {});
     });
   }

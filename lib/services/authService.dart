@@ -17,6 +17,7 @@ class AuthService {
     return false;
   }
 
-
-
+  String? userName() {
+    return FirebaseAuth.instance.currentUser?.displayName;
+  }
 }
