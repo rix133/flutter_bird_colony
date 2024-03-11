@@ -21,8 +21,9 @@ void main() {
     testWidgets('Statistics widget should build correctly',
         (WidgetTester tester) async {
       await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
 
-      expect(find.text('Some statistics'), findsOneWidget);
+    expect(find.text('Some statistics'), findsOneWidget);
       expect(find.byType(DropdownButton<int>), findsOneWidget);
       expect(find.byType(DropdownButton<String>), findsNWidgets(2));
 
