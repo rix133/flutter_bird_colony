@@ -3,8 +3,8 @@ import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/models/firestore/firestoreItem.dart';
-import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
+import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
 import '../experimentedItem.dart';
@@ -60,6 +60,9 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       return UpdateResult.error(message: "No nest found");
     } else{
       last_modified = DateTime.now();
+      //remove empty measures
+      measures.removeWhere((element) => element.value.isEmpty);
+
       CollectionReference<Object?> eggCollection =  firestore.collection(discover_date.year.toString()).doc(nestId).collection("egg");
       if(id == null){
         id = nestId + " egg " + (await eggCollection.get()).docs.length.toString();

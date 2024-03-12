@@ -2,12 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/models/experimentedItem.dart';
+import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/models/firestore/firestoreItem.dart';
+import 'package:kakrarahu/models/firestore/nest.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/measure.dart';
-import 'package:kakrarahu/models/firestore/nest.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
 import 'egg.dart';
@@ -352,8 +352,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
             : nestsItemCollection.doc(nest).collection("egg");
       }
     }
-    // take ony those measures where value is not empty
-    measures = measures.where((Measure m) => m.value.isNotEmpty).toList();
+    //remove empty measures
+    measures.removeWhere((element) => element.value.isEmpty);
     // the modified date is assigned at write time
     last_modified = DateTime.now();
     return await _saveBird(birds, nestsItemCollection, isParent);

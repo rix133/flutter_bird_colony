@@ -397,7 +397,6 @@ void main() {
     //find the save button
     Finder saveButton = find.byIcon(Icons.save);
     await tester.ensureVisible(saveButton);
-    await tester.tap(saveButton);
 
     //tap the save button
     await tester.tap(saveButton);
