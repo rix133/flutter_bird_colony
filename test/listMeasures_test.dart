@@ -26,7 +26,6 @@ void main() {
   final firestore = FakeFirebaseFirestore();
   MockLocationAccuracy10 locationAccuracy10 = MockLocationAccuracy10();
   late Widget myApp;
-  final userEmail = "test@example.com";
 
   late Measure measure;
   late Nest nest;
