@@ -87,11 +87,29 @@ class ExperimentedItem{
 
   Map<String, List<Measure>> getMeasuresMap(){
     Map<String, List<Measure>> measuresMap = {};
+    int maxLen = 0;
+
+    // Populate the measuresMap and find the maximum length
     for (Measure measure in measures) {
       if (!measuresMap.containsKey(measure.name)) {
         measuresMap[measure.name] = [measure];
+        if (maxLen < 1) {
+          maxLen = 1;
+        }
       } else {
         measuresMap[measure.name]!.add(measure);
+        int len = measuresMap[measure.name]!.length;
+        if (len > maxLen) {
+          maxLen = len;
+        }
+      }
+    }
+
+    // Add empty Measure instances to make all lists the same length
+    for (String key in measuresMap.keys) {
+      List<Measure> list = measuresMap[key]!;
+      while (list.length < maxLen) {
+        list.add(Measure.empty(list[0]));
       }
     }
     return measuresMap;
