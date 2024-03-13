@@ -1,6 +1,7 @@
 # Bird Colony Management App
 
 [![codecov](https://codecov.io/gh/rix133/flutter_bird_colony/graph/badge.svg?token=nIVX3odUDo)](https://codecov.io/gh/rix133/flutter_bird_colony)
+![Tests](https://github.com/rix133/flutter_bird_colony/actions/workflows/codecov.yml/badge.svg)
 
 Bird Colony Management is a Flutter application for managing seabird colonies.
 It uses Firebase as its backend. In essence, the app allows users to manage nests, birds, eggs, 
