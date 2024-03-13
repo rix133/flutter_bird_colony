@@ -1,18 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/models/firestore/firestoreItem.dart';
-import 'package:kakrarahu/screens/bird/editBird.dart';
-
-import 'package:kakrarahu/screens/homepage.dart';
-import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
+import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/screens/bird/editBird.dart';
+import 'package:kakrarahu/screens/homepage.dart';
 import 'package:kakrarahu/screens/nest/editEgg.dart';
 import 'package:kakrarahu/screens/nest/editNest.dart';
 import 'package:kakrarahu/services/authService.dart';
@@ -185,6 +182,19 @@ void main() {
     for (Element i in find.byType(Text).evaluate()) {
       print((i.widget as Text).data);
     }
-    expect(find.text("Metal band: AA1234"), findsOneWidget);
+    expect(find.text("Metal: AA1234"), findsOneWidget);
+  });
+
+  testWidgets(
+      "will display experiment measure on banded bird if hatched egg is long pressed",
+      (WidgetTester tester) async {
+    myApp = getInitApp('/editNest', nest);
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    await tester.longPress(find.text("Egg 1 hatched/AA1234 20 days old"));
+    await tester.pumpAndSettle();
+    expect(find.byType(EditBird), findsOneWidget);
+    expect(find.text("Metal: AA1234"), findsOneWidget);
+    expect(find.text("weight"), findsOneWidget);
   });
 }

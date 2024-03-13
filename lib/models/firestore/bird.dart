@@ -182,6 +182,23 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     return nbird;
   }
 
+  factory Bird.fromEgg(Egg egg) {
+    return Bird(
+        ringed_date: egg.discover_date,
+        ringed_as_chick: true,
+        band: egg.ring ?? "",
+        color_band: "",
+        responsible: egg.responsible ?? "",
+        species: "",
+        nest: egg.getNest(),
+        nest_year: egg.discover_date.year,
+        last_modified: egg.last_modified,
+        age: "",
+        egg: egg.getNr(),
+        experiments: egg.experiments,
+        measures: egg.measures);
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'ringed_date': ringed_date,

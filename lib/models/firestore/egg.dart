@@ -9,6 +9,7 @@ import 'package:kakrarahu/models/updateResult.dart';
 
 import '../experimentedItem.dart';
 import '../measure.dart';
+import 'bird.dart';
 
 class Egg extends ExperimentedItem implements FirestoreItem {
   String? id;
@@ -34,6 +35,8 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   String get name => id ?? "New Egg";
   @override
   DateTime get created_date => discover_date;
+
+  bool get ringed => ring != null && ring != "";
 
   @override
   factory Egg.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
@@ -173,12 +176,16 @@ class Egg extends ExperimentedItem implements FirestoreItem {
         Navigator.pushNamed(context, "/editEgg", arguments: this);
       },
       onLongPress: () {
-        Navigator.pushNamed(
-            context, "/editBird",
-            arguments: {
-              "nest": nest,
-              "egg": this,
-            });
+        Map<String, dynamic> args = ringed
+            ? {
+                "nest": nest,
+                "bird": Bird.fromEgg(this),
+              }
+            : {
+                "nest": nest,
+                "egg": this,
+              };
+        Navigator.pushNamed(context, "/editBird", arguments: args);
       },
     );
   }
