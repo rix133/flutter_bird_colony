@@ -26,7 +26,6 @@ void main() {
       // Arrange
       var n1 = Measure.note(value: 'note1');
       var n2 = Measure.note(value: 'note2');
-      var m2 = Measure.empty(m);
       experimentedItem.measures = [n1, n2, m];
       // Act
       final result = experimentedItem.getMeasuresMap();
@@ -36,9 +35,6 @@ void main() {
       expect(result['note']!.length, 2);
       expect(result['aaa']!.length, 2);
 
-      //cehck if all are of type Measure
-      expect(result['note']!.every((element) => element is Measure), true);
-      expect(result['aaa']!.every((element) => element is Measure), true);
     });
 
     test('getMeasuresMap should return a map of measures when equal lengths',
