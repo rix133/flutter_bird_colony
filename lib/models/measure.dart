@@ -159,7 +159,7 @@ class Measure implements Comparable<Measure> {
 
   Padding getSimpleMeasureForm(){
     return Padding(
-        padding: EdgeInsets.all(10),
+        padding: EdgeInsets.all(5),
         child: TextFormField(
           keyboardType: isNumber?TextInputType.number:TextInputType.text,
           controller: valueCntr,
@@ -275,8 +275,9 @@ class Measure implements Comparable<Measure> {
       ),
     );
   }
-  Row getMeasureFormWithAddButton(Function(Measure) onPressed, bool hideValue){
 
+  Widget getMeasureFormWithAddButton(
+      Function(Measure) onPressed, bool hideValue) {
     String label = name + (unit == "" ? "" : " (" + unit + ")");
     if(modified.year == DateTime.now().year && value.isNotEmpty){
       label = label + " " + DateFormat('d MMM yyyy').format(modified);
@@ -291,8 +292,10 @@ class Measure implements Comparable<Measure> {
       }
     }
 
-    return Row(
-      children: [
+    return Padding(
+        padding: EdgeInsets.all(5),
+        child: Row(
+          children: [
         Expanded(
           child: TextFormField(
             controller: valueCntr,
@@ -331,7 +334,7 @@ class Measure implements Comparable<Measure> {
           },
         )
       ],
-    );
+        ));
   }
   factory Measure.fromJson(Map<String, dynamic> json) {
     Measure m = Measure(
