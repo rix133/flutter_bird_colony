@@ -111,8 +111,9 @@ void main() {
         measures: [measure]);
 
     bird = Bird(
+        //a parent bird
         id: "AA11",
-        ringed_date: DateTime.now().subtract(Duration(days: 2)),
+        ringed_date: DateTime.now().subtract(Duration(days: 2000)),
         responsible: "Admin",
         band: "AA11",
         last_modified: DateTime.now().subtract(Duration(days: 1)),
@@ -487,7 +488,7 @@ void main() {
   testWidgets("will retain bird repeated measure value after re-save firestore",
       (WidgetTester tester) async {
     bird.measures[0].value = '123';
-    await bird.save(firestore);
+    await firestore.collection("Birds").doc(bird.id).set(bird.toJson());
     Bird savedBird = await firestore
         .collection("Birds")
         .doc(bird.id)
@@ -517,13 +518,17 @@ void main() {
     Finder textFinder = find.byWidgetPredicate((Widget widget) =>
         widget is InputDecorator && widget.decoration.labelText == 'FID (m)');
 
+    await tester.ensureVisible(textFinder);
+
     //enter text to the textfield
     await tester.enterText(textFinder, '321');
     await tester.pumpAndSettle();
 
-    for (var t in find.byType(Text).evaluate()) {
-      print((t.widget as Text).data);
-    }
+    //tap the icon button again to ensure UI update
+    await tester.tap(iconButtonFinder.first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('321'), findsOneWidget);
 
     //find the save button
     Finder saveButton = find.byIcon(Icons.save);
@@ -534,15 +539,13 @@ void main() {
     await tester.tap(saveButton);
     await tester.pumpAndSettle();
 
-    //expect that the bird is saved
+    //expect that the bird is saved if its a parent the bird will be saved in the nest collection
+    //oterwise the save might be halted by a dialog
     Bird reSavedBird = await firestore
         .collection("Birds")
         .doc(bird.id)
         .get()
         .then((value) => Bird.fromDocSnapshot(value));
-    for (Measure m in reSavedBird.measures) {
-      print(m.toJson());
-    }
     expect(reSavedBird.measures.length, 3); //the third one is the default Note
     expect(reSavedBird.measures[0].value, '123');
     expect(reSavedBird.measures[1].value, '321');

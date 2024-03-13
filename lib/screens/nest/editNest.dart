@@ -363,8 +363,6 @@ class _EditNestState extends State<EditNest> {
 
   void addMeasure(Measure m) {
     if(nest != null){
-      nest!.measures =
-          nest!.measures.map((e) => e..value = e.valueCntr.text).toList();
       setState(() {
         nest!.measures.add(m);
         nest!.measures.sort();
