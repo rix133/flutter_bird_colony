@@ -18,8 +18,8 @@ void main() {
   late Widget myApp;
   final adminEmail = "admin@example.com";
   final userEmail = "test@example.com";
-
-  setUpAll(() async {
+  group('Settings for normal user', () {
+    setUpAll(() async {
     AuthService.instance = authService;
     FirebaseFirestore firestore = FakeFirebaseFirestore();
     await firestore.collection('users').doc(adminEmail).set({'isAdmin': true});
@@ -125,7 +125,44 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Login'), findsOneWidget);
   });
+  });
 
+  group("Settings for admin user", () {
+    setUpAll(() async {
+      AuthService.instance = authService;
+      FirebaseFirestore firestore = FakeFirebaseFirestore();
+      await firestore
+          .collection('users')
+          .doc(adminEmail)
+          .set({'isAdmin': true});
+      await firestore
+          .collection('users')
+          .doc(userEmail)
+          .set({'isAdmin': false});
+      myApp = ChangeNotifierProvider<SharedPreferencesService>(
+        create: (_) => sharedPreferencesService,
+        child: MaterialApp(initialRoute: '/', routes: {
+          '/': (context) => MyHomePage(title: "Nest app"),
+          '/settings': (context) => SettingsPage(firestore: firestore),
+        }),
+      );
+    });
 
-  }
+    testWidgets('Buttons are displayed when user is logged in',
+        (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = true;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
 
+      //go to settings page
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
+
+      // Check if other buttons are not displayed
+      expect(find.text('Logout'), findsOneWidget);
+      expect(find.text('Edit default settings'), findsOneWidget);
+      expect(find.text('Manage species'), findsOneWidget);
+    });
+  });
+}

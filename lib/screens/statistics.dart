@@ -140,7 +140,6 @@ class _StatisticsState extends State<Statistics> {
                     value: dropdownValuePeople,
                     items: people,
                     onChanged: (String? newValue) {
-                      print(newValue);
                       setState(() {
                         dropdownValuePeople = newValue!;
                       });
@@ -163,7 +162,6 @@ class _StatisticsState extends State<Statistics> {
                             ListTile(
                                 title: Text("Total nests"),
                                 trailing: Text(nests.length.toString())),
-                            getNestListTile("Common Gull", nests, experimental: true),
                             ..._speciesList.species.map((Species sp) => getNestListTile(sp.english, nests)).toList(),
                             getNestListTile("", nests),
                           ],
@@ -209,20 +207,15 @@ class _StatisticsState extends State<Statistics> {
   }
 
   void onChangedTimespan(value) {
-    print(value);
+    //print(value);
   }
 
-  Widget  getNestListTile(String species, List<Nest> nests,
-      {bool experimental = false}){
+  Widget getNestListTile(String species, List<Nest> nests) {
     List<Nest> selectedNests = nests
         .where((Nest nest) =>
     nest.species == species)
         .toList();
     if(selectedNests.length == 0){return SizedBox.shrink();}
-    if(experimental){
-      selectedNests = selectedNests.where((Nest n) => n.id!.startsWith("e")).toList();
-      species = "Experiment";
-    }
     ListTile list_tile = ListTile(
         title: Text(species == "" ? "No species nests" : "$species nests"),
         //leading: Text(selectedNests.map((Nest e) => e.eggCount()).reduce((a, b) => a + b).toString()),
