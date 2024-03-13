@@ -25,11 +25,11 @@ dependencies:
     sdk: flutter
 
   geolocator: ^11.0.0
-  firebase_core: ^2.24.0
-  cloud_firestore: ^4.15.6
-  firebase_auth: ^4.17.6
+  firebase_core: ^2.27.1
+  cloud_firestore: ^4.15.9
+  firebase_auth: ^4.17.9
   google_sign_in: ^6.2.1
-  google_maps_flutter: ^2.5.3
+  google_maps_flutter: ^2.6.0
   flutter_compass: ^0.8.0
   shared_preferences: ^2.2.2
   provider: ^6.1.1

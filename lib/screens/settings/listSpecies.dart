@@ -103,7 +103,6 @@ class _ListSpeciesState extends ListScreenWidgetState<Species> {
         .map<Species>((DocumentSnapshot<Object?> e) => Species.fromDocSnapshot(e))
         .toList();
     species = species.where(filterByText).toList();
-    print(species.length);
     return species;
   }
 

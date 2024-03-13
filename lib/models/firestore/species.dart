@@ -223,10 +223,22 @@ class Species implements FirestoreItem {
 
   List<Widget> getSpeciesForm(BuildContext context, void Function(Function()) setState) {
     return [
-      TextFormItem(label: 'English', initialValue: english, changeFun: (value) => setState(() => english = value)),
-      TextFormItem(label: 'Custom', initialValue: local, changeFun: (value) => setState(() => local = value)),
-      TextFormItem(label: 'Latin', initialValue: latin ?? '', changeFun: (value) => setState(() => latin = value)),
-      TextFormItem(label: 'Latin Code', initialValue: latinCode, changeFun: (value) => setState(() => latinCode = value)),
+      TextFormItem(
+          label: 'English',
+          initialValue: english,
+          changeFun: (value) => english = value),
+      TextFormItem(
+          label: 'Custom',
+          initialValue: local,
+          changeFun: (value) => local = value),
+      TextFormItem(
+          label: 'Latin',
+          initialValue: latin ?? '',
+          changeFun: (value) => latin = value),
+      TextFormItem(
+          label: 'Latin Code',
+          initialValue: latinCode,
+          changeFun: (value) => latinCode = value),
     ];
   }
 
