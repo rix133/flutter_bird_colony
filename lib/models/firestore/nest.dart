@@ -72,12 +72,16 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
 
 
   Marker getMarker(BuildContext context, bool visibility){
+    //disable button if the nest is from another year
+    bool disabled = DateTime.now().year != discover_date.year;
     return Marker(
         infoWindow: InfoWindow(
             title: id,
-            onTap: () => Navigator.pushNamed(context, '/editNest', arguments: {
-                  "nest_id": id,
-                  "year": discover_date.year.toString()
+            onTap: disabled
+                ? null
+                : () => Navigator.pushNamed(context, '/editNest', arguments: {
+                      "nest_id": id,
+                      "year": discover_date.year.toString()
                 })),
         consumeTapEvents: false,
         visible: visibility,
@@ -185,10 +189,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
     measures.removeWhere((element) => element.value.isEmpty);
 
     CollectionReference nests =
-    firestore.collection(DateTime
-        .now()
-        .year
-        .toString());
+        firestore.collection(discover_date.year.toString());
     if (type == "modify" || type == "default") {
       return _write2Firestore(nests);
       }
@@ -211,7 +212,7 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
       });
     }
     CollectionReference items =
-    firestore.collection(DateTime.now().year.toString());
+        firestore.collection(discover_date.year.toString());
     if (!soft) {
       return await items
           .doc(id)
@@ -299,7 +300,8 @@ TextCellValue('species'),
       'measures': measures.map((e) => e.toJson()).toList(),
     };
   }
-  ListTile getListTile(BuildContext context){
+
+  ListTile getListTile(BuildContext context, {bool disabled = false}) {
     return ListTile(
       title: Text('ID: $name, $species'),
       subtitle: Text(checkedStr()),
@@ -309,19 +311,26 @@ TextCellValue('species'),
           IconButton(icon:Icon(Icons.map, color: Colors.black87),
               style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all<Color>(getMarkerColor() == BitmapDescriptor.hueGreen ? Colors.green : Colors.limeAccent)),
-              onPressed: () {
-                Navigator.pushNamed(context, '/mapNests', arguments: {
-                    'nest_ids': [id.toString()],
+                onPressed: disabled
+                    ? null
+                    : () {
+                        Navigator.pushNamed(context, '/mapNests', arguments: {
+                          'nest_ids': [id.toString()],
                     "year": discover_date.year.toString()
                   });
                 }),
           SizedBox(width: 10),
           IconButton( icon: Icon(Icons.edit, color: Colors.black87),
     style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(Colors.grey)),
-              onPressed: () {
-            Navigator.pushNamed(context, '/editNest', arguments: {"nest": this});
-          }),
-        ],
+                onPressed: disabled
+                    ? null
+                    : () {
+                        Navigator.pushNamed(context, '/editNest', arguments: {
+                          "nest": this,
+                          "year": discover_date.year.toString()
+                        });
+                      }),
+          ],
       ),
       onTap: () {
         showDialog(context: context, builder: (BuildContext context) {

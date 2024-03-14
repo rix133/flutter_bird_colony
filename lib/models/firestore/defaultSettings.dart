@@ -258,7 +258,7 @@ class DefaultSettings implements FirestoreItem {
   }
 
   @override
-  Widget getListTile(BuildContext context) {
+  Widget getListTile(BuildContext context, {bool disabled = false}) {
     return ListTile(
       title: Text(name),
       subtitle: Text('Default settings'),

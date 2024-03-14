@@ -28,8 +28,5 @@ abstract class FirestoreItem{
 
   List<TextCellValue> toExcelRowHeader();
 
-  Widget getListTile(BuildContext context);
-
-
-
+  Widget getListTile(BuildContext context, {bool disabled = false});
 }

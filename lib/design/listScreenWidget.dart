@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/experimentedItem.dart';
 import 'package:kakrarahu/models/firestore/firestoreItem.dart';
 import 'package:provider/provider.dart';
+
 import '../models/firestore/experiment.dart';
 import '../services/sharedPreferencesService.dart';
 
@@ -191,11 +192,14 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
   List<FirestoreItem> getFilteredItems(AsyncSnapshot<QuerySnapshot> snapshot);
 
   ListView listAllItems(BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+    //disable if not current year and user is not admin
+    bool disabled =
+        selectedYear != DateTime.now().year && !(sps?.isAdmin ?? false);
     items = getFilteredItems(snapshot);
     return ListView.builder(
         itemCount: items.length,
         itemBuilder: (context, index) {
-          return items[index].getListTile(context);
+          return items[index].getListTile(context, disabled: disabled);
         });
   }
 

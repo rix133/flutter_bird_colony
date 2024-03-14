@@ -148,6 +148,18 @@ void main() {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
+    // Verify initial selected year
+    expect(find.text(DateTime.now().year.toString()), findsOneWidget);
+
+    // Tap on the dropdown button to select a different year
+    await tester.tap(find.byType(DropdownButton<int>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('2023').last);
+    await tester.pumpAndSettle();
+
+    // Verify that the selected year has been updated
+    expect(find.text('2023'), findsOneWidget);
+
     // Verify initial nest statistics
     expect(find.text('Total nests'), findsOneWidget);
     //find the listTile that has the text Total nests
@@ -168,6 +180,18 @@ void main() {
     nest1.save(firestore);
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
+
+    // Verify initial selected year
+    expect(find.text(DateTime.now().year.toString()), findsOneWidget);
+
+    // Tap on the dropdown button to select a different year
+    await tester.tap(find.byType(DropdownButton<int>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('2023').last);
+    await tester.pumpAndSettle();
+
+    // Verify that the selected year has been updated
+    expect(find.text('2023'), findsOneWidget);
 
     // Verify initial nest statistics
     expect(find.text('Total nests'), findsOneWidget);

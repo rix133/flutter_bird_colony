@@ -193,7 +193,7 @@ class Experiment implements FirestoreItem {
   String get titleString =>
       '$name${description?.isNotEmpty == true ? ' - $description' : ''}';
 
-  Widget getListTile(BuildContext context) {
+  Widget getListTile(BuildContext context, {bool disabled = false}) {
     String subtitleNests = hasNests() ? "Nests: " + nests!.join(", ") : "";
     String subtitleBirds = hasBirds() ? "Birds: " + birds!.join(", ") : "";
     return Container(

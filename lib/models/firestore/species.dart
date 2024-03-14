@@ -242,7 +242,7 @@ class Species implements FirestoreItem {
     ];
   }
 
-  Widget getListTile(BuildContext context) {
+  Widget getListTile(BuildContext context, {bool disabled = false}) {
     return
       Container(
         padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),

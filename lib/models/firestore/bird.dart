@@ -85,7 +85,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   String get description =>
       "Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)} $nestString, $species";
 
-  ListTile getListTile(BuildContext context) {
+  ListTile getListTile(BuildContext context, {bool disabled = false}) {
     return ListTile(
       title: Text(name + (color_band != null ? ' ($band)' : "")),
       subtitle: Text(description),
