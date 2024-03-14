@@ -48,9 +48,11 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
       child: ElevatedButton.icon(
           key: Key("showFilteredNestButton"),
           onPressed: () {
-            List<String?> nest_ids = items.map((e) => e.id).toList();
-            Navigator.pushNamed(context, '/mapNests',
-                arguments: {'nest_ids': nest_ids});
+            List<String?> nest_ids = items.map((e) => e.id.toString()).toList();
+            Navigator.pushNamed(context, '/mapNests', arguments: {
+              'nest_ids': nest_ids,
+              "year": selectedYear.toString()
+            });
           },
           icon: Icon(Icons.map),
           label: Padding(

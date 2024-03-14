@@ -44,6 +44,7 @@ class _MapNestsState extends State<MapNests> {
   ValueNotifier<Set<Marker>> markersToShow = ValueNotifier<Set<Marker>>({});
   Set <Nest> nests = {};
   Query? query;
+  List<String>? bigFilter;
   LocationService location = LocationService.instance;
   AuthService auth = AuthService.instance;
 
@@ -70,9 +71,15 @@ class _MapNestsState extends State<MapNests> {
         }
 
         if(map["nest_ids"] != null) {
-          if (nestsCollection != null && map["nest_ids"].length > 0) {
+          if (nestsCollection != null &&
+              map["nest_ids"].length > 0 &&
+              map["nest_ids"] is List<String> &&
+              map["nest_ids"].length < 30) {
             query = nestsCollection!.where(
                 FieldPath.documentId, whereIn: map["nest_ids"]);
+          } else if (map["nest_ids"].length > 29 &&
+              map["nest_ids"] is List<String>) {
+            bigFilter = map["nest_ids"] as List<String>;
           }
         }
       }
@@ -113,6 +120,7 @@ class _MapNestsState extends State<MapNests> {
     } else {
       nestsToShow = nests;
     }
+
     markersToShow.value = nestsToShow.map((e) => e.getMarker(context, true)).toSet();
   }
 
@@ -122,19 +130,27 @@ class _MapNestsState extends State<MapNests> {
     snapshot.docChanges.forEach((DocumentChange<Object?> change) {
       if (change.type == DocumentChangeType.added) {
         snap = Nest.fromDocSnapshot(change.doc);
-        nests.add(snap);
-      }
-      if (change.type == DocumentChangeType.modified) {
+        if (bigFilter == null) {
+          nests.add(snap);
+        } else if (bigFilter!.contains(snap.id)) {
+          nests.add(snap);
+        }
+      } else if (change.type == DocumentChangeType.modified) {
+        snap = Nest.fromDocSnapshot(change.doc);
+        if (bigFilter == null) {
+          nests.removeWhere((element) => element.id == snap.id);
+          nests.add(snap);
+        } else if (bigFilter!.contains(snap.id)) {
+          nests.removeWhere((element) => element.id == snap.id);
+          nests.add(snap);
+        }
+      } else if (change.type == DocumentChangeType.removed) {
         snap = Nest.fromDocSnapshot(change.doc);
         nests.removeWhere((element) => element.id == snap.id);
-        nests.add(snap);
       }
-      if (change.type == DocumentChangeType.removed) {
-        snap = Nest.fromDocSnapshot(change.doc);
-        nests.removeWhere((element) => element.id == snap.id);
-      }
-      updateMarkersToShow();
     });
+    print(bigFilter);
+    updateMarkersToShow();
   }
 
   _updateCameraPosition(AsyncSnapshot snapshot, AsyncSnapshot<CompassEvent> snapshot1) {

@@ -15,7 +15,6 @@ import 'package:kakrarahu/screens/nest/mapNests.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
@@ -372,6 +371,48 @@ void main() {
     expect(find.byType(ListTile), findsNWidgets(2));
   });
 
+  testWidgets("will show all nests on the map from another year",
+      (WidgetTester tester) async {
+    final mapRoute = MaterialPageRoute(builder: (_) => Container());
+    await tester.pumpWidget(
+      ChangeNotifierProvider<SharedPreferencesService>(
+        create: (_) => sharedPreferencesService,
+        child: MaterialApp(
+            home: ListNests(firestore: firestore),
+            navigatorObservers: [mockObserver],
+            onGenerateRoute: (RouteSettings settings) {
+              if (settings.name == '/mapNests') {
+                expect(settings.arguments, {
+                  "nest_ids": ["234"],
+                  "year": "2023"
+                });
+                return mapRoute;
+              }
+              return null;
+            }),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsNWidgets(2));
+
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    //find the year input dropdown
+    await tester.tap(find.text(DateTime.now().year.toString()));
+    await tester.pumpAndSettle();
+    //tap the 2023 year  option
+    await tester.tap(find.text("2023"));
+    await tester.pumpAndSettle();
+
+    //check if the list of birds is displayed
+    expect(find.byType(ListTile), findsNWidgets(1));
+
+    // Tap the showFilteredNestButton button
+    await tester.tap(find.byKey(Key("showFilteredNestButton")));
+    await tester.pumpAndSettle();
+  });
+
   testWidgets("will show all nests on the map", (WidgetTester tester) async {
     final mapRoute = MaterialPageRoute(builder: (_) => Container());
     await tester.pumpWidget(
@@ -382,6 +423,10 @@ void main() {
             navigatorObservers: [mockObserver],
             onGenerateRoute: (RouteSettings settings) {
               if (settings.name == '/mapNests') {
+                expect(settings.arguments, {
+                  "nest_ids": ["1", "2"],
+                  "year": DateTime.now().year.toString()
+                });
                 return mapRoute;
               }
               return null;
@@ -395,21 +440,13 @@ void main() {
     // Tap the showFilteredNestButton button
     await tester.tap(find.byKey(Key("showFilteredNestButton")));
     await tester.pumpAndSettle();
-
-    // Capture the arguments of didPush
-
-    when(mockObserver.didPush(mapRoute, captureAny)).thenAnswer((_) {
-      final Route<dynamic> route = _.positionalArguments[0];
-      // Check the arguments
-      expect(route.settings.arguments, {
-        "nest_ids": ["1", "2"]
-      });
-    });
   });
 
   testWidgets("will show only filtered nests on the map",
       (WidgetTester tester) async {
-    final mapRoute = MaterialPageRoute(builder: (_) => Container());
+    final mapRoute = MaterialPageRoute(builder: (_) {
+      return (Container());
+    });
     await tester.pumpWidget(
       ChangeNotifierProvider<SharedPreferencesService>(
         create: (_) => sharedPreferencesService,
@@ -418,6 +455,10 @@ void main() {
             navigatorObservers: [mockObserver],
             onGenerateRoute: (RouteSettings settings) {
               if (settings.name == '/mapNests') {
+                expect(settings.arguments, {
+                  "nest_ids": ["1"],
+                  "year": DateTime.now().year.toString()
+                });
                 return mapRoute;
               }
               return null;
@@ -435,15 +476,5 @@ void main() {
     // Tap the showFilteredNestButton button
     await tester.tap(find.byKey(Key("showFilteredNestButton")));
     await tester.pumpAndSettle();
-
-    // Capture the arguments of didPush
-
-    when(mockObserver.didPush(mapRoute, captureAny)).thenAnswer((_) {
-      final Route<dynamic> route = _.positionalArguments[0];
-      // Check the arguments
-      expect(route.settings.arguments, {
-        "nest_ids": ["1"]
-      });
-    });
   });
 }
