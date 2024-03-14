@@ -8,12 +8,11 @@ import 'package:kakrarahu/models/firestore/egg.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/models/firestore/firestoreItem.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
+import 'package:kakrarahu/models/markerColorGroup.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
-
-
-class Nest extends ExperimentedItem  implements FirestoreItem {
+class Nest extends ExperimentedItem implements FirestoreItem {
   String? id;
   String accuracy;
   GeoPoint coordinates;
@@ -31,20 +30,21 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
   @override
   DateTime get created_date => discover_date;
 
-  Nest({this.id,
-    required this.discover_date,
-    required this.last_modified,
-    required this.accuracy,
-    required this.coordinates,
-    required this.responsible,
-    this.completed,
-    this.first_egg,
-    this.species,
-    this.remark,
-    this.parents,
-    List<Experiment>? experiments,
-    required List<Measure> measures
-  }) : super(experiments: experiments, measures: measures) {
+  Nest(
+      {this.id,
+      required this.discover_date,
+      required this.last_modified,
+      required this.accuracy,
+      required this.coordinates,
+      required this.responsible,
+      this.completed,
+      this.first_egg,
+      this.species,
+      this.remark,
+      this.parents,
+      List<Experiment>? experiments,
+      required List<Measure> measures})
+      : super(experiments: experiments, measures: measures) {
     updateMeasuresFromExperiments("nest");
   }
 
@@ -70,8 +70,8 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
     return false;
   }
 
-
-  Marker getMarker(BuildContext context, bool visibility){
+  Marker getMarker(
+      BuildContext context, bool visibility, MarkerColorGroup? group) {
     //disable button if the nest is from another year
     bool disabled = DateTime.now().year != discover_date.year;
     return Marker(
@@ -82,37 +82,39 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
                 : () => Navigator.pushNamed(context, '/editNest', arguments: {
                       "nest_id": id,
                       "year": discover_date.year.toString()
-                })),
+                    })),
         consumeTapEvents: false,
         visible: visibility,
         markerId: MarkerId(id!),
         //visible: snapshot.data!.docs[i].get("last_modified").toDate().day==today,
-        icon: BitmapDescriptor.defaultMarkerWithHue(getMarkerColor()),
+        icon: BitmapDescriptor.defaultMarkerWithHue(getMarkerColor(group)),
         position: LatLng(coordinates.latitude, coordinates.longitude));
   }
 
-  getMarkerColor() {
+  getMarkerColor(MarkerColorGroup? group) {
     if (completed != null) {
-      if(completed!){
+      if (completed!) {
         return BitmapDescriptor.hueAzure;
       }
     }
     if (checkedToday()) {
       return BitmapDescriptor.hueGreen;
     }
-    if(first_egg != null){
+    if (first_egg != null && group != null) {
       int dayDiff = DateTime.now().difference(first_egg!).inDays;
       //common gull incubation period is 24-26 days
       //in most seabirds it is between 11 to 45 days
-      if (dayDiff > 10 && dayDiff < 36) {
-        return BitmapDescriptor.hueMagenta;
+      if ((parents?.length ?? 0) < group.parents &&
+          dayDiff > group.minAge &&
+          dayDiff < group.maxAge &&
+          group.species.contains(species)) {
+        return group.color;
       }
     }
 
     if (chekedAgo() > Duration(days: 3)) {
       return BitmapDescriptor.hueRed;
-    }
-    else if (!checkedToday()) {
+    } else if (!checkedToday()) {
       return BitmapDescriptor.hueYellow;
     }
     return BitmapDescriptor.hueOrange;
@@ -123,45 +125,45 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
         DateTime.now().toIso8601String().split("T")[0];
   }
 
-
   @override
   factory Nest.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     ExperimentedItem eitem = ExperimentedItem.fromJson(json);
     Nest nnest = Nest(
-        id: snapshot.id,
-        //assign a last century date
-        discover_date:
-        (json['discover_date'] as Timestamp? ?? Timestamp(0, 0)).toDate(),
-        last_modified:
-        (json['last_modified'] as Timestamp? ?? Timestamp(0, 0)).toDate(),
-        accuracy: json['accuracy'] as String? ?? '',
-        remark: json["remark"],
-        first_egg: json['first_egg'] != null
-            ? (json['first_egg'] as Timestamp).toDate()
-            : null,
-        responsible: json["responsible"] as String? ?? '',
-        coordinates: json['coordinates'] as GeoPoint? ?? GeoPoint(0, 0),
-        completed: json['completed'] as bool? ?? false,
-        parents: json['parents'] != null
-            ? (json['parents'] as List<dynamic>)
-            .map((e) => Bird.fromJson(e))
-            .toList()
-            : [],
-        species: json['species'] as String? ?? '',
+      id: snapshot.id,
+      //assign a last century date
+      discover_date:
+          (json['discover_date'] as Timestamp? ?? Timestamp(0, 0)).toDate(),
+      last_modified:
+          (json['last_modified'] as Timestamp? ?? Timestamp(0, 0)).toDate(),
+      accuracy: json['accuracy'] as String? ?? '',
+      remark: json["remark"],
+      first_egg: json['first_egg'] != null
+          ? (json['first_egg'] as Timestamp).toDate()
+          : null,
+      responsible: json["responsible"] as String? ?? '',
+      coordinates: json['coordinates'] as GeoPoint? ?? GeoPoint(0, 0),
+      completed: json['completed'] as bool? ?? false,
+      parents: json['parents'] != null
+          ? (json['parents'] as List<dynamic>)
+              .map((e) => Bird.fromJson(e))
+              .toList()
+          : [],
+      species: json['species'] as String? ?? '',
       experiments: eitem.experiments,
       measures: eitem.measures,
     );
     if (nnest.remark != null) {
-      if(nnest.remark!.isNotEmpty){
-      nnest.measures.add(Measure(
-          name: "note",
-          type: "nest",
-          value: nnest.remark!,
-          isNumber: false,
-          unit: "",
-          modified: nnest.last_modified ?? DateTime.now()));
-    }}
+      if (nnest.remark!.isNotEmpty) {
+        nnest.measures.add(Measure(
+            name: "note",
+            type: "nest",
+            value: nnest.remark!,
+            isNumber: false,
+            unit: "",
+            modified: nnest.last_modified ?? DateTime.now()));
+      }
+    }
     //add measures from experments to the nest
     nnest.updateMeasuresFromExperiments("nest");
     return nnest;
@@ -174,14 +176,15 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
         .doc(name)
         .set(toJson())
         .whenComplete(() => FSItemMixin().saveChangeLog(this, nests))
-        .then((value) => UpdateResult.saveOK(item:this))
+        .then((value) => UpdateResult.saveOK(item: this))
         .catchError((e) => UpdateResult.error(message: e.toString())));
   }
 
   @override
-  Future<UpdateResult> save(FirebaseFirestore firestore,{CollectionReference<Object?>? otherItems = null,
-    bool allowOverwrite = false,
-    type = "default"}) async {
+  Future<UpdateResult> save(FirebaseFirestore firestore,
+      {CollectionReference<Object?>? otherItems = null,
+      bool allowOverwrite = false,
+      type = "default"}) async {
     if (name.isEmpty) {
       return UpdateResult.error(message: "Nest name can't be empty");
     }
@@ -192,15 +195,16 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
         firestore.collection(discover_date.year.toString());
     if (type == "modify" || type == "default") {
       return _write2Firestore(nests);
-      }
-
-      throw UnimplementedError();
     }
 
+    throw UnimplementedError();
+  }
+
   @override
-  Future<UpdateResult> delete(FirebaseFirestore firestore,{CollectionReference<Object?>? otherItems = null,
-    bool soft = true,
-    type = "default"}) async {
+  Future<UpdateResult> delete(FirebaseFirestore firestore,
+      {CollectionReference<Object?>? otherItems = null,
+      bool soft = true,
+      type = "default"}) async {
     // delete from the bird as well if asked for
     if (otherItems != null) {
       parents?.forEach((Bird b) {
@@ -232,29 +236,35 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
 
   double getAccuracy() {
     //remove all letters
-    String number = accuracy.endsWith('m') ? accuracy.substring(0, accuracy.length - 1) : accuracy;
+    String number = accuracy.endsWith('m')
+        ? accuracy.substring(0, accuracy.length - 1)
+        : accuracy;
     if (number.isEmpty) {
       return 9999.9;
     }
-    return double.tryParse(number)??9999.9;
-
+    return double.tryParse(number) ?? 9999.9;
   }
 
-  Future<List<List<CellValue>>> toExcelRows() async{
-
+  Future<List<List<CellValue>>> toExcelRows() async {
     List<CellValue> baseItems = [
       TextCellValue(name),
       DoubleCellValue(getAccuracy()),
       DoubleCellValue(coordinates.latitude),
       DoubleCellValue(coordinates.longitude),
       TextCellValue(species ?? ""),
-      DateCellValue(year: discover_date.year, month: discover_date.month, day: discover_date.day),
+      DateCellValue(
+          year: discover_date.year,
+          month: discover_date.month,
+          day: discover_date.day),
       TextCellValue(responsible ?? ""),
-      last_modified != null  ? DateTimeCellValue.fromDateTime(last_modified!) : TextCellValue(""),
+      last_modified != null
+          ? DateTimeCellValue.fromDateTime(last_modified!)
+          : TextCellValue(""),
       first_egg != null
           ? DateCellValue.fromDateTime(first_egg!)
           : TextCellValue(''),
-      IntCellValue(DateTime.now().difference(first_egg ?? DateTime(2200)).inDays),
+      IntCellValue(
+          DateTime.now().difference(first_egg ?? DateTime(2200)).inDays),
       TextCellValue(experiments?.map((e) => e.name).join(";\r") ?? ""),
       TextCellValue(parents?.map((p) => p.name).join(";\r") ?? "")
     ];
@@ -265,11 +275,11 @@ class Nest extends ExperimentedItem  implements FirestoreItem {
 
   toExcelRowHeader() {
     List<TextCellValue> baseItems = [
-    TextCellValue('name'),
-    TextCellValue('accuracy'),
-    TextCellValue('latitude'),
-TextCellValue('longitude'),
-TextCellValue('species'),
+      TextCellValue('name'),
+      TextCellValue('accuracy'),
+      TextCellValue('latitude'),
+      TextCellValue('longitude'),
+      TextCellValue('species'),
       TextCellValue('discover_date'),
       TextCellValue('last_modified_by'),
       TextCellValue('last_modified'),
@@ -279,7 +289,11 @@ TextCellValue('species'),
       TextCellValue('parents')
     ];
     Map<String, List<Measure>> measuresMap = getMeasuresMap();
-    List<TextCellValue> measureItems = measuresMap.map((key, value) => MapEntry(key, value.first.toExcelRowHeader())).values.expand((e) => e).toList();
+    List<TextCellValue> measureItems = measuresMap
+        .map((key, value) => MapEntry(key, value.first.toExcelRowHeader()))
+        .values
+        .expand((e) => e)
+        .toList();
 
     return [...baseItems, ...measureItems];
   }
@@ -301,27 +315,33 @@ TextCellValue('species'),
     };
   }
 
-  ListTile getListTile(BuildContext context, {bool disabled = false}) {
+  ListTile getListTile(BuildContext context,
+      {bool disabled = false, MarkerColorGroup? group}) {
     return ListTile(
-      title: Text('ID: $name, $species'),
-      subtitle: Text(checkedStr()),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(icon:Icon(Icons.map, color: Colors.black87),
-              style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(getMarkerColor() == BitmapDescriptor.hueGreen ? Colors.green : Colors.limeAccent)),
+        title: Text('ID: $name, $species'),
+        subtitle: Text(checkedStr()),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+                icon: Icon(Icons.map, color: Colors.black87),
+                style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all<Color>(
+                        group != null ? getMarkerColor(group) : Colors.grey)),
                 onPressed: disabled
                     ? null
                     : () {
                         Navigator.pushNamed(context, '/mapNests', arguments: {
                           'nest_ids': [id.toString()],
-                    "year": discover_date.year.toString()
-                  });
-                }),
-          SizedBox(width: 10),
-          IconButton( icon: Icon(Icons.edit, color: Colors.black87),
-    style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(Colors.grey)),
+                          "year": discover_date.year.toString()
+                        });
+                      }),
+            SizedBox(width: 10),
+            IconButton(
+                icon: Icon(Icons.edit, color: Colors.black87),
+                style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all<Color>(Colors.grey)),
                 onPressed: disabled
                     ? null
                     : () {
@@ -331,33 +351,40 @@ TextCellValue('species'),
                         });
                       }),
           ],
-      ),
-      onTap: () {
-        showDialog(context: context, builder: (BuildContext context) {
-          return AlertDialog(
-              backgroundColor: Colors.black87,
-              title: Text("Nest details"),
-          content: Column(
-            children: [
-              Text("Accuracy: $accuracy"),
-              Text("Coordinates: ${coordinates.latitude}, ${coordinates.longitude}"),
-              Text("Species: $species"),
-              Text("Discover date: ${discover_date.toIso8601String().split("T")[0]}"),
-              Text("Responsible: $responsible"),
-              Text("Last modified: ${last_modified?.toIso8601String().split("T")[0]}"),
-              Text("Completed: ${completed ?? false}"),
-              Text("First egg: ${first_egg?.toIso8601String().split("T")[0] ?? ""}"),
-              Text("${checkedStr()}"),
-              Text("Experiments: ${experiments?.map((e) => e.name).join(", ") ?? ""}"),
-              Text("Parents: ${parents?.map((p) => p.name).join(", ") ?? ""}"),
-              Text("Measures: ${measures.map((e) => e.name).join(", ")}"),
-            ],
-          ),
+        ),
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                backgroundColor: Colors.black87,
+                title: Text("Nest details"),
+                content: Column(
+                  children: [
+                    Text("Accuracy: $accuracy"),
+                    Text(
+                        "Coordinates: ${coordinates.latitude}, ${coordinates.longitude}"),
+                    Text("Species: $species"),
+                    Text(
+                        "Discover date: ${discover_date.toIso8601String().split("T")[0]}"),
+                    Text("Responsible: $responsible"),
+                    Text(
+                        "Last modified: ${last_modified?.toIso8601String().split("T")[0]}"),
+                    Text("Completed: ${completed ?? false}"),
+                    Text(
+                        "First egg: ${first_egg?.toIso8601String().split("T")[0] ?? ""}"),
+                    Text("${checkedStr()}"),
+                    Text(
+                        "Experiments: ${experiments?.map((e) => e.name).join(", ") ?? ""}"),
+                    Text(
+                        "Parents: ${parents?.map((p) => p.name).join(", ") ?? ""}"),
+                    Text("Measures: ${measures.map((e) => e.name).join(", ")}"),
+                  ],
+                ),
+              );
+            },
           );
-      },
-    );
-  }
-    );
+        });
   }
 
   bool isCompleted() {
@@ -365,7 +392,7 @@ TextCellValue('species'),
   }
 
   Duration chekedAgo() {
-    return DateTime.now().difference(last_modified??DateTime.now());
+    return DateTime.now().difference(last_modified ?? DateTime.now());
   }
 
   String checkedStr() {
@@ -391,9 +418,8 @@ TextCellValue('species'),
     }
     String year = discover_date.year.toString();
     CollectionReference eggs =
-    firestore.collection(year).doc(id).collection("egg");
-    return eggs.get().then((value) => value.docs.map((e) => Egg.fromDocSnapshot(e)).toList());
-
+        firestore.collection(year).doc(id).collection("egg");
+    return eggs.get().then(
+        (value) => value.docs.map((e) => Egg.fromDocSnapshot(e)).toList());
   }
-
 }

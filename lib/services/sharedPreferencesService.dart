@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kakrarahu/models/firestore/defaultSettings.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
+import 'package:kakrarahu/models/markerColorGroup.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,6 +14,17 @@ class SharedPreferencesService extends ChangeNotifier {
   final SharedPreferences _sharedPreferences;
 
   String get settingsType => _sharedPreferences.getString('settingsType') ?? 'default';
+
+  MarkerColorGroup? get parentTrapping =>
+      _sharedPreferences.getString('parentTrapping') != null
+          ? MarkerColorGroup.fromJson(
+              jsonDecode(_sharedPreferences.getString('parentTrapping')!))
+          : null;
+
+  set parentTrapping(MarkerColorGroup? value) {
+    _sharedPreferences.setString('parentTrapping', jsonEncode(value?.toJson()));
+    notifyListeners();
+  }
 
   set settingsType(String value) {
     _sharedPreferences.setString('settingsType', value);
