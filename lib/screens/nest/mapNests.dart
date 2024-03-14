@@ -1,7 +1,7 @@
 
-import 'package:flutter_compass/flutter_compass.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kakrarahu/services/authService.dart';
@@ -65,6 +65,10 @@ class _MapNestsState extends State<MapNests> {
       var map = ModalRoute.of(context)!.settings.arguments;
       if(map != null){
         map = map as Map<String, dynamic>;
+        if (map["year"] != null) {
+          nestsCollection = widget.firestore.collection(map["year"].toString());
+        }
+
         if(map["nest_ids"] != null) {
           if (nestsCollection != null && map["nest_ids"].length > 0) {
             query = nestsCollection!.where(

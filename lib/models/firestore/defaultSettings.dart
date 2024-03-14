@@ -2,12 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/firestore/firestoreItem.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
-import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
-import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 
 
@@ -77,7 +77,7 @@ class DefaultSettings implements FirestoreItem {
         : Species.fromJson(json['defaultSpecies']);
     return DefaultSettings(
         id: snapshot.id,
-        desiredAccuracy: json['desiredAccuracy'],
+        desiredAccuracy: (json['desiredAccuracy'] as num).toDouble(),
         selectedYear: json['selectedYear'],
         autoNextBand: json['autoNextBand'],
         autoNextBandParent: json['autoNextBandParent'],
