@@ -6,6 +6,7 @@ import 'package:kakrarahu/models/firestore/nest.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
 
+import '../../design/minMaxInput.dart';
 
 class ListNests extends ListScreenWidget<Nest> {
   const ListNests({Key? key, required FirebaseFirestore firestore})
@@ -85,10 +86,24 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
                   borderColor: Colors.white38,
                   bgColor: Colors.amberAccent,
                   labelColor: Colors.grey),
-              getMinMaxInput(context, "First egg age", updateMinEggAge, updateMaxEggAge, _minEggAge, _maxEggAge),
-              getMinMaxInput(context, "Nest age", updateMinNestAge, updateMaxNestAge, _minNestAge, _maxNestAge),
-              getMinMaxInput(context, "Loc accuracy", updateMinLocationAccuracy, updateMaxLocationAccuracy, _minLocationAccuracy, _maxLocationAccuracy),
-
+              MinMaxInput(
+                  label: "First egg age",
+                  minFun: updateMinEggAge,
+                  maxFun: updateMaxEggAge,
+                  min: _minEggAge,
+                  max: _maxEggAge),
+              MinMaxInput(
+                  label: "Nest age",
+                  minFun: updateMinNestAge,
+                  maxFun: updateMaxNestAge,
+                  min: _minNestAge,
+                  max: _maxNestAge),
+              MinMaxInput(
+                  label: "Loc accuracy",
+                  minFun: updateMinLocationAccuracy,
+                  maxFun: updateMaxLocationAccuracy,
+                  min: _minLocationAccuracy,
+                  max: _maxLocationAccuracy),
             ])),
             actions: [
               ElevatedButton(onPressed:

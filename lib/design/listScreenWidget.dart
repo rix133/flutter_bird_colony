@@ -91,41 +91,6 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
   updateYearFilter(int value);
 
-  Padding getMinMaxInput(BuildContext context, String label, Function(String) minFun, Function(String) maxFun, double? min, double? max) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Row(children: [
-        Text(label),
-        SizedBox(width: 10),
-        Expanded(child:TextFormField(
-            key: Key(label + "Min"),
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: "Min",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(25.0)),
-              ),
-            ),
-            initialValue: min?.toString() ?? "",
-            onChanged: minFun
-        )),
-        SizedBox(width: 10),
-        Expanded(child:TextFormField(
-            key: Key(label + "Max"),
-            keyboardType: TextInputType.number,
-            initialValue: max?.toString() ?? "",
-            decoration: InputDecoration(
-              labelText: "Max",
-
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(25.0)),
-              ),
-            ),
-            onChanged: maxFun
-        )),
-      ]),
-    );
-  }
 
   Future<void> executeDownload();
 

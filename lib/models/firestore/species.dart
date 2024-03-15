@@ -289,7 +289,7 @@ class LocalSpeciesList {
     return list;
   }
 
-  getSp(Species? s) {
+  Species getSp(Species? s) {
     if(s == null) {
       return Species.empty();
     }

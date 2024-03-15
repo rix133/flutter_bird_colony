@@ -5,6 +5,7 @@ class MockSharedPreferences extends Fake implements SharedPreferences {
   List<Map<String, String>> s = [];
   int? i;
   List<String>? l;
+  List<String>? l2;
   String? UA;
   String? HK;
 
@@ -58,12 +59,20 @@ class MockSharedPreferences extends Fake implements SharedPreferences {
 
   @override
   List<String>? getStringList(String key) {
-    return (l);
+    if (key == 'defaultMeasures') {
+      return l2;
+    } else {
+      return l;
+    }
   }
 
   @override
   Future<bool> setStringList(String key, List<String> value) {
-    l = value;
+    if (key == 'defaultMeasures') {
+      l2 = value;
+    } else {
+      l = value;
+    }
     return Future.value(true);
   }
 

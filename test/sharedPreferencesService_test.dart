@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kakrarahu/models/firestore/defaultSettings.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
+import 'package:kakrarahu/models/markerColorGroup.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -71,6 +72,10 @@ void main() {
 
     test('autoNextBand should return false if not set', () {
       expect(sharedPreferencesService.autoNextBand, false);
+    });
+
+    test('markerColorGroups should return empty list if not set', () {
+      expect(sharedPreferencesService.markerColorGroups, []);
     });
 
     test('autoNextBand should return the set value', () {
@@ -180,8 +185,8 @@ void main() {
           autoNextBandParent: true,
           defaultLocation: GeoPoint(11, 10),
           biasedRepeatedMeasurements: true,
-          settingsType: 'default',
           defaultSpecies: Species(english: 'test', local: '', latinCode: ''),
+          markerColorGroups: [MarkerColorGroup.magenta('test')],
           measures: [Measure.note()]);
 
       sharedPreferencesService.setFromDefaultSettings(defaultSettings);
@@ -194,6 +199,9 @@ void main() {
       expect(sharedPreferencesService.biasedRepeatedMeasures, true);
       expect(sharedPreferencesService.defaultSpecies, 'test');
       expect(sharedPreferencesService.defaultMeasures.length, 1);
+      expect(sharedPreferencesService.defaultMeasures[0].name, 'note');
+      expect(sharedPreferencesService.markerColorGroups.length, 1);
+      expect(sharedPreferencesService.markerColorGroups[0].species, 'test');
     });
   });
 }

@@ -7,7 +7,7 @@ import 'package:kakrarahu/models/firestore/nest.dart';
 import 'package:kakrarahu/models/markerColorGroup.dart';
 
 void main() {
-  final markerColorGroup = MarkerColorGroup.magenta("Test");
+  final markerColorGroup = [MarkerColorGroup.magenta("Test")];
   final Bird bird = Bird(
     band: "1234",
     species: "Test",

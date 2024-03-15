@@ -1,6 +1,7 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
+import 'package:kakrarahu/models/markerColorGroup.dart';
+import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:mockito/mockito.dart';
 
@@ -12,6 +13,8 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
   LocalSpeciesList speciesList = LocalSpeciesList.fromStringList(["Common gull","Arctic tern"]);
   List<Measure> defaultMeasures = [Measure.note()];
   bool biasedRepeatedMeasures = false;
+  String defaultSpecies = "Common Gull";
+  List<MarkerColorGroup> markerColorGroups = [];
 
   String _band = "AA1234";
   String getRecentMetalBand(String species) => _band;

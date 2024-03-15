@@ -3,13 +3,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
-import 'package:kakrarahu/screens/listMeasures.dart';
 import 'package:kakrarahu/models/firestore/defaultSettings.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
-import 'package:provider/provider.dart';
-
 import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/screens/listMeasures.dart';
+import 'package:kakrarahu/screens/settings/listMarkerColorGroups.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:provider/provider.dart';
 
 class EditDefaultSettings extends StatefulWidget {
   final FirebaseFirestore firestore;
@@ -31,9 +31,9 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
       autoNextBandParent: false,
       defaultLocation: GeoPoint(58.766218, 23.430432),
       biasedRepeatedMeasurements: false,
-      settingsType: "default",
       measures: [Measure.note()],
-      defaultSpecies: Species(english: "", latinCode: "", local: ""),
+    markerColorGroups: [],
+    defaultSpecies: Species(english: "", latinCode: "", local: ""),
     );
 
     @override
@@ -80,7 +80,15 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
         defaultSettings.measures = measures;
       });
     }),
-    SizedBox(height: 30),
+              SizedBox(height: 10),
+              ListMarkerColorGroups(
+                  markers: defaultSettings.markerColorGroups,
+                  onMarkersUpdated: (markers) {
+                    setState(() {
+                      defaultSettings.markerColorGroups = markers;
+                    });
+                  }),
+              SizedBox(height: 30),
           ModifyingButtons(firestore: widget.firestore, context: context, setState: setState, getItem: () => defaultSettings, type:type, otherItems: null)
           ]))));
   }

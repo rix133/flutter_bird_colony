@@ -59,6 +59,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ElevatedButton.icon(
+                    key: Key("deleteButton"),
                     style: ButtonStyle(
                         backgroundColor:
                         MaterialStateProperty.all(
@@ -137,6 +138,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                     ),
                     label: Text("delete")),
                 ElevatedButton.icon(
+                    key: Key("saveButton"),
                     onPressed:  () async {
                       item = widget.getItem();
                       setState(() {

@@ -15,14 +15,17 @@ class SharedPreferencesService extends ChangeNotifier {
 
   String get settingsType => _sharedPreferences.getString('settingsType') ?? 'default';
 
-  MarkerColorGroup? get parentTrapping =>
-      _sharedPreferences.getString('parentTrapping') != null
-          ? MarkerColorGroup.fromJson(
-              jsonDecode(_sharedPreferences.getString('parentTrapping')!))
-          : null;
+  List<MarkerColorGroup> get markerColorGroups =>
+      _sharedPreferences.getStringList('markerColorGroups') != null
+          ? _sharedPreferences
+              .getStringList('markerColorGroups')!
+              .map((e) => MarkerColorGroup.fromJson(jsonDecode(e)))
+              .toList()
+          : [];
 
-  set parentTrapping(MarkerColorGroup? value) {
-    _sharedPreferences.setString('parentTrapping', jsonEncode(value?.toJson()));
+  set markerColorGroups(List<MarkerColorGroup> value) {
+    _sharedPreferences.setStringList(
+        'markerColorGroups', value.map((e) => jsonEncode(e.toJson())).toList());
     notifyListeners();
   }
 
@@ -182,6 +185,7 @@ class SharedPreferencesService extends ChangeNotifier {
     defaultSpecies = defaultSettings.defaultSpecies.english;
     defaultLocation = defaultSettings.getCameraPosition();
     defaultMeasures = defaultSettings.measures;
+    markerColorGroups = defaultSettings.markerColorGroups;
     notifyListeners();
   }
 }

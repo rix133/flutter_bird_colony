@@ -122,7 +122,7 @@ class _MapNestsState extends State<MapNests> {
     }
 
     markersToShow.value = nestsToShow
-        .map((e) => e.getMarker(context, true, sps?.parentTrapping))
+        .map((e) => e.getMarker(context, true, sps?.markerColorGroups ?? []))
         .toSet();
   }
 

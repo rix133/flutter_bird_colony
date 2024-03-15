@@ -6,6 +6,7 @@ import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/firestore/firestoreItem.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
+import 'package:kakrarahu/models/markerColorGroup.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -22,8 +23,8 @@ class DefaultSettings implements FirestoreItem {
   bool biasedRepeatedMeasurements;
   List<Measure> measures = [];
   DateTime? last_modified;
-  String settingsType = "default";
   Species defaultSpecies;
+  List<MarkerColorGroup> markerColorGroups = [];
 
   @override
   String? responsible;
@@ -36,9 +37,9 @@ class DefaultSettings implements FirestoreItem {
       required this.autoNextBandParent,
       required this.defaultLocation,
       required this.biasedRepeatedMeasurements,
-      required this.settingsType,
       required this.defaultSpecies,
       required this.measures,
+      required this.markerColorGroups,
       this.responsible});
 
   @override
@@ -52,7 +53,8 @@ class DefaultSettings implements FirestoreItem {
       'biasedRepeatedMeasurements': biasedRepeatedMeasurements,
       'defaultSpecies': defaultSpecies.toJson(),
       'measures': measures.map((e) => e.toFormJson()).toList(),
-      'responsible': responsible ?? ''
+      'responsible': responsible ?? '',
+      'markerColorGroups': markerColorGroups.map((e) => e.toJson()).toList()
     };
   }
 
@@ -83,13 +85,17 @@ class DefaultSettings implements FirestoreItem {
         autoNextBandParent: json['autoNextBandParent'],
         defaultLocation: json['defaultLocation'],
         biasedRepeatedMeasurements: json['biasedRepeatedMeasurements'],
-        settingsType: snapshot.id,
         measures: json['measures'] == null
             ? []
             : (json['measures'] as List<dynamic>)
                 .map((e) => Measure.fromFormJson(e))
                 .toList(),
         defaultSpecies: defaultSpecies,
+        markerColorGroups: json['markerColorGroups'] == null
+            ? []
+            : (json['markerColorGroups'] as List<dynamic>)
+                .map((e) => MarkerColorGroup.fromJson(e))
+                .toList(),
         responsible: json['responsible']);
   }
 
@@ -177,7 +183,7 @@ class DefaultSettings implements FirestoreItem {
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
           labelText: 'Desired accuracy (m)',
-          hintText: 'Desired accuracy (m)',
+          hintText: '4.0',
         ),
         onChanged: (value) {
           desiredAccuracy = double.parse(value);
@@ -250,7 +256,6 @@ class DefaultSettings implements FirestoreItem {
         value: biasedRepeatedMeasurements,
         onChanged: (bool value) {
           biasedRepeatedMeasurements = value;
-          setState(() {});
           setState(() {});
         },
       ),

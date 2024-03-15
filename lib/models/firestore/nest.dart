@@ -70,8 +70,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     return false;
   }
 
-  Marker getMarker(
-      BuildContext context, bool visibility, MarkerColorGroup? group) {
+  Marker getMarker(BuildContext context, bool visibility,
+      List<MarkerColorGroup> group) {
     //disable button if the nest is from another year
     bool disabled = DateTime.now().year != discover_date.year;
     return Marker(
@@ -91,7 +91,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
         position: LatLng(coordinates.latitude, coordinates.longitude));
   }
 
-  getMarkerColor(MarkerColorGroup? group) {
+  getMarkerColor(List<MarkerColorGroup> groups) {
     if (completed != null) {
       if (completed!) {
         return BitmapDescriptor.hueAzure;
@@ -100,15 +100,15 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     if (checkedToday()) {
       return BitmapDescriptor.hueGreen;
     }
-    if (first_egg != null && group != null) {
+    if (first_egg != null && groups.length > 0) {
       int dayDiff = DateTime.now().difference(first_egg!).inDays;
-      //common gull incubation period is 24-26 days
-      //in most seabirds it is between 11 to 45 days
-      if ((parents?.length ?? 0) < group.parents &&
+      for (MarkerColorGroup group in groups) {
+        if ((parents?.length ?? 0) < group.parents &&
           dayDiff > group.minAge &&
           dayDiff < group.maxAge &&
-          group.species.contains(species)) {
-        return group.color;
+            group.species == species) {
+          return group.color;
+      }
       }
     }
 
@@ -316,7 +316,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   }
 
   ListTile getListTile(BuildContext context,
-      {bool disabled = false, MarkerColorGroup? group}) {
+      {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
     return ListTile(
         title: Text('ID: $name, $species'),
         subtitle: Text(checkedStr()),
@@ -327,7 +327,9 @@ class Nest extends ExperimentedItem implements FirestoreItem {
                 icon: Icon(Icons.map, color: Colors.black87),
                 style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all<Color>(
-                        group != null ? getMarkerColor(group) : Colors.grey)),
+                        groups.isNotEmpty
+                            ? getMarkerColor(groups)
+                            : Colors.grey)),
                 onPressed: disabled
                     ? null
                     : () {
