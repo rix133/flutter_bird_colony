@@ -154,7 +154,7 @@ class MarkerColorGroup {
       title: Text(name.isEmpty ? "undefined" : species + " " + name),
       subtitle: Text("First egg age: " +
           minAge.toString() +
-          " - " +
+          "-" +
           maxAge.toString() +
           " days"),
       trailing: ElevatedButton.icon(
@@ -193,7 +193,7 @@ class MarkerColorGroup {
         icon: Icon(Icons.edit, color: Colors.black),
         label: Text("Edit"),
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
+          backgroundColor: MaterialStateProperty.all(getColor()),
         ),
       ),
     );
