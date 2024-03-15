@@ -41,23 +41,15 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
       super.initState();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         sps = Provider.of<SharedPreferencesService>(context, listen: false);
-        var map = ModalRoute.of(context)?.settings.arguments;
-        if (map != null) {
-          map = map as Map<String, dynamic>;
-          if (map["defaultSettings"] != null) {
-            defaultSettings = map["defaultSettings"] as DefaultSettings;
-            setState(() {  });
-          }
-        } else {
-          widget.firestore.collection('settings').doc(type).get().then((value) {
-            if (value.exists) {
+      type = sps!.settingsType;
+      widget.firestore.collection('settings').doc(type).get().then((value) {
+        if (value.exists) {
               defaultSettings = DefaultSettings.fromDocSnapshot(value);
-            }
-            setState(() {  });
-          });
+          setState(() {});
         }
-
       });
+      setState(() {});
+    });
     }
 
     @override
@@ -75,8 +67,10 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
       child:SingleChildScrollView(child:Column(
         children: [
     ...defaultSettings.getDefaultSettingsForm(context, setState, sps),
-    ListMeasures(measures: defaultSettings.measures, onMeasuresUpdated: (measures) {
-      setState(() {
+              ListMeasures(
+                  measures: defaultSettings.measures,
+                  onMeasuresUpdated: (measures) {
+                    setState(() {
         defaultSettings.measures = measures;
       });
     }),

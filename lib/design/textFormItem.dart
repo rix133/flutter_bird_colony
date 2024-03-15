@@ -53,6 +53,7 @@ class _TextFormItemState extends State<TextFormItem> {
             child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
                 child: TextFormField(
+                  key: Key(widget.label),
                   keyboardType: widget.isNumber
                       ? TextInputType.number
                       : TextInputType.text,

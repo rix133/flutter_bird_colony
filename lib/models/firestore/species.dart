@@ -201,11 +201,11 @@ class Species implements FirestoreItem {
   factory Species.fromJson(Map<String, dynamic> json) {
     return Species(
       english: json['english'],
-      local: json['local'],
-      latin: json['latin'],
-      latinCode: json['latinCode'],
-      responsible: json['responsible'],
-      letters: json['letters'],
+      local: json['local'] ?? '',
+      latin: json['latin'] ?? '',
+      latinCode: json['latinCode'] ?? '',
+      responsible: json['responsible'] ?? '',
+      letters: json['letters'] ?? '',
     );
   }
 

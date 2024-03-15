@@ -3,8 +3,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 class EditSpecies extends StatefulWidget {
@@ -28,11 +28,11 @@ class _EditSpeciesState extends State<EditSpecies> {
       super.initState();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         sps = Provider.of<SharedPreferencesService>(context, listen: false);
-        species.responsible = sps!.userName;
+      type = sps!.settingsType;
+      species.responsible = sps!.userName;
         var map = ModalRoute.of(context)?.settings.arguments;
         if (map != null) {
             species = map as Species;
-            print(species.english);
             setState(() {  });
           }
 

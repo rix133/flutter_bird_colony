@@ -14,6 +14,7 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
   List<Measure> defaultMeasures = [Measure.note()];
   bool biasedRepeatedMeasures = false;
   String defaultSpecies = "Common Gull";
+  String settingsType = "default";
   List<MarkerColorGroup> markerColorGroups = [];
 
   String _band = "AA1234";
