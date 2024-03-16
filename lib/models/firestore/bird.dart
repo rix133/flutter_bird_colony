@@ -307,7 +307,6 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         }
       }
       // update the nest with the new parents
-      print("update the nest with the new parents time: ${DateTime.now()}");
       return(await nestsItemCollection.doc(nest).update({'parents': nestObj.parents!.map((e) => e.toSimpleJson()).toList()}).then((value) => UpdateResult.saveOK(item: this))
       );
     } catch (error) {
@@ -411,9 +410,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         });
       }
     }
-
-    print(type);
-    throw UnimplementedError();
+    return UpdateResult.error(message: "Unknown type");
   }
 
   @override

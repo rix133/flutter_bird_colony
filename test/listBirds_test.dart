@@ -1,18 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
+import 'package:kakrarahu/models/firestore/nest.dart';
+import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/screens/bird/editBird.dart';
 import 'package:kakrarahu/screens/bird/listBirds.dart';
-
 import 'package:kakrarahu/screens/homepage.dart';
-import 'package:kakrarahu/models/measure.dart';
-import 'package:kakrarahu/models/firestore/nest.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -257,5 +255,17 @@ void main() {
 
     //check if the list of birds is displayed
     expect(find.byType(ListTile), findsNWidgets(2));
+  });
+
+  testWidgets("will show alertdialog when listTile is tapped",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the search input
+    await tester.tap(find.byType(ListTile).first);
+    await tester.pumpAndSettle();
+
+    //check if the list of birds is displayed
+    expect(find.byType(AlertDialog), findsOneWidget);
   });
 }

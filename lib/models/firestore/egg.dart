@@ -24,8 +24,8 @@ class Egg extends ExperimentedItem implements FirestoreItem {
     required this.discover_date,
     required this.responsible,
     required this.status,
-    required last_modified,
-    this.ring,
+      this.last_modified,
+      this.ring,
     List<Experiment>? experiments,
     required List<Measure> measures
   }) : super(experiments: experiments, measures: measures) {
@@ -196,7 +196,11 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   }
 
   String? type(){
-    return(id?.split(" ")[1] ?? null);
+    List<String>? items = id?.split(" ");
+    if (items != null && items.length > 2) {
+      return items[1];
+    }
+    return null;
   }
 
   Padding getAgeRow() {

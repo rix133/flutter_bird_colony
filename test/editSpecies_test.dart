@@ -5,27 +5,32 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/screens/homepage.dart';
 import 'package:kakrarahu/screens/settings/editSpecies.dart';
+import 'package:kakrarahu/screens/settings/listSpecies.dart';
+import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
+import 'mocks/mockAuthService.dart';
 import 'mocks/mockSharedPreferencesService.dart';
 
 void main() {
+  final authService = MockAuthService();
   final sharedPreferencesService = MockSharedPreferencesService();
   final firestore = FakeFirebaseFirestore();
-
   late Widget myApp;
   final userEmail = "test@example.com";
-  final Species species =
+  Species species =
       Species(english: 'Common gull', local: 'Common gull', latinCode: 'CG');
   late CollectionReference speciesCollection;
+
   setUpAll(() async {
+    AuthService.instance = authService;
     speciesCollection =
         firestore.collection('settings').doc("default").collection("species");
     await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
   });
 
-  getInitApp(Object? arguments) {
+  getInitApp(dynamic args) {
     return ChangeNotifierProvider<SharedPreferencesService>(
       create: (_) => sharedPreferencesService,
       child: MaterialApp(
@@ -37,10 +42,18 @@ void main() {
                 firestore: firestore,
               ),
               settings: RouteSettings(
-                arguments: arguments,
+                arguments: args, // get initial species from object
               ),
             );
           }
+          if (settings.name == '/listSpecies') {
+            return MaterialPageRoute(
+              builder: (context) => ListSpecies(
+                firestore: firestore,
+              ),
+            );
+          }
+          // Other routes...
           return MaterialPageRoute(
             builder: (context) => MyHomePage(title: "Nest app"),
           );
@@ -59,7 +72,7 @@ void main() {
 
   testWidgets("Will load edit species without arguments",
       (WidgetTester tester) async {
-    myApp = getInitApp(null);
+    myApp = await getInitApp(null);
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
     expect(find.byType(EditSpecies), findsOneWidget);
@@ -67,14 +80,14 @@ void main() {
 
   testWidgets("Will load edit species with species",
       (WidgetTester tester) async {
-    myApp = getInitApp(species);
+    myApp = await getInitApp(species);
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
     expect(find.byType(EditSpecies), findsOneWidget);
   });
 
   testWidgets("Will save species", (WidgetTester tester) async {
-    myApp = getInitApp(species);
+    myApp = await getInitApp(species);
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
@@ -87,7 +100,7 @@ void main() {
   });
 
   testWidgets("can delete species", (WidgetTester tester) async {
-    myApp = getInitApp(species);
+    myApp = await getInitApp(species);
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
@@ -105,7 +118,7 @@ void main() {
   });
 
   testWidgets("can cancel delete species", (WidgetTester tester) async {
-    myApp = getInitApp(species);
+    myApp = await getInitApp(species);
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
@@ -123,7 +136,7 @@ void main() {
   });
 
   testWidgets("can edit species", (WidgetTester tester) async {
-    myApp = getInitApp(null);
+    myApp = await getInitApp(null);
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 

@@ -207,8 +207,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
       type = "default"}) async {
     // delete from the bird as well if asked for
     if (otherItems != null) {
-      parents?.forEach((Bird b) {
-        otherItems
+      parents?.forEach((Bird b) async {
+        await otherItems
             .doc(b.band)
             .update({'nest': null, 'nest_year': null})
             .then((value) => true)

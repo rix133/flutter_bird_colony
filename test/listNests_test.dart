@@ -477,4 +477,16 @@ void main() {
     await tester.tap(find.byKey(Key("showFilteredNestButton")));
     await tester.pumpAndSettle();
   });
+
+  testWidgets("will show alertdialog when listTile is tapped",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the search input
+    await tester.tap(find.byType(ListTile).first);
+    await tester.pumpAndSettle();
+
+    //check if the list of birds is displayed
+    expect(find.byType(AlertDialog), findsOneWidget);
+  });
 }

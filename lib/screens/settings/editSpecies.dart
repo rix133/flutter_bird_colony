@@ -33,10 +33,9 @@ class _EditSpeciesState extends State<EditSpecies> {
         var map = ModalRoute.of(context)?.settings.arguments;
         if (map != null) {
             species = map as Species;
-            setState(() {  });
-          }
-
-      });
+      }
+      setState(() {});
+    });
     }
 
     @override
