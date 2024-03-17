@@ -57,6 +57,12 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
       super.dispose();
     }
 
+  updateLocalSettings() {
+    sps!.setFromDefaultSettings(defaultSettings);
+    //refresh settings
+    Navigator.popAndPushNamed(context, "/settings");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,7 +89,14 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
                     });
                   }),
               SizedBox(height: 30),
-          ModifyingButtons(firestore: widget.firestore, context: context, setState: setState, getItem: () => defaultSettings, type:type, otherItems: null)
-          ]))));
+              ModifyingButtons(
+                  firestore: widget.firestore,
+                  context: context,
+                  setState: setState,
+                  getItem: () => defaultSettings,
+                  type: type,
+                  otherItems: null,
+                  onSaveOK: updateLocalSettings)
+            ]))));
   }
 }

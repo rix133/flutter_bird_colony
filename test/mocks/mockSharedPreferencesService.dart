@@ -1,4 +1,5 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:kakrarahu/models/firestore/defaultSettings.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/models/markerColorGroup.dart';
 import 'package:kakrarahu/models/measure.dart';
@@ -16,12 +17,11 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
   String defaultSpecies = "Common Gull";
   String settingsType = "default";
   List<MarkerColorGroup> markerColorGroups = [];
+  double desiredAccuracy = 4.0;
 
   String _band = "AA1234";
   String getRecentMetalBand(String species) => _band;
   setRecentMetalBand(String species, String band) => _band = band;
-
-  double get desiredAccuracy => 4;
 
   @override
   String get userName => 'Test User';
@@ -36,8 +36,17 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
     zoom: 16.35,
   );
 
-
-
+  setFromDefaultSettings(DefaultSettings defaultSettings) {
+    desiredAccuracy = defaultSettings.desiredAccuracy;
+    selectedYear = defaultSettings.selectedYear;
+    autoNextBand = defaultSettings.autoNextBand;
+    autoNextBandParent = defaultSettings.autoNextBandParent;
+    biasedRepeatedMeasures = defaultSettings.biasedRepeatedMeasurements;
+    defaultSpecies = defaultSettings.defaultSpecies.english;
+    defaultLocation = defaultSettings.getCameraPosition();
+    defaultMeasures = defaultSettings.measures;
+    markerColorGroups = defaultSettings.markerColorGroups;
+  }
 
   // Add other properties and methods as needed
 }
