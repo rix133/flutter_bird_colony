@@ -179,6 +179,7 @@ class DefaultSettings implements FirestoreItem {
           labelColor: Colors.grey),
       SizedBox(height: 10),
       TextFormField(
+        key: Key('desiredAccuracy'),
         initialValue: desiredAccuracy.toString(),
         keyboardType: TextInputType.number,
         decoration: InputDecoration(

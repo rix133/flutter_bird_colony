@@ -1,13 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/firestore/defaultSettings.dart';
+import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
-import 'package:kakrarahu/models/firestore/species.dart';
+import '../../models/markerColorGroup.dart';
+import 'listMarkerColorGroups.dart';
 
 class SettingsPage extends StatefulWidget {
   final FirebaseFirestore firestore;
@@ -25,16 +28,20 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isLoggedIn = false;
   bool _isAdmin = false;
   List<String> _allowedUsers = [];
-  SharedPreferencesService? sharedPreferencesService;
+  SharedPreferencesService? sps;
+  Species _defaultSpecies = Species.empty();
+  List<MarkerColorGroup> _defaultMarkerColorGroups = [];
 
   @override
   void initState() {
     super.initState();
-    sharedPreferencesService = Provider.of<SharedPreferencesService>(context, listen: false);
+    sps = Provider.of<SharedPreferencesService>(context, listen: false);
     AuthService.instance.isUserSignedIn().then((value) => setState(() {_isLoggedIn = value; }));
-    _userName = sharedPreferencesService!.userName;
-    _userEmail = sharedPreferencesService!.userEmail;
-    _isAdmin = sharedPreferencesService!.isAdmin;
+    _userName = sps!.userName;
+    _userEmail = sps!.userEmail;
+    _isAdmin = sps!.isAdmin;
+    _defaultSpecies = sps!.speciesList.getSpecies(sps!.defaultSpecies);
+    _defaultMarkerColorGroups = sps!.markerColorGroups;
     if(_isAdmin) {
       widget.firestore.collection('users').get().then((value) {
         value.docs.forEach((element) {
@@ -287,8 +294,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _isAdmin = false;
     _userName = '';
     _userEmail = '';
-    sharedPreferencesService?.clearAll();
-
+      sps?.clearAll();
     });
 
   }
@@ -296,8 +302,7 @@ class _SettingsPageState extends State<SettingsPage> {
     widget.firestore.collection('settings').doc('default').get().then((value) {
       if (value.exists) {
         DefaultSettings defaultSettings = DefaultSettings.fromDocSnapshot(value);
-        sharedPreferencesService?.setFromDefaultSettings(defaultSettings);
-
+        sps?.setFromDefaultSettings(defaultSettings);
       }
     });
     _updateSpeciesList();
@@ -306,7 +311,7 @@ class _SettingsPageState extends State<SettingsPage> {
   _updateSpeciesList() {
     widget.firestore.collection('settings').doc('default').collection("species").get().then((value) {
       List<Species> speciesList = value.docs.map((e) => Species.fromDocSnapshot(e)).toList();
-      sharedPreferencesService?.speciesList = LocalSpeciesList.fromSpeciesList(speciesList);
+      sps?.speciesList = LocalSpeciesList.fromSpeciesList(speciesList);
     });
   }
 
@@ -330,10 +335,10 @@ class _SettingsPageState extends State<SettingsPage> {
       widget.firestore.collection('users').doc(user.email).get().then((value) async {
         if (value.exists) {
           _isAdmin = value['isAdmin'];
-          sharedPreferencesService?.isAdmin = value['isAdmin'];
-          sharedPreferencesService?.isLoggedIn = true;
-          sharedPreferencesService?.userName = user!.displayName ?? '';
-          sharedPreferencesService?.userEmail = user!.email ?? '';
+          sps?.isAdmin = value['isAdmin'];
+          sps?.isLoggedIn = true;
+          sps?.userName = user!.displayName ?? '';
+          sps?.userEmail = user!.email ?? '';
           _setDefaultSettings();
           //pop all and go to homepage
           Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
@@ -343,10 +348,10 @@ class _SettingsPageState extends State<SettingsPage> {
           //if no users, the first user is admin
           if (userCount == 0) {
             widget.firestore.collection('users').doc(user!.email).set({'isAdmin': true});
-            sharedPreferencesService?.isAdmin = true;
-            sharedPreferencesService?.isLoggedIn = true;
-            sharedPreferencesService?.userName = user.displayName ?? '';
-            sharedPreferencesService?.userEmail = user.email ?? '';
+            sps?.isAdmin = true;
+            sps?.isLoggedIn = true;
+            sps?.userName = user.displayName ?? '';
+            sps?.userEmail = user.email ?? '';
             _setDefaultSettings();
             Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
             return true;
@@ -506,10 +511,10 @@ class _SettingsPageState extends State<SettingsPage> {
         children: <Widget>[
           Text('Auto set guessed metal band for chicks:'),
           Switch(
-            value: sharedPreferencesService?.autoNextBand ?? false,
-            onChanged: (value) {
-              sharedPreferencesService?.autoNextBand = value;
-              setState(() {
+                  value: sps?.autoNextBand ?? false,
+                  onChanged: (value) {
+                    sps?.autoNextBand = value;
+                    setState(() {
 
               });
             },
@@ -521,10 +526,10 @@ class _SettingsPageState extends State<SettingsPage> {
         children: <Widget>[
           Text('Auto set guessed metal band for parents:'),
           Switch(
-            value: sharedPreferencesService?.autoNextBandParent ?? false,
-            onChanged: (value) {
-              sharedPreferencesService?.autoNextBandParent = value;
-              setState(() {
+                  value: sps?.autoNextBandParent ?? false,
+                  onChanged: (value) {
+                    sps?.autoNextBandParent = value;
+                    setState(() {
 
               });
             },
@@ -541,8 +546,27 @@ class _SettingsPageState extends State<SettingsPage> {
             icon: Icon(Icons.refresh),
           ),
         ],
-      )
-    ] : [];
+            ),
+            SizedBox(height: 10),
+            SpeciesRawAutocomplete(
+              species: _defaultSpecies,
+              returnFun: (value) {
+                sps?.defaultSpecies = value.english;
+                _defaultSpecies = value;
+              },
+              speciesList: sps?.speciesList ?? LocalSpeciesList(),
+              labelTxt: "Default new nest species",
+            ),
+            SizedBox(height: 10),
+            ListMarkerColorGroups(
+                markers: _defaultMarkerColorGroups,
+                onMarkersUpdated: (markers) {
+                  sps?.markerColorGroups = markers;
+                  setState(() {
+                    _defaultMarkerColorGroups = markers;
+                  });
+                }),
+          ] : [];
   }
 
   Widget _getLoginButtons() {

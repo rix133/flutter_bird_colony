@@ -2,10 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/screens/homepage.dart';
+import 'package:kakrarahu/screens/settings/settings.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:kakrarahu/screens/settings/settings.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
@@ -96,25 +97,6 @@ void main() {
     expect(find.text('Manage species'), findsNothing);
   });
 
-  testWidgets('Admin buttons are displayed when admin is logged in', (WidgetTester tester) async {
-    authService.isLoggedIn = true;
-    sharedPreferencesService.isAdmin = true;
-    await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
-
-    //go to settings page
-    await tester.tap(find.byIcon(Icons.settings));
-    await tester.pumpAndSettle();
-
-    // Check if the admin buttons are displayed
-    expect(find.text('Logout'), findsOneWidget);
-    expect(find.text('Edit default settings'), findsOneWidget);
-    expect(find.text('Manage species'), findsOneWidget);
-
-    // Check if other buttons are not displayed
-    expect(find.text('Login with Google'), findsNothing);
-    expect(find.text('Login with email'), findsNothing);
-  });
 
   testWidgets("login with email is triggered", (WidgetTester tester) async {
     authService.isLoggedIn = false;
@@ -125,8 +107,52 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Login'), findsOneWidget);
   });
-  });
 
+    testWidgets("default species RawAutocomplete is displayed",
+        (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = false;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //go to settings page
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SpeciesRawAutocomplete), findsOneWidget);
+    });
+
+    testWidgets("default species is changed", (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = false;
+      expect(sharedPreferencesService.defaultSpecies, "Common Gull");
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //go to settings page
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
+
+      Finder speciesRawAutocompleteFinder = find.byType(SpeciesRawAutocomplete);
+      expect(speciesRawAutocompleteFinder, findsOneWidget);
+
+      // Find the TextField widget which is a descendant of the SpeciesRawAutocomplete widget
+      Finder textFieldFinder = find.descendant(
+        of: speciesRawAutocompleteFinder,
+        matching: find.byType(TextField),
+      );
+      expect(textFieldFinder, findsOneWidget);
+
+      //enter test in the textfield
+      await tester.enterText(textFieldFinder, 'tern');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("Arctic tern"));
+      await tester.pumpAndSettle();
+
+      expect(sharedPreferencesService.defaultSpecies, "Arctic tern");
+    });
+  });
   group("Settings for admin user", () {
     setUpAll(() async {
       AuthService.instance = authService;
@@ -146,6 +172,27 @@ void main() {
           '/settings': (context) => SettingsPage(firestore: firestore),
         }),
       );
+    });
+
+    testWidgets('Admin buttons are displayed when admin is logged in',
+        (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = true;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //go to settings page
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
+
+      // Check if the admin buttons are displayed
+      expect(find.text('Logout'), findsOneWidget);
+      expect(find.text('Edit default settings'), findsOneWidget);
+      expect(find.text('Manage species'), findsOneWidget);
+
+      // Check if other buttons are not displayed
+      expect(find.text('Login with Google'), findsNothing);
+      expect(find.text('Login with email'), findsNothing);
     });
 
     testWidgets('Buttons are displayed when user is logged in',
