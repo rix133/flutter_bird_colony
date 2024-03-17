@@ -164,7 +164,8 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
     return ListView.builder(
         itemCount: items.length,
         itemBuilder: (context, index) {
-          return items[index].getListTile(context, disabled: disabled);
+          return items[index].getListTile(context,
+              disabled: disabled, groups: sps?.markerColorGroups ?? []);
         });
   }
 

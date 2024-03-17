@@ -10,6 +10,7 @@ import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
+import '../markerColorGroup.dart';
 import 'egg.dart';
 
 class Bird extends ExperimentedItem implements FirestoreItem{
@@ -85,7 +86,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   String get description =>
       "Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)} $nestString, $species";
 
-  ListTile getListTile(BuildContext context, {bool disabled = false}) {
+  ListTile getListTile(BuildContext context,
+      {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
     return ListTile(
       title: Text(name + (color_band != null ? ' ($band)' : "")),
       subtitle: Text(description),

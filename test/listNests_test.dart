@@ -489,4 +489,26 @@ void main() {
     //check if the list of birds is displayed
     expect(find.byType(AlertDialog), findsOneWidget);
   });
+
+  testWidgets("will color map icon by last modified date",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the iconbutton that opens the map background color
+    //the colors are different for tiles so the color is changed
+    final ListTile tile =
+        find.byType(ListTile).first.evaluate().first.widget as ListTile;
+    final trailingRow = tile.trailing as Row;
+    final iconButton = trailingRow.children[0] as IconButton;
+    print(tile.title.toString());
+    //this should be yellow
+    expect(iconButton.style!.backgroundColor!.resolve({})!.value, 4294967040);
+
+    final ListTile tile2 =
+        find.byType(ListTile).last.evaluate().last.widget as ListTile;
+    final trailingRow2 = tile2.trailing as Row;
+    final iconButton2 = trailingRow2.children[0] as IconButton;
+    //this should be green
+    expect(iconButton2.style!.backgroundColor!.resolve({})!.value, 4278255360);
+  });
 }

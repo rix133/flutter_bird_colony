@@ -4,6 +4,8 @@ import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
+import '../markerColorGroup.dart';
+
 abstract class FirestoreItem{
 
   //ListTile getListTile(void Function(String?) removeFun,
@@ -28,5 +30,6 @@ abstract class FirestoreItem{
 
   List<TextCellValue> toExcelRowHeader();
 
-  Widget getListTile(BuildContext context, {bool disabled = false});
+  Widget getListTile(BuildContext context,
+      {bool disabled = false, List<MarkerColorGroup> groups = const []});
 }

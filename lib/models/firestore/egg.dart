@@ -8,6 +8,7 @@ import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
 import '../experimentedItem.dart';
+import '../markerColorGroup.dart';
 import '../measure.dart';
 import 'bird.dart';
 
@@ -232,7 +233,8 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   }
 
   @override
-  Widget getListTile(BuildContext context, {bool disabled = false}) {
+  Widget getListTile(BuildContext context,
+      {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
     return ListTile(
       title: Text(name),
       subtitle: Text(statusText()),

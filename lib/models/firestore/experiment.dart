@@ -7,6 +7,7 @@ import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
+import '../markerColorGroup.dart';
 import 'bird.dart';
 import 'nest.dart';
 
@@ -193,7 +194,8 @@ class Experiment implements FirestoreItem {
   String get titleString =>
       '$name${description?.isNotEmpty == true ? ' - $description' : ''}';
 
-  Widget getListTile(BuildContext context, {bool disabled = false}) {
+  Widget getListTile(BuildContext context,
+      {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
     String subtitleNests = hasNests() ? "Nests: " + nests!.join(", ") : "";
     String subtitleBirds = hasBirds() ? "Birds: " + birds!.join(", ") : "";
     return Container(

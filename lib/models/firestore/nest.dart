@@ -91,7 +91,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
         position: LatLng(coordinates.latitude, coordinates.longitude));
   }
 
-  getMarkerColor(List<MarkerColorGroup> groups) {
+  double getMarkerColor(List<MarkerColorGroup> groups) {
     if (completed != null) {
       if (completed!) {
         return BitmapDescriptor.hueAzure;
@@ -301,7 +301,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   toJson() {
     return {
       'discover_date': discover_date,
-      'last_modified': DateTime.now(),
+      'last_modified': last_modified,
       'accuracy': accuracy,
       'first_egg': first_egg,
       'remark': remark,
@@ -327,9 +327,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
                 icon: Icon(Icons.map, color: Colors.black87),
                 style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all<Color>(
-                        groups.isNotEmpty
-                            ? getMarkerColor(groups)
-                            : Colors.grey)),
+                        HSVColor.fromAHSV(1, getMarkerColor(groups), 1, 1)
+                            .toColor())),
                 onPressed: disabled
                     ? null
                     : () {

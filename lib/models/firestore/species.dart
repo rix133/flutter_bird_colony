@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/textFormItem.dart';
 import 'package:kakrarahu/models/firestore/firestoreItem.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
+import 'package:kakrarahu/models/markerColorGroup.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
 class Species implements FirestoreItem {
@@ -242,7 +243,8 @@ class Species implements FirestoreItem {
     ];
   }
 
-  Widget getListTile(BuildContext context, {bool disabled = false}) {
+  Widget getListTile(BuildContext context,
+      {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
     return
       Container(
         padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
