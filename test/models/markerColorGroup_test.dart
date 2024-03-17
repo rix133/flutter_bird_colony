@@ -30,7 +30,7 @@ void main() {
 
       markerColorGroup.setColor(newColor);
 
-      expect(markerColorGroup.color, HSVColor.fromColor(newColor).alpha);
+      expect(markerColorGroup.color, HSVColor.fromColor(newColor).hue);
     });
 
     test('should return correct color when getColor is called', () {

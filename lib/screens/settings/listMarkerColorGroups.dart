@@ -47,7 +47,7 @@ class _ListMarkerColorGroupsState extends State<ListMarkerColorGroups> {
 
   Widget getAddButton(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(18.0),
+      padding: const EdgeInsets.all(10.0),
       child: ElevatedButton.icon(
           key: Key("addMeasureButton"),
           onPressed: () {
@@ -58,10 +58,9 @@ class _ListMarkerColorGroupsState extends State<ListMarkerColorGroups> {
           },
           icon: Icon(Icons.add),
           label: Padding(
-              child: Text("Add marker color", style: TextStyle(fontSize: 18)),
-              padding: EdgeInsets.all(12)),
-          style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.grey))),
+            child: Text("Add marker color", style: TextStyle(fontSize: 14)),
+            padding: EdgeInsets.all(10)),
+      ),
     );
   }
 
@@ -76,7 +75,7 @@ class _ListMarkerColorGroupsState extends State<ListMarkerColorGroups> {
     return Column(
       children: [
         Text("Custom colors",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         SizedBox(
           height: 5,
         ),

@@ -20,7 +20,7 @@ class MarkerColorGroup {
   }
 
   setColor(Color color) {
-    this.color = HSVColor.fromColor(color).alpha;
+    this.color = HSVColor.fromColor(color).hue;
   }
 
   LocalSpeciesList speciesList = LocalSpeciesList();
@@ -64,7 +64,8 @@ class MarkerColorGroup {
       BuildContext context, Function setState, SharedPreferencesService? sps) {
     speciesList = sps?.speciesList ?? LocalSpeciesList();
     selectedSpecies = speciesList.getSpecies(species);
-    return (Column(children: [
+    return (SingleChildScrollView(
+        child: Column(children: [
       SizedBox(height: 10),
       TextFormField(
         initialValue: name,
@@ -87,8 +88,10 @@ class MarkerColorGroup {
           labelTxt: 'Species',
           labelColor: Colors.grey),
       SizedBox(height: 10),
+      Text('Nest first egg age'),
+      SizedBox(height: 5),
       MinMaxInput(
-          label: "Days since first egg",
+          label: "Days",
           minFun: (v) => minAge = int.parse(v),
           maxFun: (v) => maxAge = int.parse(v),
           min: minAge.toDouble(),
@@ -145,7 +148,7 @@ class MarkerColorGroup {
           backgroundColor: MaterialStateProperty.all(getColor()),
         ),
       ),
-    ]));
+    ])));
   }
 
   ListTile getListTile(
@@ -163,7 +166,6 @@ class MarkerColorGroup {
             builder: (BuildContext context) {
               return AlertDialog(
                 backgroundColor: Colors.black87,
-                title: Text('Edit marker color group'),
                 content: StatefulBuilder(
                   // Add this
                   builder:

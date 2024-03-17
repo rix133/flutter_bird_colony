@@ -303,6 +303,10 @@ class _SettingsPageState extends State<SettingsPage> {
       if (value.exists) {
         DefaultSettings defaultSettings = DefaultSettings.fromDocSnapshot(value);
         sps?.setFromDefaultSettings(defaultSettings);
+        setState(() {
+          _defaultSpecies = sps!.speciesList.getSpecies(sps!.defaultSpecies);
+          _defaultMarkerColorGroups = sps!.markerColorGroups;
+        });
       }
     });
     _updateSpeciesList();
@@ -549,6 +553,9 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             SizedBox(height: 10),
             SpeciesRawAutocomplete(
+              borderColor: Colors.white38,
+              bgColor: Colors.grey,
+              labelColor: Colors.grey,
               species: _defaultSpecies,
               returnFun: (value) {
                 sps?.defaultSpecies = value.english;
@@ -566,6 +573,17 @@ class _SettingsPageState extends State<SettingsPage> {
                     _defaultMarkerColorGroups = markers;
                   });
                 }),
+            SizedBox(height: 10),
+            //reset all settings button
+            ElevatedButton.icon(
+              onPressed: () {
+                _setDefaultSettings();
+              },
+              label: Padding(
+                  child: Text('Reset all settings'),
+                  padding: EdgeInsets.all(10)),
+              icon: Icon(Icons.recycling),
+            ),
           ] : [];
   }
 
