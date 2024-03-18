@@ -455,7 +455,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
 
   @override
   List<TextCellValue> toExcelRowHeader() {
-    return [
+    List<TextCellValue> baseItems = [
       TextCellValue('band'),
       TextCellValue('color_band'),
       TextCellValue("type"),
@@ -467,9 +467,18 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       TextCellValue('ringed_date'),
       TextCellValue('ringed_as_chick'),
       TextCellValue('last_modified'),
-      TextCellValue('egg'),
-      // Add more headers as per your requirements
+      TextCellValue('egg')
     ];
+    // Add more headers as per your requirements
+
+    Map<String, List<Measure>> measuresMap = getMeasuresMap();
+    List<TextCellValue> measureItems = measuresMap
+        .map((key, value) => MapEntry(key, value.first.toExcelRowHeader()))
+        .values
+        .expand((e) => e)
+        .toList();
+
+    return [...baseItems, ...measureItems];
   }
 
   @override

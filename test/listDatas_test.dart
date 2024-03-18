@@ -65,7 +65,7 @@ void main() {
       expect(find.byType(ListNests), findsOneWidget);
       expect(find.byType(ListBirds), findsNothing);
 
-      await tester.tap(find.byIcon(MyFlutterApp.bird));
+      await tester.tap(find.byIcon(CustomIcons.bird));
       await tester.pumpAndSettle();
 
       expect(find.byType(ListExperiments), findsNothing);

@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/icons/my_flutter_app_icons.dart';
-
 import 'package:kakrarahu/screens/bird/listBirds.dart';
 import 'package:kakrarahu/screens/experiment/listExperiments.dart';
 import 'package:kakrarahu/screens/nest/listNests.dart';
@@ -20,7 +19,7 @@ class ListDatas extends StatelessWidget {
             tabs: [
               Tab(icon: Icon(Icons.science), text: "Experiments"),
               Tab(icon: Icon(Icons.home), text: "Nests"),
-              Tab(icon: Icon(MyFlutterApp.bird), text: "Birds"),
+              Tab(icon: Icon(CustomIcons.bird), text: "Birds"),
             ],
           ),
         ),
