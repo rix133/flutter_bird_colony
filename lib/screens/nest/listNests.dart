@@ -257,7 +257,7 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
 
   @override
   Future<void> executeDownload() {
-    return (FSItemMixin().downloadExcel(items, "nests"));
+    return (FSItemMixin().downloadExcel(items, "nests", widget.firestore));
   }
 }
 

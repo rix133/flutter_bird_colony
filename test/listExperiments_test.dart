@@ -208,9 +208,12 @@ void main() {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.download));
-    await tester.pump(Duration(seconds: 1));
+    await tester.pump(Duration(milliseconds: 500));
     expect(find.byType(AlertDialog), findsOneWidget);
-    await tester.tap(find.text("No"));
-    await tester.pump(Duration(seconds: 1));
+    await tester.tap(find.text("OK"));
+    await tester.pumpAndSettle();
+
+    //check that alert dialog is gone
+    expect(find.byType(AlertDialog), findsNothing);
   });
 }

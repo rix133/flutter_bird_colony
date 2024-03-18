@@ -121,7 +121,7 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
 
   @override
   Future<void> executeDownload() {
-    return (FSItemMixin().downloadExcel(items, "birds"));
+    return (FSItemMixin().downloadExcel(items, "birds", widget.firestore));
   }
 
   List<Bird> getFilteredItems(AsyncSnapshot snapshot) {

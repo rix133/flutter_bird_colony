@@ -67,7 +67,8 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
           });
     } else {
       DateTime? start = totalYears.isNotEmpty ? DateTime(totalYears.first!) : null;
-      return (FSItemMixin().downloadExcel(items, "experiments", start: start));
+      return (FSItemMixin()
+          .downloadExcel(items, "experiments", widget.firestore, start: start));
     }
 
   }

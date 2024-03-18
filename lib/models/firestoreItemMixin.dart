@@ -1,12 +1,13 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:excel/excel.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/models/firestore/firestoreItem.dart';
 import 'package:kakrarahu/models/updateResult.dart';
-import 'dart:io';
 import 'package:path/path.dart';
-import 'package:excel/excel.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:share_plus/share_plus.dart';
 
 import 'firestore/bird.dart';
@@ -96,8 +97,13 @@ class FSItemMixin {
     }
   }
 
-  Future<void> downloadExcel(List<FirestoreItem> items, String type, {DateTime? start}) async {
+  Future<List<List<List<CellValue>>>?> downloadExcel(
+      List<FirestoreItem> items, String type, FirebaseFirestore firestore,
+      {DateTime? start, bool test = false}) async {
     Map<String, dynamic> sortedDataMap = await createSortedData(items);
+    if (sortedDataMap['sortedData'].isEmpty) {
+      return null;
+    }
     List<List<CellValue>> sheetData = sortedDataMap['sortedData'];
     if(start == null){
       start = sortedDataMap['start'];
@@ -111,7 +117,8 @@ class FSItemMixin {
       List<String> allExpNests = [];
       allExpNests.addAll(items.expand((e) => (e as Experiment).nests ?? []).cast<String>().toList());
         if(allExpNests.isNotEmpty){
-        QuerySnapshot nests = await FirebaseFirestore.instance.collection(year)
+        QuerySnapshot nests = await firestore
+            .collection(year)
             .where(FieldPath.documentId, whereIn: allExpNests)
             .get();
         if(nests.docs.isNotEmpty){
@@ -127,7 +134,8 @@ class FSItemMixin {
       List<String> allExpsBirds = [];
       allExpsBirds.addAll(items.expand((e) => (e as Experiment).birds ?? []).cast<String>().toList());
       if(allExpsBirds.isNotEmpty){
-        QuerySnapshot birds = await FirebaseFirestore.instance.collection("Bird")
+        QuerySnapshot birds = await firestore
+            .collection("Bird")
             .where(FieldPath.documentId, whereIn: allExpsBirds)
             .get();
         if(birds.docs.isNotEmpty){
@@ -145,7 +153,7 @@ class FSItemMixin {
         Timestamp startTimestamp = Timestamp.fromDate(start);
         Timestamp endTimestamp = Timestamp.fromDate(end);
         //get all eggs between start and end
-        QuerySnapshot eggs = await FirebaseFirestore.instance
+        QuerySnapshot eggs = await firestore
             .collectionGroup("egg")
             .where("discover_date", isGreaterThanOrEqualTo: startTimestamp)
             .where("discover_date", isLessThanOrEqualTo: endTimestamp)
@@ -161,8 +169,11 @@ class FSItemMixin {
       }
     }
 
-    if (sheets.isNotEmpty) {
+    if (sheets.isNotEmpty && !test) {
+      print(sheets);
       return await saveAsExcel(sheets, types);
+    } else if (test) {
+      return sheets;
     } else {
       return null;
     }

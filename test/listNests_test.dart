@@ -328,7 +328,7 @@ void main() {
     expect(find.byType(AlertDialog), findsOneWidget);
 
     //tap the no button
-    await tester.tap(find.text("No"));
+    await tester.tap(find.text("OK"));
     await tester.pumpAndSettle();
 
     //chekc that alert dialog is gone

@@ -97,27 +97,28 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
   Widget getAddButton(BuildContext context);
 
   Future<bool> _downloadConfirmationDialog(BuildContext context) {
-    return showDialog<bool>(
+    bool admin = sps?.isAdmin ?? false;
+    if (admin) {
+      return Future.value(true);
+    } else {
+      return showDialog<bool>(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             backgroundColor: Colors.black87,
             title: Text("Download"),
-            content: Text("Download all selected ${widget.title} to Excel?"),
-            actions: [
+              content: Text(
+                  "To get selected ${widget.title} to Excel contact an administrator."),
+              actions: [
               ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context, false);
                   },
-                  child: Text("No", style: TextStyle(color: Colors.black))),
-              ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context, true);
-                  },
-                  child: Text("Yes", style: TextStyle(color: Colors.red))),
-            ],
+                    child: Text("OK", style: TextStyle(color: Colors.black))),
+              ],
           );
         }).then((value) => value ?? false);
+    }
   }
 
   getDownloadButton(BuildContext context, SharedPreferencesService? sps) {

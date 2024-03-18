@@ -1,10 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
+import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
-
 
 import '../../design/listScreenWidget.dart';
 
@@ -58,7 +57,7 @@ class _ListSpeciesState extends ListScreenWidgetState<Species> {
 
   @override
   Future<void> executeDownload() {
-    return(FSItemMixin().downloadExcel(species, "species"));
+    return (FSItemMixin().downloadExcel(species, "species", widget.firestore));
   }
 
   @override
