@@ -44,7 +44,7 @@ class MarkerColorGroup {
             name: "parent trapping");
 
   MarkerColorGroup.fromJson(Map<String, dynamic> json)
-      : color = json['color'],
+      : color = (json['color'] as num).toDouble(),
         minAge = json['minAge'],
         maxAge = json['maxAge'],
         parents = json['parents'],

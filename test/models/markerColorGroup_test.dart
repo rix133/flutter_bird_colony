@@ -24,6 +24,17 @@ void main() {
       expect(fromJson.name, original.name);
     });
 
+    test('should get MarkerColorGroup from JSON when color is int', () {
+      final original = MarkerColorGroup.magenta('testSpecies');
+      var json = original.toJson();
+      json['color'] = json['color'].toInt();
+      final fromJson = MarkerColorGroup.fromJson(json);
+
+      expect(fromJson.color, original.color);
+      expect(fromJson.species, original.species);
+      expect(fromJson.name, original.name);
+    });
+
     test('should update color when setColor is called', () {
       final markerColorGroup = MarkerColorGroup.magenta('testSpecies');
       final newColor = Colors.red;
