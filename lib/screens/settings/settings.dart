@@ -21,7 +21,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = AuthService.instance.getGoogleSignIn();
   String? _userName;
   String? _userEmail;
   String? _userPassword;
@@ -154,10 +154,9 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<User?> signInWithNewEmail() async {
     if(_userEmail == null || _userPassword == null) return null;
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _userEmail!,
-          password: _userPassword!
-      );
+      UserCredential userCredential = await AuthService.instance
+          .createUserWithEmailAndPassword(
+              email: _userEmail, password: _userPassword);
       userCredential.user!.updateDisplayName(_userEmail!.split('@').first);
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
@@ -197,6 +196,27 @@ class _SettingsPageState extends State<SettingsPage> {
             );
           },
         );
+      } else if (e.code == 'invalid-email') {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Invalid email', style: TextStyle(color: Colors.red)),
+              content: Text(
+                'The email provided is invalid.',
+                style: TextStyle(color: Colors.black),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
       }
       return null;
     }
@@ -205,8 +225,9 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<User?> signInWithExistingEmail() async {
     if(_userEmail == null || _userPassword == null) return null;
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _userEmail!,
+      UserCredential userCredential = await AuthService.instance
+          .signInWithEmailAndPassword(
+              email: _userEmail!,
           password: _userPassword!
       );
       userCredential.user!.updateDisplayName(_userEmail!.split('@').first);
@@ -256,7 +277,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<User?> signInWithGoogle() async {
     try {
       // Trigger the authentication flow
-      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignIn googleSignIn = AuthService.instance.getGoogleSignIn();
       GoogleSignInAccount? googleUser = await googleSignIn.signInSilently();
 
       if (googleUser == null) {
@@ -275,13 +296,13 @@ class _SettingsPageState extends State<SettingsPage> {
       );
 
       // Once signed in, return the UserCredential
-      return (await FirebaseAuth.instance.signInWithCredential(credential)).user;
+      return (await AuthService.instance.signInWithCredential(credential)).user;
     } catch (e) {
       print('Sign in failed: $e');
       print(
           'Likely SHA-1 fingerprint is missing from https://console.cloud.google.com/apis/credentials?project=kakrarahu');
       //sign out from google
-      await GoogleSignIn().signOut();
+      await AuthService.instance.googleSignOut();
       // Create a new credential
 
       return null;
@@ -360,8 +381,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
             return true;
           } else {
-            await _googleSignIn.signOut().then((value) =>
-                FirebaseAuth.instance.signOut());
+            await _googleSignIn.signOut().then((value) => AuthService.instance.signOut());
             reset();
             showDialog(
               context: context,
@@ -421,8 +441,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   _logout() async {
-    await _googleSignIn.signOut().then((value) =>
-        FirebaseAuth.instance.signOut());
+    await _googleSignIn.signOut().then((value) => AuthService.instance.signOut());
     reset();
 
 
