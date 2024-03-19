@@ -21,7 +21,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final GoogleSignIn _googleSignIn = AuthService.instance.getGoogleSignIn();
+  final _auth = AuthService.instance;
   String? _userName;
   String? _userEmail;
   String? _userPassword;
@@ -36,7 +36,9 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     sps = Provider.of<SharedPreferencesService>(context, listen: false);
-    AuthService.instance.isUserSignedIn().then((value) => setState(() {_isLoggedIn = value; }));
+    _auth.isUserSignedIn().then((value) => setState(() {
+          _isLoggedIn = value;
+        }));
     _userName = sps!.userName;
     _userEmail = sps!.userEmail;
     _isAdmin = sps!.isAdmin;
@@ -154,8 +156,8 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<User?> signInWithNewEmail() async {
     if(_userEmail == null || _userPassword == null) return null;
     try {
-      UserCredential userCredential = await AuthService.instance
-          .createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
               email: _userEmail, password: _userPassword);
       userCredential.user!.updateDisplayName(_userEmail!.split('@').first);
       return userCredential.user;
@@ -167,24 +169,6 @@ class _SettingsPageState extends State<SettingsPage> {
             return AlertDialog(
               title: Text('Weak password', style: TextStyle(color: Colors.red)),
               content: Text('The password provided is too weak.', style: TextStyle(color: Colors.black),),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
-      } else if (e.code == 'email-already-in-use') {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('Email already in use', style: TextStyle(color: Colors.red)),
-              content: Text('The account already exists for that email.', style: TextStyle(color: Colors.black),),
               actions: [
                 TextButton(
                   onPressed: () {
@@ -223,34 +207,15 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<User?> signInWithExistingEmail() async {
-    if(_userEmail == null || _userPassword == null) return null;
     try {
       UserCredential userCredential = await AuthService.instance
           .signInWithEmailAndPassword(
-              email: _userEmail!,
-          password: _userPassword!
-      );
+              email: _userEmail ?? '', password: _userPassword ?? '');
       userCredential.user!.updateDisplayName(_userEmail!.split('@').first);
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('User not found', style: TextStyle(color: Colors.red)),
-              content: Text('No user found for that email.', style: TextStyle(color: Colors.black),),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
+        return signInWithNewEmail();
       } else if (e.code == 'wrong-password') {
         showDialog(
           context: context,
@@ -277,7 +242,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<User?> signInWithGoogle() async {
     try {
       // Trigger the authentication flow
-      final GoogleSignIn googleSignIn = AuthService.instance.getGoogleSignIn();
+      final GoogleSignIn googleSignIn = _auth.getGoogleSignIn();
       GoogleSignInAccount? googleUser = await googleSignIn.signInSilently();
 
       if (googleUser == null) {
@@ -296,13 +261,13 @@ class _SettingsPageState extends State<SettingsPage> {
       );
 
       // Once signed in, return the UserCredential
-      return (await AuthService.instance.signInWithCredential(credential)).user;
+      return (await _auth.signInWithCredential(credential)).user;
     } catch (e) {
       print('Sign in failed: $e');
       print(
           'Likely SHA-1 fingerprint is missing from https://console.cloud.google.com/apis/credentials?project=kakrarahu');
       //sign out from google
-      await AuthService.instance.googleSignOut();
+      await _auth.googleSignOut();
       // Create a new credential
 
       return null;
@@ -349,11 +314,7 @@ class _SettingsPageState extends State<SettingsPage> {
      if(loginType == 'existingEmail') {
        if(_userEmail != null || _userPassword != null) {
           user = await signInWithExistingEmail();
-          print(user?.email);
         }
-     }
-     if(loginType == 'newEmail') {
-       user = await signInWithNewEmail();
      }
 
     if (user != null) {
@@ -381,7 +342,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
             return true;
           } else {
-            await _googleSignIn.signOut().then((value) => AuthService.instance.signOut());
+            await _auth.googleSignOut().then((value) => _auth.signOut());
             reset();
             showDialog(
               context: context,
@@ -441,7 +402,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   _logout() async {
-    await _googleSignIn.signOut().then((value) => AuthService.instance.signOut());
+    await _auth.googleSignOut().then((value) => _auth.signOut());
     reset();
 
 
@@ -493,21 +454,6 @@ class _SettingsPageState extends State<SettingsPage> {
                       Navigator.pop(context);
                     },
                     label: Padding(child:Text('Login'), padding: EdgeInsets.all(10)),
-                    icon: Icon(Icons.account_circle),
-                  ),
-                  SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      setState(() {
-                        _disable = true;
-                      });
-                      await _login('newEmail');
-                      setState(() {
-                        _disable = false;
-                      });
-                      Navigator.pop(context);
-                    },
-                    label: Padding(child:Text('Create new account'), padding: EdgeInsets.all(10)),
                     icon: Icon(Icons.account_circle),
                   ),
                 ],
@@ -611,17 +557,19 @@ class _SettingsPageState extends State<SettingsPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ElevatedButton.icon(
-          onPressed: () {
-            _login('google');
-          },
+                key: Key('loginWithGoogleButton'),
+                onPressed: () {
+                  _login('google');
+                },
           label: Padding(child:Text('Login with Google'), padding: EdgeInsets.all(10)),
           icon: Icon(Icons.account_circle),
         ),
         SizedBox(height: 10),
         ElevatedButton.icon(
-          onPressed: () {
-            _openEmailLoginDialog();
-          },
+                key: Key('loginWithEmailButton'),
+                onPressed: () {
+                  _openEmailLoginDialog();
+                },
           label: Padding(child:Text('Login with email'), padding: EdgeInsets.all(10)),
           icon: Icon(Icons.email),
         ),

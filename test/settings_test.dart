@@ -6,6 +6,8 @@ import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/firestore/defaultSettings.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/screens/homepage.dart';
+import 'package:kakrarahu/screens/settings/editDefaultSettings.dart';
+import 'package:kakrarahu/screens/settings/listSpecies.dart';
 import 'package:kakrarahu/screens/settings/settings.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -14,41 +16,257 @@ import 'package:provider/provider.dart';
 import 'mocks/mockAuthService.dart';
 import 'mocks/mockSharedPreferencesService.dart';
 
-
 void main() {
-  final authService = MockAuthService();
+  final MockAuthService authService = MockAuthService();
   final sharedPreferencesService = MockSharedPreferencesService();
   final FirebaseFirestore firestore = FakeFirebaseFirestore();
   late Widget myApp;
   final adminEmail = "admin@example.com";
   final userEmail = "test@example.com";
-  group('Settings for normal user', () {
-    setUpAll(() async {
+
+  group("Login flow messages", () {
     AuthService.instance = authService;
-    await firestore.collection('users').doc(adminEmail).set({'isAdmin': true});
-    await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
-    myApp = ChangeNotifierProvider<SharedPreferencesService>(
-      create: (_) => sharedPreferencesService,
-      child: MaterialApp(
-          initialRoute: '/',
-          routes: {
-            '/': (context) => MyHomePage(title: "Nest app"),
-            '/settings': (context) => SettingsPage(firestore: firestore),
-          }
-      ),
-    );
+    setUp(() async {
+      authService.isLoggedIn = false;
+      sharedPreferencesService.isAdmin = false;
+      await firestore
+          .collection('users')
+          .doc(adminEmail)
+          .set({'isAdmin': true});
+      await firestore
+          .collection('users')
+          .doc(userEmail)
+          .set({'isAdmin': false});
+      myApp = ChangeNotifierProvider<SharedPreferencesService>(
+        create: (_) => sharedPreferencesService,
+        child: MaterialApp(initialRoute: '/settings', routes: {
+          '/': (context) => MyHomePage(title: "Nest app"),
+          '/settings': (context) => SettingsPage(firestore: firestore),
+        }),
+      );
+    });
+
+    testWidgets('Open email login dialog', (WidgetTester tester) async {
+      // Initialize the app
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Tap the 'Login with email' button to open the dialog
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
+
+      // Check if the dialog is displayed
+      expect(find.text('Login with email'), findsNWidgets(2));
+    });
+
+    testWidgets('Enter email and password', (WidgetTester tester) async {
+      // Initialize the app
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Tap the 'Login with email' button to open the dialog
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
+
+      // Enter email and password
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Email'), 'test@example.com');
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Password'), 'password123');
+
+      // Tap the 'Login' button
+      await tester.tap(find.text('Login'));
+      await tester.pumpAndSettle();
+
+      // Check if the login was successful
+      expect(find.byType(MyHomePage), findsOneWidget);
+    });
+
+    testWidgets('Enter email and password', (WidgetTester tester) async {
+      // Initialize the app
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Tap the 'Login with email' button to open the dialog
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
+
+      // Enter email and password
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Email'), 'admin@example.com');
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Password'), 'password123');
+
+      // Tap the 'Login' button
+      await tester.tap(find.text('Login'));
+      await tester.pumpAndSettle();
+
+      // Check if the login was successful
+      expect(find.byType(MyHomePage), findsOneWidget);
+    });
+
+    testWidgets('Login fails with wrong password', (WidgetTester tester) async {
+      // Initialize the app
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Tap the 'Login with email' button to open the dialog
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
+
+      // Enter email and password
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Email'), 'test@example.com');
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Password'), 'password312');
+
+      // Tap the 'Login' button
+      await tester.tap(find.text('Login'));
+      await tester.pumpAndSettle();
+
+      // Check if the login was not  successful
+      expect(find.byType(AlertDialog), findsNWidgets(2));
+      expect(find.text('Wrong password'), findsOneWidget);
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNWidgets(1));
+    });
+
+    testWidgets("login fails with invalid email", (WidgetTester tester) async {
+      // Initialize the app
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Tap the 'Login with email' button to open the dialog
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
+
+      // Enter email and password
+      await tester.enterText(find.widgetWithText(TextField, 'Email'), 'a');
+      await tester.enterText(find.widgetWithText(TextField, 'Password'), 'p');
+
+      await tester.tap(find.text('Login'));
+      await tester.pumpAndSettle();
+
+      // Check if the login was not  successful
+      expect(find.text("Invalid email"), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNWidgets(2));
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNWidgets(1));
+    });
+
+    testWidgets("login fails with weak password", (WidgetTester tester) async {
+      // Initialize the app
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Tap the 'Login with email' button to open the dialog
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
+
+      // Enter email and password
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Email'), 'admin@example.com');
+      await tester.enterText(find.widgetWithText(TextField, 'Password'), 'p');
+
+      await tester.tap(find.text('Login'));
+      await tester.pumpAndSettle();
+
+      // Check if the login was not  successful
+      expect(find.text("Weak password"), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNWidgets(2));
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNWidgets(1));
+    });
+
+    testWidgets('Create new account', (WidgetTester tester) async {
+      // Initialize the app
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Tap the 'Login with email' button to open the dialog
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
+
+      // Enter email and password
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Email'), 'test@example.com');
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Password'), 'password123');
+
+      // Tap the 'Create new account' button
+      await tester.tap(find.text('Login'));
+      await tester.pumpAndSettle();
+      /*
+      for(Element e in find.byType(Text).evaluate()){
+        print((e.widget as Text).data);
+      }
+       */
+
+      // Check if the account creation was successful
+      expect(find.byType(MyHomePage), findsOneWidget);
+    });
+
+    testWidgets('Create new account fails user not allowed',
+        (WidgetTester tester) async {
+      // Initialize the app
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Tap the 'Login with email' button to open the dialog
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
+
+      // Enter email and password
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Email'), 'newuser@example.com');
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Password'), 'password123');
+
+      // Tap the 'Create new account' button
+      await tester.tap(find.text('Login'));
+      await tester.pumpAndSettle();
+
+      // Check if the account creation was successful
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('Not authorized'), findsOneWidget);
+    });
   });
 
-  testWidgets('User is redirected to settings page when not signed in', (WidgetTester tester) async {
-    authService.isLoggedIn = false;
-    sharedPreferencesService.isAdmin = false;
-    await tester.pumpWidget(myApp);
+  group('Settings for normal user', () {
+    setUp(() async {
+      AuthService.instance = authService;
+      await firestore
+          .collection('users')
+          .doc(adminEmail)
+          .set({'isAdmin': true});
+      await firestore
+          .collection('users')
+          .doc(userEmail)
+          .set({'isAdmin': false});
+      myApp = ChangeNotifierProvider<SharedPreferencesService>(
+        create: (_) => sharedPreferencesService,
+        child: MaterialApp(initialRoute: '/', routes: {
+          '/': (context) => MyHomePage(title: "Nest app"),
+          '/settings': (context) => SettingsPage(firestore: firestore),
+        }),
+      );
+    });
 
-    await tester.pumpAndSettle();
-    expect(find.text('Settings'), findsOneWidget);
-  });
+    testWidgets('User is redirected to settings page when not signed in',
+        (WidgetTester tester) async {
+      authService.isLoggedIn = false;
+      sharedPreferencesService.isAdmin = false;
+      await tester.pumpWidget(myApp);
 
-    testWidgets('Login buttons are displayed when user is not logged in', (WidgetTester tester) async {
+      await tester.pumpAndSettle();
+          expect(find.text('Settings'), findsOneWidget);
+        });
+
+    testWidgets('Login buttons are displayed when user is not logged in',
+        (WidgetTester tester) async {
       authService.isLoggedIn = false;
       sharedPreferencesService.isAdmin = false;
       await tester.pumpWidget(myApp);
@@ -65,50 +283,67 @@ void main() {
       expect(find.text('Manage species'), findsNothing);
     });
 
-  testWidgets('Login with email button pressed', (WidgetTester tester) async {
-    authService.isLoggedIn = false;
-    sharedPreferencesService.isAdmin = false;
-    await tester.pumpWidget(myApp);
+    testWidgets('Login with email button pressed', (WidgetTester tester) async {
+      authService.isLoggedIn = false;
+      sharedPreferencesService.isAdmin = false;
+      await tester.pumpWidget(myApp);
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    // Tap the login with email button
-    await tester.tap(find.text('Login with email'));
-    await tester.pumpAndSettle();
+      // Tap the login with email button
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
 
-    // Check if the login page is displayed
-    expect(find.text('Login'), findsOneWidget);
-  });
+      // Check if the login page is displayed
+      expect(find.text('Login'), findsOneWidget);
+    });
 
-  testWidgets('Log out button is displayed when user is logged in', (WidgetTester tester) async {
-    authService.isLoggedIn = true;
-    await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
+    testWidgets('Log out button is displayed when user is logged in',
+        (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
 
-    //go to settings page
-    await tester.tap(find.byIcon(Icons.settings));
-    await tester.pumpAndSettle();
+      //go to settings page
+          await tester.tap(find.byIcon(Icons.settings));
+          await tester.pumpAndSettle();
 
-    // Check if the logout button is displayed
-    expect(find.text('Logout'), findsOneWidget);
+      // Check if the logout button is displayed
+      expect(find.text('Logout'), findsOneWidget);
 
-    // Check if other buttons are not displayed
-    expect(find.text('Login with Google'), findsNothing);
-    expect(find.text('Login with email'), findsNothing);
-    expect(find.text('Edit default settings'), findsNothing);
-    expect(find.text('Manage species'), findsNothing);
-  });
+      // Check if other buttons are not displayed
+          expect(find.text('Login with Google'), findsNothing);
+          expect(find.text('Login with email'), findsNothing);
+          expect(find.text('Edit default settings'), findsNothing);
+          expect(find.text('Manage species'), findsNothing);
+        });
 
+    testWidgets('Log out button pressed', (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
 
-  testWidgets("login with email is triggered", (WidgetTester tester) async {
-    authService.isLoggedIn = false;
-    sharedPreferencesService.isAdmin = false;
-    await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Login with email'));
-    await tester.pumpAndSettle();
-    expect(find.text('Login'), findsOneWidget);
-  });
+      //go to settings page
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
+
+      // Tap the logout button
+      await tester.tap(find.text('Logout'));
+      await tester.pumpAndSettle();
+
+      // Check if the login page is displayed
+      expect(find.text('Login with Google'), findsOneWidget);
+    });
+
+    testWidgets("login with email is triggered", (WidgetTester tester) async {
+      authService.isLoggedIn = false;
+      sharedPreferencesService.isAdmin = false;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
+      expect(find.text('Login'), findsOneWidget);
+    });
 
     testWidgets("default species RawAutocomplete is displayed",
         (WidgetTester tester) async {
@@ -128,6 +363,9 @@ void main() {
       authService.isLoggedIn = true;
       sharedPreferencesService.isAdmin = false;
       expect(sharedPreferencesService.defaultSpecies, "Common Gull");
+      sharedPreferencesService.speciesList =
+          LocalSpeciesList.fromStringList(["Common Gull", "Arctic tern"]);
+
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
 
@@ -160,6 +398,8 @@ void main() {
       sharedPreferencesService.isAdmin = false;
       sharedPreferencesService.defaultSpecies = "Arctic tern";
       expect(sharedPreferencesService.defaultSpecies, "Arctic tern");
+      sharedPreferencesService.speciesList =
+          LocalSpeciesList.fromStringList(["Common Gull", "Arctic tern"]);
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
 
@@ -206,6 +446,7 @@ void main() {
       expect(sharedPreferencesService.defaultSpecies, "Common Gull");
     });
   });
+
   group("Settings for admin user", () {
     setUpAll(() async {
       AuthService.instance = authService;
@@ -220,9 +461,12 @@ void main() {
           .set({'isAdmin': false});
       myApp = ChangeNotifierProvider<SharedPreferencesService>(
         create: (_) => sharedPreferencesService,
-        child: MaterialApp(initialRoute: '/', routes: {
+        child: MaterialApp(initialRoute: '/settings', routes: {
           '/': (context) => MyHomePage(title: "Nest app"),
           '/settings': (context) => SettingsPage(firestore: firestore),
+          '/listSpecies': (context) => ListSpecies(firestore: firestore),
+          '/editDefaultSettings': (context) =>
+              EditDefaultSettings(firestore: firestore),
         }),
       );
     });
@@ -232,10 +476,6 @@ void main() {
       authService.isLoggedIn = true;
       sharedPreferencesService.isAdmin = true;
       await tester.pumpWidget(myApp);
-      await tester.pumpAndSettle();
-
-      //go to settings page
-      await tester.tap(find.byIcon(Icons.settings));
       await tester.pumpAndSettle();
 
       // Check if the admin buttons are displayed
@@ -255,14 +495,61 @@ void main() {
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
 
-      //go to settings page
-      await tester.tap(find.byIcon(Icons.settings));
-      await tester.pumpAndSettle();
-
       // Check if other buttons are not displayed
       expect(find.text('Logout'), findsOneWidget);
       expect(find.text('Edit default settings'), findsOneWidget);
       expect(find.text('Manage species'), findsOneWidget);
+    });
+
+    testWidgets('Edit default settings button pressed',
+        (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = true;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //ensure that button is visible
+      final btn = find.text('Edit default settings');
+      expect(btn, findsOneWidget);
+
+      //ensure visible
+      await tester.ensureVisible(btn);
+      await tester.tap(btn);
+      await tester.pumpAndSettle();
+
+      // Check if the edit default settings page is displayed
+      expect(find.byType(EditDefaultSettings), findsOneWidget);
+    });
+
+    testWidgets('Manage species button pressed', (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = true;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      final btn = find.text('Manage species');
+      expect(btn, findsOneWidget);
+
+      await tester.ensureVisible(btn);
+      await tester.tap(btn);
+      await tester.pumpAndSettle();
+
+      // Check if the manage species page is displayed
+      expect(find.byType(ListSpecies), findsOneWidget);
+    });
+
+    testWidgets('Logout button pressed', (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = true;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Tap the logout button
+      await tester.tap(find.text('Logout'));
+      await tester.pumpAndSettle();
+
+      // Check if the login page is displayed
+      expect(find.text('Login with email'), findsOneWidget);
     });
   });
 }
