@@ -1,18 +1,17 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
-import 'package:kakrarahu/models/firestore/bird.dart';
-import 'package:kakrarahu/models/firestore/experiment.dart';
-import 'package:kakrarahu/models/measure.dart';
-import 'package:kakrarahu/models/firestore/nest.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:kakrarahu/design/modifingButtons.dart';
-import 'package:provider/provider.dart';
 import 'dart:io' show Platform;
 
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:kakrarahu/design/modifingButtons.dart';
+import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
+import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
+import 'package:kakrarahu/models/firestore/experiment.dart';
+import 'package:kakrarahu/models/firestore/nest.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
+import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:provider/provider.dart';
 
 class EditBird extends StatefulWidget {
   final FirebaseFirestore firestore;
@@ -166,6 +165,8 @@ class _EditBirdState extends State<EditBird> {
       }
     }
     addMissingMeasuresToBird(allMeasures);
+    //ensure that correct nests are referenced
+    nests = widget.firestore.collection(bird.nest_year.toString());
   }
 
   Future<void> reloadBirdFromFirestore() async {
@@ -244,19 +245,8 @@ class _EditBirdState extends State<EditBird> {
     bird.measures.sort();
   }
 
-
-  Row metalBand() {
-   List<String> recentBand = guessNextMetalBand(_recentMetalBand);
-    if(bird.id != null){
-      //give unmodifiable row with the band if the bird is from firestore
-      int lastLetter = bird.band.lastIndexOf(RegExp(r'[A-Z]'));
-      band_letCntr.text = bird.band.substring(0, lastLetter + 1);
-      band_numCntr.text = bird.band.substring(lastLetter + 1);
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-          children: [Expanded(child: Padding(padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 0),
-              child:Text("Metal: " + bird.band, style: TextStyle(fontSize: 20, color: Colors.yellow))))]);
-    }
+  Row getMetalBandInput() {
+    List<String> recentBand = guessNextMetalBand(_recentMetalBand);
 
     if (bird.band.isNotEmpty) {
       // take the letters and numbers apart
@@ -350,19 +340,32 @@ class _EditBirdState extends State<EditBird> {
         //add button to assign next metal band
         SizedBox(width: 10),
         ElevatedButton(
-          onPressed: _recentMetalBand.isNotEmpty ? () {
-            setState(() {
-              assignNextMetalBand(_recentMetalBand);
-            });
-          } : null,
+          onPressed: _recentMetalBand.isNotEmpty
+              ? () {
+                  setState(() {
+                    assignNextMetalBand(_recentMetalBand);
+                  });
+                }
+              : null,
           child: Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 1.0, vertical: 16.0),
-            child:  _recentMetalBand.isNotEmpty ? Text(recentBand.join()) : Text("?????"),
+            child: _recentMetalBand.isNotEmpty
+                ? Text(recentBand.join())
+                : Text("?????"),
           ),
         ),
       ],
     );
+  }
+
+  Row metalBand() {
+    if(bird.id != null){
+      //can't change band if it already exists
+      return Row(mainAxisAlignment: MainAxisAlignment.center, children: []);
+    } else {
+      return getMetalBandInput();
+    }
   }
 
   void addMeasure(Measure m) {
@@ -392,13 +395,15 @@ class _EditBirdState extends State<EditBird> {
   }
 
   Padding getAgeRow() {
-    int ageYears = DateTime.now().year - bird.ringed_date.year;
+    int ageYears = bird.ageInYears();
+    int ageDays = bird.ageInDays();
+    String age = ageYears > 0 ? "$ageYears years" : "$ageDays days";
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(
         children: [
           Expanded(
-              child: Text('Age: $ageYears years',
+              child: Text('Age: $age',
                   style: TextStyle(fontSize: 20, color: Colors.yellow))),
         ],
       ),
@@ -411,9 +416,13 @@ class _EditBirdState extends State<EditBird> {
     return bird;
   }
 
- List<String> guessNextMetalBand(String recentBand) {
-   String letters = "";
-   String numbers = "";
+  preformChangeMetalBand() {
+    String currentBand = bird.band;
+  }
+
+  List<String> guessNextMetalBand(String recentBand) {
+    String letters = "";
+    String numbers = "";
    if (recentBand.isNotEmpty) {
      int lastLetter = recentBand.lastIndexOf(RegExp(r'[A-Z]'));
      if (lastLetter != -1) {
@@ -431,7 +440,35 @@ class _EditBirdState extends State<EditBird> {
    }
   }
 
-
+  changeMetalBand() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Change metal band"),
+            content: Column(
+              children: [
+                Text("Are you sure you want to change the metal band?"),
+                Text("This will delete the current bird and create a new one."),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () {
+                  preformChangeMetalBand();
+                },
+                child: Text("Change"),
+              ),
+            ],
+          );
+        });
+  }
 
   assignNextMetalBand(String recentBand) {
    List<String> nextBand = guessNextMetalBand(recentBand);
@@ -461,8 +498,14 @@ class _EditBirdState extends State<EditBird> {
               padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
               child: SingleChildScrollView(
                 child: Column(children: [
-                  Text("Edit bird",
-                      style: TextStyle(fontSize: 30, color: Colors.yellow)),
+                  GestureDetector(
+                    onLongPress: () {
+                      changeMetalBand();
+                    },
+                    child: Text(
+                        bird.id != null ? "Metal: ${bird.id}" : "New bird",
+                        style: TextStyle(fontSize: 20, color: Colors.yellow)),
+                  ),
                   SizedBox(height: 10),
                   listExperiments(bird),
                   SpeciesRawAutocomplete(species: _species, returnFun: (Species sp) {

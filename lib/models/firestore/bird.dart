@@ -212,7 +212,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       'nest': nest,
       'nest_year': nest_year,
       'experiments': experiments?.map((Experiment e) => e.toSimpleJson()).toList(),
-      'last_modified': last_modified,
+      'last_modified': last_modified ?? DateTime.now(),
       'age': age,
       'egg': egg,
       'measures': measures.map((Measure e) => e.toJson()).toList(),
@@ -312,7 +312,68 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       return(await nestsItemCollection.doc(nest).update({'parents': nestObj.parents!.map((e) => e.toSimpleJson()).toList()}).then((value) => UpdateResult.saveOK(item: this))
       );
     } catch (error) {
-      return UpdateResult.error(message: "Error saving bird");
+      return UpdateResult.error(message: "Error updating nest parents");
+    }
+  }
+
+  Future<UpdateResult> _updateNestChick(CollectionReference nestsItemCollection,
+      {bool delete = false}) async {
+    try {
+      Nest? nestObj = await nestsItemCollection.doc(nest).get().then((value) {
+        if (!value.exists) {
+          return null;
+        }
+        return Nest.fromDocSnapshot(value);
+      });
+      if (nestObj == null) {
+        return UpdateResult.error(message: "Nest $nest not found");
+      }
+      //get the nest eggs
+      CollectionReference eggs =
+          nestsItemCollection.doc(nest).collection("egg");
+
+      //search if the egg with the same band exists within eggs
+
+      List<Egg> eggDocs = await eggs.get().then((value) {
+        return value.docs.map((e) => Egg.fromDocSnapshot(e)).toList();
+      });
+      Egg? eggObj = eggDocs.firstWhere((element) => element.ring == band,
+          orElse: () => null);
+      if (eggObj != null) {
+        if (eggObj.type() == "egg") {
+          if (delete == false) {
+            eggObj.ring = band;
+            return (eggs
+                .doc(eggObj.id)
+                .update(eggObj.toJson())
+                .then((value) => UpdateResult.saveOK(item: this)));
+          } else {
+            return (eggs.doc(eggObj.id).update({"ring": null}).then(
+                (value) => UpdateResult.saveOK(item: this)));
+          }
+        }
+        if (eggObj.type() == "chick") {
+          //delete the old and add the new
+          if (delete == false) {
+            eggObj.ring = band;
+            eggObj.id = "$nest chick $band";
+            return (eggs.doc(eggObj.id).set(eggObj.toJson()).then((value) =>
+                eggs
+                    .doc(eggObj.id)
+                    .delete()
+                    .then((v) => UpdateResult.saveOK(item: this))));
+          } else {
+            return (eggs
+                .doc(eggObj.id)
+                .delete()
+                .then((value) => UpdateResult.saveOK(item: this)));
+          }
+        }
+        return UpdateResult.error(message: "Nest egg not found");
+      }
+      return UpdateResult.error(message: "Nest egg not found");
+    } catch (error) {
+      return UpdateResult.error(message: "Error updating nest eggs");
     }
   }
 
@@ -324,19 +385,36 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     return ringed_as_chick ? (DateTime.now().year - ringed_date.year) : int.tryParse(age ?? "") ?? 0;
   }
 
+  int ageInDays() {
+    return ringed_as_chick
+        ? (DateTime.now().difference(ringed_date).inDays)
+        : 0;
+  }
+
   Future<UpdateResult> _updateNestEgg(CollectionReference eggItemCollection) async {
     if (egg == null) {
-      await eggItemCollection.doc("$nest chick $band").set(Egg(
+      Egg newEgg = Egg(
+          id: "$nest chick $band",
           discover_date: DateTime(1900),
           last_modified: DateTime.now(),
           experiments: experiments,
           measures: [],
           responsible: "unknown",
           ring: band,
-          status: 'hatched').toJson());
+          status: 'hatched');
+      egg = band;
+      await eggItemCollection.doc(newEgg.id).set(newEgg.toJson());
       return UpdateResult.saveOK(item: this);
     } else {
-      await eggItemCollection.doc("$nest egg $egg").update({'ring': band, 'status': 'hatched'});
+      if (egg == band) {
+        await eggItemCollection
+            .doc("$nest chick $band")
+            .update({'ring': band, 'status': 'hatched'});
+      } else {
+        await eggItemCollection
+            .doc("$nest egg $egg")
+            .update({'ring': band, 'status': 'hatched'});
+      }
     }
     return UpdateResult.saveOK(item: this);
   }
@@ -344,16 +422,20 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   Future<UpdateResult> _saveBird(CollectionReference birds, CollectionReference? nestsItemCollection, bool isParent) async {
     UpdateResult? ur;
     try {
-        ur = await _saveBirdToFirestore(birds, nestsItemCollection);
-        if(!ur.success) {
-          return ur;
-        }
-      if(nestsItemCollection != null){
+      //the update nests has to be before the bird as the egg might be updated if the bird is a chick
+      //this happens in the function _updateNestEgg
+      //TODO this is a bit of a mess, should be refactored there shoud be no need to update the nest if the bird fields related to nest are not changed
+      if (nestsItemCollection != null) {
         ur = await _updateNest(nestsItemCollection, isParent);
         if(!ur.success) {
           return ur;
         }
       }
+      ur = await _saveBirdToFirestore(birds, nestsItemCollection);
+      if (!ur.success) {
+        return ur;
+      }
+
       return UpdateResult.saveOK(item: this);
     } catch (error) {
       return UpdateResult.error(message: "Error saving bird");
@@ -429,8 +511,12 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     if (otherItems != null && type == "parent") {
       await updateNestParent(otherItems, delete: true);
     }
+    if (otherItems != null && type == "chick") {
+      await _updateNestChick(otherItems, delete: true);
+    }
+
     CollectionReference items = firestore.collection("Birds");
-    //check if the item exists
+    //check if the item exists if misssing return early
     UpdateResult ur = await items.doc(id).get().then((doc)  {
       if (!doc.exists) {
         return UpdateResult.deleteOK(item: this);

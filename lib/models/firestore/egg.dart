@@ -225,7 +225,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       'discover_date': discover_date,
       'responsible': responsible,
       'ring': ring,
-      'last_modified': last_modified,
+      'last_modified': last_modified ?? DateTime.now(),
       'status': status,
       'experiments': experiments?.map((e) => e.toSimpleJson()).toList(),
       'measures': measures.map((e) => e.toJson()).toList(),
