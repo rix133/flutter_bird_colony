@@ -172,6 +172,18 @@ void main() {
       );
       expect(egg.statusText(), pre + 'unknown');
     });
+
+    test('Egg statusText when status is "hatched"', () {
+      var egg = Egg(
+        id: defaultID,
+        discover_date: DateTime.now().subtract(Duration(days: 5)),
+        responsible: 'Responsible Person',
+        status: 'hatched',
+        ring: 'ring',
+        measures: [],
+      );
+      expect(egg.statusText(), pre + 'hatched/ring');
+    });
   });
   group("save", () {
     test('Egg save with no nest', () async {

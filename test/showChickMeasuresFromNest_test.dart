@@ -155,7 +155,7 @@ void main() {
     myApp = getInitApp('/editNest', nest);
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
-    await tester.longPress(find.text("Egg 1 hatched/AA1234 20 days old"));
+    await tester.longPress(find.text("Egg 1 hatched/AA1234"));
     await tester.pumpAndSettle();
     expect(find.byType(EditBird), findsOneWidget);
   });
@@ -166,7 +166,7 @@ void main() {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text("Egg 1 hatched/AA1234 20 days old"));
+    await tester.tap(find.text("Egg 1 hatched/AA1234"));
     await tester.pumpAndSettle();
     expect(find.byType(EditEgg), findsOneWidget);
   });
@@ -176,7 +176,7 @@ void main() {
     myApp = getInitApp('/editNest', nest);
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
-    await tester.longPress(find.text("Egg 1 hatched/AA1234 20 days old"));
+    await tester.longPress(find.text("Egg 1 hatched/AA1234"));
     await tester.pumpAndSettle();
     expect(find.byType(EditBird), findsOneWidget);
     for (Element i in find.byType(Text).evaluate()) {
@@ -191,7 +191,7 @@ void main() {
     myApp = getInitApp('/editNest', nest);
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
-    await tester.longPress(find.text("Egg 1 hatched/AA1234 20 days old"));
+    await tester.longPress(find.text("Egg 1 hatched/AA1234"));
     await tester.pumpAndSettle();
     expect(find.byType(EditBird), findsOneWidget);
     expect(find.text("Metal: AA1234"), findsOneWidget);

@@ -145,7 +145,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       txt += "/$ring";
     }
     int dayDiff = DateTime.now().difference(discover_date).inDays;
-    if (dayDiff > 0) {
+    if (dayDiff > 0 && (ring == null || ring == "")) {
       txt += " " + dayDiff.toString() + " days old";
     }
 
