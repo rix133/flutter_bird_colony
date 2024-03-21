@@ -411,13 +411,97 @@ class _EditBirdState extends State<EditBird> {
   }
 
   Bird getBird() {
+    String cb = color_band.valueCntr.text.toUpperCase();
     bird.nest = nestnr.valueCntr.text;
-    bird.color_band = color_band.valueCntr.text.toUpperCase();
+    bird.color_band = cb.isEmpty ? null : cb;
     return bird;
   }
 
   preformChangeMetalBand() {
     String currentBand = bird.band;
+    bool disableButtons = false;
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Change ${bird.id}?"),
+            content: Column(
+              children: [
+                SizedBox(height: 10),
+                getMetalBandInput(),
+                SizedBox(height: 10),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: disableButtons
+                    ? null
+                    : () {
+                        Navigator.pop(context);
+                      },
+                child: Text("Cancel"),
+              ),
+              TextButton(
+                key: Key("changeBandButton"),
+                onPressed: disableButtons
+                    ? null
+                    : () {
+                        setState(() {
+                          disableButtons = true;
+                        });
+                        bird.band = (band_letCntr.text + band_numCntr.text)
+                            .toUpperCase();
+                        sps?.setRecentBand(bird.species ?? '', bird.band);
+                        bird.id = null;
+                        bird
+                            .save(widget.firestore,
+                                otherItems: nests, type: ageType)
+                            .then((ur) {
+                          if (ur.success) {
+                            bird.id = currentBand;
+                            bird.band = currentBand;
+                            bird
+                                .delete(widget.firestore,
+                                    otherItems: nests, type: ageType)
+                                .then((value) {
+                              if (value.success) {
+                                disableButtons = false;
+                                Navigator.pop(context);
+                                Navigator.pop(context);
+                              } else {
+                                disableButtons = false;
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(SnackBar(
+                                  content: Text(
+                                      "Error deleting old band: ${value.message}"),
+                                  backgroundColor: Colors.red,
+                                  duration: Duration(seconds: 5),
+                                ));
+                              }
+                            });
+                          }
+                          if (!ur.success) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content:
+                                  Text("Error saving new band: ${ur.message}"),
+                              backgroundColor: Colors.red,
+                              duration: Duration(seconds: 5),
+                            ));
+                          }
+                        }).whenComplete(() => setState(() {
+                                  disableButtons = false;
+                                }));
+
+                        Navigator.pop(context);
+                      },
+                child: disableButtons
+                    ? CircularProgressIndicator()
+                    : Text("Change"),
+              ),
+            ],
+          );
+        });
   }
 
   List<String> guessNextMetalBand(String recentBand) {
@@ -449,7 +533,6 @@ class _EditBirdState extends State<EditBird> {
             content: Column(
               children: [
                 Text("Are you sure you want to change the metal band?"),
-                Text("This will delete the current bird and create a new one."),
               ],
             ),
             actions: [
@@ -461,6 +544,7 @@ class _EditBirdState extends State<EditBird> {
               ),
               TextButton(
                 onPressed: () {
+                  Navigator.pop(context);
                   preformChangeMetalBand();
                 },
                 child: Text("Change"),
