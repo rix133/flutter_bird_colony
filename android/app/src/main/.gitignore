@@ -1,0 +1,2 @@
+#the androidManifest mus have correct  string com.google.android.geo.API_KEY to work on build
+AndroidManifest.xml
