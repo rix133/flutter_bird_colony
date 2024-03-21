@@ -22,6 +22,19 @@ void main() {
           result.message, "Can't save bird without metal band and color band");
     });
 
+    test('should return error when band has only letters', () async {
+      final bird = Bird(
+        band: "AA",
+        ringed_date: DateTime.now(),
+        ringed_as_chick: true,
+        measures: [],
+      );
+
+      final result = await bird.save(firestore);
+      expect(result.success, false);
+      expect(result.message, "Band must contain numbers");
+    });
+
     test('should return error when band is empty and type is parent', () async {
       final bird = Bird(
         band: "",

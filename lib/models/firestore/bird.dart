@@ -386,6 +386,11 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       return UpdateResult.error(
           message: "Can't save bird without metal band and color band");
     }
+    //check that the band has numbers
+    if (band.isNotEmpty && !RegExp(r'[0-9]').hasMatch(band)) {
+      return UpdateResult.error(message: "Band must contain numbers");
+    }
+
     if (type == "parent" || type == "chick") {
       bool isParent = (type == "parent");
       if (band.isEmpty) {
