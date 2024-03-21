@@ -238,7 +238,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   }
 
   Future<UpdateResult> _saveBirdToFirestore(CollectionReference birds, CollectionReference? nestsItemCollection) async {
-    Bird? prevBird = await birds.doc(band).get().then((value) {
+    Bird? prevBird = await birds.doc(id).get().then((value) {
       if (!value.exists) {
 
         return null;
@@ -255,6 +255,10 @@ class Bird extends ExperimentedItem implements FirestoreItem{
             .collection("changelog")
             .doc(ringed_date.toString())
             .set(prevBird.toJson());
+      }
+      //TODO handle band change
+      if (prevBird.band != band) {
+        return UpdateResult.error(message: "Band change not allowed");
       }
       //handle nest change of parents on nests
       await _checkNestChange(nestsItemCollection, prevBird);
@@ -337,8 +341,12 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       List<Egg> eggDocs = await eggs.get().then((value) {
         return value.docs.map((e) => Egg.fromDocSnapshot(e)).toList();
       });
-      Egg? eggObj = eggDocs.firstWhere((element) => element.ring == band,
-          orElse: () => null);
+      Egg? eggObj;
+      try {
+        eggObj = eggDocs.firstWhere((element) => element.ring == band);
+      } catch (e) {
+        eggObj = null;
+      }
       if (eggObj != null) {
         if (eggObj.type() == "egg") {
           if (delete == false) {
@@ -356,12 +364,19 @@ class Bird extends ExperimentedItem implements FirestoreItem{
           //delete the old and add the new
           if (delete == false) {
             eggObj.ring = band;
-            eggObj.id = "$nest chick $band";
-            return (eggs.doc(eggObj.id).set(eggObj.toJson()).then((value) =>
-                eggs
+            return (eggs
+                .doc("$nest chick $band")
+                .set(eggObj.toJson())
+                .then((value) {
+              if (eggObj!.id != null) {
+                return (eggs
                     .doc(eggObj.id)
                     .delete()
-                    .then((v) => UpdateResult.saveOK(item: this))));
+                    .then((value) => UpdateResult.saveOK(item: this)));
+              } else {
+                return UpdateResult.saveOK(item: this);
+              }
+            }));
           } else {
             return (eggs
                 .doc(eggObj.id)
@@ -422,18 +437,18 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   Future<UpdateResult> _saveBird(CollectionReference birds, CollectionReference? nestsItemCollection, bool isParent) async {
     UpdateResult? ur;
     try {
-      //the update nests has to be before the bird as the egg might be updated if the bird is a chick
-      //this happens in the function _updateNestEgg
-      //TODO this is a bit of a mess, should be refactored there shoud be no need to update the nest if the bird fields related to nest are not changed
-      if (nestsItemCollection != null) {
-        ur = await _updateNest(nestsItemCollection, isParent);
-        if(!ur.success) {
-          return ur;
-        }
-      }
       ur = await _saveBirdToFirestore(birds, nestsItemCollection);
       if (!ur.success) {
         return ur;
+      }
+      //the update nests has to be before the bird as the egg might be updated if the bird is a chick
+      //this happens in the function _updateNestEgg
+      if (nestsItemCollection != null) {
+        ur = await _updateNest(nestsItemCollection, isParent);
+        if (!ur.success) {
+          return ur;
+        }
+        //TODO this is a bit of a mess, should be refactored there shoud be no need to update the nest if the bird fields related to nest are not changed
       }
 
       return UpdateResult.saveOK(item: this);
