@@ -31,7 +31,7 @@ class _EditBirdState extends State<EditBird> {
   bool buttonsDisabled = false;
   FocusNode _lettersFocus = FocusNode();
   String? previousRouteName;
-
+  bool disableBandChangeButtons = false;
 
   Measure color_band = Measure(
     name: "color ring",
@@ -245,7 +245,7 @@ class _EditBirdState extends State<EditBird> {
     bird.measures.sort();
   }
 
-  Row getMetalBandInput() {
+  Row getMetalBandInput({bool hideNext = false}) {
     List<String> recentBand = guessNextMetalBand(_recentMetalBand);
 
     if (bird.band.isNotEmpty) {
@@ -338,10 +338,12 @@ class _EditBirdState extends State<EditBird> {
           ),
         ),
         //add button to assign next metal band
-        SizedBox(width: 10),
-        ElevatedButton(
-          onPressed: _recentMetalBand.isNotEmpty
-              ? () {
+        hideNext ? Container() : SizedBox(width: 10),
+        hideNext
+            ? Container()
+            : ElevatedButton(
+                onPressed: _recentMetalBand.isNotEmpty
+                    ? () {
                   setState(() {
                     assignNextMetalBand(_recentMetalBand);
                   });
@@ -418,37 +420,51 @@ class _EditBirdState extends State<EditBird> {
   }
 
   preformChangeMetalBand() {
-    bool disableButtons = false;
     showDialog(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("Change ${bird.id}?"),
-            content: Column(
-              children: [
-                SizedBox(height: 10),
-                getMetalBandInput(),
-                SizedBox(height: 10),
-              ],
-            ),
+          return StatefulBuilder(
+              builder: (BuildContext context, StateSetter dialogSetState) {
+            return AlertDialog(
+              backgroundColor: Colors.black,
+              titleTextStyle:
+                  TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              title: Text("Change ${bird.id}"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(height: 10),
+                  Text("Are you sure you want to change the metal band?"),
+                  SizedBox(height: 20),
+                  getMetalBandInput(hideNext: true),
+                  SizedBox(height: 20),
+                ],
+              ),
             actions: [
               TextButton(
-                onPressed: disableButtons
-                    ? null
-                    : () {
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.white),
+                  ),
+                  onPressed: disableBandChangeButtons
+                      ? null
+                      : () {
                         Navigator.pop(context);
                       },
                 child: Text("Cancel"),
               ),
               TextButton(
-                key: Key("changeBandButton"),
-                onPressed: disableButtons
-                    ? null
-                    : () {
-                        setState(() {
-                          disableButtons = true;
-                        });
-                        bird.band = (band_letCntr.text + band_numCntr.text)
+                  style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all(Colors.redAccent),
+                  ),
+                  key: Key("changeBandButton"),
+                  onPressed: disableBandChangeButtons
+                      ? null
+                      : () {
+                          dialogSetState(() {
+                            disableBandChangeButtons = true;
+                          });
+                          bird.band = (band_letCntr.text + band_numCntr.text)
                             .toUpperCase();
                         bird.responsible = sps?.userName ?? "unknown";
                         bird
@@ -457,17 +473,17 @@ class _EditBirdState extends State<EditBird> {
                             .then((ur) {
                           if (ur.success) {
                             sps?.setRecentBand(bird.species ?? '', bird.band);
-                            setState(() {
-                              disableButtons = false;
-                            });
-                            Navigator.pop(context);
+                              dialogSetState(() {
+                                disableBandChangeButtons = false;
+                              });
+                              Navigator.pop(context);
                             deleteOk();
                           }
                           if (!ur.success) {
-                            setState(() {
-                              disableButtons = false;
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              dialogSetState(() {
+                                disableBandChangeButtons = false;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text("Can't change band: ${ur.message}"),
                               backgroundColor: Colors.red,
                               duration: Duration(seconds: 5),
@@ -475,12 +491,13 @@ class _EditBirdState extends State<EditBird> {
                           }
                         });
                       },
-                child: disableButtons
-                    ? CircularProgressIndicator()
-                    : Text("Change"),
+                  child: disableBandChangeButtons
+                      ? CircularProgressIndicator()
+                      : Text("Change"),
               ),
             ],
-          );
+            );
+          });
         });
   }
 
@@ -509,12 +526,11 @@ class _EditBirdState extends State<EditBird> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text("Change metal band"),
-            content: Column(
-              children: [
-                Text("Are you sure you want to change the metal band?"),
-              ],
-            ),
+            contentTextStyle: TextStyle(color: Colors.black),
+            titleTextStyle: TextStyle(color: Colors.red),
+            title: const Text("Change metal band"),
+            content:
+                const Text("Are you sure you want to change the metal band?"),
             actions: [
               TextButton(
                 onPressed: () {
@@ -566,9 +582,12 @@ class _EditBirdState extends State<EditBird> {
                     onLongPress: () {
                       changeMetalBand();
                     },
-                    child: Text(
-                        bird.id != null ? "Metal: ${bird.id}" : "New bird",
-                        style: TextStyle(fontSize: 20, color: Colors.yellow)),
+                    child: Column(children: [
+                      Text("long press to edit band",
+                          style: TextStyle(fontSize: 10, color: Colors.white)),
+                      Text(bird.id != null ? "Metal: ${bird.id}" : "New bird",
+                          style: TextStyle(fontSize: 20, color: Colors.yellow)),
+                    ]),
                   ),
                   SizedBox(height: 10),
                   listExperiments(bird),
@@ -583,6 +602,7 @@ class _EditBirdState extends State<EditBird> {
                   metalBand(),
                   bird.isChick() ? Container() : SizedBox(height: 10),
                   bird.isChick() ? Container() : color_band.getSimpleMeasureForm(),
+                  SizedBox(height: 10),
                   ModifyingButtons(firestore: widget.firestore, context:context,setState:setState, getItem:getBird, type:ageType, otherItems:nests,
                       silentOverwrite: (ageType == "parent"),
                       onSaveOK: saveOk, onDeleteOK: deleteOk),
