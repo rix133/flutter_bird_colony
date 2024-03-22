@@ -21,6 +21,8 @@ abstract class FirestoreItem{
     throw UnimplementedError('fromDocSnapshot() must be implemented in subclasses');
   }
 
+  FirestoreItem copy();
+
   Future <UpdateResult> save(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"});
 
   Future <UpdateResult> delete(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool soft = true, String type = "default"});

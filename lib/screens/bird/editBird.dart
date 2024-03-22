@@ -418,7 +418,6 @@ class _EditBirdState extends State<EditBird> {
   }
 
   preformChangeMetalBand() {
-    String currentBand = bird.band;
     bool disableButtons = false;
     showDialog(
         context: context,
@@ -451,49 +450,30 @@ class _EditBirdState extends State<EditBird> {
                         });
                         bird.band = (band_letCntr.text + band_numCntr.text)
                             .toUpperCase();
-                        sps?.setRecentBand(bird.species ?? '', bird.band);
-                        bird.id = null;
+                        bird.responsible = sps?.userName ?? "unknown";
                         bird
                             .save(widget.firestore,
                                 otherItems: nests, type: ageType)
                             .then((ur) {
                           if (ur.success) {
-                            bird.id = currentBand;
-                            bird.band = currentBand;
-                            bird
-                                .delete(widget.firestore,
-                                    otherItems: nests, type: ageType)
-                                .then((value) {
-                              if (value.success) {
-                                disableButtons = false;
-                                Navigator.pop(context);
-                                Navigator.pop(context);
-                              } else {
-                                disableButtons = false;
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(SnackBar(
-                                  content: Text(
-                                      "Error deleting old band: ${value.message}"),
-                                  backgroundColor: Colors.red,
-                                  duration: Duration(seconds: 5),
-                                ));
-                              }
+                            sps?.setRecentBand(bird.species ?? '', bird.band);
+                            setState(() {
+                              disableButtons = false;
                             });
+                            Navigator.pop(context);
+                            deleteOk();
                           }
                           if (!ur.success) {
+                            setState(() {
+                              disableButtons = false;
+                            });
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content:
-                                  Text("Error saving new band: ${ur.message}"),
+                              content: Text("Can't change band: ${ur.message}"),
                               backgroundColor: Colors.red,
                               duration: Duration(seconds: 5),
                             ));
                           }
-                        }).whenComplete(() => setState(() {
-                                  disableButtons = false;
-                                }));
-
-                        Navigator.pop(context);
+                        });
                       },
                 child: disableButtons
                     ? CircularProgressIndicator()

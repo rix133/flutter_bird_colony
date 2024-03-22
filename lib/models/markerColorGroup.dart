@@ -15,6 +15,16 @@ class MarkerColorGroup {
   String species;
   String name;
 
+  MarkerColorGroup copy() {
+    return MarkerColorGroup(
+        color: color,
+        minAge: minAge,
+        maxAge: maxAge,
+        parents: parents,
+        species: species,
+        name: name);
+  }
+
   Color getColor() {
     return HSVColor.fromAHSV(1, color, 1, 1).toColor();
   }

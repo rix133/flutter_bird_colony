@@ -26,8 +26,9 @@ void main() {
   final firestore = FakeFirebaseFirestore();
   MockLocationAccuracy10 locationAccuracy10 = MockLocationAccuracy10();
   late Widget myApp;
+
   final userEmail = "test@example.com";
-  final Nest nest = Nest(
+  final Nest masterNest = Nest(
     id: "1",
     coordinates: GeoPoint(0, 0),
     accuracy: "12.22m",
@@ -37,7 +38,7 @@ void main() {
     species: "test",
     measures: [Measure.note()],
   );
-  final Egg egg = Egg(
+  final Egg masterEgg = Egg(
       id: "1 egg 1",
       discover_date: DateTime.now().subtract(Duration(days: 2)),
       responsible: "Admin",
@@ -46,7 +47,7 @@ void main() {
       status: "intact",
       measures: [Measure.note()]);
 
-  final Egg eggEgg = Egg(
+  final Egg masterEggEgg = Egg(
       id: "1 egg 2",
       discover_date: DateTime.now().subtract(Duration(days: 2)),
       responsible: "Admin",
@@ -55,14 +56,14 @@ void main() {
       status: "hatched",
       measures: [Measure.note(value: "test")]);
 
-  Egg chickEgg = Egg(
+  final Egg masterChickEgg = Egg(
       id: "1 chick AA1235",
-      discover_date: DateTime.now().subtract(Duration(days: 36)),
+      discover_date: DateTime(1900),
       responsible: "Admin",
       ring: "AA1235",
       last_modified: DateTime.now().subtract(Duration(days: 36)),
       status: "hatched",
-      measures: [Measure.note(value: "test")]);
+      measures: []);
   final Experiment experiment = Experiment(
     id: "1",
     name: "New Experiment",
@@ -75,7 +76,7 @@ void main() {
     responsible: "Admin",
   );
 
-  Bird parent = Bird(
+  final Bird masterParent = Bird(
       ringed_date: DateTime.now().subtract(Duration(days: 360 * 3)),
       band: 'AA1234',
       ringed_as_chick: true,
@@ -90,7 +91,7 @@ void main() {
       last_modified: DateTime.now().subtract(Duration(days: 360 * 3)),
       species: 'Common gull');
 
-  Bird chickChick = Bird(
+  final Bird masterChickChick = Bird(
       ringed_date: DateTime.now().subtract(Duration(days: 36)),
       band: 'AA1235',
       ringed_as_chick: true,
@@ -101,7 +102,7 @@ void main() {
       last_modified: DateTime.now().subtract(Duration(days: 36)),
       species: 'Common gull');
 
-  Bird eggChick = Bird(
+  final Bird masterEggChick = Bird(
       ringed_date: DateTime.now().subtract(Duration(days: 36)),
       band: 'AA1236',
       ringed_as_chick: true,
@@ -148,18 +149,13 @@ void main() {
   }
 
   group("Load Bird", () {
+    late Egg egg;
+    late Bird parent;
+    late Nest nest;
     setUp(() async {
-      parent = Bird(
-          ringed_date: DateTime.now().subtract(Duration(days: 360 * 3)),
-          band: 'AA1234',
-          ringed_as_chick: true,
-          measures: [Measure.note()],
-          nest: "234",
-          //3 years ago this was the nest
-          nest_year: DateTime.now().subtract(Duration(days: 360 * 3)).year,
-          responsible: 'Admin',
-          last_modified: DateTime.now().subtract(Duration(days: 360 * 3)),
-          species: 'Common gull');
+      parent = masterParent.copy();
+      egg = masterEgg.copy();
+      nest = masterNest.copy();
       //reset the database
       await firestore.collection('recent').doc("nest").set({"id": "1"});
       await firestore
@@ -307,7 +303,13 @@ void main() {
     });
   });
   group("Save Bird", () {
+    late Bird parent;
+    late Egg egg;
+    late Nest nest;
     setUp(() async {
+      parent = masterParent.copy();
+      egg = masterEgg.copy();
+      nest = masterNest.copy();
       //reset the database
       await firestore.collection('recent').doc("nest").set({"id": "1"});
       await firestore
@@ -454,7 +456,21 @@ void main() {
     });
   });
   group("Delete Bird", () {
+    late Egg egg;
+    late Bird parent;
+    late Nest nest;
+    late Bird chickChick;
+    late Bird eggChick;
+    late Egg chickEgg;
+    late Egg eggEgg;
     setUp(() async {
+      parent = masterParent.copy();
+      egg = masterEgg.copy();
+      nest = masterNest.copy();
+      chickChick = masterChickChick.copy();
+      eggChick = masterEggChick.copy();
+      chickEgg = masterChickEgg.copy();
+      eggEgg = masterEggEgg.copy();
       parent.id = parent.band;
       parent.nest = nest.id;
       parent.nest_year = nest.discover_date.year;
@@ -521,6 +537,11 @@ void main() {
 
     testWidgets("can delete chick bird artefacts from egg",
         (WidgetTester tester) async {
+      chickChick = await firestore
+          .collection("Birds")
+          .doc(chickChick.band)
+          .get()
+          .then((value) => Bird.fromDocSnapshot(value));
       myApp = getInitApp({"bird": chickChick});
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
@@ -548,6 +569,11 @@ void main() {
 
     testWidgets("can delete egg bird artefacts from egg",
         (WidgetTester tester) async {
+      eggChick = await firestore
+          .collection("Birds")
+          .doc(eggChick.band)
+          .get()
+          .then((value) => Bird.fromDocSnapshot(value));
       myApp = getInitApp({"bird": eggChick});
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
@@ -576,6 +602,11 @@ void main() {
 
     testWidgets("can delete parent bird artefacts from nest",
         (WidgetTester tester) async {
+      parent = await firestore
+          .collection("Birds")
+          .doc(parent.band)
+          .get()
+          .then((value) => Bird.fromDocSnapshot(value));
       myApp = getInitApp({"bird": parent});
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
@@ -602,7 +633,24 @@ void main() {
   });
 
   group("Change Bird Band", () {
+    late Egg egg;
+    late Bird parent;
+    late Nest nest;
+    late Bird chickChick;
+    late Bird eggChick;
+    late Egg chickEgg;
+    late Egg eggEgg;
     setUp(() async {
+      parent = masterParent.copy();
+      egg = masterEgg.copy();
+      nest = masterNest.copy();
+      chickChick = masterChickChick.copy();
+      eggChick = masterEggChick.copy();
+      chickEgg = masterChickEgg.copy();
+      eggEgg = masterEggEgg.copy();
+
+      chickEgg.discover_date = chickChick.ringed_date;
+
       parent.id = parent.band;
       parent.nest = nest.id;
       parent.nest_year = nest.discover_date.year;
@@ -649,6 +697,35 @@ void main() {
           .doc(experiment.id)
           .set(experiment.toJson());
     });
+
+    tearDown(() async {
+      await firestore.collection("Birds").get().then((value) {
+        for (var doc in value.docs) {
+          doc.reference.delete();
+        }
+      });
+      //delete all eggs from nest 1
+      await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .get()
+          .then((value) {
+        for (var doc in value.docs) {
+          doc.reference.delete();
+        }
+      });
+      //delete all nests
+      await firestore
+          .collection(nest.discover_date.year.toString())
+          .get()
+          .then((value) {
+        for (var doc in value.docs) {
+          doc.reference.delete();
+        }
+      });
+    });
+
     testWidgets(
         "when a bird band is changed old bird is deleted and new bird is saved",
         (WidgetTester tester) async {
@@ -780,12 +857,6 @@ void main() {
     testWidgets(
         "when a bird band is changed and it is a parent on a nest the nest parents are updated",
         (WidgetTester tester) async {
-      parent = await firestore
-          .collection("Birds")
-          .doc(parent.band)
-          .get()
-          .then((value) => Bird.fromDocSnapshot(value));
-      myApp = getInitApp({"bird": parent});
       parent = await firestore
           .collection("Birds")
           .doc(parent.band)

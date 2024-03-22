@@ -66,7 +66,9 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                             Colors.red[900])),
                     onPressed: (item.id == null) ? null : () {
                       item = widget.getItem();
-                      showDialog<String>(
+                            item.responsible =
+                                sps?.userName ?? item.responsible;
+                            showDialog<String>(
                         barrierColor: Colors.black,
                         context: context,
                         builder: (BuildContext context) =>

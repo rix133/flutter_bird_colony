@@ -28,6 +28,22 @@ class Experiment implements FirestoreItem {
   List<String> previousNests = [];
   List<String> previousBirds = [];
 
+  Experiment copy() {
+    return Experiment(
+        id: id,
+        name: name,
+        description: description,
+        responsible: responsible,
+        year: year,
+        nests: List.from(nests ?? []),
+        birds: List.from(birds ?? []),
+        type: type,
+        measures: List.from(measures.map((m) => m.copy())),
+        color: color,
+        last_modified: last_modified,
+        created: created);
+  }
+
   Experiment(
       {this.id,
       required this.name,
@@ -304,7 +320,6 @@ class Experiment implements FirestoreItem {
       String type = "default"}) {
     CollectionReference expCollection =
         firestore.collection('experiments');
-
     _updateNestCollection(firestore, previousNests, delete: true);
     _updateBirdsCollection(firestore, previousBirds, delete: true);
 

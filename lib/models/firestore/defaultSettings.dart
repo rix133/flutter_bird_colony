@@ -42,6 +42,21 @@ class DefaultSettings implements FirestoreItem {
       required this.markerColorGroups,
       this.responsible});
 
+  DefaultSettings copy() {
+    return DefaultSettings(
+        id: id,
+        desiredAccuracy: desiredAccuracy,
+        selectedYear: selectedYear,
+        autoNextBand: autoNextBand,
+        autoNextBandParent: autoNextBandParent,
+        defaultLocation: defaultLocation,
+        biasedRepeatedMeasurements: biasedRepeatedMeasurements,
+        defaultSpecies: defaultSpecies.copy(),
+        measures: measures.map((e) => e.copy()).toList(),
+        markerColorGroups: markerColorGroups.map((e) => e.copy()).toList(),
+        responsible: responsible);
+  }
+
   @override
   Map<String, dynamic> toJson() {
     return {
@@ -107,6 +122,7 @@ class DefaultSettings implements FirestoreItem {
     if (id == null) {
       id = type;
     }
+    last_modified = DateTime.now();
     return (firestore
         .collection("settings")
         .doc(id)

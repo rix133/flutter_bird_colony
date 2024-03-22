@@ -15,6 +15,17 @@ class Measure implements Comparable<Measure> {
       this.valueCntr.text = value;
   }
 
+  Measure copy() {
+    return Measure(
+        name: name,
+        value: value,
+        isNumber: isNumber,
+        unit: unit,
+        modified: modified,
+        type: type,
+        repeated: repeated);
+  }
+
   Measure.note({this.value = ""}){
     this.unit = "";
     this.name = "note";

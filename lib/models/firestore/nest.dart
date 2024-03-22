@@ -30,6 +30,23 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   @override
   DateTime get created_date => discover_date;
 
+  Nest copy() {
+    return Nest(
+        id: id,
+        discover_date: discover_date,
+        last_modified: last_modified,
+        accuracy: accuracy,
+        coordinates: coordinates,
+        responsible: responsible,
+        completed: completed,
+        first_egg: first_egg,
+        species: species,
+        remark: remark,
+        parents: parents,
+        experiments: experiments,
+        measures: measures.map((e) => e.copy()).toList());
+  }
+
   Nest(
       {this.id,
       required this.discover_date,
@@ -170,8 +187,6 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   }
 
   Future<UpdateResult> _write2Firestore(CollectionReference nests) async {
-    // the modified date is assigned at write time
-    last_modified = DateTime.now();
     return (await nests
         .doc(name)
         .set(toJson())
@@ -190,7 +205,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     }
     //remove empty measures
     measures.removeWhere((element) => element.value.isEmpty);
-
+    // the modified date is assigned at write time
+    last_modified = DateTime.now();
     CollectionReference nests =
         firestore.collection(discover_date.year.toString());
     if (type == "modify" || type == "default") {

@@ -60,7 +60,7 @@ void main() {
 
       final result = await bird.save(firestore, type: "unknown");
       expect(result.success, false);
-      expect(result.message, "Unknown type");
+      expect(result.message, "Unknown type of bird: unknown");
     });
 
     test('should save bird when band is not empty and type is parent',

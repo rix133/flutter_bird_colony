@@ -39,6 +39,18 @@ class Egg extends ExperimentedItem implements FirestoreItem {
 
   bool get ringed => ring != null && ring != "";
 
+  Egg copy() {
+    return Egg(
+        id: id,
+        discover_date: discover_date,
+        responsible: responsible,
+        ring: ring,
+        status: status,
+        last_modified: last_modified,
+        experiments: experiments,
+        measures: measures.map((e) => e.copy()).toList());
+  }
+
   @override
   factory Egg.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;

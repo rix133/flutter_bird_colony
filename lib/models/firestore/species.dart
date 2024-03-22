@@ -147,11 +147,25 @@ class Species implements FirestoreItem {
   @override
   String get name => local.isEmpty ? english : local;
 
+  Species copy() {
+    return Species(
+      id: id,
+      english: english,
+      local: local,
+      latin: latin,
+      latinCode: latinCode,
+      responsible: responsible,
+      last_modified: last_modified,
+      letters: letters,
+    );
+  }
+
   @override
   Future<UpdateResult> save(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
       bool allowOverwrite = false,
       String type = "default"}) {
+    last_modified = DateTime.now();
     if (id == null) {
       return (firestore
           .collection('settings')
