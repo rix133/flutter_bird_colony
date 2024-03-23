@@ -292,6 +292,11 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         //check if the nest has changed and update the nest accordingly
         await _checkNestChange(nestsItemCollection, prevBird!);
       }
+    } else {
+      //its  a new bird
+      if (id == null && nestsItemCollection != null) {
+        await updateNest(nestsItemCollection);
+      }
     }
     last_modified = DateTime.now();
     return(birds.doc(band).set(toJson()).then((value) => _saveToChangelog(birds)).then((value) => UpdateResult.saveOK(item: this))
