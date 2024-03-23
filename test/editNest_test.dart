@@ -244,4 +244,188 @@ void main() {
       expect(eggObj.discover_date, newBird.ringed_date);
     });
   });
+
+  group("validate required measures", () {
+    setUp(() async {
+      //reset the database
+      await firestore.collection('recent').doc("nest").set({"id": "1"});
+      await nest.save(firestore);
+      egg.measures = [
+        Measure.numeric(name: "weight", unit: "", modified: DateTime.now())
+      ];
+      //add egg to nest
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .set(egg.toJson());
+    });
+
+    tearDown(() async {
+      //delete all nest eggs
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .get()
+          .then((value) {
+        value.docs.forEach((element) {
+          element.reference.delete();
+        });
+      });
+
+      //delete nest
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .delete();
+    });
+
+    testWidgets("will save nest when no required measures on egg",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+      //expect to find the egg in firestore
+      var eggObj = await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .get();
+      expect(eggObj.exists, true);
+      Egg newEgg = Egg.fromDocSnapshot(eggObj);
+      expect(newEgg.id, "1 egg 1");
+      expect(newEgg.status, "intact");
+      //the other one is an empty note
+      expect(newEgg.measures.length, 2);
+      expect(newEgg.measures[0].name, "note");
+      expect(newEgg.measures[0].value, "");
+      expect(newEgg.measures[1].name, "weight");
+      expect(newEgg.measures[1].value, "");
+
+      expect(find.byType(AlertDialog), findsNothing);
+    });
+
+    testWidgets("will not save nest when required measures on egg",
+        (WidgetTester tester) async {
+      Egg egg2 = Egg(
+          id: "1 egg 2",
+          discover_date: DateTime.now().subtract(Duration(days: 2)),
+          responsible: "Admin",
+          ring: null,
+          last_modified: DateTime.now().subtract(Duration(days: 1)),
+          status: "intact",
+          measures: [
+            Measure.numeric(
+                name: "weight",
+                unit: "",
+                modified: DateTime.now(),
+                required: true)
+          ]);
+      await egg2.save(firestore);
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+      //expect to find the egg in firestore
+      var eggObj = await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .get();
+      expect(eggObj.exists, true);
+      Egg newEgg = Egg.fromDocSnapshot(eggObj);
+      expect(newEgg.id, "1 egg 1");
+      expect(newEgg.status, "intact");
+      expect(newEgg.measures.length, 2);
+      expect(newEgg.measures[0].name, "note");
+      expect(newEgg.measures[0].value, "");
+      expect(newEgg.measures[1].name, "weight");
+      expect(newEgg.measures[1].value, "");
+
+      egg2 = Egg.fromDocSnapshot(await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg2.id)
+          .get());
+      expect(egg2.status, "intact");
+      //check that the egg measure 1 value is empty
+      expect(newEgg.measures.length, 2);
+      expect(newEgg.measures[0].name, "note");
+      expect(newEgg.measures[0].value, "");
+      expect(newEgg.measures[1].name, "weight");
+      expect(newEgg.measures[1].value, "");
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+    });
+
+    testWidgets("will save nest when required measures are bypassed on egg",
+        (WidgetTester tester) async {
+      Egg egg2 = Egg(
+          id: "1 egg 2",
+          discover_date: DateTime.now().subtract(Duration(days: 2)),
+          responsible: "Admin",
+          ring: null,
+          last_modified: DateTime.now().subtract(Duration(days: 1)),
+          status: "intact",
+          measures: [
+            Measure.numeric(
+                name: "weight",
+                unit: "",
+                modified: DateTime.now(),
+                required: true)
+          ]);
+      await egg2.save(firestore);
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      await tester.tap(find.text("Save anyway"));
+      await tester.pumpAndSettle();
+
+      //expect to find the egg in firestore
+      var eggObj = await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .get();
+      expect(eggObj.exists, true);
+      Egg newEgg = Egg.fromDocSnapshot(eggObj);
+      expect(newEgg.id, "1 egg 1");
+      expect(newEgg.status, "intact");
+      expect(newEgg.measures.length, 2);
+      expect(newEgg.measures[0].name, "note");
+      expect(newEgg.measures[0].value, "");
+      expect(newEgg.measures[1].name, "weight");
+      expect(newEgg.measures[1].value, "");
+
+      egg2 = Egg.fromDocSnapshot(await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg2.id)
+          .get());
+      expect(egg2.status, "intact");
+      //check that the egg measure 1 value is empty
+      expect(newEgg.measures.length, 2);
+      expect(newEgg.measures[0].name, "note");
+      expect(newEgg.measures[0].value, "");
+      expect(newEgg.measures[1].name, "weight");
+      expect(newEgg.measures[1].value, "");
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+    });
+  });
 }

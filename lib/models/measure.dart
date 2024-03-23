@@ -9,10 +9,19 @@ class Measure implements Comparable<Measure> {
   DateTime modified = DateTime.now();
   String unit = "";
   bool repeated = false;
+  bool required = false;
   String type=  "any";
 
-  Measure({required this.name, required this.value, required this.isNumber, required this.unit, required  this.modified, required this.type, this.repeated = false}){
-      this.valueCntr.text = value;
+  Measure(
+      {required this.name,
+      required this.value,
+      required this.isNumber,
+      required this.unit,
+      required this.modified,
+      required this.type,
+      this.repeated = false,
+      this.required = false}) {
+    this.valueCntr.text = value;
   }
 
   Measure copy() {
@@ -23,6 +32,7 @@ class Measure implements Comparable<Measure> {
         unit: unit,
         modified: modified,
         type: type,
+        required: required,
         repeated: repeated);
   }
 
@@ -31,21 +41,42 @@ class Measure implements Comparable<Measure> {
     this.name = "note";
     this.isNumber = false;
     this.repeated = true;
+    this.required = false;
     this.valueCntr.text = value;
   }
 
-
-  Measure.numeric({required this.name, value ="", required this.unit, required this.modified, this.repeated = false}){
+  Measure.numeric(
+      {required this.name,
+      value = "",
+      required this.unit,
+      required this.modified,
+      this.repeated = false,
+      this.required = false}) {
     this.isNumber = true;
     this.valueCntr.text = value;
   }
-  Measure.text({required this.name, value ="", unit ="", required this.modified, this.repeated = false}){
+
+  Measure.text(
+      {required this.name,
+      value = "",
+      unit = "",
+      required this.modified,
+      this.repeated = false,
+      this.required = false}) {
     this.isNumber = false;
     this.valueCntr.text = value;
   }
 
   factory Measure.empty(Measure m){
-    return Measure(name: m.name, value: "", isNumber: m.isNumber, unit: m.unit, modified: DateTime.now(), type: m.type, repeated: m.repeated);
+    return Measure(
+        name: m.name,
+        value: "",
+        isNumber: m.isNumber,
+        unit: m.unit,
+        modified: DateTime.now(),
+        type: m.type,
+        repeated: m.repeated,
+        required: m.required);
   }
 
   toJson() {
@@ -56,6 +87,7 @@ class Measure implements Comparable<Measure> {
       'isNumber': isNumber,
       'unit': unit,
       'modified': modified.toIso8601String(),
+      'required': required,
       'repeated': repeated
     };
   }
@@ -65,6 +97,7 @@ class Measure implements Comparable<Measure> {
       'name': name,
       'type': type,
       'isNumber': isNumber,
+      'required': required,
       'repeated': repeated,
       'unit': unit
     };
@@ -154,6 +187,15 @@ class Measure implements Comparable<Measure> {
               });
             },
           ),
+          SwitchListTile(
+            title: const Text('Required'),
+            value: this.required,
+            onChanged: (bool value) {
+              setState(() {
+                this.required = value;
+              });
+            },
+          ),
         ],
       ),
     );
@@ -179,10 +221,11 @@ class Measure implements Comparable<Measure> {
           },
           textAlign: TextAlign.center,
           decoration: InputDecoration(
-            labelText: name +  (unit == "" ? "" : " (" + unit + ")"),
+            labelText: name +
+                (unit == "" ? "" : " (" + unit + ")" + (required ? "*" : "")),
             labelStyle: TextStyle(color: Colors.yellow),
             hintText: unit,
-            fillColor: Colors.orange,
+            fillColor: (required && value.isEmpty) ? Colors.red : Colors.orange,
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25),
               borderSide: (BorderSide(
@@ -192,7 +235,9 @@ class Measure implements Comparable<Measure> {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25.0),
               borderSide: BorderSide(
-                color: Colors.deepOrange,
+                color: (required && value.isEmpty)
+                    ? Colors.red
+                    : Colors.deepOrange,
                 width: 1.5,
               ),
             ),
@@ -259,7 +304,8 @@ class Measure implements Comparable<Measure> {
   ListTile getMeasureTileEdit(){
     valueCntr.text = value;
     return ListTile(
-      title: Text(name + (unit == "" ? "" : " (" + unit + ")")),
+      title: Text(
+          name + (unit == "" ? "" : " (" + unit + ")" + (required ? "*" : ""))),
       trailing: TextFormField(
         keyboardType: isNumber ? TextInputType.number : TextInputType.text,
         controller: valueCntr,
@@ -268,7 +314,7 @@ class Measure implements Comparable<Measure> {
           labelText: value,
           labelStyle: TextStyle(color: Colors.yellow),
           hintText: unit,
-          fillColor: Colors.orange,
+          fillColor: (required && value.isEmpty) ? Colors.red : Colors.orange,
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(25),
               borderSide: (BorderSide(
@@ -278,7 +324,8 @@ class Measure implements Comparable<Measure> {
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25.0),
             borderSide: BorderSide(
-              color: Colors.deepOrange,
+              color:
+                  (required && value.isEmpty) ? Colors.red : Colors.deepOrange,
               width: 1.5,
             ),
           ),
@@ -320,15 +367,18 @@ class Measure implements Comparable<Measure> {
               labelText: label,
               labelStyle: TextStyle(color: Colors.yellow),
               hintText: value,
-              fillColor: Colors.orange,
-              focusedBorder: OutlineInputBorder(
+                  fillColor:
+                      (required && value.isEmpty) ? Colors.red : Colors.orange,
+                  focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25),
                   borderSide: (BorderSide(color: Colors.indigo))),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(25.0),
                 borderSide: BorderSide(
-                  color: Colors.deepOrange,
-                  width: 1.5,
+                      color: (required && value.isEmpty)
+                          ? Colors.red
+                          : Colors.deepOrange,
+                      width: 1.5,
                 ),
               ),
             ),
@@ -355,8 +405,8 @@ class Measure implements Comparable<Measure> {
         unit: json['unit'],
         type: json['type'] ?? "any",
         modified: json['modified'] != null ? DateTime.parse(json['modified']) : DateTime.now(),
-        repeated: json['repeated'] ?? false
-    );
+        repeated: json['repeated'] ?? false,
+        required: json['required'] ?? false);
     return m;
   }
 
@@ -368,8 +418,8 @@ class Measure implements Comparable<Measure> {
         unit: json['unit'],
         type: json['type'] ?? "any",
         modified: DateTime.now(),
-        repeated: json['repeated'] ?? false
-    );
+        repeated: json['repeated'] ?? false,
+        required: json['required'] ?? false);
     return m;
   }
 
