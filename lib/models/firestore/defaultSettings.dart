@@ -279,6 +279,10 @@ class DefaultSettings implements FirestoreItem {
     ]);
   }
 
+  UpdateResult validate({List<FirestoreItem> otherItems = const []}) {
+    return UpdateResult.validateOK();
+  }
+
   @override
   Widget getListTile(BuildContext context,
       {bool disabled = false, List<MarkerColorGroup> groups = const []}) {

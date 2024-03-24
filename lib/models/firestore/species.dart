@@ -236,6 +236,10 @@ class Species implements FirestoreItem {
     };
   }
 
+  UpdateResult validate({List<FirestoreItem> otherItems = const []}) {
+    return UpdateResult.validateOK();
+  }
+
   List<Widget> getSpeciesForm(BuildContext context, void Function(Function()) setState) {
     return [
       TextFormItem(

@@ -193,6 +193,10 @@ class Experiment implements FirestoreItem {
         };
   }
 
+  UpdateResult validate({List<FirestoreItem> otherItems = const []}) {
+    return UpdateResult.validateOK();
+  }
+
   gotoBird(String bird, BuildContext context) {
     return () => {
           Navigator.pushNamed(context, "/editBird", arguments: {

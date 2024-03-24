@@ -399,10 +399,6 @@ void main() {
           widget is InputDecorator &&
           widget.decoration.labelText == 'color ring');
 
-      //print labels of all input decorators
-      //for (var item in tester.allWidgets.whereType<InputDecorator>()) {
-      //  print(item.decoration.labelText);
-      //}
 
       expect(finder, findsOneWidget);
 
@@ -453,6 +449,34 @@ void main() {
           .get()
           .then((value) => Nest.fromDocSnapshot(value));
       expect(fsNest.parents?.first.color_band, "A1B2");
+    });
+
+    testWidgets("will raise an alert dialog when overwriting an existing bird",
+        (WidgetTester tester) async {
+      myApp = getInitApp({"nest": nest, "egg": egg});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //find the letters and numbers inputs
+      await tester.enterText(find.byKey(Key("band_letCntr")), "AA");
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(Key("band_numCntr")), "1234");
+      await tester.pumpAndSettle();
+
+      //save the bird
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      //expect to find the bird in firestore
+      var bird = await firestore.collection("Birds").doc("AA1234").get();
+      expect(bird.exists, true);
+      //expect the bird to be unchanged
+      Bird parentObj = Bird.fromDocSnapshot(bird);
+      expect(parentObj.band, "AA1234");
+      expect(parentObj.last_modified, parent.last_modified);
+      expect(parentObj.responsible, parent.responsible);
     });
   });
   group("Delete Bird", () {

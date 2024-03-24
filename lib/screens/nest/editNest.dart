@@ -33,6 +33,7 @@ class _EditNestState extends State<EditNest> {
   int new_egg_nr = 1;
   Position? position;
   List<Bird> parents = [];
+  List<Egg?> eggs = [];
   LocalSpeciesList speciesList = LocalSpeciesList();
   double _desiredAccuracy = 1;
   Nest? nest;
@@ -145,6 +146,10 @@ class _EditNestState extends State<EditNest> {
     ));
   }
 
+  List<Egg> getEggs() {
+    return eggs.map((e) => e!).toList();
+  }
+
   Nest getNest() {
     if (nest != null) {
       nest!.species = species.english;
@@ -162,24 +167,28 @@ class _EditNestState extends State<EditNest> {
         if (snapshot.hasError) {
           return Text('Something went wrong');
         }
-
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator();
         }
-
         if (snapshot.hasData) {
+          eggs = snapshot.data!.docs.map((doc) {
+            egg = Egg.fromDocSnapshot(doc);
+            egg.addNonExistingExperiments(nest!.experiments, "egg");
+            if (nest!.first_egg == null) {
+              nest!.first_egg = egg.discover_date;
+            }
+            return egg.knownOrder() ? egg : null;
+          }).toList();
+          //filter out nulls
+          eggs.removeWhere((element) => element == null);
           return Container(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                ...snapshot.data!.docs.map((doc) {
-                  egg = Egg.fromDocSnapshot(doc);
-                  egg.addNonExistingExperiments(nest!.experiments, "egg");
-                  if (nest!.first_egg == null) {
-                    nest!.first_egg = egg.discover_date;
-                  }
-                  return egg.knownOrder() ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                ...eggs.map((egg) {
+                  return egg!.knownOrder()
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       egg.getButton(context, nest),
                       SizedBox(height: 5),
@@ -455,7 +464,15 @@ class _EditNestState extends State<EditNest> {
                 _getParentsRow(nest!.parents, context),
                 _getEggsStream(_eggStream),
                 SizedBox(height: 30),
-                ModifyingButtons(firestore: widget.firestore, context: context,  setState:setState, getItem:getNest, type:"modify", otherItems: null, silentOverwrite: true),
+                ModifyingButtons(
+                    firestore: widget.firestore,
+                    context: context,
+                    setState: setState,
+                    getItem: getNest,
+                    type: "modify",
+                    otherItems: null,
+                    silentOverwrite: true,
+                    getOtherItems: getEggs),
               ],
             ),
           ))),

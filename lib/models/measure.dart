@@ -45,26 +45,40 @@ class Measure implements Comparable<Measure> {
     this.valueCntr.text = value;
   }
 
-  Measure.numeric(
-      {required this.name,
-      value = "",
-      required this.unit,
-      required this.modified,
-      this.repeated = false,
-      this.required = false}) {
-    this.isNumber = true;
-    this.valueCntr.text = value;
-  }
-
-  Measure.text(
-      {required this.name,
+  factory Measure.numeric(
+      {required name,
       value = "",
       unit = "",
-      required this.modified,
-      this.repeated = false,
-      this.required = false}) {
-    this.isNumber = false;
-    this.valueCntr.text = value;
+      type = "any",
+      bool repeated = false,
+      bool required = false}) {
+    return Measure(
+        name: name,
+        value: value,
+        isNumber: true,
+        unit: unit,
+        modified: DateTime.now(),
+        type: type,
+        repeated: repeated,
+        required: required);
+  }
+
+  factory Measure.text(
+      {required name,
+      value = "",
+      unit = "",
+      type = "any",
+      bool repeated = false,
+      bool required = false}) {
+    return Measure(
+        name: name,
+        value: value,
+        isNumber: false,
+        unit: unit,
+        modified: DateTime.now(),
+        type: type,
+        repeated: repeated,
+        required: required);
   }
 
   factory Measure.empty(Measure m){
@@ -119,6 +133,10 @@ class Measure implements Comparable<Measure> {
 
   void dispose() {
     valueCntr.dispose();
+  }
+
+  bool isInvalid() {
+    return required && value.isEmpty;
   }
 
   TextEditingController valueCntr = TextEditingController();

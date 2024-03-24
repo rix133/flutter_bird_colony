@@ -250,9 +250,7 @@ void main() {
       //reset the database
       await firestore.collection('recent').doc("nest").set({"id": "1"});
       await nest.save(firestore);
-      egg.measures = [
-        Measure.numeric(name: "weight", unit: "", modified: DateTime.now())
-      ];
+      egg.measures = [Measure.numeric(name: "weight", unit: "")];
       //add egg to nest
       await firestore
           .collection(DateTime.now().year.toString())
@@ -310,8 +308,9 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
     });
 
-    testWidgets("will not save nest when required measures on egg",
+    testWidgets("will not save nest when required measures on egg are empty",
         (WidgetTester tester) async {
+      Measure m1 = Measure.numeric(name: "weight", unit: "", required: true);
       Egg egg2 = Egg(
           id: "1 egg 2",
           discover_date: DateTime.now().subtract(Duration(days: 2)),
@@ -319,14 +318,13 @@ void main() {
           ring: null,
           last_modified: DateTime.now().subtract(Duration(days: 1)),
           status: "intact",
-          measures: [
-            Measure.numeric(
-                name: "weight",
-                unit: "",
-                modified: DateTime.now(),
-                required: true)
-          ]);
-      await egg2.save(firestore);
+          measures: [m1]);
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg2.id)
+          .set(egg2.toJson());
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
 
@@ -357,11 +355,12 @@ void main() {
           .get());
       expect(egg2.status, "intact");
       //check that the egg measure 1 value is empty
-      expect(newEgg.measures.length, 2);
-      expect(newEgg.measures[0].name, "note");
-      expect(newEgg.measures[0].value, "");
-      expect(newEgg.measures[1].name, "weight");
-      expect(newEgg.measures[1].value, "");
+      expect(egg2.measures.length, 2);
+      expect(egg2.measures[0].name, "note");
+      expect(egg2.measures[0].value, "");
+      expect(egg2.measures[1].name, "weight");
+      expect(egg2.measures[1].value, "");
+      expect(egg2.measures[1].required, true, reason: "required measure");
 
       expect(find.byType(AlertDialog), findsOneWidget);
     });
@@ -379,11 +378,20 @@ void main() {
             Measure.numeric(
                 name: "weight",
                 unit: "",
-                modified: DateTime.now(),
                 required: true)
           ]);
-      await egg2.save(firestore);
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg2.id)
+          .set(egg2.toJson());
       await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //enter text to the nest note
+      Finder noteTextField = find.byType(TextField).at(1);
+      await tester.enterText(noteTextField, "test note");
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(Key("saveButton")));
@@ -391,7 +399,7 @@ void main() {
 
       expect(find.byType(AlertDialog), findsOneWidget);
 
-      await tester.tap(find.text("Save anyway"));
+      await tester.tap(find.text("save anyway"));
       await tester.pumpAndSettle();
 
       //expect to find the egg in firestore
@@ -419,13 +427,19 @@ void main() {
           .get());
       expect(egg2.status, "intact");
       //check that the egg measure 1 value is empty
-      expect(newEgg.measures.length, 2);
-      expect(newEgg.measures[0].name, "note");
-      expect(newEgg.measures[0].value, "");
-      expect(newEgg.measures[1].name, "weight");
-      expect(newEgg.measures[1].value, "");
+      expect(egg2.measures.length, 2);
+      expect(egg2.measures[0].name, "note");
+      expect(egg2.measures[0].value, "");
+      expect(egg2.measures[1].name, "weight");
+      expect(egg2.measures[1].value, "");
 
-      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
+
+      Nest nestObj = Nest.fromDocSnapshot(await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .get());
+      expect(nestObj.measures[0].value, "test note");
     });
   });
 }

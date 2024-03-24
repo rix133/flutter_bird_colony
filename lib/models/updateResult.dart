@@ -14,6 +14,11 @@ class UpdateResult {
         message = "Saved",
         type = "save";
 
+  UpdateResult.validateOK()
+      : success = true,
+        message = "OK",
+        type = "validation";
+
   UpdateResult.deleteOK({required this.item})
       : success = true,
         message = "Deleted",

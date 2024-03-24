@@ -23,6 +23,8 @@ abstract class FirestoreItem{
 
   FirestoreItem copy();
 
+  UpdateResult validate({List<FirestoreItem> otherItems = const []});
+
   Future <UpdateResult> save(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"});
 
   Future <UpdateResult> delete(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool soft = true, String type = "default"});
