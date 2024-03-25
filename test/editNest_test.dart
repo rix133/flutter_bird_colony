@@ -48,10 +48,13 @@ void main() {
       status: EggStatus('intact'),
       measures: [Measure.note()]);
 
-  setUpAll(() async {
+  Future<Widget> getMyApp() async {
     AuthService.instance = authService;
     LocationService.instance = locationAccuracy10;
-
+    sharedPreferencesService.defaultMeasures = [
+      Measure.numeric(name: "weight", type: "chick"),
+      Measure.note()
+    ];
     await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
     myApp = ChangeNotifierProvider<SharedPreferencesService>(
       create: (_) => sharedPreferencesService,
@@ -97,7 +100,10 @@ void main() {
         },
       ),
     );
-  });
+    return myApp;
+  }
+
+  ;
   group("make new Bird", () {
     setUp(() async {
       //reset the database
@@ -110,6 +116,7 @@ void main() {
           .collection("egg")
           .doc(egg.id)
           .set(egg.toJson());
+      myApp = await getMyApp();
     });
 
     tearDown(() async {
@@ -204,6 +211,62 @@ void main() {
       expect(eggObj.status.toString(), "hatched");
     });
 
+    testWidgets(
+        "will add a bird when egg is long pressed an will show chick weight",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.longPress(find.text('Egg 1 intact 2 days old'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EditBird), findsOneWidget);
+
+      //find the letters and numbers inputs
+      await tester.enterText(find.byKey(Key("band_letCntr")), "bb");
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(Key("band_numCntr")), "1235");
+      await tester.pumpAndSettle();
+
+      Finder noteFinder = find.byWidgetPredicate((Widget widget) =>
+          widget is InputDecorator && widget.decoration.labelText == 'note');
+
+      expect(noteFinder, findsOneWidget, reason: "note input not found");
+
+      Finder textFinder = find.byWidgetPredicate((Widget widget) =>
+          widget is InputDecorator && widget.decoration.labelText == 'weight');
+
+      expect(textFinder, findsOneWidget, reason: "weight input not found");
+      await tester.enterText(textFinder, "100");
+      await tester.pumpAndSettle();
+
+      //save the bird
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+      //expect to find the bird in firestore
+      var bird = await firestore.collection("Birds").doc("BB1235").get();
+      expect(bird.exists, true);
+      Bird newBird = Bird.fromDocSnapshot(bird);
+      expect(newBird.id, "BB1235");
+      expect(newBird.species, "Common gull");
+      expect(newBird.nest, "1");
+      expect(newBird.nest_year, nest.discover_date.year);
+      expect(newBird.ringed_as_chick, true);
+      expect(newBird.measures.length, 2);
+      expect(newBird.measures[1].name, "weight");
+      expect(newBird.measures[1].value, "100");
+      expect(newBird.isChick(), true);
+
+      Egg eggObj = Egg.fromDocSnapshot(await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .get());
+      expect(eggObj.ring, "BB1235");
+      expect(eggObj.status.toString(), "hatched");
+    });
+
     testWidgets("will add bird when add egg is long pressed",
         (WidgetTester tester) async {
       await tester.pumpWidget(myApp);
@@ -259,6 +322,8 @@ void main() {
           .collection("egg")
           .doc(egg.id)
           .set(egg.toJson());
+
+      myApp = await getMyApp();
     });
 
     tearDown(() async {

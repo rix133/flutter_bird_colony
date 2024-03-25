@@ -32,6 +32,7 @@ class _EditBirdState extends State<EditBird> {
   FocusNode _lettersFocus = FocusNode();
   String? previousRouteName;
   bool disableBandChangeButtons = false;
+  List<Measure> allMeasures = [Measure.note()];
 
   Measure color_band = Measure(
     name: "color ring",
@@ -105,12 +106,12 @@ class _EditBirdState extends State<EditBird> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       initializeServices();
       var map = ModalRoute.of(context)?.settings.arguments;
-      List<Measure> allMeasures = sps?.defaultMeasures ?? [];
+      allMeasures = sps?.defaultMeasures ?? [];
       if (map != null) {
         map = map as Map<String, dynamic>;
-        await handleMap(map, allMeasures);
+        await handleMap(map);
       } else {
-        handleNoMap(allMeasures);
+        handleNoMap();
       }
       autoAssignNextMetalBand(_recentMetalBand);
       setState(() {});
@@ -122,8 +123,8 @@ class _EditBirdState extends State<EditBird> {
     _speciesList = sps?.speciesList ?? LocalSpeciesList();
   }
 
-  Future<void> handleMap(Map<String, dynamic> map, List<Measure> allMeasures) async {
-   if (map["route"] != null) {
+  Future<void> handleMap(Map<String, dynamic> map) async {
+    if (map["route"] != null) {
       previousRouteName = map["route"];
     }
     if (map["nest"] != null) {
@@ -131,15 +132,16 @@ class _EditBirdState extends State<EditBird> {
     }
     if (map["bird"] != null) {
       //ageType is set within handleBird
-      await handleBird(map, allMeasures);
+      await handleBird(map);
     } else if (map["egg"] != null) {
       ageType = "chick";
       handleEgg(map);
     } else {
       //only nest this means ita a prent
       ageType = "parent";
-      handleNoBirdNoEgg(allMeasures);
+      handleNoBirdNoEgg();
     }
+    bird.addNonExistingExperiments(nest.experiments, ageType);
     bird.measures.sort();
     _species = _speciesList.getSpecies(bird.species);
    _recentMetalBand = sps?.getRecentMetalBand(bird.species ?? "") ?? "";
@@ -147,7 +149,7 @@ class _EditBirdState extends State<EditBird> {
     color_band.setValue(bird.color_band);
   }
 
-  Future<void> handleBird(Map<String, dynamic> map, List<Measure> allMeasures) async {
+  Future<void> handleBird(Map<String, dynamic> map) async {
     bird = map["bird"] as Bird;
     if (bird.band.isNotEmpty) {
       await reloadBirdFromFirestore();
@@ -164,7 +166,7 @@ class _EditBirdState extends State<EditBird> {
         }
       }
     }
-    addMissingMeasuresToBird(allMeasures);
+    addMissingMeasuresToBird();
     //ensure that correct nests are referenced
     nests = widget.firestore.collection(bird.nest_year.toString());
   }
@@ -191,7 +193,7 @@ class _EditBirdState extends State<EditBird> {
       responsible: sps?.userName ?? "unknown",
       nest: nest.name,
       nest_year: nest.discover_date.year,
-      measures: [Measure.note()],
+      measures: allMeasures,
       experiments: nest.experiments,
     );
   }
@@ -202,8 +204,8 @@ class _EditBirdState extends State<EditBird> {
     bird.species = nest.species;
   }
 
-  void addMissingMeasuresToBird(List<Measure> allMeasures) {
-   //filter for bird type measures
+  void addMissingMeasuresToBird() {
+    //filter for bird type measures
     bird.addMissingMeasures(allMeasures, ageType);
   }
 
@@ -218,12 +220,12 @@ class _EditBirdState extends State<EditBird> {
       responsible: sps?.userName ?? "unknown",
       nest: nest.name,
       nest_year: nest.discover_date.year,
-      measures: [Measure.note()],
+      measures: allMeasures,
       experiments: nest.experiments,
     );
   }
 
-  void handleNoBirdNoEgg(List<Measure> allMeasures) {
+  void handleNoBirdNoEgg() {
     bird = Bird(
       species: nest.species,
       ringed_date: DateTime.now(),
@@ -237,7 +239,7 @@ class _EditBirdState extends State<EditBird> {
     );
   }
 
-  void handleNoMap(List<Measure> allMeasures) {
+  void handleNoMap() {
     bird.measures = allMeasures;
     if (bird.ringed_as_chick) {
       bird.measures.removeWhere((element) => element.name == "age");
