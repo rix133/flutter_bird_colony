@@ -2,18 +2,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/screens/nest/findNest.dart';
-
-import 'package:kakrarahu/screens/homepage.dart';
-import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
+import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/screens/homepage.dart';
 import 'package:kakrarahu/screens/nest/editNest.dart';
+import 'package:kakrarahu/screens/nest/findNest.dart';
+import 'package:kakrarahu/screens/settings/settings.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:kakrarahu/screens/settings/settings.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
@@ -36,7 +34,7 @@ void main() {
     discover_date: DateTime.now(),
     responsible: "Admin",
     species: "test",
-    measures: [Measure.note()],
+    measures: [Measure.numeric(name: "test", required: true)],
   );
 
   setUpAll(() async {
@@ -82,6 +80,75 @@ void main() {
 
     //check if routed to nestManage
     expect(find.byType(EditNest), findsOneWidget);
+  });
+
+  testWidgets(
+      "Can go to modify nest page through search and save nest without filling required measure",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    //find the find nest button on homepage
+    await tester.tap(find.text("find nest"));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), '1');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text("Find nest"));
+    await tester.pumpAndSettle();
+
+    //check if routed to nestManage
+    expect(find.byType(EditNest), findsOneWidget);
+
+    //save the nest
+    await tester.tap(find.byKey(Key("saveButton")));
+    await tester.pumpAndSettle();
+
+    //find the AlertDialog
+    expect(find.byType(AlertDialog), findsOneWidget);
+    //find the save anyway button
+    await tester.tap(find.text("save anyway"));
+    await tester.pumpAndSettle();
+    //expect to be back in the find nest page
+    expect(find.byType(FindNest), findsOneWidget);
+  });
+
+  testWidgets(
+      "Can go to modify nest page through search and save nest with filling required measure",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    //find the find nest button on homepage
+    await tester.tap(find.text("find nest"));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), '1');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text("Find nest"));
+    await tester.pumpAndSettle();
+
+    //check if routed to nestManage
+    expect(find.byType(EditNest), findsOneWidget);
+
+    //fill the required measure that has a label of test
+    // Find the first textfield that matches the predicate
+    Finder textFinder = find.byWidgetPredicate((Widget widget) =>
+        widget is InputDecorator && widget.decoration.labelText == 'test');
+
+    await tester.enterText(textFinder, '1');
+
+    //save the nest
+    await tester.tap(find.byKey(Key("saveButton")));
+    await tester.pumpAndSettle();
+
+    //find the AlertDialog
+    expect(find.byType(AlertDialog), findsNothing);
+
+    //expect to be back in the find nest page
+    expect(find.byType(FindNest), findsOneWidget);
   });
 
   testWidgets("FindNest: search for a nest that does not exist", (WidgetTester tester) async {
