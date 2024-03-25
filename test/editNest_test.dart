@@ -31,7 +31,7 @@ void main() {
   final Nest nest = Nest(
     id: "1",
     coordinates: GeoPoint(0, 0),
-    accuracy: "12.22m",
+    accuracy: "3.22m",
     last_modified: DateTime.now().subtract(Duration(days: 1)),
     discover_date: DateTime.now().subtract(Duration(days: 2)),
     first_egg: DateTime.now().subtract(Duration(days: 2)),
@@ -577,6 +577,85 @@ void main() {
           .doc(nest.id)
           .get());
       expect(nestObj.measures[0].value, "test note");
+    });
+  });
+
+  group("validate nest accuracy", () {
+    setUp(() async {
+      //reset the database
+      nest.accuracy = "13.22m";
+      await firestore.collection('recent').doc("nest").set({"id": "1"});
+      await nest.save(firestore);
+      egg.measures = [];
+      //add egg to nest
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .set(egg.toJson());
+
+      myApp = await getMyApp();
+    });
+
+    tearDown(() async {
+      //delete all nest eggs
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .get()
+          .then((value) {
+        value.docs.forEach((element) {
+          element.reference.delete();
+        });
+      });
+
+      //delete nest
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .delete();
+    });
+
+    testWidgets("will raise an alertdialog for low accuracy",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      await tester.tap(find.text("save anyway"));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      Nest nestObj = Nest.fromDocSnapshot(await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .get());
+      expect(nestObj.accuracy, "13.22m");
+    });
+
+    testWidgets("will save nest when accuracy is OK when updated",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.my_location));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      Nest nestObj = Nest.fromDocSnapshot(await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .get());
+      expect(nestObj.accuracy, "3.20m");
     });
   });
 }

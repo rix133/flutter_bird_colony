@@ -32,7 +32,7 @@ void main() {
   final Nest nest = Nest(
     id: "1",
     coordinates: GeoPoint(0, 0),
-    accuracy: "12.22m",
+    accuracy: "3.22m",
     last_modified: DateTime.now(),
     discover_date: DateTime.now(),
     responsible: "Admin",

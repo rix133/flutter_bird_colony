@@ -33,7 +33,7 @@ void main() {
   final Nest nest1 = Nest(
     id: "1",
     coordinates: GeoPoint(0, 0),
-    accuracy: "12.22m",
+    accuracy: "3.22m",
     last_modified: DateTime.now().subtract(Duration(days: 2)),
     discover_date: DateTime.now().subtract(Duration(days: 2)),
     first_egg: DateTime.now().subtract(Duration(days: 2)),
@@ -56,7 +56,7 @@ void main() {
   final Nest nest3 = Nest(
     id: "234",
     coordinates: GeoPoint(0, 0),
-    accuracy: "12.22m",
+    accuracy: "3.22m",
     last_modified: DateTime(2023, 6, 1),
     discover_date: DateTime(2023, 5, 1),
     responsible: "Admin",

@@ -34,7 +34,7 @@ void main() {
   final Nest nest = Nest(
     id: "1",
     coordinates: GeoPoint(0, 0),
-    accuracy: "12.22m",
+    accuracy: "3.22m",
     last_modified: DateTime.now().subtract(Duration(days: 1)),
     discover_date: DateTime.now().subtract(Duration(days: 2)),
     first_egg: DateTime.now().subtract(Duration(days: 2)),
@@ -128,7 +128,7 @@ void main() {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
-    expect(find.text('~12.2m'), findsOneWidget);
+    expect(find.text('~3.2m'), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
   });
 
