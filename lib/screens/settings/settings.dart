@@ -59,7 +59,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<String> _addUserByEmail() async {
     String email = '';
     String? warning;
-    await showDialog(
+    return await showDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
@@ -70,6 +70,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
+                    key: Key('newUserEmailTextField'),
                     style: TextStyle(color: Colors.black),
                     decoration: InputDecoration(hintText: 'Email', hintStyle: TextStyle(color: Colors.deepPurpleAccent)),
                     onChanged: (value) {
@@ -87,24 +88,28 @@ class _SettingsPageState extends State<SettingsPage> {
                 TextButton(
                   onPressed: () {
                     email = '';
-                    Navigator.pop(context);
+                    Navigator.pop(context, email);
                   },
                   child: Text('Cancel'),
                 ),
                 TextButton(
-                  onPressed: () {
+                  key: Key('saveNewUserButton'),
+                  onPressed: () async {
                     if (email.isNotEmpty &&
                         !_allowedUsers.contains(email) &&
                         RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9_%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$").hasMatch(email)) {
-                      widget.firestore.collection('users').doc(email).set({'isAdmin': false});
-                      Navigator.pop(context);
+                      await widget.firestore
+                          .collection('users')
+                          .doc(email)
+                          .set({'isAdmin': false});
+                      Navigator.pop(context, email);
                     } else {
                       setState(() {
                         warning = 'Invalid email or already added';
                       });
                     }
                   },
-                  child: Text('OK'),
+                  child: Text('Add user'),
                 ),
               ],
             );
@@ -112,7 +117,6 @@ class _SettingsPageState extends State<SettingsPage> {
         );
       },
     );
-    return email;
   }
 
   _goToEditSpecies() {
@@ -138,7 +142,8 @@ class _SettingsPageState extends State<SettingsPage> {
         ..._allowedUsers.map((e) => Text(e)),
         SizedBox(height: 20),
         ElevatedButton.icon(
-          onPressed: () async {
+                key: Key('addUserButton'),
+                onPressed: () async {
             await _addUserByEmail().then((value) {
               if (value.isNotEmpty) {
                 _allowedUsers.add(value);

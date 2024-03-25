@@ -504,9 +504,9 @@ void main() {
   });
 
   group("Settings for admin user", () {
-    setUpAll(() async {
+    FirebaseFirestore firestore = FakeFirebaseFirestore();
+    setUp(() async {
       AuthService.instance = authService;
-      FirebaseFirestore firestore = FakeFirebaseFirestore();
       await firestore
           .collection('users')
           .doc(adminEmail)
@@ -525,6 +525,40 @@ void main() {
               EditDefaultSettings(firestore: firestore),
         }),
       );
+    });
+
+    testWidgets("can add new user email", (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = true;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //find the add user button
+      Finder userBtn = find.byKey(Key('addUserButton'));
+      expect(userBtn, findsOneWidget);
+
+      //ensure the button is visible
+      await tester.ensureVisible(userBtn);
+
+      //tap the add user button
+      await tester.tap(userBtn);
+      await tester.pumpAndSettle();
+
+      //find the textfield
+      Finder textFieldFinder = find.byKey(Key('newUserEmailTextField'));
+      expect(textFieldFinder, findsOneWidget);
+
+      //enter text in the textfield
+      await tester.enterText(textFieldFinder, 'new@mail.com');
+      await tester.pumpAndSettle();
+
+      //find the save button
+      await tester.tap(find.byKey(Key('saveNewUserButton')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('new@mail.com'), findsOneWidget);
+      var user = await firestore.collection('users').doc('new@mail.com').get();
+      expect(user.exists, true);
     });
 
     testWidgets('Admin buttons are displayed when admin is logged in',
