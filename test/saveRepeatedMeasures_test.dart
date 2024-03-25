@@ -216,7 +216,7 @@ void main() {
     expect(find.text('???'), findsOneWidget);
 
     //tap the save button
-    await tester.tap(find.text("save"));
+    await tester.tap(find.byKey(Key("saveButton")));
     await tester.pumpAndSettle();
 
     //expect that the egg is saved
@@ -273,7 +273,7 @@ void main() {
     //check that at least one textforfield co
 
     //find the save button
-    Finder saveButton = find.byIcon(Icons.save);
+    Finder saveButton = find.byKey(Key("saveButton"));
     await tester.ensureVisible(saveButton);
 
     //tap the save button
@@ -347,7 +347,7 @@ void main() {
     expect(find.text('???'), findsNWidgets(2));
 
     //find the save button
-    Finder saveButton = find.byIcon(Icons.save);
+    Finder saveButton = find.byKey(Key("saveButton"));
     await tester.ensureVisible(saveButton);
     await tester.pumpAndSettle();
 
@@ -407,7 +407,7 @@ void main() {
     await tester.enterText(textFinder, '321');
 
     //find the save button
-    Finder saveButton = find.byIcon(Icons.save);
+    Finder saveButton = find.byKey(Key("saveButton"));
     await tester.ensureVisible(saveButton);
     await tester.pumpAndSettle();
 
@@ -466,7 +466,7 @@ void main() {
     await tester.pumpAndSettle();
 
     //find the save button
-    Finder saveButton = find.byIcon(Icons.save);
+    Finder saveButton = find.byKey(Key("saveButton"));
     await tester.ensureVisible(saveButton);
     await tester.pumpAndSettle();
 
@@ -531,7 +531,7 @@ void main() {
     expect(find.text('321'), findsOneWidget);
 
     //find the save button
-    Finder saveButton = find.byIcon(Icons.save);
+    Finder saveButton = find.byKey(Key("saveButton"));
     await tester.ensureVisible(saveButton);
     await tester.pumpAndSettle();
 

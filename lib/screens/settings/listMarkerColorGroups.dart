@@ -49,8 +49,8 @@ class _ListMarkerColorGroupsState extends State<ListMarkerColorGroups> {
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: ElevatedButton.icon(
-          key: Key("addMeasureButton"),
-          onPressed: () {
+        key: Key("addMarkerColorGroupsButton"),
+        onPressed: () {
             MarkerColorGroup newMeasure =
                 MarkerColorGroup.magenta(sps?.defaultSpecies ?? "");
             widget.markers.add(newMeasure);

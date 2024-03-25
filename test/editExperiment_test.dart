@@ -200,6 +200,16 @@ void main() {
         .set(experiment.toJson());
   });
 
+  tearDown(() async {
+    //empty the experiment collection
+    await firestore
+        .collection('experiments')
+        .get()
+        .then((value) => value.docs.forEach((element) async {
+              await element.reference.delete();
+            }));
+  });
+
   testWidgets('Will load new experiment', (WidgetTester tester) async {
     myApp = getInitApp(null);
     await tester.pumpWidget(myApp);
@@ -304,6 +314,72 @@ void main() {
         findsNWidgets(2));
   });
 
+  testWidgets("saves experiment measures to firestore",
+      (WidgetTester tester) async {
+    myApp = getInitApp(null);
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    //set the name
+    await tester.enterText(
+        find.byKey(Key("experimentNameField")), "test experiment");
+    await tester.pumpAndSettle();
+
+    //add a measure
+    final addMeasureButton = find.byKey(Key("addMeasureButton"));
+    expect(addMeasureButton, findsOneWidget);
+
+    await tester.ensureVisible(addMeasureButton);
+    await tester.tap(addMeasureButton);
+    await tester.pumpAndSettle();
+
+    //find the edit button under added measure
+    final editButton = find.byIcon(Icons.edit);
+    expect(editButton, findsOneWidget);
+    await tester.tap(editButton);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(Key("nameMeasureEdit")), "test measure");
+
+    //find the 3 switchListTiles and toggle them
+    final switchListTiles = find.byType(SwitchListTile);
+    expect(switchListTiles, findsNWidgets(3));
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(switchListTiles.at(i));
+      await tester.pumpAndSettle();
+    }
+
+    await tester.tap(find.byKey(Key("doneMeasureEditButton")));
+    await tester.pumpAndSettle();
+
+    final saveButton = find.byKey(Key("saveButton"));
+    expect(saveButton, findsOneWidget);
+
+    //ensure visible
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    QuerySnapshot query = await firestore.collection('experiments').get();
+    List<QueryDocumentSnapshot> docs = query.docs;
+    expect(docs.length, 2);
+    List<Experiment> experiments =
+        docs.map((e) => Experiment.fromDocSnapshot(e)).toList();
+
+    //get the new experiment
+    Experiment? dfObj =
+        experiments.firstWhere((element) => element.name == "test experiment");
+
+    expect(dfObj.measures.length, 1);
+    expect(dfObj.measures[0].name, "test measure");
+    expect(dfObj.measures[0].isNumber, true);
+    expect(dfObj.measures[0].type, "any");
+    expect(dfObj.measures[0].unit, "");
+    expect(dfObj.measures[0].value, "");
+    expect(dfObj.measures[0].required, true);
+    expect(dfObj.measures[0].repeated, true);
+  });
+
   testWidgets("can change experiment type to bird",
       (WidgetTester tester) async {
     myApp = getInitApp(null);
@@ -344,7 +420,7 @@ void main() {
         find.byKey(Key("experimentNameField")), "test experiment");
 
     //find the save button
-    Finder saveButton = find.byIcon(Icons.save);
+    Finder saveButton = find.byKey(Key("saveButton"));
     await tester.ensureVisible(saveButton);
     await tester.tap(saveButton);
 
@@ -395,7 +471,7 @@ void main() {
         find.byKey(Key("experimentNameField")), "test experiment");
 
     //find the save button
-    Finder saveButton = find.byIcon(Icons.save);
+    Finder saveButton = find.byKey(Key("saveButton"));
     await tester.ensureVisible(saveButton);
 
     //tap the save button
@@ -435,7 +511,7 @@ void main() {
     expect(find.text("Nest ID: 2"), findsNothing);
 
     //find the save button
-    Finder saveButton = find.byIcon(Icons.save);
+    Finder saveButton = find.byKey(Key("saveButton"));
     await tester.ensureVisible(saveButton);
     await tester.tap(saveButton);
 

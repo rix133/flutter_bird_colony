@@ -153,6 +153,7 @@ class Measure implements Comparable<Measure> {
       child: Column(
         children: [
           TextFormField(
+            key: Key("nameMeasureEdit"),
             controller: nameCntr,
             onChanged: (value) {
               this.name = value;
@@ -173,6 +174,7 @@ class Measure implements Comparable<Measure> {
             ),
           ),
           DropdownButtonFormField<String>(
+            key: Key("typeMeasureEdit"),
             value: this.type,
             onChanged: (String? newValue) {
               setState(() {
@@ -292,12 +294,13 @@ class Measure implements Comparable<Measure> {
                   child: Text('Remove'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                    key: Key("doneMeasureEditButton"),
+                    onPressed: () {
                     onSaved(this);
                     Navigator.pop(context);
                   },
-                  child: Text('Save'),
-                ),
+                    child: Text('Done'),
+                  ),
               ],
             );
           }

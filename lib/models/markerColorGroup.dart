@@ -193,11 +193,12 @@ class MarkerColorGroup {
                     child: Text('Remove'),
                   ),
                   ElevatedButton(
+                    key: Key("doneMarkerColorGroupsEditButton"),
                     onPressed: () {
                       onSaved(this);
                       Navigator.pop(context);
                     },
-                    child: Text('Save'),
+                    child: Text('Done'),
                   ),
                 ],
               );

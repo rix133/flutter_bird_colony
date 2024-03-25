@@ -268,7 +268,7 @@ void main() {
       await tester.pumpAndSettle();
 
       //save the bird
-      await tester.tap(find.text("save"));
+      await tester.tap(find.byKey(Key("saveButton")));
       await tester.pumpAndSettle();
       //expect to find the bird in firestore
       var bird = await firestore.collection("Birds").doc("AA1235").get();
@@ -341,7 +341,7 @@ void main() {
       await tester.pumpAndSettle();
 
       //save the bird
-      await tester.tap(find.text("save"));
+      await tester.tap(find.byKey(Key("saveButton")));
       await tester.pumpAndSettle();
       //expect to find the bird in firestore
       var bird = await firestore.collection("Birds").doc("AA1235").get();

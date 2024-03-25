@@ -92,7 +92,7 @@ void main() {
     await tester.pumpAndSettle();
 
     //save the species
-    await tester.tap(find.text("save"));
+    await tester.tap(find.byKey(Key("saveButton")));
     await tester.pumpAndSettle();
     //expect to find the species in firestore
     var savedSpecies = await speciesCollection.doc(species.id).get();
@@ -146,7 +146,7 @@ void main() {
     await tester.pumpAndSettle();
 
     //save the species
-    await tester.tap(find.text("save"));
+    await tester.tap(find.byKey(Key("saveButton")));
     await tester.pumpAndSettle();
     //list all the documents in firestore
     var items = await speciesCollection.get();

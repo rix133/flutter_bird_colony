@@ -93,4 +93,85 @@ void main() {
 
     expect(sharedPreferencesService.desiredAccuracy, 5.2);
   });
+
+  testWidgets("saves default settings to firestore",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(Key("desiredAccuracy")), "3.2");
+
+    //add a measure
+    final addMeasureButton = find.byKey(Key("addMeasureButton"));
+    expect(addMeasureButton, findsOneWidget);
+
+    //essure the button is visble
+    await tester.ensureVisible(addMeasureButton);
+    await tester.tap(addMeasureButton);
+    await tester.pumpAndSettle();
+
+    //find the edit button under added measure
+    final editButton = find.byIcon(Icons.edit);
+    expect(editButton, findsNWidgets(2));
+    await tester.ensureVisible(editButton.last);
+    await tester.tap(editButton.last);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(Key("nameMeasureEdit")), "test measure");
+
+    Finder typeDropdown = find.byKey(Key("typeMeasureEdit"));
+    await tester.tap(typeDropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("nest").last);
+    await tester.pumpAndSettle();
+
+    //find the 3 switchListTiles  in the alertdialog and toggle them
+    final alertDialog = find.byType(AlertDialog);
+    final switchListTiles = find.descendant(
+      of: alertDialog,
+      matching: find.byType(SwitchListTile),
+    );
+    expect(switchListTiles, findsNWidgets(3));
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(switchListTiles.at(i));
+      await tester.pumpAndSettle();
+    }
+
+    await tester.tap(find.byKey(Key("doneMeasureEditButton")));
+    await tester.pumpAndSettle();
+
+    final saveButton = find.byKey(Key("saveButton"));
+    expect(saveButton, findsOneWidget);
+
+    //ensure visible
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    expect(
+        await firestore
+            .collection('settings')
+            .doc("default")
+            .get()
+            .then((value) => value.exists),
+        true);
+    DefaultSettings dfObj = await firestore
+        .collection('settings')
+        .doc("default")
+        .get()
+        .then((value) => DefaultSettings.fromDocSnapshot(value));
+
+    expect(dfObj.desiredAccuracy, 3.2);
+    expect(dfObj.selectedYear, DateTime.now().year);
+    expect(dfObj.autoNextBand, false);
+    expect(dfObj.autoNextBandParent, false);
+    expect(dfObj.measures.length, 2);
+    expect(dfObj.measures[1].name, "test measure");
+    expect(dfObj.measures[1].isNumber, true);
+    expect(dfObj.measures[1].type, "nest");
+    expect(dfObj.measures[1].unit, "");
+    expect(dfObj.measures[1].value, "");
+    expect(dfObj.measures[1].required, true);
+    expect(dfObj.measures[1].repeated, true);
+  });
 }

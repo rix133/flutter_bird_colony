@@ -48,7 +48,7 @@ void main() {
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
 
-      final addButton = find.byKey(Key("addMeasureButton"));
+      final addButton = find.byKey(Key("addMarkerColorGroupsButton"));
       expect(addButton, findsOneWidget);
 
       await tester.tap(addButton);
@@ -63,7 +63,7 @@ void main() {
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
 
-      final addButton = find.byKey(Key("addMeasureButton"));
+      final addButton = find.byKey(Key("addMarkerColorGroupsButton"));
       expect(addButton, findsOneWidget);
 
       await tester.tap(addButton);
@@ -94,7 +94,7 @@ void main() {
       await tester.enterText(ages.last, "20");
 
       //find the text save
-      final saveButton = find.text("Save");
+      final saveButton = find.byKey(Key("doneMarkerColorGroupsEditButton"));
       expect(saveButton, findsOneWidget);
 
       await tester.tap(saveButton);
@@ -132,7 +132,7 @@ void main() {
       await tester.pumpAndSettle();
 
       //find the text save
-      final saveButton = find.text("Save");
+      final saveButton = find.byKey(Key("doneMarkerColorGroupsEditButton"));
       expect(saveButton, findsOneWidget);
 
       await tester.tap(saveButton);

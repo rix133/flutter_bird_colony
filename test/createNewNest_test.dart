@@ -1,17 +1,15 @@
 
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:kakrarahu/screens/homepage.dart';
-import 'package:kakrarahu/screens/nest/mapCreateNest.dart';
 import 'package:kakrarahu/screens/nest/createNest.dart';
 import 'package:kakrarahu/screens/nest/editNest.dart';
+import 'package:kakrarahu/screens/nest/mapCreateNest.dart';
+import 'package:kakrarahu/screens/settings/settings.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:kakrarahu/screens/settings/settings.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
@@ -280,7 +278,7 @@ void main() {
 
     expect(find.byType(EditNest), findsOneWidget);
 
-    await tester.tap(find.text("save"));
+    await tester.tap(find.byKey(Key("saveButton")));
     await tester.pumpAndSettle();
     expect(find.byType(MapCreateNest), findsOneWidget);
   });

@@ -1,17 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kakrarahu/design/experimentDropdown.dart';
 import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
-import 'package:kakrarahu/screens/nest/findNest.dart';
-
-import 'package:kakrarahu/screens/homepage.dart';
-import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
+import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/screens/homepage.dart';
 import 'package:kakrarahu/screens/nest/editNest.dart';
+import 'package:kakrarahu/screens/nest/findNest.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -177,7 +175,7 @@ void main() {
     // Tap the location button
     await tester.tap(find.byIcon(Icons.my_location));
     await tester.pumpAndSettle();
-    await tester.tap(find.text("save"));
+    await tester.tap(find.byKey(Key("saveButton")));
     await tester.pumpAndSettle();
     
     
@@ -299,7 +297,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap the "save" button
-    await tester.tap(find.text("save"));
+    await tester.tap(find.byKey(Key("saveButton")));
     await tester.pumpAndSettle();
 
     // Verify if the nest's species is updated
@@ -331,7 +329,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap the "save" button
-    await tester.tap(find.text("save"));
+    await tester.tap(find.byKey(Key("saveButton")));
     await tester.pumpAndSettle();
 
     // Verify if the nest's measures are updated
@@ -346,7 +344,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap the "save" button
-    await tester.tap(find.text("save"));
+    await tester.tap(find.byKey(Key("saveButton")));
     await tester.pumpAndSettle();
 
     // Verify if the nest's responsible is updated
