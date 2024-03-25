@@ -280,6 +280,11 @@ void main() {
 
     await tester.tap(find.byKey(Key("saveButton")));
     await tester.pumpAndSettle();
+
+    //tap save anyway
+    await tester.tap(find.text("save anyway"));
+    await tester.pumpAndSettle();
+
     expect(find.byType(MapCreateNest), findsOneWidget);
   });
 }

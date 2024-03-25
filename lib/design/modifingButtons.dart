@@ -58,7 +58,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
     bool doValidate = validate;
     bool doOverwrite = allowOverwrite;
     if (validate) {
-      ur = item.validate(otherItems: otherFSItems);
+      ur = item.validate(sps, otherItems: otherFSItems);
       if (!ur.success) {
         showAlertDialog(
             superContext, "Validation failed. " + ur.message, saveItem,

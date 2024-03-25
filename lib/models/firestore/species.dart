@@ -6,6 +6,7 @@ import 'package:kakrarahu/models/firestore/firestoreItem.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/markerColorGroup.dart';
 import 'package:kakrarahu/models/updateResult.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
 
 class Species implements FirestoreItem {
   Species(
@@ -236,7 +237,8 @@ class Species implements FirestoreItem {
     };
   }
 
-  UpdateResult validate({List<FirestoreItem> otherItems = const []}) {
+  UpdateResult validate(SharedPreferencesService? sps,
+      {List<FirestoreItem> otherItems = const []}) {
     return UpdateResult.validateOK();
   }
 

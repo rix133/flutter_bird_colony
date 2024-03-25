@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/updateResult.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
 
 import '../markerColorGroup.dart';
 
@@ -23,7 +24,8 @@ abstract class FirestoreItem{
 
   FirestoreItem copy();
 
-  UpdateResult validate({List<FirestoreItem> otherItems = const []});
+  UpdateResult validate(SharedPreferencesService? sps,
+      {List<FirestoreItem> otherItems = const []});
 
   Future <UpdateResult> save(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"});
 

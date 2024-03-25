@@ -12,6 +12,8 @@ import 'package:kakrarahu/models/markerColorGroup.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
+import '../../services/sharedPreferencesService.dart';
+
 class Nest extends ExperimentedItem implements FirestoreItem {
   String? id;
   String accuracy;
@@ -138,6 +140,18 @@ class Nest extends ExperimentedItem implements FirestoreItem {
       return BitmapDescriptor.hueYellow;
     }
     return BitmapDescriptor.hueOrange;
+  }
+
+  @override
+  UpdateResult validate(SharedPreferencesService? sps,
+      {List<FirestoreItem> otherItems = const []}) {
+    //if nest location is inaccurate raise a warning
+    if (getAccuracy() > (sps?.desiredAccuracy ?? 10.0)) {
+      return UpdateResult.error(
+          message: "nest location accuracy is over ${sps?.desiredAccuracy} m");
+    }
+
+    return super.validate(sps, otherItems: otherItems);
   }
 
   checkedToday() {
