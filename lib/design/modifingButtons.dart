@@ -157,16 +157,24 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
     showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(
+        backgroundColor: Colors.black87,
+        titleTextStyle: TextStyle(color: Colors.red),
         title: Text("Error"),
         content: Text(message),
         actions: <Widget>[
           TextButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(Colors.white),
+            ),
             onPressed: () {
               Navigator.pop(context);
             },
             child: const Text('Cancel'),
           ),
           TextButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(Colors.white),
+            ),
             onPressed: () async {
               Navigator.pop(context);
               await action(context,

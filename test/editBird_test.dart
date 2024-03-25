@@ -768,9 +768,6 @@ void main() {
 
       //expect an alert dialog
       expect(find.byType(AlertDialog), findsOneWidget);
-      //find the button change band
-      await tester.tap(find.text("Change"));
-      await tester.pumpAndSettle();
 
       //find the letters and numbers inputs
       await tester.enterText(find.byKey(Key("band_letCntr")), "bb");
@@ -837,9 +834,6 @@ void main() {
 
       //expect an alert dialog
       expect(find.byType(AlertDialog), findsOneWidget);
-      //find the button change band
-      await tester.tap(find.text("Change"));
-      await tester.pumpAndSettle();
 
       //find the letters and numbers inputs
       await tester.enterText(find.byKey(Key("band_letCntr")), "aa");
@@ -896,9 +890,6 @@ void main() {
 
       //expect an alert dialog
       expect(find.byType(AlertDialog), findsOneWidget);
-      //find the button change band
-      await tester.tap(find.text("Change"));
-      await tester.pumpAndSettle();
 
       //find the letters and numbers inputs
       await tester.enterText(find.byKey(Key("band_letCntr")), "bb");
@@ -944,9 +935,6 @@ void main() {
 
       //expect an alert dialog
       expect(find.byType(AlertDialog), findsOneWidget);
-      //find the button change band
-      await tester.tap(find.text("Change"));
-      await tester.pumpAndSettle();
 
       //find the letters and numbers inputs
       await tester.enterText(find.byKey(Key("band_letCntr")), "bb");
@@ -1017,9 +1005,6 @@ void main() {
 
       //expect an alert dialog
       expect(find.byType(AlertDialog), findsOneWidget);
-      //find the button change band
-      await tester.tap(find.text("Change"));
-      await tester.pumpAndSettle();
 
       //find the letters and numbers inputs
       await tester.enterText(find.byKey(Key("band_letCntr")), "bb");

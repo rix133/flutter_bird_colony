@@ -272,7 +272,12 @@ class Measure implements Comparable<Measure> {
       title: Text(name.isEmpty
           ? "undefined"
           : name + (unit == "" ? "" : " (" + unit + ")")),
-      subtitle: Text("on: " + type + (repeated ? " (repeated)" : " (single)")),
+      subtitle: Text("on: " +
+          type +
+          " (" +
+          (repeated ? " repeated" : " single") +
+          (required ? ", required" : "") +
+          ")"),
       trailing: ElevatedButton.icon(
           onPressed:  () => showDialog(
           context: context,

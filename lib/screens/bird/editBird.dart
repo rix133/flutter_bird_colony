@@ -419,7 +419,7 @@ class _EditBirdState extends State<EditBird> {
     return bird;
   }
 
-  preformChangeMetalBand() {
+  changeMetalBand() {
     showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -434,7 +434,8 @@ class _EditBirdState extends State<EditBird> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(height: 10),
-                  Text("Are you sure you want to change the metal band?"),
+                  Text(
+                      "Are you sure you want to change the metal band? Maybe you can just change the nest or delete the bird?  You can't overwrite existing bands"),
                   SizedBox(height: 20),
                   getMetalBandInput(hideNext: true),
                   SizedBox(height: 20),
@@ -521,34 +522,6 @@ class _EditBirdState extends State<EditBird> {
    }
   }
 
-  changeMetalBand() {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            contentTextStyle: TextStyle(color: Colors.black),
-            titleTextStyle: TextStyle(color: Colors.red),
-            title: const Text("Change metal band"),
-            content:
-                const Text("Are you sure you want to change the metal band?"),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  preformChangeMetalBand();
-                },
-                child: Text("Change"),
-              ),
-            ],
-          );
-        });
-  }
 
   assignNextMetalBand(String recentBand) {
    List<String> nextBand = guessNextMetalBand(recentBand);
