@@ -56,11 +56,15 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
         ? <FirestoreItem>[]
         : widget.getOtherItems!(); //get other items
     bool doValidate = validate;
+    bool doOverwrite = allowOverwrite;
     if (validate) {
       ur = item.validate(otherItems: otherFSItems);
       if (!ur.success) {
-        showAlertDialog(context, "Validation failed. " + ur.message, saveItem,
-            validate: false, btnString: "save anyway");
+        showAlertDialog(
+            superContext, "Validation failed. " + ur.message, saveItem,
+            validate: false,
+            btnString: "save anyway",
+            allowOverwrite: doOverwrite);
         return;
       }
     }
@@ -70,7 +74,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
     item.responsible = sps?.userName ?? item.responsible;
     ur = await item.save(widget.firestore,
         otherItems: widget.otherItems,
-        allowOverwrite: allowOverwrite,
+        allowOverwrite: doOverwrite,
         type: widget.type);
     if (!ur.success) {
       setState(() {
@@ -82,7 +86,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
               ur.message +
               " Do you want to try to overwrite?",
           saveItem,
-          silentOverwrite: true,
+          allowOverwrite: true,
           btnString: "Overwrite",
           validate: doValidate);
     } else {
@@ -90,7 +94,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
       if (widget.onSaveOK != null) {
         widget.onSaveOK!();
       } else {
-        Navigator.pop(superContext);
+        Navigator.pop(context);
       }
     }
   }
@@ -129,6 +133,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                 setState(() {
                   _isLoading = false;
                 });
+                Navigator.pop(context);
                 showAlertDialog(
                     context, "Item could not be deleted. " + ur.message, close,
                     btnString: "OK");
@@ -139,7 +144,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                 if (widget.onDeleteOK != null) {
                   widget.onDeleteOK!();
                 } else {
-                  Navigator.pop(superContext);
+                  Navigator.pop(context);
                 }
               }
             },
@@ -151,7 +156,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
   }
 
   void showAlertDialog(BuildContext context, String message, Function action,
-      {bool silentOverwrite = false,
+      {bool allowOverwrite = false,
       String btnString = "Retry",
       bool validate = true}) {
     showDialog(
@@ -178,7 +183,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
             onPressed: () async {
               Navigator.pop(context);
               await action(context,
-                  allowOverwrite: silentOverwrite, validate: validate);
+                  allowOverwrite: allowOverwrite, validate: validate);
             },
             child: Text(btnString, style: TextStyle(color: Colors.red)),
           ),
