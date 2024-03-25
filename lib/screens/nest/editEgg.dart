@@ -2,11 +2,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/design/modifingButtons.dart';
+import 'package:kakrarahu/models/eggStatus.dart';
+import 'package:kakrarahu/models/firestore/egg.dart';
+import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
-
-import '../../models/firestore/egg.dart';
-import '../../models/measure.dart';
 
 class EditEgg extends StatefulWidget {
   final FirebaseFirestore firestore;
@@ -36,7 +36,7 @@ class _EditEggState extends State<EditEgg> {
             last_modified: DateTime.now(),
             responsible: sps!.userName,
             measures: [],
-            status: "New");
+            status: EggStatus("intact"));
       }
       egg.addMissingMeasures(sps?.defaultMeasures, "egg");
       setState(() {
@@ -66,13 +66,14 @@ class _EditEggState extends State<EditEgg> {
   }
 
   RawAutocomplete statusField(){
-    TextEditingController egg_status = TextEditingController(text: egg.status);
+    TextEditingController egg_status =
+        TextEditingController(text: egg.status.toString());
     return(RawAutocomplete<Object>(
         focusNode: _focusNode,
         onSelected: (selectedString) {
           setState(() {
             egg_status.text = selectedString.toString();
-            egg.status = selectedString.toString();
+            egg.status = EggStatus(selectedString.toString());
           });
 
         },
@@ -110,22 +111,7 @@ class _EditEggState extends State<EditEgg> {
           );
         },
         optionsBuilder: (TextEditingValue textEditingValue) {
-          return [
-            "intact",
-            "predated",
-            "crack",
-            "broken",
-            "missing",
-            "unknown",
-            "small hole",
-            "medium hole",
-            "big hole",
-            "destroyed by human",
-            "drowned",
-            "hatched",
-            "dead chick",
-            "dead egg"
-          ].where((element) {
+          return EggStatuses.statuses.where((element) {
             return element
                 .toString()
                 .toLowerCase()

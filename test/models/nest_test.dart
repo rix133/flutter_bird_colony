@@ -3,6 +3,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:kakrarahu/models/eggStatus.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
@@ -523,7 +524,7 @@ void main() {
       id: "123 egg 1",
       discover_date: DateTime.now(),
       last_modified: DateTime.now(),
-      status: 'intact',
+      status: EggStatus('intact'),
       responsible: 'John Doe',
       measures: [],
     );
@@ -532,7 +533,7 @@ void main() {
       id: "123 egg 2",
       discover_date: DateTime.now(),
       last_modified: DateTime.now(),
-      status: 'predated',
+      status: EggStatus('predated'),
       responsible: 'John Doe',
       measures: [],
     );
@@ -564,8 +565,8 @@ void main() {
       expect(eggs.length, 2);
       expect(eggs[0].id, "123 egg 1");
       expect(eggs[1].id, "123 egg 2");
-      expect(eggs[0].status, "intact");
-      expect(eggs[1].status, "predated");
+      expect(eggs[0].status.toString(), "intact");
+      expect(eggs[1].status.toString(), "predated");
     });
     group('Nest delete with parents', () {
       Bird bird1 = Bird(

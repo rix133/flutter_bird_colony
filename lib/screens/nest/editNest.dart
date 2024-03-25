@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:kakrarahu/design//modifingButtons.dart';
 import 'package:kakrarahu/design/experimentDropdown.dart';
 import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
+import 'package:kakrarahu/models/eggStatus.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
@@ -230,8 +231,8 @@ class _EditNestState extends State<EditNest> {
                   measures: [],
                   experiments: nest?.experiments ?? [],
                   last_modified: DateTime.now(),
-                  status: "intact",
-                  ring: null);
+                status: EggStatus("intact"),
+                ring: null);
               if (new_egg_nr == 1) {
                 nest!.first_egg = DateTime.now();
               }
@@ -259,7 +260,7 @@ class _EditNestState extends State<EditNest> {
                   responsible: sps.userName,
                   measures: [],
                   experiments: nest?.experiments ?? [],
-                  status: "unknown",
+                  status: EggStatus("unknown"),
                   ring: null),
             });
           },

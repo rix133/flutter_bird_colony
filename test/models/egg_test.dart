@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kakrarahu/models/eggStatus.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
 
 void main() {
@@ -11,19 +12,19 @@ void main() {
       var egg = Egg(
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       expect(egg.discover_date, isNotNull);
       expect(egg.responsible, 'Responsible Person');
-      expect(egg.status, 'intact');
+      expect(egg.status.toString(), 'intact');
     });
 
     test('Egg ringed status when ring is not null', () {
       var egg = Egg(
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         ring: 'Ring',
         measures: [],
       );
@@ -34,7 +35,7 @@ void main() {
       var egg = Egg(
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       expect(egg.ringed, false);
@@ -44,7 +45,7 @@ void main() {
       var egg = Egg(
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       var json = egg.toJson();
@@ -58,7 +59,7 @@ void main() {
         id: '1 egg 1',
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       expect(egg.knownOrder(), true);
@@ -69,7 +70,7 @@ void main() {
         id: '1 1',
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       expect(egg.knownOrder(), false);
@@ -82,7 +83,7 @@ void main() {
         id: '1 egg 1',
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       expect(egg.type(), 'egg');
@@ -93,7 +94,7 @@ void main() {
         id: '1 1',
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       expect(egg.type(), null);
@@ -104,7 +105,7 @@ void main() {
         id: '1 chick 1',
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       expect(egg.type(), "chick");
@@ -116,7 +117,7 @@ void main() {
       var egg = Egg(
         discover_date: DateTime.now().subtract(Duration(days: 5)),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       var ageRow = egg.getAgeRow();
@@ -134,7 +135,7 @@ void main() {
         id: defaultID,
         discover_date: DateTime.now().subtract(Duration(days: 5)),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       expect(egg.statusText(), pre + 'intact' + post);
@@ -145,7 +146,7 @@ void main() {
         id: defaultID,
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'predated',
+        status: EggStatus('predated'),
         measures: [],
       );
       expect(egg.statusText(), pre + 'predated');
@@ -156,7 +157,7 @@ void main() {
         id: defaultID,
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'drowned',
+        status: EggStatus('drowned'),
         measures: [],
       );
       expect(egg.statusText(), pre + 'drowned');
@@ -167,7 +168,7 @@ void main() {
         id: defaultID,
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'unknown',
+        status: EggStatus('unknown'),
         measures: [],
       );
       expect(egg.statusText(), pre + 'unknown');
@@ -178,7 +179,7 @@ void main() {
         id: defaultID,
         discover_date: DateTime.now().subtract(Duration(days: 5)),
         responsible: 'Responsible Person',
-        status: 'hatched',
+        status: EggStatus('hatched'),
         ring: 'ring',
         measures: [],
       );
@@ -190,7 +191,7 @@ void main() {
       var egg = Egg(
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       egg.id = null;
@@ -203,7 +204,7 @@ void main() {
       var egg = Egg(
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       egg.id = '1 egg 1';
@@ -215,7 +216,7 @@ void main() {
       var egg = Egg(
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       egg.id = '1 egg 1';
@@ -227,7 +228,7 @@ void main() {
       var egg = Egg(
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
       egg.id = null;

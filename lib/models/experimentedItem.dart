@@ -10,8 +10,9 @@ import 'measure.dart';
 class ExperimentedItem{
   List<Experiment>? experiments = [];
   List<Measure> measures = [];
-  
-  
+
+  String get itemName => "item";
+
   ExperimentedItem({this.experiments, required this.measures});
   
   ExperimentedItem.fromJson(Map<String, dynamic> json){
@@ -41,12 +42,11 @@ class ExperimentedItem{
     }
     if (measures.isNotEmpty) {
       for (Measure m in measures) {
-        //get the runtimetype of the item
+        //get the name of the item
         if (m.isInvalid()) {
-          String type = this.runtimeType.toString().toLowerCase();
           return UpdateResult.error(
               message:
-                  "Measure ${m.name} on $type is required but not filled in!");
+                  "Measure ${m.name} on $itemName is required but not filled in!");
         }
       }
     }

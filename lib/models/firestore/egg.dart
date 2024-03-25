@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
+import 'package:kakrarahu/models/eggStatus.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/models/firestore/firestoreItem.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
@@ -17,7 +18,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   DateTime discover_date;
   String? responsible;
   String? ring;
-  String status;
+  EggStatus status;
   DateTime? last_modified;
   List<Object>? changelogs;
 
@@ -32,6 +33,38 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   }) : super(experiments: experiments, measures: measures) {
     updateMeasuresFromExperiments("egg");
   }
+
+  @override
+  UpdateResult validate({List<FirestoreItem> otherItems = const []}) {
+    //if egg is broken or missing, no need to validate
+    if (!status.canMeasure) {
+      return UpdateResult.validateOK();
+    }
+
+    if (otherItems.isNotEmpty) {
+      //check if there are any other items that must pass validation
+      for (FirestoreItem item in otherItems) {
+        UpdateResult result = item.validate();
+        if (!result.success) {
+          return result;
+        }
+      }
+    }
+    if (measures.isNotEmpty) {
+      for (Measure m in measures) {
+        //get the name of the item
+        if (m.isInvalid()) {
+          return UpdateResult.error(
+              message:
+                  "Measure ${m.name} on $itemName is required but not filled in!");
+        }
+      }
+    }
+    return UpdateResult.validateOK();
+  }
+
+  @override
+  String get itemName => "egg " + (this.getNr() ?? "");
 
   String get name => id ?? "New Egg";
   @override
@@ -61,7 +94,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
         responsible: json["responsible"],
         ring: json['ring'],
         last_modified: (json['last_modified'] as Timestamp? ?? Timestamp.fromMillisecondsSinceEpoch(0)).toDate(),
-        status: json['status'],
+        status: EggStatus(json['status'] ?? "intact"),
         experiments: eitem.experiments,
         measures: eitem.measures
     );
@@ -134,7 +167,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       TextCellValue(responsible ?? ""),
       last_modified != null ? DateTimeCellValue.fromDateTime(last_modified!) : TextCellValue(""),
       TextCellValue(ring ?? ""),
-      TextCellValue(status),
+      TextCellValue(status.toString()),
       TextCellValue(experiments?.map((e) => e.name).join(";\r") ?? ""), // Convert experiments to string
     ];
     List<List<CellValue>> rows = addMeasuresToRow(baseItems);
@@ -175,16 +208,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
 
   ElevatedButton getButton(BuildContext context, Nest? nest){
     return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-          backgroundColor: status == "intact" ||
-              status == "unknown"
-              ? Colors.green
-              : (status == "broken" ||
-              status == "missing" ||
-              status == "predated" ||
-              status == "drowned"
-              ? Colors.red
-              : Colors.orange[800])),
+      style: ElevatedButton.styleFrom(backgroundColor: status.color()),
       child: Text(statusText()),
       onPressed: () {
         Navigator.pushNamed(context, "/editEgg", arguments: this);
@@ -238,7 +262,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       'responsible': responsible,
       'ring': ring,
       'last_modified': last_modified ?? DateTime.now(),
-      'status': status,
+      'status': status.toString(),
       'experiments': experiments?.map((e) => e.toSimpleJson()).toList(),
       'measures': measures.map((e) => e.toJson()).toList(),
     };

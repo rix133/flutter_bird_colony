@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kakrarahu/models/eggStatus.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
@@ -43,7 +44,7 @@ void main() {
       responsible: "Admin",
       ring: "AA1234",
       last_modified: DateTime.now().subtract(Duration(days: 3)),
-      status: "hatched",
+      status: EggStatus('hatched'),
       measures: []);
   final Experiment experiment = Experiment(
     id: "1",

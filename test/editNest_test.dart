@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kakrarahu/models/eggStatus.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
@@ -44,7 +45,7 @@ void main() {
       responsible: "Admin",
       ring: null,
       last_modified: DateTime.now().subtract(Duration(days: 1)),
-      status: "intact",
+      status: EggStatus('intact'),
       measures: [Measure.note()]);
 
   setUpAll(() async {
@@ -200,7 +201,7 @@ void main() {
           .doc(egg.id)
           .get());
       expect(eggObj.ring, "BB1235");
-      expect(eggObj.status, "hatched");
+      expect(eggObj.status.toString(), "hatched");
     });
 
     testWidgets("will add bird when add egg is long pressed",
@@ -240,7 +241,7 @@ void main() {
           .doc("1 chick BB1235")
           .get());
       expect(eggObj.ring, "BB1235");
-      expect(eggObj.status, "hatched");
+      expect(eggObj.status.toString(), "hatched");
       expect(eggObj.discover_date, newBird.ringed_date);
     });
   });
@@ -297,7 +298,7 @@ void main() {
       expect(eggObj.exists, true);
       Egg newEgg = Egg.fromDocSnapshot(eggObj);
       expect(newEgg.id, "1 egg 1");
-      expect(newEgg.status, "intact");
+      expect(newEgg.status.toString(), "intact");
       //the other one is an empty note
       expect(newEgg.measures.length, 2);
       expect(newEgg.measures[0].name, "note");
@@ -317,7 +318,7 @@ void main() {
           responsible: "Admin",
           ring: null,
           last_modified: DateTime.now().subtract(Duration(days: 1)),
-          status: "intact",
+          status: EggStatus('intact'),
           measures: [m1]);
       await firestore
           .collection(DateTime.now().year.toString())
@@ -340,7 +341,7 @@ void main() {
       expect(eggObj.exists, true);
       Egg newEgg = Egg.fromDocSnapshot(eggObj);
       expect(newEgg.id, "1 egg 1");
-      expect(newEgg.status, "intact");
+      expect(newEgg.status.toString(), "intact");
       expect(newEgg.measures.length, 2);
       expect(newEgg.measures[0].name, "note");
       expect(newEgg.measures[0].value, "");
@@ -353,7 +354,7 @@ void main() {
           .collection("egg")
           .doc(egg2.id)
           .get());
-      expect(egg2.status, "intact");
+      expect(egg2.status.toString(), "intact");
       //check that the egg measure 1 value is empty
       expect(egg2.measures.length, 2);
       expect(egg2.measures[0].name, "note");
@@ -373,7 +374,7 @@ void main() {
           responsible: "Admin",
           ring: null,
           last_modified: DateTime.now().subtract(Duration(days: 1)),
-          status: "intact",
+          status: EggStatus('intact'),
           measures: [
             Measure.numeric(
                 name: "weight",
@@ -412,7 +413,7 @@ void main() {
       expect(eggObj.exists, true);
       Egg newEgg = Egg.fromDocSnapshot(eggObj);
       expect(newEgg.id, "1 egg 1");
-      expect(newEgg.status, "intact");
+      expect(newEgg.status.toString(), "intact");
       expect(newEgg.measures.length, 2);
       expect(newEgg.measures[0].name, "note");
       expect(newEgg.measures[0].value, "");
@@ -425,7 +426,78 @@ void main() {
           .collection("egg")
           .doc(egg2.id)
           .get());
-      expect(egg2.status, "intact");
+      expect(egg2.status.toString(), "intact");
+      //check that the egg measure 1 value is empty
+      expect(egg2.measures.length, 2);
+      expect(egg2.measures[0].name, "note");
+      expect(egg2.measures[0].value, "");
+      expect(egg2.measures[1].name, "weight");
+      expect(egg2.measures[1].value, "");
+
+      expect(find.byType(AlertDialog), findsNothing);
+
+      Nest nestObj = Nest.fromDocSnapshot(await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .get());
+      expect(nestObj.measures[0].value, "test note");
+    });
+    testWidgets(
+        "will save nest when egg cant be measured but has required measure",
+        (WidgetTester tester) async {
+      Egg egg2 = Egg(
+          id: "1 egg 2",
+          discover_date: DateTime.now().subtract(Duration(days: 2)),
+          responsible: "Admin",
+          ring: null,
+          last_modified: DateTime.now().subtract(Duration(days: 1)),
+          status: EggStatus('missing'),
+          measures: [
+            Measure.numeric(name: "weight", unit: "", required: true)
+          ]);
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg2.id)
+          .set(egg2.toJson());
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //enter text to the nest note
+      Finder noteTextField = find.byType(TextField).at(1);
+      await tester.enterText(noteTextField, "test note");
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+
+      //expect to find the egg in firestore
+      var eggObj = await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .get();
+      expect(eggObj.exists, true);
+      Egg newEgg = Egg.fromDocSnapshot(eggObj);
+      expect(newEgg.id, "1 egg 1");
+      expect(newEgg.status.toString(), "intact");
+      expect(newEgg.measures.length, 2);
+      expect(newEgg.measures[0].name, "note");
+      expect(newEgg.measures[0].value, "");
+      expect(newEgg.measures[1].name, "weight");
+      expect(newEgg.measures[1].value, "");
+
+      egg2 = Egg.fromDocSnapshot(await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg2.id)
+          .get());
+      expect(egg2.status.toString(), "missing");
       //check that the egg measure 1 value is empty
       expect(egg2.measures.length, 2);
       expect(egg2.measures[0].name, "note");

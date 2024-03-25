@@ -3,6 +3,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
+import 'package:kakrarahu/models/eggStatus.dart';
 import 'package:kakrarahu/models/firestore/bird.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
@@ -44,7 +45,7 @@ void main() {
       responsible: "Admin",
       ring: null,
       last_modified: DateTime.now().subtract(Duration(days: 1)),
-      status: "intact",
+      status: EggStatus('intact'),
       measures: [Measure.note()]);
 
   final Egg masterEggEgg = Egg(
@@ -53,7 +54,7 @@ void main() {
       responsible: "Admin",
       ring: "AA1236",
       last_modified: DateTime.now().subtract(Duration(days: 1)),
-      status: "hatched",
+      status: EggStatus('hatched'),
       measures: [Measure.note(value: "test")]);
 
   final Egg masterChickEgg = Egg(
@@ -62,7 +63,7 @@ void main() {
       responsible: "Admin",
       ring: "AA1235",
       last_modified: DateTime.now().subtract(Duration(days: 36)),
-      status: "hatched",
+      status: EggStatus('hatched'),
       measures: []);
   final Experiment experiment = Experiment(
     id: "1",
@@ -977,7 +978,7 @@ void main() {
       //last modified should change
       expect(newEggObj.last_modified, isNot(chickEgg.last_modified),
           reason: "last modified should change");
-      expect(newEggObj.status, chickEgg.status,
+      expect(newEggObj.status.toString(), chickEgg.status.toString(),
           reason: "status should not change");
       expect(newEggObj.measures.length, chickEgg.measures.length,
           reason: "measures should not change");
@@ -1039,7 +1040,7 @@ void main() {
       //last modified should change
       expect(newEggObj.last_modified, isNot(eggEgg.last_modified),
           reason: "last modified should change");
-      expect(newEggObj.status, eggEgg.status,
+      expect(newEggObj.status.toString(), eggEgg.status.toString(),
           reason: "status should not change");
       expect(newEggObj.measures.length, eggEgg.measures.length,
           reason: "measures should not change");

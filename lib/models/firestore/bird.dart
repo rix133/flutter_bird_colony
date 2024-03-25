@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:kakrarahu/models/eggStatus.dart';
 import 'package:kakrarahu/models/experimentedItem.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/models/firestore/firestoreItem.dart';
@@ -31,6 +32,9 @@ class Bird extends ExperimentedItem implements FirestoreItem{
 
   @override
   String get name => (color_band?.isNotEmpty ?? false) ? color_band! : band;
+
+  @override
+  String get itemName => "bird";
 
   String get current_nest =>
       (nest_year == DateTime.now().year) ? (nest ?? "") : "";
@@ -373,7 +377,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
           measures: [],
           responsible: responsible,
           ring: band,
-          status: 'hatched');
+          status: EggStatus("hatched"));
       await eggItemCollection.doc(newEgg.id).set(newEgg.toJson());
       return UpdateResult.saveOK(item: this);
     } else {

@@ -3,18 +3,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
+import 'package:kakrarahu/models/eggStatus.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
-import 'package:kakrarahu/screens/bird/editBird.dart';
-import 'package:kakrarahu/screens/nest/editEgg.dart';
-import 'package:kakrarahu/screens/nest/findNest.dart';
-
-import 'package:kakrarahu/screens/homepage.dart';
-import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
+import 'package:kakrarahu/models/measure.dart';
+import 'package:kakrarahu/screens/bird/editBird.dart';
+import 'package:kakrarahu/screens/homepage.dart';
+import 'package:kakrarahu/screens/nest/editEgg.dart';
 import 'package:kakrarahu/screens/nest/editNest.dart';
+import 'package:kakrarahu/screens/nest/findNest.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -49,7 +48,7 @@ void main() {
       responsible: "Admin",
       ring: null,
       last_modified: DateTime.now().subtract(Duration(days: 1)),
-      status: "intact",
+      status: EggStatus('intact'),
       measures: [Measure.note()]);
 
   setUpAll(() async {

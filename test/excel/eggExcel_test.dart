@@ -1,5 +1,6 @@
 import 'package:excel/excel.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kakrarahu/models/eggStatus.dart';
 import 'package:kakrarahu/models/firestore/egg.dart';
 
 void main() {
@@ -8,7 +9,7 @@ void main() {
       final egg = Egg(
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
 
@@ -23,7 +24,7 @@ void main() {
       expect((rows[0][5] as TextCellValue).value,
           egg.last_modified?.toIso8601String() ?? "");
       expect((rows[0][6] as TextCellValue).value, egg.ring ?? "");
-      expect((rows[0][7] as TextCellValue).value, egg.status);
+      expect((rows[0][7] as TextCellValue).value, egg.status.toString());
       expect((rows[0][8] as TextCellValue).value,
           egg.experiments?.map((e) => e.name).join(";\r") ?? "");
     });
@@ -32,7 +33,7 @@ void main() {
       final egg = Egg(
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: 'intact',
+        status: EggStatus('intact'),
         measures: [],
       );
 
