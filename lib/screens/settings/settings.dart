@@ -224,11 +224,23 @@ class _SettingsPageState extends State<SettingsPage> {
               title: Text('Wrong password', style: TextStyle(color: Colors.red)),
               content: Text('Wrong password provided for that user.', style: TextStyle(color: Colors.black),),
               actions: [
+                _userEmail == null
+                    ? Container()
+                    : TextButton(
+                        onPressed: (_userEmail?.isEmpty ?? true)
+                            ? null
+                            : () {
+                                Navigator.pop(context);
+                                AuthService.instance
+                                    .sendPasswordResetEmail(_userEmail ?? '');
+                              },
+                        child: Text('Reset password'),
+                      ),
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  child: Text('OK'),
+                  child: Text('Try again'),
                 ),
               ],
             );
@@ -431,20 +443,25 @@ class _SettingsPageState extends State<SettingsPage> {
                     decoration: InputDecoration(hintText: 'Email', hintStyle: TextStyle(color: Colors.deepPurpleAccent)),
                     onChanged: (value) {
                       _userEmail = value;
-                    },
+                              setState(() {});
+                            },
                   ),
                   TextField(
                     style: TextStyle(color: Colors.black),
                     decoration: InputDecoration(hintText: 'Password', hintStyle: TextStyle(color: Colors.deepPurpleAccent)),
                     onChanged: (value) {
                       _userPassword = value;
-                    },
+                              setState(() {});
+                            },
                   ),
                   SizedBox(height: 10),
                   ElevatedButton.icon(
                     key: Key('loginButton'),
-                    onPressed: () async {
-                      setState(() {
+                            onPressed: ((_userEmail?.isEmpty ?? true) &&
+                                    (_userPassword?.isEmpty ?? true))
+                                ? null
+                                : () async {
+                                    setState(() {
                         _disable = true;
                       });
                       await _login('existingEmail');
@@ -483,10 +500,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   value: sps?.autoNextBand ?? false,
                   onChanged: (value) {
                     sps?.autoNextBand = value;
-                    setState(() {
-
-              });
-            },
+                    setState(() {});
+                  },
           ),
         ],
       ),

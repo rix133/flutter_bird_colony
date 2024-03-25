@@ -127,9 +127,37 @@ void main() {
       // Check if the login was not  successful
       expect(find.byType(AlertDialog), findsNWidgets(2));
       expect(find.text('Wrong password'), findsOneWidget);
-      await tester.tap(find.text('OK'));
+      await tester.tap(find.text('Try again'));
       await tester.pumpAndSettle();
       expect(find.byType(AlertDialog), findsNWidgets(1));
+    });
+
+    testWidgets('Login fail will show option to reset password',
+        (WidgetTester tester) async {
+      // Initialize the app
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Tap the 'Login with email' button to open the dialog
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
+
+      // Enter email and password
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Email'), 'test@example.com');
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Password'), 'password312');
+
+      // Tap the 'Login' button
+      await tester.tap(find.text('Login'));
+      await tester.pumpAndSettle();
+
+      // Check if the login was not  successful
+      expect(find.byType(AlertDialog), findsNWidgets(2));
+      expect(find.text('Wrong password'), findsOneWidget);
+      expect(find.text('Reset password'), findsOneWidget);
+      await tester.tap(find.text('Try again'));
+      await tester.pumpAndSettle();
     });
 
     testWidgets("login fails with invalid email", (WidgetTester tester) async {
@@ -296,6 +324,8 @@ void main() {
 
       // Check if the login page is displayed
       expect(find.text('Login'), findsOneWidget);
+      //tap the cancel
+      await tester.tap(find.text('Cancel'));
     });
 
     testWidgets('Log out button is displayed when user is logged in',
@@ -357,6 +387,32 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SpeciesRawAutocomplete), findsOneWidget);
+    });
+
+    testWidgets("default settings are changed", (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = false;
+      expect(sharedPreferencesService.defaultSpecies, "Common Gull");
+      sharedPreferencesService.speciesList =
+          LocalSpeciesList.fromStringList(["Common Gull", "Arctic tern"]);
+
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //go to settings page
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
+
+      //find the switchlisttiles and toogle them
+      Finder switchFinder = find.byType(Switch);
+      expect(switchFinder, findsNWidgets(2));
+      for (int i = 0; i < 2; i++) {
+        await tester.tap(switchFinder.at(i));
+        await tester.pumpAndSettle();
+      }
+
+      expect(sharedPreferencesService.autoNextBand, true);
+      expect(sharedPreferencesService.autoNextBandParent, true);
     });
 
     testWidgets("default species is changed", (WidgetTester tester) async {
