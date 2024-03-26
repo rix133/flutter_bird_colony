@@ -101,10 +101,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
             title: id,
             onTap: disabled
                 ? null
-                : () => Navigator.pushNamed(context, '/editNest', arguments: {
-                      "nest_id": id,
-                      "year": discover_date.year.toString()
-                    })),
+                : () => Navigator.pushNamed(context, '/editNest',
+                    arguments: {"nest": this})),
         consumeTapEvents: false,
         visible: visibility,
         markerId: MarkerId(id!),
