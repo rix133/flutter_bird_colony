@@ -287,12 +287,6 @@ class DefaultSettings implements FirestoreItem {
   @override
   Widget getListTile(BuildContext context,
       {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
-    return ListTile(
-      title: Text(name),
-      subtitle: Text('Default settings'),
-      onTap: () {
-        Navigator.pushNamed(context, '/editDefaultSettings', arguments: this);
-      },
-    );
+    throw UnimplementedError();
   }
 }

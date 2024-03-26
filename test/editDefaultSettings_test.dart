@@ -44,6 +44,50 @@ void main() {
     expect(find.byType(ListMarkerColorGroups), findsOneWidget);
   });
 
+  testWidgets('all values are changed in getDefaultSettingsForm',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    // Change desiredAccuracy
+    await tester.enterText(find.byKey(Key('desiredAccuracy')), '6.0');
+    await tester.pumpAndSettle();
+    expect(find.text('6.0'), findsOneWidget);
+
+    // Change selectedYear
+    await tester.drag(find.byType(Slider), Offset(50.0, 0.0));
+    await tester.pumpAndSettle();
+
+    // Toggle autoNextBand
+    await tester
+        .tap(find.widgetWithText(SwitchListTile, 'Auto next band chick'));
+    await tester.pumpAndSettle();
+
+    // Toggle autoNextBandParent
+    await tester
+        .tap(find.widgetWithText(SwitchListTile, 'Auto next band parent'));
+    await tester.pumpAndSettle();
+
+    // Change defaultLocation latitude
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Default location latitude'),
+        '60.0');
+    await tester.pumpAndSettle();
+    expect(find.text('60.0'), findsOneWidget);
+
+    // Change defaultLocation longitude
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Default location longitude'),
+        '25.0');
+    await tester.pumpAndSettle();
+    expect(find.text('25.0'), findsOneWidget);
+
+    // Toggle biasedRepeatedMeasurements
+    await tester.tap(
+        find.widgetWithText(SwitchListTile, 'Observer bias repeated measures'));
+    await tester.pumpAndSettle();
+  });
+
   testWidgets(
       'updates default settings in firestore when save button is pressed',
       (WidgetTester tester) async {
