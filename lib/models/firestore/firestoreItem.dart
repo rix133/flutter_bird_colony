@@ -22,6 +22,8 @@ abstract class FirestoreItem{
     throw UnimplementedError('fromDocSnapshot() must be implemented in subclasses');
   }
 
+  Future<List<FirestoreItem>> changeLog(FirebaseFirestore firestore);
+
   FirestoreItem copy();
 
   List<UpdateResult> validate(SharedPreferencesService? sps,

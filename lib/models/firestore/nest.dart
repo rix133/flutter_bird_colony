@@ -160,6 +160,17 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   }
 
   @override
+  Future<List<Nest>> changeLog(FirebaseFirestore firestore) async {
+    return (firestore
+        .collection(discover_date.year.toString())
+        .doc(id)
+        .collection("changelog")
+        .get()
+        .then((value) =>
+            value.docs.map((e) => Nest.fromDocSnapshot(e)).toList()));
+  }
+
+  @override
   factory Nest.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     ExperimentedItem eitem = ExperimentedItem.fromJson(json);

@@ -149,6 +149,18 @@ class DefaultSettings implements FirestoreItem {
   }
 
   @override
+  Future<List<DefaultSettings>> changeLog(FirebaseFirestore firestore) async {
+    return (firestore
+        .collection('settings')
+        .doc(id)
+        .collection('changeLog')
+        .get()
+        .then((value) => value.docs
+            .map((e) => DefaultSettings.fromDocSnapshot(e))
+            .toList()));
+  }
+
+  @override
   List<TextCellValue> toExcelRowHeader() {
     return [
       TextCellValue('Desired accuracy'),

@@ -168,7 +168,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
         backgroundColor: Colors.black87,
         titleTextStyle: TextStyle(color: Colors.red),
         title: Text("Problem(s)"),
-        content: Column(children: [
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
           Text(mainMessage, style: TextStyle(color: Colors.redAccent)),
           ...errors.map((e) => Text(e.message)).toList(),
         ]),

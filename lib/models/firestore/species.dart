@@ -284,6 +284,19 @@ class Species implements FirestoreItem {
         ),
     );
   }
+
+  @override
+  Future<List<Species>> changeLog(FirebaseFirestore firestore) async {
+    return firestore
+        .collection('settings')
+        .doc('default')
+        .collection('species')
+        .doc(id)
+        .collection('changeLog')
+        .get()
+        .then((value) =>
+            value.docs.map((e) => Species.fromDocSnapshot(e)).toList());
+  }
 }
 
 class LocalSpeciesList {

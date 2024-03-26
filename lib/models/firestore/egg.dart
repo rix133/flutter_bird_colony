@@ -47,6 +47,19 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   }
 
   @override
+  Future<List<Egg>> changeLog(FirebaseFirestore firestore) async {
+    return (firestore
+        .collection(discover_date.year.toString())
+        .doc(getNest())
+        .collection("egg")
+        .doc(id)
+        .collection("changelog")
+        .get()
+        .then(
+            (value) => value.docs.map((e) => Egg.fromDocSnapshot(e)).toList()));
+  }
+
+  @override
   String get itemName => "egg " + (this.getNr() ?? "");
 
   String get name => id ?? "New Egg";

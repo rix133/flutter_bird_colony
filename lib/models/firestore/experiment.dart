@@ -187,6 +187,17 @@ class Experiment implements FirestoreItem {
     );
   }
 
+  @override
+  Future<List<Experiment>> changeLog(FirebaseFirestore firestore) async {
+    return firestore
+        .collection('experiments')
+        .doc(id)
+        .collection('changeLog')
+        .get()
+        .then((value) =>
+            value.docs.map((e) => Experiment.fromDocSnapshot(e)).toList());
+  }
+
   gotoNest(String nest, BuildContext context) {
     return () => {
           Navigator.pushNamed(context, '/editNest',
