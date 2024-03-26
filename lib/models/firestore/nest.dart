@@ -141,15 +141,17 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   }
 
   @override
-  UpdateResult validate(SharedPreferencesService? sps,
+  List<UpdateResult> validate(SharedPreferencesService? sps,
       {List<FirestoreItem> otherItems = const []}) {
+    List<UpdateResult> results = [];
     //if nest location is inaccurate raise a warning
     if (getAccuracy() > (sps?.desiredAccuracy ?? 10.0)) {
-      return UpdateResult.error(
-          message: "nest location accuracy is over ${sps?.desiredAccuracy} m");
+      results.add(UpdateResult.error(
+          message: "Nest location accuracy is over ${sps?.desiredAccuracy} m"));
     }
+    results.addAll(super.validate(sps, otherItems: otherItems));
 
-    return super.validate(sps, otherItems: otherItems);
+    return results;
   }
 
   checkedToday() {

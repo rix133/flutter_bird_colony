@@ -36,11 +36,11 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   }
 
   @override
-  UpdateResult validate(SharedPreferencesService? sps,
+  List<UpdateResult> validate(SharedPreferencesService? sps,
       {List<FirestoreItem> otherItems = const []}) {
     //if egg is broken or missing, no need to validate
     if (!status.canMeasure) {
-      return UpdateResult.validateOK();
+      return [];
     }
 
     return super.validate(sps, otherItems: otherItems);

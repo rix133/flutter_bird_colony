@@ -24,7 +24,7 @@ abstract class FirestoreItem{
 
   FirestoreItem copy();
 
-  UpdateResult validate(SharedPreferencesService? sps,
+  List<UpdateResult> validate(SharedPreferencesService? sps,
       {List<FirestoreItem> otherItems = const []});
 
   Future <UpdateResult> save(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"});

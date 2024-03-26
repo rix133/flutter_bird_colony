@@ -237,9 +237,9 @@ class Species implements FirestoreItem {
     };
   }
 
-  UpdateResult validate(SharedPreferencesService? sps,
+  List<UpdateResult> validate(SharedPreferencesService? sps,
       {List<FirestoreItem> otherItems = const []}) {
-    return UpdateResult.validateOK();
+    return [];
   }
 
   List<Widget> getSpeciesForm(BuildContext context, void Function(Function()) setState) {

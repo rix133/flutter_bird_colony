@@ -279,9 +279,9 @@ class DefaultSettings implements FirestoreItem {
     ]);
   }
 
-  UpdateResult validate(SharedPreferencesService? sps,
+  List<UpdateResult> validate(SharedPreferencesService? sps,
       {List<FirestoreItem> otherItems = const []}) {
-    return UpdateResult.validateOK();
+    return [];
   }
 
   @override

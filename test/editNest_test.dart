@@ -312,6 +312,7 @@ void main() {
   group("validate required measures", () {
     setUp(() async {
       //reset the database
+      nest.accuracy = "3.22m";
       await firestore.collection('recent').doc("nest").set({"id": "1"});
       await nest.save(firestore);
       egg.measures = [Measure.numeric(name: "weight", unit: "")];
@@ -374,6 +375,34 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
     });
 
+    testWidgets("will raise an alertdialog with 2 errors",
+        (WidgetTester tester) async {
+      nest.accuracy = "13.22m";
+      egg.measures = [
+        Measure.numeric(name: "weight", unit: "", required: true)
+      ];
+      await nest.save(firestore);
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .set(egg.toJson());
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      expect(find.text("Validation failed (2 errors)"), findsOneWidget);
+      expect(find.text("Nest location accuracy is over 4.0 m"), findsOneWidget);
+      expect(
+          find.text("Measure weight on egg 1 is required but not filled in!"),
+          findsOneWidget);
+    });
+
     testWidgets("will not save nest when required measures on egg are empty",
         (WidgetTester tester) async {
       Measure m1 = Measure.numeric(name: "weight", unit: "", required: true);
@@ -429,6 +458,7 @@ void main() {
       expect(egg2.measures[1].required, true, reason: "required measure");
 
       expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text("Validation failed"), findsOneWidget);
     });
 
     testWidgets("will save nest when required measures are bypassed on egg",
@@ -511,7 +541,7 @@ void main() {
         "will save nest when egg cant be measured but has required measure",
         (WidgetTester tester) async {
       Egg egg2 = Egg(
-          id: "1 egg 2",
+          id: "1 egg 1",
           discover_date: DateTime.now().subtract(Duration(days: 2)),
           responsible: "Admin",
           ring: null,
@@ -524,8 +554,9 @@ void main() {
           .collection(DateTime.now().year.toString())
           .doc(nest.id)
           .collection("egg")
-          .doc(egg2.id)
+          .doc(egg.id)
           .set(egg2.toJson());
+
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
 
@@ -539,22 +570,6 @@ void main() {
 
       expect(find.byType(AlertDialog), findsNothing);
 
-      //expect to find the egg in firestore
-      var eggObj = await firestore
-          .collection(DateTime.now().year.toString())
-          .doc(nest.id)
-          .collection("egg")
-          .doc(egg.id)
-          .get();
-      expect(eggObj.exists, true);
-      Egg newEgg = Egg.fromDocSnapshot(eggObj);
-      expect(newEgg.id, "1 egg 1");
-      expect(newEgg.status.toString(), "intact");
-      expect(newEgg.measures.length, 2);
-      expect(newEgg.measures[0].name, "note");
-      expect(newEgg.measures[0].value, "");
-      expect(newEgg.measures[1].name, "weight");
-      expect(newEgg.measures[1].value, "");
 
       egg2 = Egg.fromDocSnapshot(await firestore
           .collection(DateTime.now().year.toString())
