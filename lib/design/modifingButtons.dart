@@ -81,7 +81,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
         _isLoading = false;
       });
       showAlertDialog(
-          context,
+          superContext,
           "Item could not be saved. Do you want to try to overwrite?",
           [ur],
           saveItem,
@@ -93,7 +93,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
       if (widget.onSaveOK != null) {
         widget.onSaveOK!();
       } else {
-        Navigator.pop(context);
+        Navigator.pop(superContext);
       }
     }
   }
@@ -132,9 +132,8 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                 setState(() {
                   _isLoading = false;
                 });
-                Navigator.pop(context);
                 showAlertDialog(
-                    context, "Item could not be deleted.", [ur], close,
+                    superContext, "Item could not be deleted.", [ur], close,
                     btnString: "OK");
               } else {
                 setState(() {
@@ -143,7 +142,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                 if (widget.onDeleteOK != null) {
                   widget.onDeleteOK!();
                 } else {
-                  Navigator.pop(context);
+                  Navigator.pop(superContext);
                 }
               }
             },
