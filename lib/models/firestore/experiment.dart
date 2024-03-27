@@ -205,7 +205,7 @@ class Experiment implements FirestoreItem {
   gotoNest(String nest, BuildContext context) {
     return () => {
           Navigator.pushNamed(context, '/editNest',
-              arguments: {'nest_id': nest})
+              arguments: {'nest_id': nest, 'year': year})
         };
   }
 
@@ -214,11 +214,9 @@ class Experiment implements FirestoreItem {
     return [];
   }
 
-  gotoBird(String bird, BuildContext context) {
+  gotoBird(String band, BuildContext context) {
     return () => {
-          Navigator.pushNamed(context, "/editBird", arguments: {
-            'bird': {'band': bird}
-          })
+          Navigator.pushNamed(context, "/editBird", arguments: {'bird_id': band})
         };
   }
 
@@ -316,7 +314,8 @@ class Experiment implements FirestoreItem {
   }
 
   void showNestMap(BuildContext context) {
-    Navigator.pushNamed(context, '/mapNests', arguments: {'nest_ids': nests});
+    Navigator.pushNamed(context, '/mapNests',
+        arguments: {'nest_ids': nests, 'year': year});
   }
 
   Future<UpdateResult> _updateNestCollection(FirebaseFirestore firestore, List<String>? items,

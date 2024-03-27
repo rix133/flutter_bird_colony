@@ -221,6 +221,7 @@ class FSItemMixin {
       List<List<List<CellValue>>> sheets, List<String> types,
       {bool testOnly = false}) async {
     Excel excel = Excel.createExcel(); // Create a new Excel file
+
     for (int i = 0; i < sheets.length; i++) {
       String type = types[i];
       List<List<CellValue>> rows = sheets[i];
@@ -228,8 +229,9 @@ class FSItemMixin {
       //excel.delete("Sheet1"); // Delete the default sheet (Sheet1)
 
       CellStyle headStyle =
-          CellStyle(backgroundColorHex: "#D3D3D3", bold: true);
-      CellStyle bodyStyle = CellStyle(backgroundColorHex: "none", bold: false);
+          CellStyle(backgroundColorHex: ExcelColor.black12, bold: true);
+      CellStyle bodyStyle =
+          CellStyle(backgroundColorHex: ExcelColor.none, bold: false);
       CellStyle currenctStyle = headStyle;
       for (int i = 0; i < rows.length; i++) {
         if (i != 0) {
@@ -247,7 +249,15 @@ class FSItemMixin {
         sheet.setColumnAutoFit(j);
       }
     }
+
     excel.setDefaultSheet(types[0]);
+
+    //remove the default sheet
+    try {
+      excel.delete("Sheet1");
+    } catch (e) {
+      print(e);
+    }
 
     if (testOnly) {
       return excel;

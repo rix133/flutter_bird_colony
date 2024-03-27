@@ -13,6 +13,7 @@ import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/screens/experiment/editExperiment.dart';
 import 'package:kakrarahu/screens/experiment/listExperiments.dart';
 import 'package:kakrarahu/screens/homepage.dart';
+import 'package:kakrarahu/screens/nest/mapNests.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
 import 'package:kakrarahu/services/sharedPreferencesService.dart';
@@ -144,6 +145,7 @@ void main() {
         '/': (context) => MyHomePage(title: "Nest app"),
         '/listExperiments': (context) => ListExperiments(firestore: firestore),
         '/editExperiment': (context) => EditExperiment(firestore: firestore),
+        '/mapNests': (context) => MapNests(firestore: firestore),
       }),
     );
   });
@@ -163,6 +165,30 @@ void main() {
     await tester.tap(find.text("close"));
     await tester.pumpAndSettle();
     expect(find.byType(AlertDialog), findsNothing);
+  });
+
+  testWidgets("will go to nests when map is tapped",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the map icon on first list tile
+    await tester.tap(find.byIcon(Icons.map).first);
+    await tester.pumpAndSettle();
+
+    //check if redirected to mapNests
+    expect(find.byType(MapNests), findsOneWidget);
+  });
+
+  testWidgets("will go to edit experiment when edit is tapped",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the map icon on first list tile
+    await tester.tap(find.byIcon(Icons.edit).first);
+    await tester.pumpAndSettle();
+
+    //check if redirected to mapNests
+    expect(find.byType(EditExperiment), findsOneWidget);
   });
 
   testWidgets('List experiments loads', (WidgetTester tester) async {

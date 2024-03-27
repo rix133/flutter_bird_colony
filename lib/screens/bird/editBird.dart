@@ -130,6 +130,10 @@ class _EditBirdState extends State<EditBird> {
     if (map["nest"] != null) {
       nest = map["nest"] as Nest;
     }
+    if (map["bird_id"] != null) {
+      reloadBirdFromFirestore(map["bird_id"].toString());
+    }
+
     if (map["bird"] != null) {
       //ageType is set within handleBird
       await handleBird(map);
@@ -152,7 +156,7 @@ class _EditBirdState extends State<EditBird> {
   Future<void> handleBird(Map<String, dynamic> map) async {
     bird = map["bird"] as Bird;
     if (bird.band.isNotEmpty) {
-      await reloadBirdFromFirestore();
+      await reloadBirdFromFirestore(bird.band);
     } else {
       if (map["nest"] != null) {
         if(bird.color_band?.isNotEmpty ?? false){
@@ -171,10 +175,12 @@ class _EditBirdState extends State<EditBird> {
     nests = widget.firestore.collection(bird.nest_year.toString());
   }
 
-  Future<void> reloadBirdFromFirestore() async {
-   if(birds == null) return;
-    bird = await birds!.doc(bird.band).get().then(
-            (DocumentSnapshot value) => Bird.fromDocSnapshot(value)).catchError(onSnapshotError);
+  Future<void> reloadBirdFromFirestore(String id) async {
+    if(birds == null) return;
+    bird = await birds!
+        .doc(id)
+        .get()
+        .then((DocumentSnapshot value) => Bird.fromDocSnapshot(value)).catchError(onSnapshotError);
     ageType = bird.isChick() ? "chick" : "parent";
     bird.addNonExistingExperiments(nest.experiments, ageType);
   }
