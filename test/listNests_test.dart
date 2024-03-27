@@ -488,8 +488,16 @@ void main() {
     await tester.pumpAndSettle();
 
     //check if the list of birds is displayed
-    expect(find.byType(AlertDialog), findsOneWidget);
-  });
+        expect(find.byType(AlertDialog), findsOneWidget);
+
+        //expect the downloadChangelog button key to be present
+        expect(find.byKey(Key("downloadChangelog")), findsOneWidget);
+
+        //close the dialog
+        await tester.tap(find.text("close"));
+        await tester.pumpAndSettle();
+        expect(find.byType(AlertDialog), findsNothing);
+      });
 
   testWidgets("will color map icon by last modified date",
       (WidgetTester tester) async {

@@ -192,10 +192,14 @@ class Experiment implements FirestoreItem {
     return firestore
         .collection('experiments')
         .doc(id)
-        .collection('changeLog')
+        .collection('changelog')
         .get()
-        .then((value) =>
-            value.docs.map((e) => Experiment.fromDocSnapshot(e)).toList());
+        .then((value) {
+      List<Experiment> experiments =
+          value.docs.map((e) => Experiment.fromDocSnapshot(e)).toList();
+      experiments.sort((a, b) => b.last_modified!.compareTo(a.last_modified!));
+      return experiments;
+    });
   }
 
   gotoNest(String nest, BuildContext context) {
@@ -218,6 +222,46 @@ class Experiment implements FirestoreItem {
         };
   }
 
+  getDetailsDialog(BuildContext context, FirebaseFirestore firestore) {
+    return AlertDialog(
+      backgroundColor: Colors.black87,
+      title: Text("Experiment Details"),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("Name: $name"),
+          Text("Description: ${description ?? ""}"),
+          Text("Responsible: ${responsible ?? ""}"),
+          Text("Year: ${year ?? ""}"),
+          Text("Type: $type"),
+          Text("Last Modified: ${last_modified?.toIso8601String() ?? ""}"),
+          Text("Created: ${created?.toIso8601String() ?? ""}"),
+          Text("Nests: ${nests?.join(", ") ?? ""}"),
+          Text("Birds: ${birds?.join(", ") ?? ""}"),
+        ],
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text("close"),
+        ),
+        //download changelog Elevated icon button
+        ElevatedButton.icon(
+          key: Key("downloadChangelog"),
+          icon: Icon(Icons.download),
+          label: Text("Download changelog"),
+          onPressed: () async {
+            Navigator.pop(context);
+            await FSItemMixin().downloadChangeLog(
+                this.changeLog(firestore), "experiment", firestore);
+          },
+        ),
+      ],
+    );
+  }
+
   dispose() {
     measures.forEach((m) {
       m.dispose();
@@ -227,7 +271,7 @@ class Experiment implements FirestoreItem {
   String get titleString =>
       '$name${description?.isNotEmpty == true ? ' - $description' : ''}';
 
-  Widget getListTile(BuildContext context,
+  Widget getListTile(BuildContext context, FirebaseFirestore firestore,
       {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
     String subtitleNests = hasNests() ? "Nests: " + nests!.join(", ") : "";
     String subtitleBirds = hasBirds() ? "Birds: " + birds!.join(", ") : "";
@@ -238,7 +282,10 @@ class Experiment implements FirestoreItem {
         subtitle: Text(subtitleNests + subtitleBirds,
             style: TextStyle(color: Colors.grey, fontSize: 12)),
         onTap: () {
-          showNestMap(context);
+          showDialog(
+              context: context,
+              builder: (BuildContext context) =>
+                  getDetailsDialog(context, firestore));
         },
         trailing: Row(
           mainAxisSize: MainAxisSize.min,

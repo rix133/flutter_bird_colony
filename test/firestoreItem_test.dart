@@ -190,5 +190,63 @@ void main() {
           test: false);
       expect(result, isNull);
     });
+
+    test('returns Excel object when testOnly is true from saveExcel', () async {
+      // Arrange
+      FSItemMixin mixin = FSItemMixin();
+      List<List<List<CellValue>>> sheets = [
+        [
+          [TextCellValue('Header1'), TextCellValue('Header2')],
+          [TextCellValue('Data1'), TextCellValue('Data2')]
+        ]
+      ];
+      List<String> types = ['TestType'];
+
+      // Act
+      var result = await mixin.saveAsExcel(sheets, types, testOnly: true);
+
+      // Assert
+      expect(result, isA<Excel>());
+      expect(result['TestType'], isNotNull);
+    });
+  });
+
+  group('Changelog download', () {
+    setUpAll(() async {
+      await nest1.save(firestore);
+      await egg.save(firestore);
+      await experiment.save(firestore);
+      await parent.save(firestore);
+      await chick.save(firestore);
+    });
+    final mixin = FSItemMixin();
+
+    test(
+        'downloadChangeLog returns sheets when test is true and type is experiments',
+        () async {
+      final result = await mixin.downloadChangeLog(
+          experiment.changeLog(firestore), 'experiments', firestore,
+          test: true);
+      expect(result, isNotNull);
+      expect(result, isA<List<List<List<CellValue>>>>());
+    });
+
+    test('downloadChangeLog returns sheets when test is true and type is nests',
+        () async {
+      final result = await mixin.downloadChangeLog(
+          nest1.changeLog(firestore), 'nests', firestore,
+          test: true);
+      expect(result, isNotNull);
+      expect(result, isA<List<List<List<CellValue>>>>());
+    });
+
+    test('downloadChangeLog returns sheets when test is true and type is bird',
+        () async {
+      final result = await mixin.downloadChangeLog(
+          chick.changeLog(firestore), 'bird', firestore,
+          test: true);
+      expect(result, isNotNull);
+      expect(result, isA<List<List<List<CellValue>>>>());
+    });
   });
 }

@@ -82,9 +82,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('25.0'), findsOneWidget);
 
+    Finder brm =
+        find.widgetWithText(SwitchListTile, 'Observer bias repeated measures');
+
     // Toggle biasedRepeatedMeasurements
-    await tester.tap(
-        find.widgetWithText(SwitchListTile, 'Observer bias repeated measures'));
+    await tester.ensureVisible(brm);
+    await tester.tap(brm);
     await tester.pumpAndSettle();
   });
 

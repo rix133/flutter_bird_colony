@@ -16,7 +16,7 @@ class Species implements FirestoreItem {
       this.latin,
       required this.latinCode,
       this.responsible,
-        this.last_modified,
+      this.last_modified,
       this.letters = ''});
 
   String? id;
@@ -34,6 +34,7 @@ class Species implements FirestoreItem {
       latinCode: '',
     );
   }
+
   factory Species.fromEnglish(String english) {
     return Species(
       english: english,
@@ -242,7 +243,8 @@ class Species implements FirestoreItem {
     return [];
   }
 
-  List<Widget> getSpeciesForm(BuildContext context, void Function(Function()) setState) {
+  List<Widget> getSpeciesForm(
+      BuildContext context, void Function(Function()) setState) {
     return [
       TextFormItem(
           label: 'English',
@@ -263,39 +265,84 @@ class Species implements FirestoreItem {
     ];
   }
 
-  Widget getListTile(BuildContext context,
+  getDetailsDialog(BuildContext context, FirebaseFirestore firestore) {
+    return AlertDialog(
+      title: Text('Species details'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('English: $english'),
+          Text('Local: $local'),
+          Text('Latin: ${latin ?? ''}'),
+          Text('Latin Code: $latinCode'),
+        ],
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text('close'),
+        ),
+        //download changelog Elevated icon button
+        ElevatedButton.icon(
+          key: Key("downloadChangelog"),
+          icon: Icon(Icons.download),
+          label: Text("Download changelog"),
+          onPressed: () async {
+            Navigator.pop(context);
+            await FSItemMixin().downloadChangeLog(
+                this.changeLog(firestore), "species", firestore);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget getListTile(BuildContext context, FirebaseFirestore firestore,
       {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
     return
       Container(
         padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
         child: ListTile(
-          title: Text(english +  (latin != null ? ' (' + latin! + ')' : '')),
-          subtitle: Text(local),
-          trailing:
-              IconButton(
-                icon: Icon(Icons.edit, color: Colors.black),
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
-                ),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/editSpecies', arguments: this);
-                },
-              ),
+        title: Text(english + (latin != null ? ' (' + latin! + ')' : '')),
+        subtitle: Text(local),
+        onTap: () {
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return getDetailsDialog(context, firestore);
+              });
+        },
+        trailing: IconButton(
+          icon: Icon(Icons.edit, color: Colors.black),
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
+          ),
+          onPressed: () {
+            Navigator.pushNamed(context, '/editSpecies', arguments: this);
+          },
         ),
+      ),
     );
   }
 
   @override
   Future<List<Species>> changeLog(FirebaseFirestore firestore) async {
-    return firestore
+    return (firestore
         .collection('settings')
         .doc('default')
         .collection('species')
         .doc(id)
         .collection('changeLog')
         .get()
-        .then((value) =>
-            value.docs.map((e) => Species.fromDocSnapshot(e)).toList());
+        .then((value) {
+      List<Species> speciesList =
+          value.docs.map((e) => Species.fromDocSnapshot(e)).toList();
+      speciesList.sort((a, b) => b.last_modified!.compareTo(
+          a.last_modified!)); // Sort by last_modified in descending order
+      return speciesList;
+    }));
   }
 }
 

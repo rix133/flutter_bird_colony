@@ -92,8 +92,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     return false;
   }
 
-  Marker getMarker(BuildContext context, bool visibility,
-      List<MarkerColorGroup> group) {
+  Marker getMarker(
+      BuildContext context, bool visibility, List<MarkerColorGroup> group) {
     //disable button if the nest is from another year
     bool disabled = DateTime.now().year != discover_date.year;
     return Marker(
@@ -124,11 +124,11 @@ class Nest extends ExperimentedItem implements FirestoreItem {
       int dayDiff = DateTime.now().difference(first_egg!).inDays;
       for (MarkerColorGroup group in groups) {
         if ((parents?.length ?? 0) < group.parents &&
-          dayDiff > group.minAge &&
-          dayDiff < group.maxAge &&
+            dayDiff > group.minAge &&
+            dayDiff < group.maxAge &&
             group.species == species) {
           return group.color;
-      }
+        }
       }
     }
 
@@ -166,8 +166,14 @@ class Nest extends ExperimentedItem implements FirestoreItem {
         .doc(id)
         .collection("changelog")
         .get()
-        .then((value) =>
-            value.docs.map((e) => Nest.fromDocSnapshot(e)).toList()));
+        .then((value) {
+      List<Nest> nests =
+          value.docs.map((e) => Nest.fromDocSnapshot(e)).toList();
+      nests.sort((a, b) => b.last_modified!.compareTo(a.last_modified!));
+      nests.insert(
+          0, this); // Add the new Nest object to the beginning of the list
+      return nests;
+    }));
   }
 
   @override
@@ -359,7 +365,56 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     };
   }
 
-  ListTile getListTile(BuildContext context,
+  getDetailsDialog(BuildContext context, FirebaseFirestore firestore) {
+    return AlertDialog(
+      backgroundColor: Colors.black87,
+      title: Text("Nest details"),
+      content: SingleChildScrollView(
+          child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("Accuracy: $accuracy"),
+          Text(
+              "Coordinates: ${coordinates.latitude}, ${coordinates.longitude}"),
+          Text("Species: $species"),
+          Text(
+              "Discover date: ${discover_date.toIso8601String().split("T")[0]}"),
+          Text("Responsible: $responsible"),
+          Text(
+              "Last modified: ${last_modified?.toIso8601String().split("T")[0]}"),
+          Text("Completed: ${completed ?? false}"),
+          Text(
+              "First egg: ${first_egg?.toIso8601String().split("T")[0] ?? ""}"),
+          Text("${checkedStr()}"),
+          Text(
+              "Experiments: ${experiments?.map((e) => e.name).join(", ") ?? ""}"),
+          Text("Parents: ${parents?.map((p) => p.name).join(", ") ?? ""}"),
+          Text("Measures: ${measures.map((e) => e.name).join(", ")}"),
+        ],
+      )),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text("close"),
+        ),
+        //download changelog Elevated icon button
+        ElevatedButton.icon(
+          key: Key("downloadChangelog"),
+          icon: Icon(Icons.download),
+          label: Text("Download changelog"),
+          onPressed: () async {
+            Navigator.pop(context);
+            await FSItemMixin().downloadChangeLog(
+                this.changeLog(firestore), "nest", firestore);
+          },
+        ),
+      ],
+    );
+  }
+
+  ListTile getListTile(BuildContext context, FirebaseFirestore firestore,
       {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
     return ListTile(
         title: Text('ID: $name, $species'),
@@ -401,32 +456,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
           showDialog(
             context: context,
             builder: (BuildContext context) {
-              return AlertDialog(
-                backgroundColor: Colors.black87,
-                title: Text("Nest details"),
-                content: Column(
-                  children: [
-                    Text("Accuracy: $accuracy"),
-                    Text(
-                        "Coordinates: ${coordinates.latitude}, ${coordinates.longitude}"),
-                    Text("Species: $species"),
-                    Text(
-                        "Discover date: ${discover_date.toIso8601String().split("T")[0]}"),
-                    Text("Responsible: $responsible"),
-                    Text(
-                        "Last modified: ${last_modified?.toIso8601String().split("T")[0]}"),
-                    Text("Completed: ${completed ?? false}"),
-                    Text(
-                        "First egg: ${first_egg?.toIso8601String().split("T")[0] ?? ""}"),
-                    Text("${checkedStr()}"),
-                    Text(
-                        "Experiments: ${experiments?.map((e) => e.name).join(", ") ?? ""}"),
-                    Text(
-                        "Parents: ${parents?.map((p) => p.name).join(", ") ?? ""}"),
-                    Text("Measures: ${measures.map((e) => e.name).join(", ")}"),
-                  ],
-                ),
-              );
+              return getDetailsDialog(context, firestore);
             },
           );
         });

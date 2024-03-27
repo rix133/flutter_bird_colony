@@ -297,7 +297,7 @@ class DefaultSettings implements FirestoreItem {
   }
 
   @override
-  Widget getListTile(BuildContext context,
+  Widget getListTile(BuildContext context, FirebaseFirestore firestore,
       {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
     throw UnimplementedError();
   }

@@ -93,5 +93,25 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Close'), findsNothing);
     });
+
+    testWidgets("will show alertdialog when listTile is tapped",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      //find the search input
+      await tester.tap(find.byType(ListTile).first);
+      await tester.pumpAndSettle();
+
+      //check if the list of birds is displayed
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      //expect the downloadChangelog button key to be present
+      expect(find.byKey(Key("downloadChangelog")), findsOneWidget);
+
+      //close the dialog
+      await tester.tap(find.text("close"));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+    });
   });
 }

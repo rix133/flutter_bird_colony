@@ -112,7 +112,51 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   String get description =>
       "Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)} $nestString, $species";
 
-  ListTile getListTile(BuildContext context,
+  getDetailsDialog(BuildContext context, FirebaseFirestore firestore) {
+    return AlertDialog(
+      backgroundColor: Colors.black87,
+      title: Text("Bird details"),
+      content: SingleChildScrollView(
+          child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("Band: $band"),
+          Text("Color band: ${color_band ?? "unknown"}"),
+          Text("Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)}"),
+          Text("Nest: ${nest ?? "unknown"}"),
+          Text("Species: ${species ?? "unknown"}"),
+          Text("Responsible: ${responsible ?? "unknown"}"),
+          Text("Age: ${age ?? "unknown"}"),
+          Text(
+              "Last modified: ${last_modified != null ? DateFormat('d MMM yyyy').format(last_modified!) : "unknown"}"),
+          Text("Egg: ${egg ?? "unknown"}"),
+          Text(
+              "Experiments: ${experiments?.map((e) => e.name).join(", ") ?? "unknown"}"),
+          Text("Measures: ${measures.map((e) => e.name).join(", ")}"),
+        ],
+      )),
+      actions: [
+        ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text("close")),
+        //download changelog Elevated icon button
+        ElevatedButton.icon(
+          key: Key("downloadChangelog"),
+          icon: Icon(Icons.download),
+          label: Text("Download changelog"),
+          onPressed: () async {
+            Navigator.pop(context);
+            await FSItemMixin().downloadChangeLog(
+                this.changeLog(firestore), "bird", firestore);
+          },
+        ),
+      ],
+    );
+  }
+
+  ListTile getListTile(BuildContext context, FirebaseFirestore firestore,
       {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
     return ListTile(
       title: Text(name + (color_band != null ? ' ($band)' : "")),
@@ -120,41 +164,17 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       trailing: IconButton(
         icon: Icon(Icons.edit, color: Colors.black87),
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all<Color>(Colors.grey)),
+            backgroundColor: MaterialStateProperty.all<Color>(Colors.grey)),
         onPressed: () {
-          Navigator.pushNamed(context, '/editBird',
-              arguments: {'bird': this});
+          Navigator.pushNamed(context, '/editBird', arguments: {'bird': this});
         },
       ),
       onTap: () {
-        showDialog(context: context, builder: (BuildContext context) {
-          return AlertDialog(
-            backgroundColor: Colors.black87,
-            title: Text("Bird details"),
-            content: Column(
-              children: [
-                Text("Band: $band"),
-                Text("Color band: ${color_band ?? "unknown"}"),
-                Text("Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)}"),
-                Text("Nest: ${nest ?? "unknown"}"),
-                Text("Species: ${species ?? "unknown"}"),
-                Text("Responsible: ${responsible ?? "unknown"}"),
-                Text("Age: ${age ?? "unknown"}"),
-                Text("Last modified: ${last_modified != null ? DateFormat('d MMM yyyy').format(last_modified!) : "unknown"}"),
-                Text("Egg: ${egg ?? "unknown"}"),
-                Text("Experiments: ${experiments?.map((e) => e.name).join(", ") ?? "unknown"}"),
-                Text("Measures: ${measures.map((e) => e.name).join(", ")}"),
-              ],
-            ),
-            actions: [
-              ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text("Close"))
-            ],
-          );
-        });
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return getDetailsDialog(context, firestore);
+            });
       },
     );
   }
@@ -167,7 +187,11 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         .collection("changelog")
         .get()
         .then((value) {
-      return value.docs.map((e) => Bird.fromDocSnapshot(e)).toList();
+      List<Bird> birdList =
+          value.docs.map((e) => Bird.fromDocSnapshot(e)).toList();
+      birdList.sort((a, b) => b.last_modified!.compareTo(
+          a.last_modified!)); // Sort by last_modified in descending order
+      return birdList;
     }));
   }
 

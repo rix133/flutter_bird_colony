@@ -97,6 +97,44 @@ class FSItemMixin {
     }
   }
 
+  Future<List<List<List<CellValue>>>?> downloadChangeLog(
+      Future<List<FirestoreItem>> items,
+      String type,
+      FirebaseFirestore firestore,
+      {DateTime? start,
+      bool test = false}) async {
+    if (type == "nest") {
+      List<String> types = ["nest"];
+      List<Nest> nests = await items as List<Nest>;
+
+      List<List<List<CellValue>>>? nestLog =
+          await downloadExcel(nests, type, firestore, start: start, test: true);
+      if (nestLog != null) {
+        Nest n = nests.first;
+        List<Egg> eggs = await n.eggs(firestore);
+        for (Egg e in eggs) {
+          List<List<List<CellValue>>>? eggLog = await downloadExcel(
+              [e], e.itemName, firestore,
+              start: start, test: true);
+          if (eggLog != null) {
+            nestLog.addAll(eggLog);
+            types.add(e.itemName);
+          }
+        }
+        if (!test) {
+          return await saveAsExcel(nestLog, types);
+        } else {
+          return nestLog;
+        }
+      } else {
+        return null;
+      }
+    } else {
+      return downloadExcel(await items, type, firestore,
+          start: start, test: test);
+    }
+  }
+
   Future<List<List<List<CellValue>>>?> downloadExcel(
       List<FirestoreItem> items, String type, FirebaseFirestore firestore,
       {DateTime? start, bool test = false}) async {
@@ -179,9 +217,9 @@ class FSItemMixin {
     }
   }
 
-  saveAsExcel(List<List<List<CellValue>>> sheets, List<String> types) async {
-    String fName =
-        types.join("_") + "_" + DateTime.now().toIso8601String() + ".xlsx";
+  Future<dynamic> saveAsExcel(
+      List<List<List<CellValue>>> sheets, List<String> types,
+      {bool testOnly = false}) async {
     Excel excel = Excel.createExcel(); // Create a new Excel file
     for (int i = 0; i < sheets.length; i++) {
       String type = types[i];
@@ -211,6 +249,16 @@ class FSItemMixin {
     }
     excel.setDefaultSheet(types[0]);
 
+    if (testOnly) {
+      return excel;
+    }
+    return (saveAndShareExcelFile(types, excel));
+  }
+
+  Future<void> saveAndShareExcelFile(List<String> types, Excel excel) async {
+    String fName =
+        types.join("_") + "_" + DateTime.now().toIso8601String() + ".xlsx";
+
     if (!kIsWeb) {
       // If the platform is not web
       final directory = await getTemporaryDirectory();
@@ -229,10 +277,12 @@ class FSItemMixin {
                 'Sharing ${types.join(", ")} file from Kakrarahu app. Downloaded on ${DateTime.now().toIso8601String()}');
         //delete the file from local storage
         saveFile.delete();
+        return;
       }
     } else {
       // If the platform is web
       excel.save(fileName: fName);
+      return;
     }
   }
 }

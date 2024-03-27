@@ -148,6 +148,23 @@ void main() {
     );
   });
 
+  testWidgets("will show alertdialog when listTile is tapped",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the search input
+    await tester.tap(find.byType(ListTile).first);
+    await tester.pumpAndSettle();
+
+    //check if the list of birds is displayed
+    expect(find.byType(AlertDialog), findsOneWidget);
+
+    //close the dialog
+    await tester.tap(find.text("close"));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+  });
+
   testWidgets('List experiments loads', (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();

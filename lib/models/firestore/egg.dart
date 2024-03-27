@@ -55,8 +55,13 @@ class Egg extends ExperimentedItem implements FirestoreItem {
         .doc(id)
         .collection("changelog")
         .get()
-        .then(
-            (value) => value.docs.map((e) => Egg.fromDocSnapshot(e)).toList()));
+        .then((value) {
+      List<Egg> eggList =
+          value.docs.map((e) => Egg.fromDocSnapshot(e)).toList();
+      eggList.sort((a, b) => b.last_modified!.compareTo(
+          a.last_modified!)); // Sort by last_modified in descending order
+      return eggList;
+    }));
   }
 
   @override
@@ -265,7 +270,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   }
 
   @override
-  Widget getListTile(BuildContext context,
+  Widget getListTile(BuildContext context, FirebaseFirestore firestore,
       {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
     return ListTile(
       title: Text(name),
