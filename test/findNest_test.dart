@@ -151,6 +151,46 @@ void main() {
     expect(find.byType(FindNest), findsOneWidget);
   });
 
+  testWidgets("Can go to modify nest page through search and delete nest",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    //find the find nest button on homepage
+    await tester.tap(find.text("find nest"));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), '1');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text("Find nest"));
+    await tester.pumpAndSettle();
+
+    //check if routed to nestManage
+    expect(find.byType(EditNest), findsOneWidget);
+
+    //delete the nest
+    await tester.tap(find.byKey(Key("deleteButton")));
+    await tester.pumpAndSettle();
+
+    //find the AlertDialog
+    expect(find.byType(AlertDialog), findsOneWidget);
+
+    //find the delete  button
+    await tester.tap(find.text("Delete"));
+    await tester.pumpAndSettle();
+
+    //check firestore nest deletion
+    var nestDoc = await firestore
+        .collection(DateTime.now().year.toString())
+        .doc(nest.id)
+        .get();
+    expect(nestDoc.exists, false);
+
+    //expect to be back in the find nest page
+    expect(find.byType(FindNest), findsOneWidget);
+  });
+
   testWidgets("FindNest: search for a nest that does not exist", (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
