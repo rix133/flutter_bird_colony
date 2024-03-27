@@ -7,6 +7,7 @@ import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
+import '../../services/sharedPreferencesService.dart';
 import '../markerColorGroup.dart';
 import 'bird.dart';
 import 'nest.dart';
@@ -186,6 +187,17 @@ class Experiment implements FirestoreItem {
     );
   }
 
+  @override
+  Future<List<Experiment>> changeLog(FirebaseFirestore firestore) async {
+    return firestore
+        .collection('experiments')
+        .doc(id)
+        .collection('changeLog')
+        .get()
+        .then((value) =>
+            value.docs.map((e) => Experiment.fromDocSnapshot(e)).toList());
+  }
+
   gotoNest(String nest, BuildContext context) {
     return () => {
           Navigator.pushNamed(context, '/editNest',
@@ -193,8 +205,9 @@ class Experiment implements FirestoreItem {
         };
   }
 
-  UpdateResult validate({List<FirestoreItem> otherItems = const []}) {
-    return UpdateResult.validateOK();
+  List<UpdateResult> validate(SharedPreferencesService? sps,
+      {List<FirestoreItem> otherItems = const []}) {
+    return [];
   }
 
   gotoBird(String bird, BuildContext context) {

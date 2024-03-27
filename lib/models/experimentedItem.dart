@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:excel/excel.dart';
 import 'package:kakrarahu/models/firestore/experiment.dart';
 import 'package:kakrarahu/models/updateResult.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
 
 import 'firestore/firestoreItem.dart';
 import 'measure.dart';
@@ -30,27 +31,28 @@ class ExperimentedItem{
     }
   }
 
-  UpdateResult validate({List<FirestoreItem> otherItems = const []}) {
+  List<UpdateResult> validate(SharedPreferencesService? sps,
+      {List<FirestoreItem> otherItems = const []}) {
+    List<UpdateResult> results = [];
     if (otherItems.isNotEmpty) {
       //check if there are any other items that cant pass validation
       for (FirestoreItem item in otherItems) {
-        UpdateResult result = item.validate();
-        if (!result.success) {
-          return result;
-        }
+        List<UpdateResult> subResult = item.validate(sps);
+        results.addAll(subResult);
       }
     }
     if (measures.isNotEmpty) {
       for (Measure m in measures) {
         //get the name of the item
         if (m.isInvalid()) {
-          return UpdateResult.error(
+          UpdateResult err = UpdateResult.error(
               message:
                   "Measure ${m.name} on $itemName is required but not filled in!");
+          results.add(err);
         }
       }
     }
-    return UpdateResult.validateOK();
+    return results;
   }
 
   void dispose(){

@@ -120,7 +120,6 @@ class _MapNestsState extends State<MapNests> {
     } else {
       nestsToShow = nests;
     }
-
     markersToShow.value = nestsToShow
         .map((e) => e.getMarker(context, true, sps?.markerColorGroups ?? []))
         .toSet();
@@ -151,7 +150,6 @@ class _MapNestsState extends State<MapNests> {
         nests.removeWhere((element) => element.id == snap.id);
       }
     });
-    print(bigFilter);
     updateMarkersToShow();
   }
 

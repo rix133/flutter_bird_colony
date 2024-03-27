@@ -159,6 +159,18 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     );
   }
 
+  @override
+  Future<List<Bird>> changeLog(FirebaseFirestore firestore) async {
+    return (firestore
+        .collection("Birds")
+        .doc(band)
+        .collection("changelog")
+        .get()
+        .then((value) {
+      return value.docs.map((e) => Bird.fromDocSnapshot(e)).toList();
+    }));
+  }
+
   bool seenThisYear(bool chick) {
     if (chick || last_modified == null) {
       return this.ringed_date.year == DateTime.now().year;

@@ -68,6 +68,53 @@ void main() {
       expect(list.species[1].english, 'European Herring Gull');
     });
 
+    test('name should return local name when it is not empty', () {
+      final species = Species(
+        english: 'Test English',
+        local: 'Test Local',
+        latin: 'Test Latin',
+        latinCode: 'T',
+        responsible: 'Test Responsible',
+        letters: 'Test Letters',
+      );
+
+      expect(species.name, 'Test Local');
+    });
+
+    test('name should return english name when local name is empty', () {
+      final species = Species(
+        english: 'Test English',
+        local: '',
+        latin: 'Test Latin',
+        latinCode: 'T',
+        responsible: 'Test Responsible',
+        letters: 'Test Letters',
+      );
+
+      expect(species.name, 'Test English');
+    });
+
+    test('copy should return a new instance with the same properties', () {
+      final species = Species(
+        english: 'Test English',
+        local: 'Test Local',
+        latin: 'Test Latin',
+        latinCode: 'T',
+        responsible: 'Test Responsible',
+        letters: 'Test Letters',
+      );
+
+      final copy = species.copy();
+
+      expect(copy, isNot(same(species)));
+      expect(copy.english, species.english);
+      expect(copy.local, species.local);
+      expect(copy.latin, species.latin);
+      expect(copy.latinCode, species.latinCode);
+      expect(copy.responsible, species.responsible);
+      expect(copy.letters, species.letters);
+    });
+
     test('Get species by english name', () {
       var speciesList = [
         Species.fromEnglish('Common Gull'),

@@ -149,6 +149,18 @@ class DefaultSettings implements FirestoreItem {
   }
 
   @override
+  Future<List<DefaultSettings>> changeLog(FirebaseFirestore firestore) async {
+    return (firestore
+        .collection('settings')
+        .doc(id)
+        .collection('changeLog')
+        .get()
+        .then((value) => value.docs
+            .map((e) => DefaultSettings.fromDocSnapshot(e))
+            .toList()));
+  }
+
+  @override
   List<TextCellValue> toExcelRowHeader() {
     return [
       TextCellValue('Desired accuracy'),
@@ -279,19 +291,14 @@ class DefaultSettings implements FirestoreItem {
     ]);
   }
 
-  UpdateResult validate({List<FirestoreItem> otherItems = const []}) {
-    return UpdateResult.validateOK();
+  List<UpdateResult> validate(SharedPreferencesService? sps,
+      {List<FirestoreItem> otherItems = const []}) {
+    return [];
   }
 
   @override
   Widget getListTile(BuildContext context,
       {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
-    return ListTile(
-      title: Text(name),
-      subtitle: Text('Default settings'),
-      onTap: () {
-        Navigator.pushNamed(context, '/editDefaultSettings', arguments: this);
-      },
-    );
+    throw UnimplementedError();
   }
 }

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:kakrarahu/models/updateResult.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
 
 import '../markerColorGroup.dart';
 
@@ -21,9 +22,12 @@ abstract class FirestoreItem{
     throw UnimplementedError('fromDocSnapshot() must be implemented in subclasses');
   }
 
+  Future<List<FirestoreItem>> changeLog(FirebaseFirestore firestore);
+
   FirestoreItem copy();
 
-  UpdateResult validate({List<FirestoreItem> otherItems = const []});
+  List<UpdateResult> validate(SharedPreferencesService? sps,
+      {List<FirestoreItem> otherItems = const []});
 
   Future <UpdateResult> save(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"});
 

@@ -94,7 +94,7 @@ void main() {
     nest = Nest(
       id: "1",
       coordinates: GeoPoint(0, 0),
-      accuracy: "12.22m",
+      accuracy: "2.22m",
       last_modified: DateTime.now().subtract(Duration(days: 1)),
       discover_date: DateTime.now().subtract(Duration(days: 2)),
       first_egg: DateTime.now().subtract(Duration(days: 2)),

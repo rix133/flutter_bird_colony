@@ -12,6 +12,8 @@ import 'package:kakrarahu/models/markerColorGroup.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/models/updateResult.dart';
 
+import '../../services/sharedPreferencesService.dart';
+
 class Nest extends ExperimentedItem implements FirestoreItem {
   String? id;
   String accuracy;
@@ -99,10 +101,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
             title: id,
             onTap: disabled
                 ? null
-                : () => Navigator.pushNamed(context, '/editNest', arguments: {
-                      "nest_id": id,
-                      "year": discover_date.year.toString()
-                    })),
+                : () => Navigator.pushNamed(context, '/editNest',
+                    arguments: {"nest": this})),
         consumeTapEvents: false,
         visible: visibility,
         markerId: MarkerId(id!),
@@ -140,9 +140,34 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     return BitmapDescriptor.hueOrange;
   }
 
+  @override
+  List<UpdateResult> validate(SharedPreferencesService? sps,
+      {List<FirestoreItem> otherItems = const []}) {
+    List<UpdateResult> results = [];
+    //if nest location is inaccurate raise a warning
+    if (getAccuracy() > (sps?.desiredAccuracy ?? 10.0)) {
+      results.add(UpdateResult.error(
+          message: "Nest location accuracy is over ${sps?.desiredAccuracy} m"));
+    }
+    results.addAll(super.validate(sps, otherItems: otherItems));
+
+    return results;
+  }
+
   checkedToday() {
     return last_modified?.toIso8601String().split("T")[0] ==
         DateTime.now().toIso8601String().split("T")[0];
+  }
+
+  @override
+  Future<List<Nest>> changeLog(FirebaseFirestore firestore) async {
+    return (firestore
+        .collection(discover_date.year.toString())
+        .doc(id)
+        .collection("changelog")
+        .get()
+        .then((value) =>
+            value.docs.map((e) => Nest.fromDocSnapshot(e)).toList()));
   }
 
   @override

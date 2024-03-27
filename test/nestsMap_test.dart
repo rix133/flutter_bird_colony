@@ -8,6 +8,7 @@ import 'package:kakrarahu/models/firestore/nest.dart';
 import 'package:kakrarahu/models/measure.dart';
 import 'package:kakrarahu/screens/homepage.dart';
 import 'package:kakrarahu/screens/nest/createNest.dart';
+import 'package:kakrarahu/screens/nest/editNest.dart';
 import 'package:kakrarahu/screens/nest/mapNests.dart';
 import 'package:kakrarahu/services/authService.dart';
 import 'package:kakrarahu/services/locationService.dart';
@@ -29,8 +30,8 @@ void main() {
   final Nest nest = Nest(
     id: "1",
     coordinates: GeoPoint(58.766218, 23.430432),
-    accuracy: "12.22m",
-    last_modified: DateTime.now(),
+    accuracy: "3.22m",
+    last_modified: DateTime.now().subtract(Duration(days: 5)),
     discover_date: DateTime.now(),
     responsible: "Admin",
     species: "Common gull",
@@ -61,6 +62,13 @@ void main() {
               settings: RouteSettings(
                 arguments: nest, // get initial nest from firestore
               ),
+            );
+          } else if (settings.name == '/editNest') {
+            return MaterialPageRoute(
+              builder: (context) => EditNest(
+                firestore: firestore,
+              ),
+              settings: settings, // get nest from settings
             );
           } else if (settings.name == '/mapNests') {
             return MaterialPageRoute(
@@ -163,6 +171,43 @@ void main() {
     expect(find.byType(AlertDialog), findsNothing);
   });
 
+  testWidgets("can search for nest 2", (WidgetTester tester) async {
+    myApp = getInitApp(null);
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    var mapFinder = find.byType(GoogleMap);
+    expect(mapFinder, findsOneWidget);
+
+    GoogleMap g = mapFinder.first.evaluate().first.widget as GoogleMap;
+
+    expect(g.markers.length, 1);
+
+    // Find the FloatingActionButton with the "search" hero tag and tap it
+    Finder searchButton = find.byWidgetPredicate(
+      (Widget widget) =>
+          widget is FloatingActionButton && widget.heroTag == "search",
+    );
+    await tester.tap(searchButton);
+    await tester.pumpAndSettle();
+
+    // Check if an AlertDialog is present in the widget tree
+    expect(find.byType(AlertDialog), findsOneWidget);
+
+    // Find the TextFormField within the AlertDialog and simulate the "done" action
+    Finder searchField = find.byType(TextFormField);
+    await tester.showKeyboard(searchField);
+    await tester.enterText(searchField, "2");
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    g = mapFinder.first.evaluate().first.widget as GoogleMap;
+    expect(g.markers.length, 0);
+
+    // Check if the AlertDialog is no longer present in the widget tree
+    expect(find.byType(AlertDialog), findsNothing);
+  });
+
   testWidgets("can update location", (WidgetTester tester) async {
     myApp = getInitApp(null);
     await tester.pumpWidget(myApp);
@@ -190,13 +235,89 @@ void main() {
     expect(g.markers.length, 1);
   });
 
+  testWidgets("will go to nest when marker is tapped ",
+      (WidgetTester tester) async {
+    myApp = getInitApp({
+      "nest_ids": ["1"]
+    });
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    expect(find.byType(MapNests), findsOneWidget);
+
+    var mapFinder = find.byType(GoogleMap);
+    expect(mapFinder, findsOneWidget);
+
+    GoogleMap g = mapFinder.first.evaluate().first.widget as GoogleMap;
+
+    expect(g.markers.length, 1);
+    //tap the first marker
+    g.markers.first.infoWindow.onTap!();
+    await tester.pumpAndSettle();
+
+    //fid the text 1 and tap it
+    expect(find.text("1"), findsOneWidget);
+    await tester.tap(find.text("1"));
+    await tester.pumpAndSettle();
+    //expect to be on EditNest page
+    expect(find.byType(EditNest), findsOneWidget);
+  });
+
+  testWidgets("will get back from nest when marker is tapped and nest is saved",
+      (WidgetTester tester) async {
+    myApp = getInitApp({
+      "nest_ids": ["1"]
+    });
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    expect(find.byType(MapNests), findsOneWidget);
+
+    var mapFinder = find.byType(GoogleMap);
+    expect(mapFinder, findsOneWidget);
+
+    GoogleMap g = mapFinder.first.evaluate().first.widget as GoogleMap;
+
+    expect(g.markers.length, 1);
+    //tap the first marker
+    g.markers.first.infoWindow.onTap!();
+    await tester.pumpAndSettle();
+
+    //fid the text 1 and tap it
+    expect(find.text("1"), findsOneWidget);
+    await tester.tap(find.text("1"));
+    await tester.pumpAndSettle();
+    //expect to be on EditNest page
+    expect(find.byType(EditNest), findsOneWidget);
+
+    //find the save button and tap it
+    Finder saveButton = find.byKey(Key("saveButton"));
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+    //expect to be on MapNests page
+    expect(find.byType(MapNests), findsOneWidget);
+
+    g = mapFinder.first.evaluate().first.widget as GoogleMap;
+
+    expect(g.markers.length, 1);
+    //tap the first marker
+    g.markers.first.infoWindow.onTap!();
+    await tester.pumpAndSettle();
+    expect(find.text("1"), findsOneWidget);
+
+    // can go back to nest again issue https://github.com/rix133/flutter_bird_colony/issues/77
+    expect(find.text("1"), findsOneWidget);
+    await tester.tap(find.text("1"));
+    await tester.pumpAndSettle();
+    //expect to be on EditNest page
+    expect(find.byType(EditNest), findsOneWidget);
+  });
+
   testWidgets("will show markers of different year",
       (WidgetTester tester) async {
     DateTime then = DateTime.now().subtract(Duration(days: 365));
     Nest nest2 = Nest(
       id: "2",
       coordinates: GeoPoint(58.766218, 23.430432),
-      accuracy: "12.22m",
+      accuracy: "3.22m",
       last_modified: then,
       discover_date: then,
       responsible: "Admin",
@@ -220,5 +341,53 @@ void main() {
     GoogleMap g = mapFinder.first.evaluate().first.widget as GoogleMap;
 
     expect(g.markers.length, 1);
+    expect(g.markers.first.markerId.value, "2");
+  });
+
+  testWidgets("will remove a nest marker when firestore is updated",
+      (WidgetTester tester) async {
+    myApp = getInitApp(null);
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    expect(find.byType(MapNests), findsOneWidget);
+
+    var mapFinder = find.byType(GoogleMap);
+    expect(mapFinder, findsOneWidget);
+
+    GoogleMap g = mapFinder.first.evaluate().first.widget as GoogleMap;
+
+    expect(g.markers.length, 1);
+    //remove the nest from firestore
+    await nests.doc("1").delete();
+    await tester.pumpAndSettle();
+
+    g = mapFinder.first.evaluate().first.widget as GoogleMap;
+    expect(g.markers.length, 0);
+  });
+  testWidgets("will update a nest marker when firestore is updated",
+      (WidgetTester tester) async {
+    myApp = getInitApp(null);
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    expect(find.byType(MapNests), findsOneWidget);
+
+    var mapFinder = find.byType(GoogleMap);
+    expect(mapFinder, findsOneWidget);
+
+    GoogleMap g = mapFinder.first.evaluate().first.widget as GoogleMap;
+
+    expect(g.markers.length, 1);
+    expect(
+        ((g.markers.first.icon.toJson() as List))[1], BitmapDescriptor.hueRed);
+    //remove the nest from firestore
+    await nests.doc("1").update({"last_modified": DateTime.now()});
+    await tester.pumpAndSettle();
+
+    g = mapFinder.first.evaluate().first.widget as GoogleMap;
+    expect(g.markers.length, 1);
+    //expect marker color to ber huegreen
+    //print(((g.markers.first.icon.toJson() as List)));
+    expect(((g.markers.first.icon.toJson() as List))[1],
+        BitmapDescriptor.hueGreen);
   });
 }

@@ -98,7 +98,6 @@ class _EditNestState extends State<EditNest> {
       speciesList = sps.speciesList;
       if (data["year"] != null) {
         nests = widget.firestore.collection(data["year"].toString());
-        print(data);
       }
       if(data["nest_id"] != null) {
         nests?.doc(data["nest_id"]).get().then((value) {

@@ -56,6 +56,10 @@ class MockAuthService extends Mock implements AuthService {
         email: email, password: password!);
   }
 
+  Future<void> sendPasswordResetEmail(String email) {
+    return Future.value();
+  }
+
   Future<UserCredential> signInWithEmailAndPassword(
       {String? email, String? password}) {
     if (email == "admin@example.com" || email == "a" || email == null) {

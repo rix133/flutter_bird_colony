@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kakrarahu/models/firestore/defaultSettings.dart';
 import 'package:kakrarahu/models/firestore/species.dart';
 import 'package:kakrarahu/models/markerColorGroup.dart';
+import 'package:kakrarahu/models/measure.dart';
 
 void main() {
   group('DefaultSettings', () {
@@ -74,6 +75,53 @@ void main() {
       expect(savedSettings.markerColorGroups.first.name, 'parent trapping');
     });
 
+    test('copy should return a new instance with the same properties', () {
+      final settings = DefaultSettings(
+        desiredAccuracy: 5.0,
+        selectedYear: 2022,
+        autoNextBand: true,
+        autoNextBandParent: true,
+        defaultLocation: GeoPoint(58.766218, 23.430432),
+        biasedRepeatedMeasurements: true,
+        measures: [],
+        defaultSpecies: Species(english: 'Test', latinCode: 'T', local: 'Test'),
+        markerColorGroups: [],
+      );
+
+      final copy = settings.copy();
+
+      expect(copy, isNot(same(settings)));
+      expect(copy.desiredAccuracy, settings.desiredAccuracy);
+      expect(copy.selectedYear, settings.selectedYear);
+      expect(copy.autoNextBand, settings.autoNextBand);
+      expect(copy.autoNextBandParent, settings.autoNextBandParent);
+      expect(copy.defaultLocation, settings.defaultLocation);
+      expect(
+          copy.biasedRepeatedMeasurements, settings.biasedRepeatedMeasurements);
+      expect(copy.defaultSpecies.english, settings.defaultSpecies.english);
+      expect(copy.markerColorGroups, isEmpty);
+    });
+
+    test('copy should return a new instance with the same list items', () {
+      final settings = DefaultSettings(
+        desiredAccuracy: 5.0,
+        selectedYear: 2022,
+        autoNextBand: true,
+        autoNextBandParent: true,
+        defaultLocation: GeoPoint(58.766218, 23.430432),
+        biasedRepeatedMeasurements: true,
+        measures: [Measure.note()],
+        defaultSpecies: Species(english: 'Test', latinCode: 'T', local: 'Test'),
+        markerColorGroups: [MarkerColorGroup.magenta('Test')],
+      );
+
+      final copy = settings.copy();
+
+      expect(copy.measures[0], isNot(same(settings.measures[0])));
+      expect(copy.markerColorGroups[0],
+          isNot(same(settings.markerColorGroups[0])));
+    });
+
     test('deletes instance from firestore', () async {
       final settings = DefaultSettings(
         id: 'test',
@@ -92,6 +140,23 @@ void main() {
 
       var item = await mockFirestore.collection('settings').doc('test').get();
       expect(item.exists, false);
+    });
+
+    test('delete does nothing to no id instance', () async {
+      final settings = DefaultSettings(
+        id: null,
+        desiredAccuracy: 5.0,
+        selectedYear: 2022,
+        autoNextBand: true,
+        autoNextBandParent: true,
+        defaultLocation: GeoPoint(58.766218, 23.430432),
+        biasedRepeatedMeasurements: true,
+        measures: [],
+        markerColorGroups: [],
+        defaultSpecies: Species(english: 'Test', latinCode: 'T', local: 'Test'),
+      );
+      var res = await settings.delete(mockFirestore);
+      expect(res.success, true);
     });
   });
 }

@@ -36,7 +36,8 @@ class ModifyingButtons extends StatefulWidget {
 }
 
 class _ModifyingButtonsState extends State<ModifyingButtons> {
-  UpdateResult ur = UpdateResult(success: false, message: "", type: "empty");
+  UpdateResult ur = UpdateResult.error(message: "uninitialized");
+  List<UpdateResult> urs = [];
   late FirestoreItem item;
   bool _isLoading = false;
   SharedPreferencesService? sps;
@@ -58,10 +59,9 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
     bool doValidate = validate;
     bool doOverwrite = allowOverwrite;
     if (validate) {
-      ur = item.validate(otherItems: otherFSItems);
-      if (!ur.success) {
-        showAlertDialog(
-            superContext, "Validation failed. " + ur.message, saveItem,
+      urs = item.validate(sps, otherItems: otherFSItems);
+      if (urs.isNotEmpty) {
+        showAlertDialog(superContext, "Validation failed", urs, saveItem,
             validate: false,
             btnString: "save anyway",
             allowOverwrite: doOverwrite);
@@ -81,10 +81,9 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
         _isLoading = false;
       });
       showAlertDialog(
-          superContext,
-          "Item could not be saved." +
-              ur.message +
-              " Do you want to try to overwrite?",
+          context,
+          "Item could not be saved. Do you want to try to overwrite?",
+          [ur],
           saveItem,
           allowOverwrite: true,
           btnString: "Overwrite",
@@ -94,7 +93,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
       if (widget.onSaveOK != null) {
         widget.onSaveOK!();
       } else {
-        Navigator.pop(superContext);
+        Navigator.pop(context);
       }
     }
   }
@@ -134,8 +133,8 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                   _isLoading = false;
                 });
                 Navigator.pop(context);
-                showAlertDialog(superContext,
-                    "Item could not be deleted. " + ur.message, close,
+                showAlertDialog(
+                    context, "Item could not be deleted.", [ur], close,
                     btnString: "OK");
               } else {
                 setState(() {
@@ -144,7 +143,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                 if (widget.onDeleteOK != null) {
                   widget.onDeleteOK!();
                 } else {
-                  Navigator.pop(superContext);
+                  Navigator.pop(context);
                 }
               }
             },
@@ -155,17 +154,24 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
     );
   }
 
-  void showAlertDialog(BuildContext context, String message, Function action,
+  void showAlertDialog(BuildContext context, String message,
+      List<UpdateResult> errors, Function action,
       {bool allowOverwrite = false,
       String btnString = "Retry",
       bool validate = true}) {
+    int errCount = errors.length;
+    String mainMessage =
+        errCount == 1 ? message : message + " ($errCount errors)";
     showDialog(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         backgroundColor: Colors.black87,
         titleTextStyle: TextStyle(color: Colors.red),
-        title: Text("Error"),
-        content: Text(message),
+        title: Text("Problem(s)"),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(mainMessage, style: TextStyle(color: Colors.redAccent)),
+          ...errors.map((e) => Text(e.message)).toList(),
+        ]),
         actions: <Widget>[
           TextButton(
             style: ButtonStyle(

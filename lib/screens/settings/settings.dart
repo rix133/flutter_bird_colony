@@ -59,7 +59,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<String> _addUserByEmail() async {
     String email = '';
     String? warning;
-    await showDialog(
+    return await showDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
@@ -70,6 +70,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
+                    key: Key('newUserEmailTextField'),
                     style: TextStyle(color: Colors.black),
                     decoration: InputDecoration(hintText: 'Email', hintStyle: TextStyle(color: Colors.deepPurpleAccent)),
                     onChanged: (value) {
@@ -87,24 +88,28 @@ class _SettingsPageState extends State<SettingsPage> {
                 TextButton(
                   onPressed: () {
                     email = '';
-                    Navigator.pop(context);
+                    Navigator.pop(context, email);
                   },
                   child: Text('Cancel'),
                 ),
                 TextButton(
-                  onPressed: () {
+                  key: Key('saveNewUserButton'),
+                  onPressed: () async {
                     if (email.isNotEmpty &&
                         !_allowedUsers.contains(email) &&
                         RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9_%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$").hasMatch(email)) {
-                      widget.firestore.collection('users').doc(email).set({'isAdmin': false});
-                      Navigator.pop(context);
+                      await widget.firestore
+                          .collection('users')
+                          .doc(email)
+                          .set({'isAdmin': false});
+                      Navigator.pop(context, email);
                     } else {
                       setState(() {
                         warning = 'Invalid email or already added';
                       });
                     }
                   },
-                  child: Text('OK'),
+                  child: Text('Add user'),
                 ),
               ],
             );
@@ -112,7 +117,6 @@ class _SettingsPageState extends State<SettingsPage> {
         );
       },
     );
-    return email;
   }
 
   _goToEditSpecies() {
@@ -138,7 +142,8 @@ class _SettingsPageState extends State<SettingsPage> {
         ..._allowedUsers.map((e) => Text(e)),
         SizedBox(height: 20),
         ElevatedButton.icon(
-          onPressed: () async {
+                key: Key('addUserButton'),
+                onPressed: () async {
             await _addUserByEmail().then((value) {
               if (value.isNotEmpty) {
                 _allowedUsers.add(value);
@@ -224,11 +229,23 @@ class _SettingsPageState extends State<SettingsPage> {
               title: Text('Wrong password', style: TextStyle(color: Colors.red)),
               content: Text('Wrong password provided for that user.', style: TextStyle(color: Colors.black),),
               actions: [
+                _userEmail == null
+                    ? Container()
+                    : TextButton(
+                        onPressed: (_userEmail?.isEmpty ?? true)
+                            ? null
+                            : () {
+                                Navigator.pop(context);
+                                AuthService.instance
+                                    .sendPasswordResetEmail(_userEmail ?? '');
+                              },
+                        child: Text('Reset password'),
+                      ),
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  child: Text('OK'),
+                  child: Text('Try again'),
                 ),
               ],
             );
@@ -431,20 +448,25 @@ class _SettingsPageState extends State<SettingsPage> {
                     decoration: InputDecoration(hintText: 'Email', hintStyle: TextStyle(color: Colors.deepPurpleAccent)),
                     onChanged: (value) {
                       _userEmail = value;
-                    },
+                              setState(() {});
+                            },
                   ),
                   TextField(
                     style: TextStyle(color: Colors.black),
                     decoration: InputDecoration(hintText: 'Password', hintStyle: TextStyle(color: Colors.deepPurpleAccent)),
                     onChanged: (value) {
                       _userPassword = value;
-                    },
+                              setState(() {});
+                            },
                   ),
                   SizedBox(height: 10),
                   ElevatedButton.icon(
                     key: Key('loginButton'),
-                    onPressed: () async {
-                      setState(() {
+                            onPressed: ((_userEmail?.isEmpty ?? true) &&
+                                    (_userPassword?.isEmpty ?? true))
+                                ? null
+                                : () async {
+                                    setState(() {
                         _disable = true;
                       });
                       await _login('existingEmail');
@@ -483,10 +505,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   value: sps?.autoNextBand ?? false,
                   onChanged: (value) {
                     sps?.autoNextBand = value;
-                    setState(() {
-
-              });
-            },
+                    setState(() {});
+                  },
           ),
         ],
       ),

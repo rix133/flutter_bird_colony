@@ -19,7 +19,17 @@ class MockLocationAccuracy10 extends Mock implements LocationService {
   }
 
   Future<Position> getCurrentPosition({LocationAccuracy desiredAccuracy = LocationAccuracy.best, bool forceAndroidLocationManager = false}) {
-    return Future.value(Position(latitude: 58.888888, longitude: 23.888888, accuracy: 5.0, altitude: 0.0, heading: 0.0, speed: 0.0, speedAccuracy: 0.0, timestamp: DateTime.now(), altitudeAccuracy: 0.0, headingAccuracy: 0.0));
+    return Future.value(Position(
+        latitude: 58.888888,
+        longitude: 23.888888,
+        accuracy: 3.2,
+        altitude: 0.0,
+        heading: 0.0,
+        speed: 0.0,
+        speedAccuracy: 0.0,
+        timestamp: DateTime.now(),
+        altitudeAccuracy: 0.0,
+        headingAccuracy: 0.0));
   }
 }
 

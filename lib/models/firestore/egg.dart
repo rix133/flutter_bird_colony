@@ -7,6 +7,7 @@ import 'package:kakrarahu/models/firestore/firestoreItem.dart';
 import 'package:kakrarahu/models/firestore/nest.dart';
 import 'package:kakrarahu/models/firestoreItemMixin.dart';
 import 'package:kakrarahu/models/updateResult.dart';
+import 'package:kakrarahu/services/sharedPreferencesService.dart';
 
 import '../experimentedItem.dart';
 import '../markerColorGroup.dart';
@@ -35,32 +36,27 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   }
 
   @override
-  UpdateResult validate({List<FirestoreItem> otherItems = const []}) {
+  List<UpdateResult> validate(SharedPreferencesService? sps,
+      {List<FirestoreItem> otherItems = const []}) {
     //if egg is broken or missing, no need to validate
     if (!status.canMeasure) {
-      return UpdateResult.validateOK();
+      return [];
     }
 
-    if (otherItems.isNotEmpty) {
-      //check if there are any other items that must pass validation
-      for (FirestoreItem item in otherItems) {
-        UpdateResult result = item.validate();
-        if (!result.success) {
-          return result;
-        }
-      }
-    }
-    if (measures.isNotEmpty) {
-      for (Measure m in measures) {
-        //get the name of the item
-        if (m.isInvalid()) {
-          return UpdateResult.error(
-              message:
-                  "Measure ${m.name} on $itemName is required but not filled in!");
-        }
-      }
-    }
-    return UpdateResult.validateOK();
+    return super.validate(sps, otherItems: otherItems);
+  }
+
+  @override
+  Future<List<Egg>> changeLog(FirebaseFirestore firestore) async {
+    return (firestore
+        .collection(discover_date.year.toString())
+        .doc(getNest())
+        .collection("egg")
+        .doc(id)
+        .collection("changelog")
+        .get()
+        .then(
+            (value) => value.docs.map((e) => Egg.fromDocSnapshot(e)).toList()));
   }
 
   @override
