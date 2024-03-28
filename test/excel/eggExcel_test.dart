@@ -1,7 +1,7 @@
 import 'package:excel/excel.dart';
+import 'package:flutter_bird_colony/models/eggStatus.dart';
+import 'package:flutter_bird_colony/models/firestore/egg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/models/eggStatus.dart';
-import 'package:kakrarahu/models/firestore/egg.dart';
 
 void main() {
   group('Egg toExcelRows and toExcelRowHeader', () {

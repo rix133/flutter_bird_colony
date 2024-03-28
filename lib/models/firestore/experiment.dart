@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/models/experimentedItem.dart';
-import 'package:kakrarahu/models/firestore/firestoreItem.dart';
-import 'package:kakrarahu/models/firestoreItemMixin.dart';
-import 'package:kakrarahu/models/measure.dart';
-import 'package:kakrarahu/models/updateResult.dart';
+import 'package:flutter_bird_colony/models/experimentedItem.dart';
+import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
+import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
+import 'package:flutter_bird_colony/models/measure.dart';
+import 'package:flutter_bird_colony/models/updateResult.dart';
 
 import '../../services/sharedPreferencesService.dart';
 import '../markerColorGroup.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
+import 'package:flutter_bird_colony/models/firestore/species.dart';
 
 class SpeciesRawAutocomplete extends StatefulWidget {
   final Function(Species) returnFun;

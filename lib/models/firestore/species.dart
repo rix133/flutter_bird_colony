@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/design/textFormItem.dart';
-import 'package:kakrarahu/models/firestore/firestoreItem.dart';
-import 'package:kakrarahu/models/firestoreItemMixin.dart';
-import 'package:kakrarahu/models/markerColorGroup.dart';
-import 'package:kakrarahu/models/updateResult.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/design/textFormItem.dart';
+import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
+import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
+import 'package:flutter_bird_colony/models/markerColorGroup.dart';
+import 'package:flutter_bird_colony/models/updateResult.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 
 class Species implements FirestoreItem {
   Species(

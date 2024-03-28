@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
+import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/models/markerColorGroup.dart';
+import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/models/firestore/defaultSettings.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
-import 'package:kakrarahu/models/markerColorGroup.dart';
-import 'package:kakrarahu/models/measure.dart';
 
 void main() {
   group('DefaultSettings', () {

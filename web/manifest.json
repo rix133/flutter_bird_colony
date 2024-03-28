@@ -1,6 +1,6 @@
 {
-    "name": "kakrarahu",
-    "short_name": "kakrarahu",
+  "name": "flutter_bird_colony",
+  "short_name": "flutter_bird_colony",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

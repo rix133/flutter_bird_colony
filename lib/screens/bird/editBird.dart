@@ -2,15 +2,15 @@ import 'dart:io' show Platform;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/design/modifingButtons.dart';
-import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
-import 'package:kakrarahu/models/firestore/bird.dart';
-import 'package:kakrarahu/models/firestore/egg.dart';
-import 'package:kakrarahu/models/firestore/experiment.dart';
-import 'package:kakrarahu/models/firestore/nest.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
-import 'package:kakrarahu/models/measure.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/design/modifingButtons.dart';
+import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
+import 'package:flutter_bird_colony/models/firestore/bird.dart';
+import 'package:flutter_bird_colony/models/firestore/egg.dart';
+import 'package:flutter_bird_colony/models/firestore/experiment.dart';
+import 'package:flutter_bird_colony/models/firestore/nest.dart';
+import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/models/measure.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 class EditBird extends StatefulWidget {

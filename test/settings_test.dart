@@ -1,16 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
+import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
+import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/screens/homepage.dart';
+import 'package:flutter_bird_colony/screens/settings/editDefaultSettings.dart';
+import 'package:flutter_bird_colony/screens/settings/listSpecies.dart';
+import 'package:flutter_bird_colony/screens/settings/settings.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
-import 'package:kakrarahu/models/firestore/defaultSettings.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
-import 'package:kakrarahu/screens/homepage.dart';
-import 'package:kakrarahu/screens/settings/editDefaultSettings.dart';
-import 'package:kakrarahu/screens/settings/listSpecies.dart';
-import 'package:kakrarahu/screens/settings/settings.dart';
-import 'package:kakrarahu/services/authService.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';

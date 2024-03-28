@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/design/listScreenWidget.dart';
-import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
-import 'package:kakrarahu/models/firestore/nest.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
-import 'package:kakrarahu/models/firestoreItemMixin.dart';
+import 'package:flutter_bird_colony/design/listScreenWidget.dart';
+import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
+import 'package:flutter_bird_colony/models/firestore/nest.dart';
+import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
 
 import '../../design/minMaxInput.dart';
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/services/authService.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
 
 class HomePageButton extends StatelessWidget {
   final String route;

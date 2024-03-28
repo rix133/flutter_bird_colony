@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:kakrarahu/models/firestore/experiment.dart';
-import 'package:kakrarahu/models/firestore/firestoreItem.dart';
-import 'package:kakrarahu/models/updateResult.dart';
+import 'package:flutter_bird_colony/models/firestore/experiment.dart';
+import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
+import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -284,7 +284,7 @@ class FSItemMixin {
 
         await Share.shareXFiles([file],
             text:
-                'Sharing ${types.join(", ")} file from Kakrarahu app. Downloaded on ${DateTime.now().toIso8601String()}');
+                'Sharing ${types.join(", ")} file from Bird Colony app. Downloaded on ${DateTime.now().toIso8601String()}');
         //delete the file from local storage
         saveFile.delete();
         return;

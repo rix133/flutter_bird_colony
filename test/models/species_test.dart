@@ -1,5 +1,5 @@
+import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
 
 void main() {
   group('Species', () {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/design/homepageButton.dart';
-import 'package:kakrarahu/services/authService.dart';
+import 'package:flutter_bird_colony/design/homepageButton.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
 
 class MyHomePage extends StatefulWidget {
   final String title;

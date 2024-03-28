@@ -1,11 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
+import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/models/markerColorGroup.dart';
+import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:kakrarahu/models/firestore/defaultSettings.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
-import 'package:kakrarahu/models/markerColorGroup.dart';
-import 'package:kakrarahu/models/measure.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPreferencesService extends ChangeNotifier {

@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
+import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
+import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
-import 'package:kakrarahu/models/firestore/defaultSettings.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
-import 'package:kakrarahu/services/authService.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/markerColorGroup.dart';
@@ -282,7 +282,7 @@ class _SettingsPageState extends State<SettingsPage> {
     } catch (e) {
       print('Sign in failed: $e');
       print(
-          'Likely SHA-1 fingerprint is missing from https://console.cloud.google.com/apis/credentials?project=kakrarahu');
+          'Likely SHA-1 fingerprint is missing from https://console.cloud.google.com/apis/credentials?project=flutter_bird_colony');
       //sign out from google
       await _auth.googleSignOut();
       // Create a new credential

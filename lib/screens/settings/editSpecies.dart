@@ -2,9 +2,9 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/design/modifingButtons.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/design/modifingButtons.dart';
+import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 class EditSpecies extends StatefulWidget {

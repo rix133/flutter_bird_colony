@@ -1,5 +1,4 @@
-import 'package:kakrarahu/models/firestore/firestoreItem.dart';
-
+import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
 
 class UpdateResult {
   bool success = false;

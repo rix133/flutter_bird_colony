@@ -1,7 +1,7 @@
 // Purpose: List all measures to define, edit or delete them allow to add new ones
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/models/markerColorGroup.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/models/markerColorGroup.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 class ListMarkerColorGroups extends StatefulWidget {

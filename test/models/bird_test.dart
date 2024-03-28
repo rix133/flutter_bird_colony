@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:flutter_bird_colony/models/firestore/bird.dart';
+import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/models/firestore/bird.dart';
-import 'package:kakrarahu/models/updateResult.dart';
 
 void main() {
   FirebaseFirestore firestore = FakeFirebaseFirestore();

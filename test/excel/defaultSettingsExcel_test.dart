@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
+import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
+import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/models/firestore/defaultSettings.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
 
 void main() {
   group('DefaultSettings', () {

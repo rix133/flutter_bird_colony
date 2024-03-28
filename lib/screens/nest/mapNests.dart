@@ -1,12 +1,12 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
+import 'package:flutter_bird_colony/services/locationService.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:kakrarahu/services/authService.dart';
-import 'package:kakrarahu/services/locationService.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/firestore/nest.dart';

@@ -1,15 +1,15 @@
 
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/screens/homepage.dart';
+import 'package:flutter_bird_colony/screens/nest/createNest.dart';
+import 'package:flutter_bird_colony/screens/nest/editNest.dart';
+import 'package:flutter_bird_colony/screens/nest/mapCreateNest.dart';
+import 'package:flutter_bird_colony/screens/settings/settings.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
+import 'package:flutter_bird_colony/services/locationService.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/screens/homepage.dart';
-import 'package:kakrarahu/screens/nest/createNest.dart';
-import 'package:kakrarahu/screens/nest/editNest.dart';
-import 'package:kakrarahu/screens/nest/mapCreateNest.dart';
-import 'package:kakrarahu/screens/settings/settings.dart';
-import 'package:kakrarahu/services/authService.dart';
-import 'package:kakrarahu/services/locationService.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';

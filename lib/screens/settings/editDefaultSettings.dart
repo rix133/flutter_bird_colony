@@ -2,13 +2,13 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/design/modifingButtons.dart';
-import 'package:kakrarahu/models/firestore/defaultSettings.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
-import 'package:kakrarahu/models/measure.dart';
-import 'package:kakrarahu/screens/listMeasures.dart';
-import 'package:kakrarahu/screens/settings/listMarkerColorGroups.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/design/modifingButtons.dart';
+import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
+import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/models/measure.dart';
+import 'package:flutter_bird_colony/screens/listMeasures.dart';
+import 'package:flutter_bird_colony/screens/settings/listMarkerColorGroups.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 class EditDefaultSettings extends StatefulWidget {

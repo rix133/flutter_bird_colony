@@ -1,14 +1,14 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
+import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
+import 'package:flutter_bird_colony/screens/listMeasures.dart';
+import 'package:flutter_bird_colony/screens/settings/editDefaultSettings.dart';
+import 'package:flutter_bird_colony/screens/settings/listMarkerColorGroups.dart';
+import 'package:flutter_bird_colony/screens/settings/settings.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/design/speciesRawAutocomplete.dart';
-import 'package:kakrarahu/models/firestore/defaultSettings.dart';
-import 'package:kakrarahu/screens/listMeasures.dart';
-import 'package:kakrarahu/screens/settings/editDefaultSettings.dart';
-import 'package:kakrarahu/screens/settings/listMarkerColorGroups.dart';
-import 'package:kakrarahu/screens/settings/settings.dart';
-import 'package:kakrarahu/services/authService.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';

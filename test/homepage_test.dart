@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/design/homepageButton.dart';
+import 'package:flutter_bird_colony/screens/homepage.dart';
+import 'package:flutter_bird_colony/screens/settings/settings.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/design/homepageButton.dart';
-import 'package:kakrarahu/screens/homepage.dart';
-import 'package:kakrarahu/services/authService.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
-import 'package:kakrarahu/screens/settings/settings.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
@@ -27,8 +27,8 @@ void main() {
       child: MaterialApp(
           initialRoute: '/',
           routes: {
-            '/': (context) => MyHomePage(title: "Kakrarahu nests"),
-            '/settings': (context) => SettingsPage(firestore: firestore),
+        '/': (context) => MyHomePage(title: "Bird Colony nests"),
+        '/settings': (context) => SettingsPage(firestore: firestore),
           }
       ),
     );
@@ -39,7 +39,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Kakrarahu nests'), findsOneWidget);
+    expect(find.text('Bird Colony nests'), findsOneWidget);
   });
 
   testWidgets('Settings button is found when user is signed in', (WidgetTester tester) async {

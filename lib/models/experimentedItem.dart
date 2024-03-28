@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:excel/excel.dart';
-import 'package:kakrarahu/models/firestore/experiment.dart';
-import 'package:kakrarahu/models/updateResult.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/models/firestore/experiment.dart';
+import 'package:flutter_bird_colony/models/updateResult.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 
 import 'firestore/firestoreItem.dart';
 import 'measure.dart';

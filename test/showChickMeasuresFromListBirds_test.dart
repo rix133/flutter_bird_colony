@@ -1,14 +1,14 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/models/firestore/bird.dart';
+import 'package:flutter_bird_colony/models/firestore/experiment.dart';
+import 'package:flutter_bird_colony/models/measure.dart';
+import 'package:flutter_bird_colony/screens/bird/editBird.dart';
+import 'package:flutter_bird_colony/screens/bird/listBirds.dart';
+import 'package:flutter_bird_colony/screens/homepage.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/models/firestore/bird.dart';
-import 'package:kakrarahu/models/firestore/experiment.dart';
-import 'package:kakrarahu/models/measure.dart';
-import 'package:kakrarahu/screens/bird/editBird.dart';
-import 'package:kakrarahu/screens/bird/listBirds.dart';
-import 'package:kakrarahu/screens/homepage.dart';
-import 'package:kakrarahu/services/authService.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';

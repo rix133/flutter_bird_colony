@@ -1,6 +1,6 @@
+import 'package:flutter_bird_colony/models/experimentedItem.dart';
+import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/models/experimentedItem.dart';
-import 'package:kakrarahu/models/measure.dart';
 
 void main() {
   group('Excel Output', () {

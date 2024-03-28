@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:google_sign_in_mocks/google_sign_in_mocks.dart';
-import 'package:kakrarahu/services/authService.dart';
 import 'package:mockito/mockito.dart';
 
 class MockAuthService extends Mock implements AuthService {

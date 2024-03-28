@@ -1,36 +1,35 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:kakrarahu/screens/settings/editDefaultSettings.dart';
-import 'package:kakrarahu/screens/nest/editEgg.dart';
-import 'package:kakrarahu/screens/experiment/editExperiment.dart';
-import 'package:kakrarahu/screens/bird/editBird.dart';
-import 'package:kakrarahu/screens/homepage.dart';
-import 'package:kakrarahu/screens/bird/listBirds.dart';
-import 'package:kakrarahu/screens/experiment/listExperiments.dart';
-import 'package:kakrarahu/screens/nest/listNests.dart';
-import 'package:kakrarahu/screens/settings/listSpecies.dart';
-import 'package:kakrarahu/screens/nest/editNest.dart';
-import 'package:kakrarahu/screens/settings/settings.dart';
-import 'package:kakrarahu/screens/statistics.dart';
-import 'screens/settings/editSpecies.dart';
-import 'screens/listDatas.dart';
-import 'services/sharedPreferencesService.dart';
-import 'design/styles.dart';
-import 'package:kakrarahu/screens/nest/findNest.dart';
-import 'package:kakrarahu/screens/nest/createNest.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'screens/nest/mapNests.dart';
-import 'screens/nest/mapCreateNest.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/screens/bird/editBird.dart';
+import 'package:flutter_bird_colony/screens/bird/listBirds.dart';
+import 'package:flutter_bird_colony/screens/experiment/editExperiment.dart';
+import 'package:flutter_bird_colony/screens/experiment/listExperiments.dart';
+import 'package:flutter_bird_colony/screens/homepage.dart';
+import 'package:flutter_bird_colony/screens/nest/createNest.dart';
+import 'package:flutter_bird_colony/screens/nest/editEgg.dart';
+import 'package:flutter_bird_colony/screens/nest/editNest.dart';
+import 'package:flutter_bird_colony/screens/nest/findNest.dart';
+import 'package:flutter_bird_colony/screens/nest/listNests.dart';
+import 'package:flutter_bird_colony/screens/settings/editDefaultSettings.dart';
+import 'package:flutter_bird_colony/screens/settings/listSpecies.dart';
+import 'package:flutter_bird_colony/screens/settings/settings.dart';
+import 'package:flutter_bird_colony/screens/statistics.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'design/styles.dart';
+import 'firebase_options.dart';
+import 'screens/listDatas.dart';
+import 'screens/nest/mapCreateNest.dart';
+import 'screens/nest/mapNests.dart';
+import 'screens/settings/editSpecies.dart';
+import 'services/sharedPreferencesService.dart';
 
 late FirebaseApp firebaseApp;
 const bool useEmulator = false; // Set to true to use emulators not the real Production Firestore
-const String appName = 'Kakrarahu nests';
-
-
+const String appName = 'Bird Colony';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();

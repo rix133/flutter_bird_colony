@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:kakrarahu/services/locationService.dart';
 import 'package:mockito/mockito.dart';
 
 class MockLocationAccuracy10 extends Mock implements LocationService {

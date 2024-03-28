@@ -1,7 +1,7 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:kakrarahu/design/experimentDropdown.dart';
-import 'package:kakrarahu/models/firestore/experiment.dart';
+import 'package:flutter_bird_colony/design/experimentDropdown.dart';
+import 'package:flutter_bird_colony/models/firestore/experiment.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('ExperimentDropdown widget test', (WidgetTester tester) async {

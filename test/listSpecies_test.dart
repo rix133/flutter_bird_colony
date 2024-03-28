@@ -1,10 +1,10 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/screens/settings/editSpecies.dart';
+import 'package:flutter_bird_colony/screens/settings/listSpecies.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
-import 'package:kakrarahu/screens/settings/editSpecies.dart';
-import 'package:kakrarahu/screens/settings/listSpecies.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockSharedPreferencesService.dart';

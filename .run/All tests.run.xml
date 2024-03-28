@@ -1,8 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="All tests" type="FlutterTestConfigType" factoryName="Flutter Test">
-    <option name="testDir" value="C:\Users\rix133\Documents\kakrarahu\test" />
-    <option name="useRegexp" value="false" />
-    <option name="additionalArgs" value="--coverage" />
-    <method v="2" />
-  </configuration>
-</component>

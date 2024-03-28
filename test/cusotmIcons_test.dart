@@ -1,5 +1,5 @@
+import 'package:flutter_bird_colony/icons/my_flutter_app_icons.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/icons/my_flutter_app_icons.dart';
 
 void main() {
   group('CustomIcons', () {

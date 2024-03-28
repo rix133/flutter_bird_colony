@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:kakrarahu/services/locationService.dart';
 import 'package:mockito/mockito.dart';
 
 class MockGeolocatorPlatform extends GeolocatorPlatform {

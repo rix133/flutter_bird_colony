@@ -1,12 +1,12 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/icons/my_flutter_app_icons.dart';
+import 'package:flutter_bird_colony/screens/bird/listBirds.dart';
+import 'package:flutter_bird_colony/screens/experiment/listExperiments.dart';
+import 'package:flutter_bird_colony/screens/listDatas.dart';
+import 'package:flutter_bird_colony/screens/nest/listNests.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/icons/my_flutter_app_icons.dart';
-import 'package:kakrarahu/screens/bird/listBirds.dart';
-import 'package:kakrarahu/screens/experiment/listExperiments.dart';
-import 'package:kakrarahu/screens/listDatas.dart';
-import 'package:kakrarahu/screens/nest/listNests.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockSharedPreferencesService.dart';

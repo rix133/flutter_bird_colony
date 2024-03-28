@@ -1,12 +1,12 @@
 // Test for listMarkerColorGroups.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/design/minMaxInput.dart';
+import 'package:flutter_bird_colony/models/markerColorGroup.dart';
+import 'package:flutter_bird_colony/screens/settings/listMarkerColorGroups.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/design/minMaxInput.dart';
-import 'package:kakrarahu/models/markerColorGroup.dart';
-import 'package:kakrarahu/screens/settings/listMarkerColorGroups.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockSharedPreferencesService.dart';

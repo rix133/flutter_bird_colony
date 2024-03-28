@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/models/markerColorGroup.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:kakrarahu/models/markerColorGroup.dart';
 
 void main() {
   group('MarkerColorGroup', () {

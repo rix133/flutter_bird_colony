@@ -1,6 +1,6 @@
 import 'package:excel/excel.dart';
+import 'package:flutter_bird_colony/models/firestore/bird.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/models/firestore/bird.dart';
 
 void main() {
   group('Bird toExcelRows and toExcelRowHeader', () {

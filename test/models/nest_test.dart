@@ -1,13 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_bird_colony/models/eggStatus.dart';
+import 'package:flutter_bird_colony/models/firestore/bird.dart';
+import 'package:flutter_bird_colony/models/firestore/egg.dart';
+import 'package:flutter_bird_colony/models/firestore/nest.dart';
+import 'package:flutter_bird_colony/models/markerColorGroup.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:kakrarahu/models/eggStatus.dart';
-import 'package:kakrarahu/models/firestore/bird.dart';
-import 'package:kakrarahu/models/firestore/egg.dart';
-import 'package:kakrarahu/models/firestore/nest.dart';
-import 'package:kakrarahu/models/markerColorGroup.dart';
 
 void main() {
   final markerColorGroup = [MarkerColorGroup.magenta("Test")];

@@ -1,9 +1,9 @@
+import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
+import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/models/markerColorGroup.dart';
+import 'package:flutter_bird_colony/models/measure.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:kakrarahu/models/firestore/defaultSettings.dart';
-import 'package:kakrarahu/models/firestore/species.dart';
-import 'package:kakrarahu/models/markerColorGroup.dart';
-import 'package:kakrarahu/models/measure.dart';
-import 'package:kakrarahu/services/sharedPreferencesService.dart';
 import 'package:mockito/mockito.dart';
 
 class MockSharedPreferencesService extends Mock implements SharedPreferencesService {

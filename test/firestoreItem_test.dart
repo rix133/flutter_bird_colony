@@ -1,15 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:flutter_bird_colony/models/eggStatus.dart';
+import 'package:flutter_bird_colony/models/firestore/bird.dart';
+import 'package:flutter_bird_colony/models/firestore/egg.dart';
+import 'package:flutter_bird_colony/models/firestore/experiment.dart';
+import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
+import 'package:flutter_bird_colony/models/firestore/nest.dart';
+import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
+import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kakrarahu/models/eggStatus.dart';
-import 'package:kakrarahu/models/firestore/bird.dart';
-import 'package:kakrarahu/models/firestore/egg.dart';
-import 'package:kakrarahu/models/firestore/experiment.dart';
-import 'package:kakrarahu/models/firestore/firestoreItem.dart';
-import 'package:kakrarahu/models/firestore/nest.dart';
-import 'package:kakrarahu/models/firestoreItemMixin.dart';
-import 'package:kakrarahu/models/measure.dart';
 
 void main() {
   final firestore = FakeFirebaseFirestore();
