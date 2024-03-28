@@ -279,8 +279,9 @@ void main() {
         'should return hueGreen when dayDiff is between 10 and 35 and checked today',
         () {
       final nest = Nest(
-        discover_date: DateTime.now(),
-        last_modified: DateTime.now().subtract(Duration(hours: 1)),
+        discover_date: DateTime.now().subtract(Duration(days: 20)),
+        last_modified: DateTime.now(),
+        //enforce today
         accuracy: 'high',
         coordinates: GeoPoint(0, 0),
         responsible: 'John Doe',
