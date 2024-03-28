@@ -1,16 +1,16 @@
-import 'dart:io';
-
 import 'package:activout_firebase_options_selector/activout_firebase_options_selector.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
+import 'package:flutter_bird_colony/main.dart';
 import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
+import 'package:restart_app/restart_app.dart';
 
 import '../../models/markerColorGroup.dart';
 import 'listMarkerColorGroups.dart';
@@ -335,6 +335,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _defaultMarkerColorGroups = sps!.markerColorGroups;
         });
       }
+      // its first login no settings yet
     });
     _updateSpeciesList();
   }
@@ -346,9 +347,14 @@ class _SettingsPageState extends State<SettingsPage> {
         .collection("species")
         .get()
         .then((value) {
-      List<Species> speciesList =
-          value.docs.map((e) => Species.fromDocSnapshot(e)).toList();
-      sps?.speciesList = LocalSpeciesList.fromSpeciesList(speciesList);
+      if (value.docs.isEmpty) {
+        //should there be a a default list of species?
+        return;
+      } else {
+        List<Species> speciesList =
+            value.docs.map((e) => Species.fromDocSnapshot(e)).toList();
+        sps?.speciesList = LocalSpeciesList.fromSpeciesList(speciesList);
+      }
     });
   }
 
@@ -384,8 +390,11 @@ class _SettingsPageState extends State<SettingsPage> {
               .collection('users')
               .get()
               .then((value) => value.docs.length);
-          //if no users, the first user is admin
-          if (userCount == 0) {
+          //if no users, the first user is admin by default
+          //all are admins in the testing app
+          print(appName);
+          print(userCount);
+          if (userCount == 0 || appName == "testing") {
             widget.firestore
                 .collection('users')
                 .doc(user!.email)
@@ -527,7 +536,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     Navigator.pop(context);
                                   },
                             label: Padding(
-                                child: Text('Login'),
+                                child: Text('Login/Register'),
                                 padding: EdgeInsets.all(10)),
                             icon: Icon(Icons.account_circle),
                           ),
@@ -702,12 +711,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   actions: <Widget>[
                     ElevatedButton(
-                      child: Text("Restart"),
+                      key: Key('selectColonyButton'),
+                      child: Text(hasChanged ? "Close" : "Restart"),
                       onPressed: () {
                         Navigator.of(context).pop();
                         if(hasChanged) {
                           //restart the app
-                          exit(0);
+                          Restart.restartApp();
                         }
                       },
                     ),

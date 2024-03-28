@@ -75,7 +75,7 @@ void main() {
           find.widgetWithText(TextField, 'Password'), 'password123');
 
       // Tap the 'Login' button
-      await tester.tap(find.text('Login'));
+      await tester.tap(find.text('Login/Register'));
       await tester.pumpAndSettle();
 
       // Check if the login was successful
@@ -98,7 +98,7 @@ void main() {
           find.widgetWithText(TextField, 'Password'), 'password123');
 
       // Tap the 'Login' button
-      await tester.tap(find.text('Login'));
+      await tester.tap(find.text('Login/Register'));
       await tester.pumpAndSettle();
 
       // Check if the login was successful
@@ -121,7 +121,7 @@ void main() {
           find.widgetWithText(TextField, 'Password'), 'password312');
 
       // Tap the 'Login' button
-      await tester.tap(find.text('Login'));
+      await tester.tap(find.text('Login/Register'));
       await tester.pumpAndSettle();
 
       // Check if the login was not  successful
@@ -149,7 +149,7 @@ void main() {
           find.widgetWithText(TextField, 'Password'), 'password312');
 
       // Tap the 'Login' button
-      await tester.tap(find.text('Login'));
+      await tester.tap(find.text('Login/Register'));
       await tester.pumpAndSettle();
 
       // Check if the login was not  successful
@@ -173,7 +173,7 @@ void main() {
       await tester.enterText(find.widgetWithText(TextField, 'Email'), 'a');
       await tester.enterText(find.widgetWithText(TextField, 'Password'), 'p');
 
-      await tester.tap(find.text('Login'));
+      await tester.tap(find.text('Login/Register'));
       await tester.pumpAndSettle();
 
       // Check if the login was not  successful
@@ -198,7 +198,7 @@ void main() {
           find.widgetWithText(TextField, 'Email'), 'admin@example.com');
       await tester.enterText(find.widgetWithText(TextField, 'Password'), 'p');
 
-      await tester.tap(find.text('Login'));
+      await tester.tap(find.text('Login/Register'));
       await tester.pumpAndSettle();
 
       // Check if the login was not  successful
@@ -225,7 +225,7 @@ void main() {
           find.widgetWithText(TextField, 'Password'), 'password123');
 
       // Tap the 'Create new account' button
-      await tester.tap(find.text('Login'));
+      await tester.tap(find.text('Login/Register'));
       await tester.pumpAndSettle();
       /*
       for(Element e in find.byType(Text).evaluate()){
@@ -254,8 +254,12 @@ void main() {
           find.widgetWithText(TextField, 'Password'), 'password123');
 
       // Tap the 'Create new account' button
-      await tester.tap(find.text('Login'));
+      await tester.tap(find.text('Login/Register'));
       await tester.pumpAndSettle();
+
+      for (Element e in find.byType(Text).evaluate()) {
+        print((e.widget as Text).data);
+      }
 
       // Check if the account creation was successful
       expect(find.byType(AlertDialog), findsOneWidget);
@@ -264,6 +268,7 @@ void main() {
   });
 
   group('Settings for normal user', () {
+    String appName = 'production'; // Default value for non-testing apps
     setUp(() async {
       AuthService.instance = authService;
       await firestore
@@ -292,6 +297,26 @@ void main() {
       await tester.pumpAndSettle();
           expect(find.text('Settings'), findsOneWidget);
         });
+
+    testWidgets("can open colony selection when not logged in",
+        (WidgetTester tester) async {
+      authService.isLoggedIn = false;
+      sharedPreferencesService.isAdmin = false;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Check if the colony testing button is displayed
+      Finder colbtn = find.text('Select another colony');
+      expect(colbtn, findsOneWidget);
+      await tester.tap(colbtn);
+      await tester.pumpAndSettle();
+      expect(find.text('Select colony'), findsOneWidget);
+      //tap the  button with key selectColonyButton
+      await tester.tap(find.byKey(Key('selectColonyButton')));
+      await tester.pumpAndSettle();
+      //expect no alertdialog
+      expect(find.byType(AlertDialog), findsNothing);
+    });
 
     testWidgets('Login buttons are displayed when user is not logged in',
         (WidgetTester tester) async {
@@ -323,7 +348,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check if the login page is displayed
-      expect(find.text('Login'), findsOneWidget);
+      expect(find.text('Login/Register'), findsOneWidget);
       //tap the cancel
       await tester.tap(find.text('Cancel'));
     });
@@ -372,7 +397,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(Key('loginWithEmailButton')));
       await tester.pumpAndSettle();
-      expect(find.text('Login'), findsOneWidget);
+      expect(find.text('Login/Register'), findsOneWidget);
     });
 
     testWidgets("default species RawAutocomplete is displayed",
@@ -496,7 +521,9 @@ void main() {
 
       expect(sharedPreferencesService.defaultSpecies, "Arctic tern");
 
-      await tester.tap(find.byIcon(Icons.recycling));
+      Finder reset = find.byIcon(Icons.recycling);
+      tester.ensureVisible(reset);
+      await tester.tap(reset);
       await tester.pumpAndSettle();
 
       expect(sharedPreferencesService.defaultSpecies, "Common Gull");

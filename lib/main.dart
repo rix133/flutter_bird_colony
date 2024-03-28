@@ -1,3 +1,5 @@
+//backend selection items
+import 'package:activout_firebase_options_selector/activout_firebase_options_selector.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -19,21 +21,18 @@ import 'package:flutter_bird_colony/screens/statistics.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'design/styles.dart';
+import 'firebase_options_default.dart' as manageBirdColony;
+import 'firebase_options_kakrarahu.dart' as kakrarahuColony;
 import 'screens/listDatas.dart';
 import 'screens/nest/mapCreateNest.dart';
 import 'screens/nest/mapNests.dart';
 import 'screens/settings/editSpecies.dart';
 import 'services/sharedPreferencesService.dart';
-import 'design/styles.dart';
-
-//backend selection items
-import 'package:activout_firebase_options_selector/activout_firebase_options_selector.dart';
-import 'firebase_options_default.dart' as manageBirdColony;
-import 'firebase_options_kakrarahu.dart' as kakrarahuColony;
 
 
 late FirebaseApp firebaseApp;
-String appName = 'Bird Colony';
+String appName = 'unknown';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();

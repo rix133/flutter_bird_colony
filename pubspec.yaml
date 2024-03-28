@@ -41,6 +41,7 @@ dependencies:
   path_provider:
   excel: ^4.0.3
   activout_firebase_options_selector: ^1.0.0
+  restart_app: ^1.2.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
