@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bird_colony/firebase_options.dart';
+import 'package:flutter_bird_colony/firebase_options_default.dart';
 import 'package:flutter_bird_colony/screens/bird/editBird.dart';
 import 'package:flutter_bird_colony/screens/bird/listBirds.dart';
 import 'package:flutter_bird_colony/screens/experiment/editExperiment.dart';

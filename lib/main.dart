@@ -19,35 +19,31 @@ import 'package:flutter_bird_colony/screens/statistics.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'design/styles.dart';
-import 'firebase_options.dart';
 import 'screens/listDatas.dart';
 import 'screens/nest/mapCreateNest.dart';
 import 'screens/nest/mapNests.dart';
 import 'screens/settings/editSpecies.dart';
 import 'services/sharedPreferencesService.dart';
+import 'design/styles.dart';
+
+//backend selection items
+import 'package:activout_firebase_options_selector/activout_firebase_options_selector.dart';
+import 'firebase_options_default.dart' as manageBirdColony;
+import 'firebase_options_kakrarahu.dart' as kakrarahuColony;
+
 
 late FirebaseApp firebaseApp;
-const bool useEmulator = false; // Set to true to use emulators not the real Production Firestore
-const String appName = 'Bird Colony';
+String appName = 'Bird Colony';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
-  firebaseApp = await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform);
-  if (useEmulator) {
-    try {
-      // Firestore
-      FirebaseFirestore.instanceFor(app: firebaseApp)
-          .useFirestoreEmulator('localhost', 8080);
-      // Auth
-      FirebaseAuth.instanceFor(app: firebaseApp)
-          .useAuthEmulator('localhost', 9099);
-    } catch (e) {
-      print('Error using emulators: $e');
-    }
-  }
+  const defaultKey = 'testing';
 
+ await FirebaseOptionsSelector.initialize(defaultKey, {
+    defaultKey: manageBirdColony.DefaultFirebaseOptions.currentPlatform,
+    "Kakrarahu": kakrarahuColony.DefaultFirebaseOptions.currentPlatform,
+  });
+  appName = await FirebaseOptionsSelector.getCurrentSelection();
   final sharedPreferences = await SharedPreferences.getInstance();
   final firestore = FirebaseFirestore.instance;
 
@@ -88,7 +84,6 @@ class MyApp extends StatelessWidget {
         '/': (context)=>MyHomePage(title: appName),
         '/editEgg': (context)=>EditEgg(firestore: firestore),
         '/createNest':(context)=> CreateNest(firestore: firestore),
-        //'/nestsNearby':(context)=> const NestsNearby(),
         '/editNest':(context)=>  EditNest(firestore: firestore),
         '/settings':(context)=>  SettingsPage(firestore: firestore),
         '/mapNests':(context)=> MapNests(firestore: firestore),
