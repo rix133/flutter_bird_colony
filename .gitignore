@@ -48,7 +48,12 @@ app.*.map.json
 /android/app/release
 
 #Firestore things
-firebase_options.dart
+firebase_options*
 GoogleService-Info.plist
 google-services.json
 .firebase/hosting.*
+
+#generated ios files
+/ios/
+
+
