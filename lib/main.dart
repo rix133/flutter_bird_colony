@@ -84,7 +84,8 @@ class MyApp extends StatelessWidget {
         '/editEgg': (context)=>EditEgg(firestore: firestore),
         '/createNest':(context)=> CreateNest(firestore: firestore),
         '/editNest':(context)=>  EditNest(firestore: firestore),
-        '/settings':(context)=>  SettingsPage(firestore: firestore),
+        '/settings': (context) =>
+            SettingsPage(firestore: firestore, testApp: appName == 'testing'),
         '/mapNests':(context)=> MapNests(firestore: firestore),
         '/statistics':(context)=> Statistics(firestore: firestore),
         '/mapCreateNest':(context)=>MapCreateNest(firestore: firestore),

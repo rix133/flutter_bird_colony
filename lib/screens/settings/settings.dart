@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
-import 'package:flutter_bird_colony/main.dart';
 import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/services/authService.dart';
@@ -17,8 +16,10 @@ import 'listMarkerColorGroups.dart';
 
 class SettingsPage extends StatefulWidget {
   final FirebaseFirestore firestore;
+  final testApp;
 
-  const SettingsPage({super.key, required this.firestore});
+  const SettingsPage(
+      {super.key, required this.firestore, this.testApp = false});
 
   @override
   _SettingsPageState createState() => _SettingsPageState();
@@ -392,9 +393,7 @@ class _SettingsPageState extends State<SettingsPage> {
               .then((value) => value.docs.length);
           //if no users, the first user is admin by default
           //all are admins in the testing app
-          print(appName);
-          print(userCount);
-          if (userCount == 0 || appName == "testing") {
+          if (userCount == 0 || widget.testApp) {
             widget.firestore
                 .collection('users')
                 .doc(user!.email)
