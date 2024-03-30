@@ -149,6 +149,10 @@ class Nest extends ExperimentedItem implements FirestoreItem {
       results.add(UpdateResult.error(
           message: "Nest location accuracy is over ${sps?.desiredAccuracy} m"));
     }
+    if (species == null || species!.isEmpty) {
+      results.add(UpdateResult.error(message: "Nest species is empty"));
+    }
+
     results.addAll(super.validate(sps, otherItems: otherItems));
 
     return results;

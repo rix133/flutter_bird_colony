@@ -1,6 +1,7 @@
 
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
 import 'package:flutter_bird_colony/screens/homepage.dart';
 import 'package:flutter_bird_colony/screens/nest/createNest.dart';
 import 'package:flutter_bird_colony/screens/nest/editNest.dart';
@@ -28,7 +29,7 @@ void main() {
   setUpAll(() async {
     AuthService.instance = authService;
     LocationService.instance = locationAccuracy10;
-
+    sharedPreferencesService.desiredAccuracy = 12;
 
     await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
     myApp = ChangeNotifierProvider<SharedPreferencesService>(
@@ -45,6 +46,27 @@ void main() {
       ),
     );
   });
+
+  Future<WidgetTester> setSpecies(WidgetTester tester) async {
+    Finder speciesRawAutocompleteFinder = find.byType(SpeciesRawAutocomplete);
+    expect(speciesRawAutocompleteFinder, findsOneWidget);
+
+    // Find the TextField widget which is a descendant of the SpeciesRawAutocomplete widget
+    Finder textFieldFinder = find.descendant(
+      of: speciesRawAutocompleteFinder,
+      matching: find.byType(TextField),
+    );
+    expect(textFieldFinder, findsOneWidget);
+
+    //enter test in the textfield
+    await tester.enterText(textFieldFinder, 'gull');
+    await tester.pumpAndSettle();
+
+    //tap the first listtile
+    await tester.tap(find.byType(ListTile).first);
+    await tester.pumpAndSettle();
+    return tester;
+  }
 
   setUp(() async {
     //reset the database
@@ -118,8 +140,10 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
+    tester = await setSpecies(tester);
 
     await tester.enterText(find.byKey(Key('enter nest ID')), "2");
+
     await tester.tap(find.text("add nest"));
     await tester.pumpAndSettle();
 
@@ -181,6 +205,7 @@ void main() {
     // Check if the data in the document is the same as the expected data
     expect(docFuture.data(), equals(expectedData));
 
+    await setSpecies(tester);
 
     await tester.enterText(find.byKey(Key('enter nest ID')), "2");
     await tester.tap(find.text("add nest"));
@@ -207,6 +232,8 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
+
+    tester = await setSpecies(tester);
 
     await tester.enterText(find.byKey(Key('enter nest ID')), "2");
     await tester.tap(find.text("add nest"));
@@ -246,6 +273,8 @@ void main() {
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
 
+    tester = await setSpecies(tester);
+
     await tester.tap(find.text("Next: 3334"));
     await tester.pumpAndSettle();
 
@@ -272,6 +301,8 @@ void main() {
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
 
+    tester = await setSpecies(tester);
+
     await tester.enterText(find.byKey(Key('enter nest ID')), "2");
     await tester.tap(find.text("add nest"));
     await tester.pumpAndSettle();
@@ -281,10 +312,74 @@ void main() {
     await tester.tap(find.byKey(Key("saveButton")));
     await tester.pumpAndSettle();
 
-    //tap save anyway
+
+    expect(find.byType(MapCreateNest), findsOneWidget);
+  });
+  testWidgets("will raise an error if nest ID is empty",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text("add nest"));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    tester = await setSpecies(tester);
+
+    await tester.enterText(find.byKey(Key('enter nest ID')), "");
+    await tester.tap(find.text("add nest"));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SnackBar), findsOneWidget);
+  });
+
+  testWidgets("will raise an alertdialog  if species is not set",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text("add nest"));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(Key('enter nest ID')), "2");
+    await tester.tap(find.text("add nest"));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsOneWidget);
+    //tap the Cancel button
+    await tester.tap(find.text("cancel"));
+    await tester.pumpAndSettle();
+
+    //expect to be still in the create nest page
+    expect(find.byType(CreateNest), findsOneWidget);
+  });
+
+  testWidgets("will allow  nest saving if species is not set",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text("add nest"));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(Key('enter nest ID')), "2");
+    await tester.tap(find.text("add nest"));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsOneWidget);
+    //tap the save anyway button
     await tester.tap(find.text("save anyway"));
     await tester.pumpAndSettle();
 
-    expect(find.byType(MapCreateNest), findsOneWidget);
+    //expect to be on edit nest page
+    expect(find.byType(EditNest), findsOneWidget);
   });
 }

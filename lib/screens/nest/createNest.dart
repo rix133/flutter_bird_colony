@@ -88,7 +88,43 @@ class _CreateNestState extends State<CreateNest> {
     if (nest.id == null || nest.id == "") {
       return Future.value(UpdateResult.error(message: "Nest ID is empty"));
     }
+    List<UpdateResult> validations = nest.validate(sps);
 
+    if (validations.length > 0) {
+      return showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text("Validation errors"),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: validations.map((e) => Text(e.message)).toList(),
+                  ),
+                  actions: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop(true);
+                      },
+                      child: Text("save anyway"),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop(false);
+                      },
+                      child: Text("cancel"),
+                    ),
+                  ],
+                );
+              })
+          .then((save) => save
+              ? _doSave()
+              : Future.value(UpdateResult.error(message: "Validation errors")));
+    } else {
+      return _doSave();
+    }
+  }
+
+  Future<UpdateResult> _doSave() {
     return nests!.doc(nest.id).get().then((value) {
       if (value.exists) {
         return UpdateResult.error(message: "Nest ${nest.id} already exists");
