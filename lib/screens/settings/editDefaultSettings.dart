@@ -30,8 +30,10 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
       autoNextBand: false,
       autoNextBandParent: false,
       defaultLocation: GeoPoint(58.766218, 23.430432),
-      biasedRepeatedMeasurements: false,
-      measures: [Measure.note()],
+    defaultCameraZoom: 16.35,
+    defaultCameraBearing: 270,
+    biasedRepeatedMeasurements: false,
+    measures: [Measure.note()],
     markerColorGroups: [],
     defaultSpecies: Species(english: "", latinCode: "", local: ""),
     );

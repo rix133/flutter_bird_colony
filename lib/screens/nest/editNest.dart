@@ -125,7 +125,7 @@ class _EditNestState extends State<EditNest> {
           desiredAccuracy: LocationAccuracy.best);
       if((position?.accuracy ?? 999999) < nest!.getAccuracy()){
         nest!.coordinates = GeoPoint(position!.latitude, position!.longitude);
-        nest!.accuracy = position!.accuracy.toStringAsFixed(2) + "m";
+        nest!.setAccuracy(position!.accuracy);
       }
       setState(() { });
     };

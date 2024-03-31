@@ -68,19 +68,6 @@ void main() {
         .tap(find.widgetWithText(SwitchListTile, 'Auto next band parent'));
     await tester.pumpAndSettle();
 
-    // Change defaultLocation latitude
-    await tester.enterText(
-        find.widgetWithText(TextFormField, 'Default location latitude'),
-        '60.0');
-    await tester.pumpAndSettle();
-    expect(find.text('60.0'), findsOneWidget);
-
-    // Change defaultLocation longitude
-    await tester.enterText(
-        find.widgetWithText(TextFormField, 'Default location longitude'),
-        '25.0');
-    await tester.pumpAndSettle();
-    expect(find.text('25.0'), findsOneWidget);
 
     Finder brm =
         find.widgetWithText(SwitchListTile, 'Observer bias repeated measures');
@@ -88,6 +75,25 @@ void main() {
     // Toggle biasedRepeatedMeasurements
     await tester.ensureVisible(brm);
     await tester.tap(brm);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets("updates default camera position", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    //find the map button setDefaultLocation and tap it
+    final mapButton = find.byKey(Key("setDefaultMap"));
+    expect(mapButton, findsOneWidget);
+
+    await tester.ensureVisible(mapButton);
+    await tester.tap(mapButton);
+    await tester.pumpAndSettle();
+
+    //find the  setDefaultLocation in the map and tap it
+    final setDefaultLocation = find.byKey(Key("setDefaultLocation"));
+    expect(setDefaultLocation, findsOneWidget);
+    await tester.tap(setDefaultLocation);
     await tester.pumpAndSettle();
   });
 

@@ -299,6 +299,10 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     return double.tryParse(number) ?? 9999.9;
   }
 
+  setAccuracy(double value) {
+    accuracy = value.toStringAsFixed(2) + "m";
+  }
+
   Future<List<List<CellValue>>> toExcelRows() async {
     List<CellValue> baseItems = [
       TextCellValue(name),

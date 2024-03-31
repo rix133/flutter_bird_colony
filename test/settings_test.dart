@@ -257,10 +257,6 @@ void main() {
       await tester.tap(find.text('Login/Register'));
       await tester.pumpAndSettle();
 
-      for (Element e in find.byType(Text).evaluate()) {
-        print((e.widget as Text).data);
-      }
-
       // Check if the account creation was successful
       expect(find.byType(AlertDialog), findsOneWidget);
       expect(find.text('Not authorized'), findsOneWidget);
@@ -268,7 +264,6 @@ void main() {
   });
 
   group('Settings for normal user', () {
-    String appName = 'production'; // Default value for non-testing apps
     setUp(() async {
       AuthService.instance = authService;
       await firestore
@@ -496,6 +491,8 @@ void main() {
             desiredAccuracy: 4.0,
             selectedYear: DateTime.now().year,
             autoNextBand: false,
+            defaultCameraBearing: 270,
+            defaultCameraZoom: 16.35,
             autoNextBandParent: false,
             defaultLocation: GeoPoint(58.766218, 23.430432),
             biasedRepeatedMeasurements: false,

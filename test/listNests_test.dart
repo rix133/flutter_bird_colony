@@ -509,7 +509,6 @@ void main() {
         find.byType(ListTile).first.evaluate().first.widget as ListTile;
     final trailingRow = tile.trailing as Row;
     final iconButton = trailingRow.children[0] as IconButton;
-    print(tile.title.toString());
     //this should be yellow
     expect(iconButton.style!.backgroundColor!.resolve({})!.value, 4294967040);
 

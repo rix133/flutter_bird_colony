@@ -164,16 +164,31 @@ class SharedPreferencesService extends ChangeNotifier {
   }
 
   CameraPosition get defaultLocation {
-    double lat = _sharedPreferences.getDouble('defaultLocationLat') ?? 0;
-    double long = _sharedPreferences.getDouble('defaultLocationLong') ?? 0;
-    return CameraPosition(target: LatLng(lat, long),  bearing: 270,
-      zoom: 16.35);
+    double lat = _sharedPreferences.getDouble('defaultLocationLat') ?? 55.76288;
+    double long =
+        _sharedPreferences.getDouble('defaultLocationLong') ?? 16.57478;
+    double zoom = _sharedPreferences.getDouble('defaultLocationZoom') ?? 3.2;
+    double bearing =
+        _sharedPreferences.getDouble('defaultLocationBearing') ?? 0;
+    return CameraPosition(
+        target: LatLng(lat, long), bearing: bearing, zoom: zoom);
   }
 
   set defaultLocation(CameraPosition value) {
     _sharedPreferences.setDouble('defaultLocationLat', value.target.latitude);
     _sharedPreferences.setDouble('defaultLocationLong', value.target.longitude);
+    _sharedPreferences.setDouble('defaultLocationZoom', value.zoom);
+    _sharedPreferences.setDouble('defaultLocationBearing', value.bearing);
     notifyListeners();
+  }
+
+  set mapType(MapType value) {
+    _sharedPreferences.setInt('mapType', value.index);
+    notifyListeners();
+  }
+
+  MapType get mapType {
+    return MapType.values[_sharedPreferences.getInt('mapType') ?? 2];
   }
 
   setFromDefaultSettings(DefaultSettings defaultSettings) {

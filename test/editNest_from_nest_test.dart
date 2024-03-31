@@ -160,15 +160,6 @@ void main() {
     await tester.pumpAndSettle();
 
 
-    //for debugging purposes its good to print out all the widgets texts
-    tester.allWidgets.where((widget) => widget is ElevatedButton).forEach((widget) {
-      final ElevatedButton button = widget as ElevatedButton;
-      if (button.child is Text) {
-        final buttonText = (button.child as Text).data;
-        print(buttonText);
-      }
-    });
-
     expect(find.text('Egg 1 intact 2 days old'), findsOneWidget);
   });
 

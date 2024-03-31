@@ -14,6 +14,7 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
   LocalSpeciesList speciesList = LocalSpeciesList.fromStringList(["Common gull","Arctic tern"]);
   List<Measure> defaultMeasures = [Measure.note()];
   bool biasedRepeatedMeasures = false;
+  MapType mapType = MapType.satellite;
   String defaultSpecies = "Common Gull";
   String settingsType = "default";
   List<MarkerColorGroup> markerColorGroups = [];

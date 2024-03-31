@@ -180,9 +180,7 @@ void main() {
     await tester.longPress(find.text("Egg 1 hatched/AA1234"));
     await tester.pumpAndSettle();
     expect(find.byType(EditBird), findsOneWidget);
-    for (Element i in find.byType(Text).evaluate()) {
-      print((i.widget as Text).data);
-    }
+
     expect(find.text("Metal: AA1234"), findsOneWidget);
   });
 

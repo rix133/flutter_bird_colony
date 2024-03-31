@@ -169,9 +169,9 @@ void main() {
     test('should get and set defaultLocation', () {
       CameraPosition cameraPosition =
           CameraPosition(target: LatLng(12, 11), bearing: 270, zoom: 10);
-      expect(sharedPreferencesService.defaultLocation.zoom, 16.35);
+      expect(sharedPreferencesService.defaultLocation.zoom, 3.2);
       sharedPreferencesService.defaultLocation = cameraPosition;
-      //expect(sharedPreferencesService.defaultLocation.zoom, 10);
+      expect(sharedPreferencesService.defaultLocation.zoom, 10);
       expect(sharedPreferencesService.defaultLocation.target.latitude, 12);
       expect(sharedPreferencesService.defaultLocation.target.longitude, 11);
     });
@@ -182,6 +182,8 @@ void main() {
           desiredAccuracy: 2,
           selectedYear: 2022,
           autoNextBand: true,
+          defaultCameraBearing: 272,
+          defaultCameraZoom: 15.35,
           autoNextBandParent: true,
           defaultLocation: GeoPoint(11, 10),
           biasedRepeatedMeasurements: true,
@@ -196,6 +198,8 @@ void main() {
       expect(sharedPreferencesService.autoNextBandParent, true);
       expect(sharedPreferencesService.defaultLocation.target.latitude, 11);
       expect(sharedPreferencesService.defaultLocation.target.longitude, 10);
+      expect(sharedPreferencesService.defaultLocation.zoom, 15.35);
+      expect(sharedPreferencesService.defaultLocation.bearing, 272);
       expect(sharedPreferencesService.biasedRepeatedMeasures, true);
       expect(sharedPreferencesService.defaultSpecies, 'test');
       expect(sharedPreferencesService.defaultMeasures.length, 1);

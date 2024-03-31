@@ -11,6 +11,8 @@ import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../screens/settings/editDefaultMap.dart';
+
 class DefaultSettings implements FirestoreItem {
   String? id;
   double desiredAccuracy;
@@ -18,6 +20,8 @@ class DefaultSettings implements FirestoreItem {
   bool autoNextBand;
   bool autoNextBandParent;
   GeoPoint defaultLocation;
+  double defaultCameraZoom;
+  double defaultCameraBearing;
   bool biasedRepeatedMeasurements;
   List<Measure> measures = [];
   DateTime? last_modified;
@@ -36,6 +40,8 @@ class DefaultSettings implements FirestoreItem {
       required this.defaultLocation,
       required this.biasedRepeatedMeasurements,
       required this.defaultSpecies,
+      required this.defaultCameraZoom,
+      required this.defaultCameraBearing,
       required this.measures,
       required this.markerColorGroups,
       this.responsible});
@@ -48,6 +54,8 @@ class DefaultSettings implements FirestoreItem {
         autoNextBand: autoNextBand,
         autoNextBandParent: autoNextBandParent,
         defaultLocation: defaultLocation,
+        defaultCameraBearing: defaultCameraBearing,
+        defaultCameraZoom: defaultCameraZoom,
         biasedRepeatedMeasurements: biasedRepeatedMeasurements,
         defaultSpecies: defaultSpecies.copy(),
         measures: measures.map((e) => e.copy()).toList(),
@@ -63,6 +71,8 @@ class DefaultSettings implements FirestoreItem {
       'autoNextBand': autoNextBand,
       'autoNextBandParent': autoNextBandParent,
       'defaultLocation': defaultLocation,
+      'defaultCameraZoom': defaultCameraZoom,
+      'defaultCameraBearing': defaultCameraBearing,
       'biasedRepeatedMeasurements': biasedRepeatedMeasurements,
       'defaultSpecies': defaultSpecies.toJson(),
       'measures': measures.map((e) => e.toFormJson()).toList(),
@@ -80,8 +90,16 @@ class DefaultSettings implements FirestoreItem {
   getCameraPosition() {
     return CameraPosition(
       target: LatLng(defaultLocation.latitude, defaultLocation.longitude),
-      zoom: 14.4746,
+      zoom: defaultCameraZoom,
+      bearing: defaultCameraBearing,
     );
+  }
+
+  setCameraPosition(CameraPosition cameraPosition) {
+    defaultLocation = GeoPoint(
+        cameraPosition.target.latitude, cameraPosition.target.longitude);
+    defaultCameraZoom = cameraPosition.zoom;
+    defaultCameraBearing = cameraPosition.bearing;
   }
 
   @override
@@ -97,6 +115,8 @@ class DefaultSettings implements FirestoreItem {
         autoNextBand: json['autoNextBand'],
         autoNextBandParent: json['autoNextBandParent'],
         defaultLocation: json['defaultLocation'],
+        defaultCameraZoom: json['defaultCameraZoom'] ?? 16.35,
+        defaultCameraBearing: json['defaultCameraBearing'] ?? 270.0,
         biasedRepeatedMeasurements: json['biasedRepeatedMeasurements'],
         measures: json['measures'] == null
             ? []
@@ -250,34 +270,6 @@ class DefaultSettings implements FirestoreItem {
         },
       ),
       SizedBox(height: 10),
-      TextFormField(
-        initialValue: defaultLocation.latitude.toString(),
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          labelText: 'Default location latitude',
-          hintText: 'Default location latitude',
-        ),
-        onChanged: (value) {
-          defaultLocation =
-              GeoPoint(double.parse(value), defaultLocation.longitude);
-          setState(() {});
-        },
-      ),
-      SizedBox(height: 10),
-      TextFormField(
-        initialValue: defaultLocation.longitude.toString(),
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          labelText: 'Default location longitude',
-          hintText: 'Default location longitude',
-        ),
-        onChanged: (value) {
-          defaultLocation =
-              GeoPoint(defaultLocation.latitude, double.parse(value));
-          setState(() {});
-        },
-      ),
-      SizedBox(height: 10),
       SwitchListTile(
         title: const Text('Observer bias repeated measures'),
         value: biasedRepeatedMeasurements,
@@ -286,6 +278,24 @@ class DefaultSettings implements FirestoreItem {
           setState(() {});
         },
       ),
+      SizedBox(height: 10),
+      ElevatedButton.icon(
+          key: Key('setDefaultMap'),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EditDefaultMap(),
+              ),
+            ).then((value) {
+              if (value is CameraPosition) {
+                setCameraPosition(value);
+                setState(() {});
+              }
+            });
+          },
+          icon: Icon(Icons.map),
+          label: Text("Set default map"))
     ]);
   }
 
