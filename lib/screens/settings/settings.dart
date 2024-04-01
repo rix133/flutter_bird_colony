@@ -625,6 +625,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 }),
             SizedBox(height: 10),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text("Map type: "),
                 DropdownButton<MapType>(
