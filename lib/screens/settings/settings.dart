@@ -31,6 +31,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String? _userEmail;
   String? _userPassword;
   String? _selectedColony;
+  bool _colonyHasChanged = false;
   bool _isLoggedIn = false;
   bool _isAdmin = false;
   List<String> _allowedUsers = [];
@@ -239,7 +240,7 @@ class _SettingsPageState extends State<SettingsPage> {
       userCredential.user!.updateDisplayName(_userEmail!.split('@').first);
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
+      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
         return signInWithNewEmail();
       } else if (e.code == 'wrong-password') {
         showDialog(
@@ -677,7 +678,6 @@ class _SettingsPageState extends State<SettingsPage> {
       SizedBox(width: 15),
       ElevatedButton(
           onPressed: () async {
-            bool hasChanged = false;
             return (showDialog<void>(
               context: context,
               builder: (BuildContext context) {
@@ -698,9 +698,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                         if (newValue != null) {
                                           await FirebaseOptionsSelector.select(
                                               newValue);
-                                          hasChanged = true;
-                                          setState(
-                                              () => _selectedColony = newValue);
+                                          setState(() {
+                                            _selectedColony = newValue;
+                                            _colonyHasChanged = true;
+                                          });
                                         }
                                       },
                                     ))
@@ -711,10 +712,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   actions: <Widget>[
                     ElevatedButton(
                       key: Key('selectColonyButton'),
-                      child: Text(hasChanged ? "Close" : "Restart"),
+                      child: const Text("Close/Restart"),
                       onPressed: () {
                         Navigator.of(context).pop();
-                        if(hasChanged) {
+                        if (_colonyHasChanged) {
                           //restart the app
                           Restart.restartApp();
                         }
