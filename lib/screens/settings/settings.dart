@@ -624,21 +624,26 @@ class _SettingsPageState extends State<SettingsPage> {
                   });
                 }),
             SizedBox(height: 10),
-            DropdownButton<MapType>(
-              key: Key('mapTypeDropdown'),
-              style: TextStyle(color: Colors.deepPurpleAccent),
-              value: sps?.mapType,
-              items: MapType.values.map((MapType value) {
-                return DropdownMenuItem<MapType>(
-                  value: value,
-                  child: Text(value.toString().split('.').last),
-                );
-              }).toList(),
-              onChanged: (MapType? newValue) {
-                setState(() {
-                  sps?.mapType = newValue!;
-                });
-              },
+            Row(
+              children: [
+                const Text("Map type: "),
+                DropdownButton<MapType>(
+                  key: Key('mapTypeDropdown'),
+                  style: TextStyle(color: Colors.deepPurpleAccent),
+                  value: sps?.mapType,
+                  items: MapType.values.map((MapType value) {
+                    return DropdownMenuItem<MapType>(
+                      value: value,
+                      child: Text(value.toString().split('.').last),
+                    );
+                  }).toList(),
+                  onChanged: (MapType? newValue) {
+                    setState(() {
+                      sps?.mapType = newValue!;
+                    });
+                  },
+                ),
+              ],
             ),
             SizedBox(height: 10),
             //reset all settings button

@@ -65,8 +65,12 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       camPosDefault = sps!.defaultLocation;
-      camPosCurrent = sps!.defaultLocation;
+      camPosCurrent = CameraPosition(
+          target: camPosDefault.target,
+          zoom: camPosDefault.zoom,
+          bearing: camPosDefault.bearing);
       mapType = sps!.mapType;
+      setState(() {});
       if (widget.autoUpdateLoc) {
         _positionStreamSubscription =
             location.getPositionStream().listen((Position position) {
