@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
 import 'package:flutter_bird_colony/models/eggStatus.dart';
 import 'package:flutter_bird_colony/models/firestore/bird.dart';
 import 'package:flutter_bird_colony/models/firestore/egg.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
+import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/screens/bird/editBird.dart';
 import 'package:flutter_bird_colony/screens/homepage.dart';
@@ -671,6 +673,105 @@ void main() {
           .doc(nest.id)
           .get());
       expect(nestObj.accuracy, "3.20m");
+    });
+  });
+
+  group("save undefined species", () {
+    setUp(() async {
+      //reset the database
+      sharedPreferencesService.speciesList = LocalSpeciesList();
+      nest.accuracy = "3.22m";
+      nest.species = null;
+      await firestore.collection('recent').doc("nest").set({"id": "1"});
+      await nest.save(firestore);
+      egg.measures = [];
+      //add egg to nest
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .set(egg.toJson());
+
+      myApp = await getMyApp();
+    });
+
+    tearDown(() async {
+      //delete all nest eggs
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .get()
+          .then((value) {
+        value.docs.forEach((element) {
+          element.reference.delete();
+        });
+      });
+
+      //delete nest
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .delete();
+    });
+
+    testWidgets("will raise an alertdialog if species is missing",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      await tester.tap(find.text("save anyway"));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      Nest nestObj = Nest.fromDocSnapshot(await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .get());
+      expect(nestObj.species, '');
+    });
+
+    testWidgets("will allow saving when species is not selected from a list",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //set species to undefined in SpeciesRawAutocomplete
+      Finder speciesRawAutocompleteFinder = find.byType(SpeciesRawAutocomplete);
+      expect(speciesRawAutocompleteFinder, findsOneWidget);
+
+      // Find the TextField widget which is a descendant of the SpeciesRawAutocomplete widget
+      Finder textFieldFinder = find.descendant(
+        of: speciesRawAutocompleteFinder,
+        matching: find.byType(TextField),
+      );
+      expect(textFieldFinder, findsOneWidget);
+
+      //enter test in the textfield
+      await tester.enterText(textFieldFinder, 'undefined');
+      await tester.pumpAndSettle();
+
+      TextField textField = tester.widget(textFieldFinder);
+      expect(textField.controller?.text, 'undefined');
+
+      Finder saveBtn = find.byKey(Key("saveButton"));
+      await tester.ensureVisible(saveBtn);
+      await tester.tap(saveBtn);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing,
+          reason: "AlertDialog found although species should be set");
+      Nest nestObj = Nest.fromDocSnapshot(await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .get());
+      expect(nestObj.species, "undefined");
     });
   });
 }
