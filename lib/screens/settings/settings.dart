@@ -151,7 +151,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _getAllowedUsers() {
-    return _isAdmin
+    return (_isAdmin && !widget.testApp)
         ? Column(
             children: [
               Text('Allowed users:'),
