@@ -81,8 +81,8 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
     coordinates = GeoPoint(value.latitude, value.longitude);
     camPosCurrent = CameraPosition(
       target: LatLng(value.latitude, value.longitude),
-      bearing: camPosDefault.bearing,
-      zoom: camPosDefault.zoom,
+      bearing: camPosCurrent.bearing,
+      zoom: camPosCurrent.zoom,
     );
     setState(() {
       circle = {
