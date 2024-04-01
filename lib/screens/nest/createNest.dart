@@ -95,6 +95,8 @@ class _CreateNestState extends State<CreateNest> {
               context: context,
               builder: (BuildContext context) {
                 return AlertDialog(
+                  backgroundColor: Colors.black87,
+                  titleTextStyle: TextStyle(color: Colors.redAccent),
                   title: Text("Validation errors"),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,

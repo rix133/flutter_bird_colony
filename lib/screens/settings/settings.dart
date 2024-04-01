@@ -8,6 +8,7 @@ import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import 'package:restart_app/restart_app.dart';
@@ -622,6 +623,23 @@ class _SettingsPageState extends State<SettingsPage> {
                     _defaultMarkerColorGroups = markers;
                   });
                 }),
+            SizedBox(height: 10),
+            DropdownButton<MapType>(
+              key: Key('mapTypeDropdown'),
+              style: TextStyle(color: Colors.deepPurpleAccent),
+              value: sps?.mapType,
+              items: MapType.values.map((MapType value) {
+                return DropdownMenuItem<MapType>(
+                  value: value,
+                  child: Text(value.toString().split('.').last),
+                );
+              }).toList(),
+              onChanged: (MapType? newValue) {
+                setState(() {
+                  sps?.mapType = newValue!;
+                });
+              },
+            ),
             SizedBox(height: 10),
             //reset all settings button
             ElevatedButton.icon(

@@ -11,6 +11,7 @@ import 'package:flutter_bird_colony/screens/settings/settings.dart';
 import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
@@ -407,6 +408,34 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SpeciesRawAutocomplete), findsOneWidget);
+    });
+
+    testWidgets("default map type is changed", (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = false;
+      expect(sharedPreferencesService.mapType, MapType.satellite);
+
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //go to settings page
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
+
+      //find the mapType dropdown
+      Finder dropdownFinder = find.byKey(Key('mapTypeDropdown'));
+      expect(dropdownFinder, findsOneWidget);
+
+      //open the dropdown
+      await tester.ensureVisible(dropdownFinder);
+      await tester.tap(dropdownFinder);
+      await tester.pumpAndSettle();
+
+      //select the normal map type
+      await tester.tap(find.text("normal"));
+      await tester.pumpAndSettle();
+
+      expect(sharedPreferencesService.mapType, MapType.normal);
     });
 
     testWidgets("default settings are changed", (WidgetTester tester) async {
