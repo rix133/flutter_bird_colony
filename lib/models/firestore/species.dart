@@ -129,7 +129,6 @@ class Species implements FirestoreItem {
   @override
   Future<UpdateResult> delete(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
-      bool soft = true,
       String type = "default"}) {
     if (id == null) {
       return Future.value(UpdateResult.deleteOK(item: this));
@@ -137,13 +136,7 @@ class Species implements FirestoreItem {
     return (FSItemMixin().deleteFiresoreItem(
         this,
         firestore
-            .collection('settings')
-            .doc(type)
-            .collection("species"),
-        firestore
-            .collection('settings')
-            .doc(type)
-            .collection("deletedSpecies")));
+            .collection('settings').doc(type).collection("species")));
   }
 
   @override
@@ -162,6 +155,11 @@ class Species implements FirestoreItem {
     );
   }
 
+  _saveChangeLog(FirebaseFirestore firestore, String type) {
+    FSItemMixin().saveChangeLog(
+        this, firestore.collection('settings').doc(type).collection('species'));
+  }
+
   @override
   Future<UpdateResult> save(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
@@ -174,8 +172,11 @@ class Species implements FirestoreItem {
           .doc(type)
           .collection("species")
           .add(toJson())
-          .then((value) => UpdateResult.saveOK(item: this))
-          .catchError((error) => UpdateResult.error(message: error)));
+          .then((value) {
+        id = value.id;
+        _saveChangeLog(firestore, type);
+        return (UpdateResult.saveOK(item: this));
+      }).catchError((error) => UpdateResult.error(message: error)));
     }
     return (firestore
         .collection('settings')
@@ -183,8 +184,10 @@ class Species implements FirestoreItem {
         .collection("species")
         .doc(id)
         .set(toJson())
-        .then((value) => UpdateResult.saveOK(item: this))
-        .catchError((error) => UpdateResult.error(message: error)));
+        .then((value) {
+      _saveChangeLog(firestore, type);
+      return (UpdateResult.saveOK(item: this));
+    }).catchError((error) => UpdateResult.error(message: error)));
   }
 
   @override

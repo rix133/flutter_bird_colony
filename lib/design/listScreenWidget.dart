@@ -201,7 +201,8 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
             SizedBox(height: 20,),
             Row(children: [
               Expanded(child: TextField(
-                controller: searchController,
+                    key: Key("searchTextField"),
+                    controller: searchController,
                 onChanged: (value) {
                   setState(() {});
                 },

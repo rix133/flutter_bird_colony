@@ -45,29 +45,9 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
   Future<void> executeDownload() {
     //get how many different year experiments are requested
     Set<int?> totalYears = items.map((e) => (e as Experiment).year).toSet();
-
-    if(totalYears.length > 1){
-      return showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              backgroundColor: Colors.black87,
-              title: Text("Download"),
-              content: Text("Please select only one year to download"),
-              actions: [
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text("Close", style: TextStyle(color: Colors.black))),
-              ],
-            );
-          });
-    } else {
       DateTime? start = totalYears.isNotEmpty ? DateTime(totalYears.first!) : null;
       return (FSItemMixin()
           .downloadExcel(items, "experiments", widget.firestore, start: start));
-    }
 
   }
 

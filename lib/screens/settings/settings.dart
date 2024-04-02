@@ -353,8 +353,11 @@ class _SettingsPageState extends State<SettingsPage> {
         .get()
         .then((value) {
       if (value.docs.isEmpty) {
-        //should there be a a default list of species?
-        return;
+        //make a default list of species from the example
+        for (Species s in LocalSpeciesList.example().species) {
+          s.save(widget.firestore);
+        }
+        return LocalSpeciesList.example();
       } else {
         List<Species> speciesList =
             value.docs.map((e) => Species.fromDocSnapshot(e)).toList();

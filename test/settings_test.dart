@@ -17,7 +17,7 @@ import 'package:provider/provider.dart';
 import 'mocks/mockAuthService.dart';
 import 'mocks/mockSharedPreferencesService.dart';
 
-void main() {
+void main() async {
   final MockAuthService authService = MockAuthService();
   final sharedPreferencesService = MockSharedPreferencesService();
   final FirebaseFirestore firestore = FakeFirebaseFirestore();

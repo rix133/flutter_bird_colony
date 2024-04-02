@@ -379,28 +379,13 @@ class Experiment implements FirestoreItem {
   @override
   Future<UpdateResult> delete(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
-      bool soft = true,
       String type = "default"}) {
     CollectionReference expCollection =
         firestore.collection('experiments');
     _updateNestCollection(firestore, previousNests, delete: true);
     _updateBirdsCollection(firestore, previousBirds, delete: true);
 
-    if (!soft) {
-      return expCollection
-          .doc(id)
-          .delete()
-          .then((value) => UpdateResult.deleteOK(item: this))
-          .catchError((error) => UpdateResult.error(message: error.toString()));
-    } else {
-      CollectionReference deletedCollection = firestore
-          .collection("deletedItems")
-          .doc("experiments")
-          .collection("deleted");
-
-      return FSItemMixin()
-          .deleteFiresoreItem(this, expCollection, deletedCollection);
-    }
+    return FSItemMixin().deleteFiresoreItem(this, expCollection);
   }
 
   @override

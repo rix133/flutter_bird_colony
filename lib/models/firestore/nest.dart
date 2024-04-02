@@ -257,7 +257,6 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   @override
   Future<UpdateResult> delete(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
-      bool soft = true,
       type = "default"}) async {
     // delete from the bird as well if asked for
     if (otherItems != null) {
@@ -271,21 +270,9 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     }
     CollectionReference items =
         firestore.collection(discover_date.year.toString());
-    if (!soft) {
-      return await items
-          .doc(id)
-          .delete()
-          .then((value) => UpdateResult.deleteOK(item: this))
-          .catchError((error) => UpdateResult.error(message: error.toString()));
-    } else {
-      CollectionReference deletedCollection = firestore
-          .collection("deletedItems")
-          .doc("Nests_" + DateTime.now().year.toString())
-          .collection("deleted");
 
       //check if the item is already in deleted collection
-      return FSItemMixin().deleteFiresoreItem(this, items, deletedCollection);
-    }
+    return FSItemMixin().deleteFiresoreItem(this, items);
   }
 
   double getAccuracy() {

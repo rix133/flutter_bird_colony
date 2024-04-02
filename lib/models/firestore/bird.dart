@@ -498,7 +498,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     CollectionReference birds = firestore.collection("Birds");
     if (prevBird != null && prevBird!.band != band) {
       return await prevBird!
-          .delete(firestore, otherItems: otherItems, soft: false, type: type)
+          .delete(firestore, otherItems: otherItems, type: type)
           .then((value) async {
         if (value.success) {
           return await _saveBirdToFirestore(birds, otherItems);
@@ -514,7 +514,6 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   @override
   Future<UpdateResult> delete(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
-      bool soft = true,
       type = "parent"}) async {
     // delete from the nest as well if asked for
     if (otherItems != null) {
@@ -532,22 +531,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     if (ur.success) {
       return ur;
     }
-    if (!soft) {
-      return await items
-          .doc(id)
-          .delete()
-          .then((value) => UpdateResult.deleteOK(item: this))
-          .catchError((error) => UpdateResult.error(message: error.toString()));
-    } else {
-      CollectionReference deletedCollection = firestore
-          .collection("deletedItems")
-          .doc("Birds")
-          .collection("deleted");
-
-      //check if the item is already in deleted collection
-
-      return FSItemMixin().deleteFiresoreItem(this, items, deletedCollection);
-    }
+    return FSItemMixin().deleteFiresoreItem(this, items);
   }
 
   @override

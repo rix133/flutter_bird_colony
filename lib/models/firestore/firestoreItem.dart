@@ -31,7 +31,9 @@ abstract class FirestoreItem{
 
   Future <UpdateResult> save(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, String type = "default"});
 
-  Future <UpdateResult> delete(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool soft = true, String type = "default"});
+  Future<UpdateResult> delete(FirebaseFirestore firestore,
+      {CollectionReference<Object?>? otherItems = null,
+      String type = "default"});
 
   //get a row in an excel table
   Future<List<List<CellValue>>> toExcelRows();

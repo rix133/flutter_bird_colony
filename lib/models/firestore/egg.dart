@@ -125,7 +125,9 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   }
 
   @override
-  Future <UpdateResult> delete(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool soft = true, type = "default"}) async {
+  Future<UpdateResult> delete(FirebaseFirestore firestore,
+      {CollectionReference<Object?>? otherItems = null,
+      type = "default"}) async {
     String? nestId = getNest();
     if(nestId == null){
       return UpdateResult.error(message: "No nest found");

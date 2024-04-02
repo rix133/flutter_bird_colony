@@ -104,160 +104,285 @@ void main() {
       responsible: 'Admin',
       last_modified: DateTime.now().subtract(Duration(days: 3)),
       species: 'Common gull');
+  group('Navigation and loading', () {
+    setUpAll(() async {
+      AuthService.instance = authService;
+      LocationService.instance = locationAccuracy10;
 
-  setUpAll(() async {
-    AuthService.instance = authService;
-    LocationService.instance = locationAccuracy10;
+      await firestore.collection('recent').doc("nest").set({"id": "2"});
+      await firestore
+          .collection(nest1.discover_date.year.toString())
+          .doc(nest1.id)
+          .set(nest1.toJson());
+      await firestore
+          .collection(nest2.discover_date.year.toString())
+          .doc(nest2.id)
+          .set(nest2.toJson());
+      await firestore
+          .collection(nest3.discover_date.year.toString())
+          .doc(nest3.id)
+          .set(nest3.toJson());
 
-    await firestore.collection('recent').doc("nest").set({"id": "2"});
-    await firestore
-        .collection(nest1.discover_date.year.toString())
-        .doc(nest1.id)
-        .set(nest1.toJson());
-    await firestore
-        .collection(nest2.discover_date.year.toString())
-        .doc(nest2.id)
-        .set(nest2.toJson());
-    await firestore
-        .collection(nest3.discover_date.year.toString())
-        .doc(nest3.id)
-        .set(nest3.toJson());
+      await firestore.collection("Birds").doc(parent.band).set(parent.toJson());
+      await firestore.collection("Birds").doc(chick.band).set(chick.toJson());
+      //add egg to nest
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest1.id)
+          .collection("egg")
+          .doc(egg.id)
+          .set(egg.toJson());
+      await firestore
+          .collection('experiments')
+          .doc(experiment.id)
+          .set(experiment.toJson());
 
-    await firestore.collection("Birds").doc(parent.band).set(parent.toJson());
-    await firestore.collection("Birds").doc(chick.band).set(chick.toJson());
-    //add egg to nest
-    await firestore
-        .collection(DateTime.now().year.toString())
-        .doc(nest1.id)
-        .collection("egg")
-        .doc(egg.id)
-        .set(egg.toJson());
-    await firestore
-        .collection('experiments')
-        .doc(experiment.id)
-        .set(experiment.toJson());
+      await firestore
+          .collection('users')
+          .doc(userEmail)
+          .set({'isAdmin': false});
 
-    await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
+      myApp = ChangeNotifierProvider<SharedPreferencesService>(
+        create: (_) => sharedPreferencesService,
+        child: MaterialApp(initialRoute: '/listExperiments', routes: {
+          '/': (context) => MyHomePage(title: "Nest app"),
+          '/listExperiments': (context) =>
+              ListExperiments(firestore: firestore),
+          '/editExperiment': (context) => EditExperiment(firestore: firestore),
+          '/mapNests': (context) => MapNests(firestore: firestore),
+        }),
+      );
+    });
+    testWidgets("will show alertdialog when listTile is tapped",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      //find the search input
+      await tester.tap(find.byType(ListTile).first);
+      await tester.pumpAndSettle();
 
-    myApp = ChangeNotifierProvider<SharedPreferencesService>(
-      create: (_) => sharedPreferencesService,
-      child: MaterialApp(initialRoute: '/listExperiments', routes: {
-        '/': (context) => MyHomePage(title: "Nest app"),
-        '/listExperiments': (context) => ListExperiments(firestore: firestore),
-        '/editExperiment': (context) => EditExperiment(firestore: firestore),
-        '/mapNests': (context) => MapNests(firestore: firestore),
-      }),
-    );
+      //check if the list of birds is displayed
+          expect(find.byType(AlertDialog), findsOneWidget);
+
+      //close the dialog
+      await tester.tap(find.text("close"));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+    });
+
+    testWidgets("will go to nests when map is tapped",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      //find the map icon on first list tile
+      await tester.tap(find.byIcon(Icons.map).first);
+      await tester.pumpAndSettle();
+
+      //check if redirected to mapNests
+      expect(find.byType(MapNests), findsOneWidget);
+    });
+
+    testWidgets("will go to edit experiment when edit is tapped",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      //find the map icon on first list tile
+      await tester.tap(find.byIcon(Icons.edit).first);
+      await tester.pumpAndSettle();
+
+      //check if redirected to mapNests
+      expect(find.byType(EditExperiment), findsOneWidget);
+    });
+
+    testWidgets('List experiments loads', (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      expect(find.byType(ListTile), findsNWidgets(1));
+      expect(find.text("New Experiment"), findsOneWidget);
+    });
+
+    testWidgets("can add new experiment", (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+      expect(find.byType(EditExperiment), findsOneWidget);
+    });
+
+    testWidgets('List experiments loads and can be edited',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      expect(find.byType(ListTile), findsNWidgets(1));
+      //find the edit button and tap it
+      await tester.tap(find.byIcon(Icons.edit));
+      await tester.pumpAndSettle();
+      expect(find.byType(EditExperiment), findsOneWidget);
+    });
   });
 
-  testWidgets("will show alertdialog when listTile is tapped",
-      (WidgetTester tester) async {
-    await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
-    //find the search input
-    await tester.tap(find.byType(ListTile).first);
-    await tester.pumpAndSettle();
+  group('Filtering', () {
+    setUpAll(() async {
+      AuthService.instance = authService;
+      LocationService.instance = locationAccuracy10;
 
-    //check if the list of birds is displayed
-    expect(find.byType(AlertDialog), findsOneWidget);
+      await firestore.collection('recent').doc("nest").set({"id": "2"});
+      await firestore
+          .collection(nest1.discover_date.year.toString())
+          .doc(nest1.id)
+          .set(nest1.toJson());
+      await firestore
+          .collection(nest2.discover_date.year.toString())
+          .doc(nest2.id)
+          .set(nest2.toJson());
+      await firestore
+          .collection(nest3.discover_date.year.toString())
+          .doc(nest3.id)
+          .set(nest3.toJson());
 
-    //close the dialog
-    await tester.tap(find.text("close"));
-    await tester.pumpAndSettle();
-    expect(find.byType(AlertDialog), findsNothing);
+      await firestore.collection("Birds").doc(parent.band).set(parent.toJson());
+      await firestore.collection("Birds").doc(chick.band).set(chick.toJson());
+      //add egg to nest
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest1.id)
+          .collection("egg")
+          .doc(egg.id)
+          .set(egg.toJson());
+      await firestore
+          .collection('experiments')
+          .doc(experiment.id)
+          .set(experiment.toJson());
+
+      await firestore
+          .collection('experiments')
+          .doc("2")
+          .set(experiment.toJson());
+      experiment.year = 2023;
+      await firestore
+          .collection('experiments')
+          .doc("3")
+          .set(experiment.toJson());
+
+      await firestore
+          .collection('users')
+          .doc(userEmail)
+          .set({'isAdmin': false});
+
+      myApp = ChangeNotifierProvider<SharedPreferencesService>(
+        create: (_) => sharedPreferencesService,
+        child: MaterialApp(initialRoute: '/listExperiments', routes: {
+          '/': (context) => MyHomePage(title: "Nest app"),
+          '/listExperiments': (context) =>
+              ListExperiments(firestore: firestore),
+          '/editExperiment': (context) => EditExperiment(firestore: firestore),
+          '/mapNests': (context) => MapNests(firestore: firestore),
+        }),
+      );
+    });
+
+    testWidgets("will filter experiments by year", (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      expect(find.byType(ListTile), findsNWidgets(2));
+      await tester.tap(find.byIcon(Icons.filter_alt));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(DateTime.now().year.toString()));
+      await tester.pumpAndSettle();
+      //tap the 2023 year  option
+      await tester.tap(find.text("2023"));
+      await tester.pumpAndSettle();
+      expect(find.byType(ListTile), findsNWidgets(1));
+    });
+
+    testWidgets("will filter experiments by text", (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      expect(find.byType(ListTile), findsNWidgets(2));
+      await tester.enterText(find.byKey(Key('searchTextField')), "10");
+      await tester.pumpAndSettle();
+      expect(find.byType(ListTile), findsNWidgets(0));
+    });
+
+    testWidgets("can search for experiment", (WidgetTester tester) async {
+      experiment.name = "test";
+      await firestore
+          .collection('experiments')
+          .doc("2")
+          .set(experiment.toJson());
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.search));
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsOneWidget);
+      await tester.enterText(find.byType(TextField), "New");
+      await tester.pumpAndSettle();
+      expect(find.byType(ListTile), findsOneWidget);
+    });
   });
 
-  testWidgets("will go to nests when map is tapped",
-      (WidgetTester tester) async {
-    await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
-    //find the map icon on first list tile
-    await tester.tap(find.byIcon(Icons.map).first);
-    await tester.pumpAndSettle();
+  group('Exporting', () {
+    setUpAll(() async {
+      AuthService.instance = authService;
+      LocationService.instance = locationAccuracy10;
 
-    //check if redirected to mapNests
-    expect(find.byType(MapNests), findsOneWidget);
-  });
+      await firestore.collection('recent').doc("nest").set({"id": "2"});
+      await firestore
+          .collection(nest1.discover_date.year.toString())
+          .doc(nest1.id)
+          .set(nest1.toJson());
+      await firestore
+          .collection(nest2.discover_date.year.toString())
+          .doc(nest2.id)
+          .set(nest2.toJson());
+      await firestore
+          .collection(nest3.discover_date.year.toString())
+          .doc(nest3.id)
+          .set(nest3.toJson());
 
-  testWidgets("will go to edit experiment when edit is tapped",
-      (WidgetTester tester) async {
-    await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
-    //find the map icon on first list tile
-    await tester.tap(find.byIcon(Icons.edit).first);
-    await tester.pumpAndSettle();
+      await firestore.collection("Birds").doc(parent.band).set(parent.toJson());
+      await firestore.collection("Birds").doc(chick.band).set(chick.toJson());
+      //add egg to nest
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest1.id)
+          .collection("egg")
+          .doc(egg.id)
+          .set(egg.toJson());
+      await firestore
+          .collection('experiments')
+          .doc(experiment.id)
+          .set(experiment.toJson());
 
-    //check if redirected to mapNests
-    expect(find.byType(EditExperiment), findsOneWidget);
-  });
+      await firestore
+          .collection('users')
+          .doc(userEmail)
+          .set({'isAdmin': false});
 
-  testWidgets('List experiments loads', (WidgetTester tester) async {
-    await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
-    expect(find.byType(ListTile), findsNWidgets(1));
-    expect(find.text("New Experiment"), findsOneWidget);
-  });
+      myApp = ChangeNotifierProvider<SharedPreferencesService>(
+        create: (_) => sharedPreferencesService,
+        child: MaterialApp(initialRoute: '/listExperiments', routes: {
+          '/': (context) => MyHomePage(title: "Nest app"),
+          '/listExperiments': (context) =>
+              ListExperiments(firestore: firestore),
+          '/editExperiment': (context) => EditExperiment(firestore: firestore),
+          '/mapNests': (context) => MapNests(firestore: firestore),
+        }),
+      );
+    });
 
-  testWidgets('List experiments loads and can be edited',
-      (WidgetTester tester) async {
-    await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
-    expect(find.byType(ListTile), findsNWidgets(1));
-    //find the edit button and tap it
-    await tester.tap(find.byIcon(Icons.edit));
-    await tester.pumpAndSettle();
-    expect(find.byType(EditExperiment), findsOneWidget);
-  });
+    testWidgets("will raise download experiment dialog",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.download));
+      await tester.pump(Duration(milliseconds: 500));
+      expect(find.byType(AlertDialog), findsOneWidget);
+      await tester.tap(find.text("OK"));
+      await tester.pumpAndSettle();
 
-  testWidgets("will filter experiments by year", (WidgetTester tester) async {
-    await firestore.collection('experiments').doc("2").set(experiment.toJson());
-    experiment.year = 2023;
-    await firestore.collection('experiments').doc("3").set(experiment.toJson());
-    await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
-    expect(find.byType(ListTile), findsNWidgets(2));
-    await tester.tap(find.byIcon(Icons.filter_alt));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text(DateTime.now().year.toString()));
-    await tester.pumpAndSettle();
-    //tap the 2023 year  option
-    await tester.tap(find.text("2023"));
-    await tester.pumpAndSettle();
-    expect(find.byType(ListTile), findsNWidgets(1));
-  });
-
-  testWidgets("can add new experiment", (WidgetTester tester) async {
-    await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pumpAndSettle();
-    expect(find.byType(EditExperiment), findsOneWidget);
-  });
-
-  testWidgets("can search for experiment", (WidgetTester tester) async {
-    experiment.name = "test";
-    await firestore.collection('experiments').doc("2").set(experiment.toJson());
-    await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.search));
-    await tester.pumpAndSettle();
-    expect(find.byType(TextField), findsOneWidget);
-    await tester.enterText(find.byType(TextField), "New");
-    await tester.pumpAndSettle();
-    expect(find.byType(ListTile), findsOneWidget);
-  });
-
-  testWidgets("will raise download experiment dialog",
-      (WidgetTester tester) async {
-    await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.download));
-    await tester.pump(Duration(milliseconds: 500));
-    expect(find.byType(AlertDialog), findsOneWidget);
-    await tester.tap(find.text("OK"));
-    await tester.pumpAndSettle();
-
-    //check that alert dialog is gone
-    expect(find.byType(AlertDialog), findsNothing);
+      //check that alert dialog is gone
+      expect(find.byType(AlertDialog), findsNothing);
+    });
   });
 }

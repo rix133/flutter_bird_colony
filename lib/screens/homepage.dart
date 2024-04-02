@@ -12,10 +12,11 @@ class MyHomePage extends StatefulWidget {
 
 
 class _MyHomePageState extends State<MyHomePage> {
+  AuthService _auth = AuthService.instance;
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: AuthService.instance.isUserSignedIn(),
+      future: _auth.isUserSignedIn(),
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.data == true) {
@@ -44,8 +45,18 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          HomePageButton(route: '/mapNests', icon: Icons.map_outlined, label: "map", color: Colors.green[800]!),
-                          HomePageButton(route: '/mapCreateNest', icon: Icons.add, label: "add nest", color: Colors.purple[800]!),
+                          HomePageButton(
+                              route: '/mapNests',
+                              icon: Icons.map_outlined,
+                              label: "map",
+                              color: Colors.green[800]!,
+                              auth: _auth),
+                          HomePageButton(
+                              route: '/mapCreateNest',
+                              icon: Icons.add,
+                              label: "add nest",
+                              color: Colors.purple[800]!,
+                              auth: _auth),
                         ],
                       ),
                     ),
@@ -58,12 +69,27 @@ class _MyHomePageState extends State<MyHomePage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                HomePageButton(route: "/listDatas", icon: Icons.science, label: "data", color: Colors.blue[700]!),
-                                HomePageButton(route: "/statistics", icon: Icons.bar_chart, label: "stats", color: Colors.amber[700]!),
+                                HomePageButton(
+                                    route: "/listDatas",
+                                    icon: Icons.science,
+                                    label: "data",
+                                    color: Colors.blue[700]!,
+                                    auth: _auth),
+                                HomePageButton(
+                                    route: "/statistics",
+                                    icon: Icons.bar_chart,
+                                    label: "stats",
+                                    color: Colors.amber[700]!,
+                                    auth: _auth),
                               ],
                             ),
                           ),
-                          HomePageButton(route: "/findNest", icon: Icons.search, label: "find nest", color: Colors.red[900]!),
+                          HomePageButton(
+                              route: "/findNest",
+                              icon: Icons.search,
+                              label: "find nest",
+                              color: Colors.red[900]!,
+                              auth: _auth),
                         ],
                       ),
                     ),

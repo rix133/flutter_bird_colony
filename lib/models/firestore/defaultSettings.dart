@@ -152,18 +152,11 @@ class DefaultSettings implements FirestoreItem {
   @override
   Future<UpdateResult> delete(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
-      bool soft = true,
       String type = "default"}) {
     if (id == null) {
       return Future.value(UpdateResult.deleteOK(item: this));
     }
-    return (FSItemMixin().deleteFiresoreItem(
-        this,
-        firestore.collection('settings'),
-        firestore
-            .collection('settings')
-            .doc(type)
-            .collection("deletedSettings")));
+    return (FSItemMixin().deleteFiresoreItem(this, firestore.collection('settings')));
   }
 
   @override

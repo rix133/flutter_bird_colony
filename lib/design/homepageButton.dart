@@ -6,13 +6,19 @@ class HomePageButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
+  final AuthService auth;
 
-  HomePageButton({required this.route, required this.icon, required this.label, required this.color});
+  HomePageButton(
+      {required this.route,
+      required this.icon,
+      required this.label,
+      required this.color,
+      required this.auth});
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: AuthService.instance.isUserSignedIn(),
+      future: auth.isUserSignedIn(),
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator(); // Show loading spinner while waiting for future to complete
