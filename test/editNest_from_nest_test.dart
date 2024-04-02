@@ -31,17 +31,7 @@ void main() {
   MockLocationAccuracy10 locationAccuracy10 = MockLocationAccuracy10();
   late Widget myApp;
   final userEmail = "test@example.com";
-  final Nest nest = Nest(
-    id: "1",
-    coordinates: GeoPoint(0, 0),
-    accuracy: "3.22m",
-    last_modified: DateTime.now().subtract(Duration(days: 1)),
-    discover_date: DateTime.now().subtract(Duration(days: 2)),
-    first_egg: DateTime.now().subtract(Duration(days: 2)),
-    responsible: "Admin",
-    species: "Common gull",
-    measures: [Measure.note()],
-  );
+  late Nest nest;
   final Egg egg = Egg(
       id: "1 egg 1",
       discover_date: DateTime.now().subtract(Duration(days: 2)),
@@ -108,12 +98,29 @@ void main() {
   });
 
   setUp(() async {
+    //reset nest
+    nest = Nest(
+      id: "1",
+      coordinates: GeoPoint(0, 0),
+      accuracy: "3.22m",
+      last_modified: DateTime.now().subtract(Duration(days: 1)),
+      discover_date: DateTime.now().subtract(Duration(days: 2)),
+      first_egg: DateTime.now().subtract(Duration(days: 2)),
+      responsible: "Admin",
+      species: "Common gull",
+      measures: [Measure.note()],
+    );
+
     //reset the database
     await firestore.collection('recent').doc("nest").set({"id":"1"});
     await firestore.collection(DateTime.now().year.toString()).doc(nest.id).set(nest.toJson());
     //add egg to nest
     await firestore.collection(DateTime.now().year.toString()).doc(nest.id).collection("egg").doc(egg.id).set(egg.toJson());
 
+  });
+  tearDown(() {
+    //empty nests
+    firestore.collection(DateTime.now().year.toString()).doc(nest.id).delete();
   });
 
   testWidgets("Will display add egg and add parent buttons", (WidgetTester tester) async {
@@ -207,6 +214,57 @@ testWidgets("will navigate to nest when egg is saved", (WidgetTester tester) asy
         expect(find.text('Egg 1 intact 2 days old'), findsNothing);
         expect(firestore.collection(DateTime.now().year.toString()).doc(nest.id).collection("egg").doc(egg.id).get(), completion((DocumentSnapshot snapshot) => snapshot.exists == false));
       });
+
+  testWidgets(
+      "will navigate to find nest when nest is saved after validation errors",
+      (WidgetTester tester) async {
+    nest.accuracy = "12.00m";
+    nest.save(firestore);
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.save));
+    await tester.pumpAndSettle();
+
+    expect(find.text("save anyway"), findsOneWidget);
+
+    await tester.tap(find.text('save anyway'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(MyHomePage), findsOneWidget);
+  });
+
+  testWidgets(
+      "will stay on nest when nest saving is canceled after validation errors",
+      (WidgetTester tester) async {
+    nest.accuracy = "12.00m";
+    nest.save(firestore);
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.save));
+    await tester.pumpAndSettle();
+
+    expect(find.text("save anyway"), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsNothing);
+
+    expect(find.byType(EditNest), findsOneWidget);
+  });
+
+  testWidgets("will navigate to find nest when nest is saved",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.save));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(MyHomePage), findsOneWidget);
+  });
 
   testWidgets("will navigate to find nest when nest is deleted", (WidgetTester tester) async {
     await tester.pumpWidget(myApp);

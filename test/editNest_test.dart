@@ -737,14 +737,17 @@ void main() {
       expect(nestObj.species, '');
     });
 
-    testWidgets("will allow saving when species is not selected from a list",
+    testWidgets("will allow saving when species is not in the list",
         (WidgetTester tester) async {
+      nest.species = "undefined";
+      await nest.save(firestore);
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
 
       //set species to undefined in SpeciesRawAutocomplete
-      Finder speciesRawAutocompleteFinder = find.byType(SpeciesRawAutocomplete);
-      expect(speciesRawAutocompleteFinder, findsOneWidget);
+          Finder speciesRawAutocompleteFinder = find.byType(
+              SpeciesRawAutocomplete);
+          expect(speciesRawAutocompleteFinder, findsOneWidget);
 
       // Find the TextField widget which is a descendant of the SpeciesRawAutocomplete widget
       Finder textFieldFinder = find.descendant(
@@ -753,12 +756,8 @@ void main() {
       );
       expect(textFieldFinder, findsOneWidget);
 
-      //enter test in the textfield
-      await tester.enterText(textFieldFinder, 'undefined');
-      await tester.pumpAndSettle();
-
       TextField textField = tester.widget(textFieldFinder);
-      expect(textField.controller?.text, 'undefined');
+          expect(textField.controller?.text, 'undefined');
 
       Finder saveBtn = find.byKey(Key("saveButton"));
       await tester.ensureVisible(saveBtn);
@@ -766,12 +765,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(AlertDialog), findsNothing,
-          reason: "AlertDialog found although species should be set");
-      Nest nestObj = Nest.fromDocSnapshot(await firestore
-          .collection(nest.discover_date.year.toString())
-          .doc(nest.id)
-          .get());
-      expect(nestObj.species, "undefined");
-    });
+              reason: "AlertDialog found although species should be set");
+          Nest nestObj = Nest.fromDocSnapshot(await firestore
+              .collection(nest.discover_date.year.toString())
+              .doc(nest.id)
+              .get());
+          expect(nestObj.species, "undefined");
+        });
   });
 }

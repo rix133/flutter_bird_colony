@@ -52,19 +52,22 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
 
   Future<void> saveItem(BuildContext superContext,
       {bool validate = true, bool allowOverwrite = false}) async {
+    bool dialogResult = false;
     item = widget.getItem();
     List<FirestoreItem> otherFSItems = widget.getOtherItems == null
         ? <FirestoreItem>[]
         : widget.getOtherItems!(); //get other items
-    bool doValidate = validate;
-    bool doOverwrite = allowOverwrite;
     if (validate) {
       urs = item.validate(sps, otherItems: otherFSItems);
       if (urs.isNotEmpty) {
-        showAlertDialog(superContext, "Validation failed", urs, saveItem,
-            validate: false,
-            btnString: "save anyway",
-            allowOverwrite: doOverwrite);
+        dialogResult = await showAlertDialog(
+            superContext, "Validation failed", urs,
+            btnString: "save anyway");
+        if (dialogResult) {
+          await saveItem(superContext,
+              validate: false, allowOverwrite: allowOverwrite);
+          return;
+        }
         return;
       }
     }
@@ -74,20 +77,18 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
     item.responsible = sps?.userName ?? item.responsible;
     ur = await item.save(widget.firestore,
         otherItems: widget.otherItems,
-        allowOverwrite: doOverwrite,
+        allowOverwrite: allowOverwrite,
         type: widget.type);
     if (!ur.success) {
       setState(() {
         _isLoading = false;
       });
-      showAlertDialog(
-          superContext,
-          "Item could not be saved. Do you want to try to overwrite?",
-          [ur],
-          saveItem,
-          allowOverwrite: true,
-          btnString: "Overwrite",
-          validate: doValidate);
+      dialogResult = await showAlertDialog(superContext,
+          "Item could not be saved. Do you want to try to overwrite?", [ur],
+          btnString: "Overwrite");
+      if (dialogResult) {
+        saveItem(superContext, validate: false, allowOverwrite: true);
+      }
     } else {
       _isLoading = false;
       if (widget.onSaveOK != null) {
@@ -133,7 +134,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                   _isLoading = false;
                 });
                 showAlertDialog(
-                    superContext, "Item could not be deleted.", [ur], close,
+                    superContext, "Item could not be deleted.", [ur],
                     btnString: "OK");
               } else {
                 setState(() {
@@ -153,48 +154,44 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
     );
   }
 
-  void showAlertDialog(BuildContext context, String message,
-      List<UpdateResult> errors, Function action,
-      {bool allowOverwrite = false,
-      String btnString = "Retry",
-      bool validate = true}) {
+  Future<bool> showAlertDialog(
+      BuildContext context, String message, List<UpdateResult> errors,
+      {String btnString = "Retry"}) async {
     int errCount = errors.length;
     String mainMessage =
         errCount == 1 ? message : message + " ($errCount errors)";
-    showDialog(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        backgroundColor: Colors.black87,
-        titleTextStyle: TextStyle(color: Colors.red),
-        title: Text("Problem(s)"),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(mainMessage, style: TextStyle(color: Colors.redAccent)),
-          ...errors.map((e) => Text(e.message)).toList(),
-        ]),
-        actions: <Widget>[
-          TextButton(
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.white),
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.white),
-            ),
-            onPressed: () async {
-              Navigator.pop(context);
-              await action(context,
-                  allowOverwrite: allowOverwrite, validate: validate);
-            },
-            child: Text(btnString, style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
+    bool? result = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+              backgroundColor: Colors.black87,
+              titleTextStyle: TextStyle(color: Colors.red),
+              title: Text("Problem(s)"),
+              content: Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(mainMessage, style: TextStyle(color: Colors.redAccent)),
+                ...errors.map((e) => Text(e.message)).toList(),
+              ]),
+              actions: <Widget>[
+                TextButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.white),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.white),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                  child: Text(btnString, style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ));
+    return result ?? false;
   }
 
   Stack getButtons(
