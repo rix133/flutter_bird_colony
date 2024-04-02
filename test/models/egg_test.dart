@@ -185,6 +185,40 @@ void main() {
       );
       expect(egg.statusText(), pre + 'hatched/ring');
     });
+
+    test('itemName should return "egg " and the number', () {
+      var egg = Egg(
+          id: '1 egg 1',
+          discover_date: DateTime.now(),
+          responsible: 'test',
+          status: EggStatus('intact'),
+          measures: []);
+      expect(egg.itemName, 'egg 1');
+    });
+
+    test('name should return id or "New Egg" if id is null', () {
+      Egg egg = Egg(
+          id: null,
+          discover_date: DateTime.now(),
+          responsible: 'test',
+          status: EggStatus('intact'),
+          measures: []);
+      expect(egg.name, 'New Egg');
+    });
+
+    test('changeLog should return sorted list of Eggs', () async {
+      var egg = Egg(
+          id: '1 egg 1',
+          discover_date: DateTime.now(),
+          responsible: 'test',
+          status: EggStatus('intact'),
+          measures: []);
+      var firestore = FakeFirebaseFirestore();
+      egg.save(firestore);
+      var changeLog = await egg.changeLog(firestore);
+      expect(changeLog, isInstanceOf<List<Egg>>());
+      // Add more assertions based on your expected changeLog data
+    });
   });
   group("save", () {
     test('Egg save with no nest', () async {

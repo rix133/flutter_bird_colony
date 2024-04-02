@@ -200,14 +200,6 @@ class Egg extends ExperimentedItem implements FirestoreItem {
     return txt;
   }
 
-  List<Widget> getEggForm(Function(Measure) addMeasure, bool hideValue){
-    return [
-      //statusField(_focusNode),
-      ...measures.map((e) => e.getMeasureForm(addMeasure, hideValue)).toList(),
-    ];
-
-  }
-
 
   ElevatedButton getButton(BuildContext context, Nest? nest){
     return ElevatedButton(
