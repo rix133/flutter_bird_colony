@@ -36,7 +36,9 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
     return Padding(
       padding: const EdgeInsets.all(18.0),
       child: ElevatedButton.icon(
-          onPressed: null,
+          onPressed: () {
+            Navigator.pushNamed(context, '/editBird');
+          },
           icon: Icon(Icons.add),
           label: Padding(child:Text("Add Bird", style: TextStyle(fontSize: 18)), padding: EdgeInsets.all(12)),
           style: ButtonStyle(

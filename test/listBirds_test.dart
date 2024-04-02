@@ -277,4 +277,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(AlertDialog), findsNothing);
   });
+
+  testWidgets("will go to edit bird page when add bird is pressed",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the search input
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    //check if the list of birds is displayed
+    expect(find.byType(EditBird), findsOneWidget);
+  });
 }

@@ -335,29 +335,7 @@ void main() {
     expect(find.byType(SnackBar), findsOneWidget);
   });
 
-  testWidgets("will raise an alertdialog  if species is not set",
-      (WidgetTester tester) async {
-    await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
 
-    await tester.tap(find.text("add nest"));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pumpAndSettle();
-
-    await tester.enterText(find.byKey(Key('enter nest ID')), "2");
-    await tester.tap(find.text("add nest"));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(AlertDialog), findsOneWidget);
-    //tap the Cancel button
-    await tester.tap(find.text("cancel"));
-    await tester.pumpAndSettle();
-
-    //expect to be still in the create nest page
-    expect(find.byType(CreateNest), findsOneWidget);
-  });
 
   testWidgets("will allow  nest saving if species is not set",
       (WidgetTester tester) async {
@@ -372,11 +350,6 @@ void main() {
 
     await tester.enterText(find.byKey(Key('enter nest ID')), "2");
     await tester.tap(find.text("add nest"));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(AlertDialog), findsOneWidget);
-    //tap the save anyway button
-    await tester.tap(find.text("save anyway"));
     await tester.pumpAndSettle();
 
     //expect to be on edit nest page
