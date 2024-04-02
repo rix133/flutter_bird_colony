@@ -351,6 +351,179 @@ class LocalSpeciesList {
 
   LocalSpeciesList();
 
+  factory LocalSpeciesList.example() {
+    LocalSpeciesList list = LocalSpeciesList();
+    List<Species> species = list.species;
+
+    species.add(Species(
+        english: 'Common Gull',
+        local: 'Goéland cendré, Sturmmöwe, Stormmeeuw',
+        latin: 'Larus canus',
+        latinCode: 'larcan'));
+    species.add(Species(
+        english: 'Common Chaffinch',
+        local: 'Pinson des arbres, Buchfink, Vink',
+        latin: 'Fringilla coelebs',
+        latinCode: 'fricoe'));
+    species.add(Species(
+        english: 'Common Wood Pigeon',
+        local: 'Pigeon ramier, Ringeltaube, Houtduif',
+        latin: 'Columba palumbus',
+        latinCode: 'colpal'));
+    species.add(Species(
+        english: 'Dunnock',
+        local: 'Accenteur mouchet, Heckenbraunelle, Heggemus',
+        latin: 'Prunella modularis',
+        latinCode: 'prumod'));
+    species.add(Species(
+        english: 'Common Blackbird',
+        local: 'Merle noir, Amsel, Merel',
+        latin: 'Turdus merula',
+        latinCode: 'turmer'));
+    species.add(Species(
+        english: 'Eurasian Blue Tit',
+        local: 'Mésange bleue, Blaumeise, Pimpelmees',
+        latin: 'Cyanistes caeruleus',
+        latinCode: 'cyacae'));
+    species.add(Species(
+        english: 'Great Tit',
+        local: 'Mésange charbonnière, Kohlmeise, Koolmees',
+        latin: 'Parus major',
+        latinCode: 'parmaj'));
+    species.add(Species(
+        english: 'Eurasian Nuthatch',
+        local: 'Sittelle torchepot, Kleiber, Boomklever',
+        latin: 'Sitta europaea',
+        latinCode: 'siteur'));
+    species.add(Species(
+        english: 'European Robin',
+        local: 'Rouge-gorge familier, Rotkehlchen, Roodborst',
+        latin: 'Erithacus rubecula',
+        latinCode: 'erirub'));
+    species.add(Species(
+        english: 'Eurasian Tree Sparrow',
+        local: 'Moineau friquet, Feldsperling, Ringmus',
+        latin: 'Passer montanus',
+        latinCode: 'pasmont'));
+    species.add(Species(
+        english: 'Common Starling',
+        local: 'Étourneau sansonnet, Star, Spreeuw',
+        latin: 'Sturnus vulgaris',
+        latinCode: 'stuvul'));
+    species.add(Species(
+        english: 'Common Chiffchaff',
+        local: 'Pouillot véloce, Zilpzalp, Tjiftjaf',
+        latin: 'Phylloscopus collybita',
+        latinCode: 'phocol'));
+    species.add(Species(
+        english: 'Willow Warbler',
+        local: 'Pouillot fitis, Fitis, Fitis',
+        latin: 'Phylloscopus trochilus',
+        latinCode: 'photro'));
+    species.add(Species(
+        english: 'House Sparrow',
+        local: 'Moineau domestique, Haussperling, Huismus',
+        latin: 'Passer domesticus',
+        latinCode: 'pasdom'));
+    species.add(Species(
+        english: 'Eurasian Sparrowhawk',
+        local: 'Épervier d\'Europe, Sperber, Sperwer',
+        latin: 'Accipiter nisus',
+        latinCode: 'accnis'));
+    species.add(Species(
+        english: 'Common Buzzard',
+        local: 'Buse variable, Mäusebussard, Buizerd',
+        latin: 'Buteo buteo',
+        latinCode: 'butbut'));
+    species.add(Species(
+        english: 'Eurasian Magpie',
+        local: 'Pie bavarde, Elster, Ekster',
+        latin: 'Pica pica',
+        latinCode: 'picpic'));
+    species.add(Species(
+        english: 'Eurasian Coot',
+        local: 'Foulque macroule, Blässhuhn, Meerkoet',
+        latin: 'Fulica atra',
+        latinCode: 'fulatr'));
+    species.add(Species(
+        english: 'Mallard',
+        local: 'Canard colvert, Stockente, Wilde Eend',
+        latin: 'Anas platyrhynchos',
+        latinCode: 'anapla'));
+    species.add(Species(
+        english: 'Eurasian Skylark',
+        local: 'Alouette des champs, Feldlerche, Veldleeuwerik',
+        latin: 'Alauda arvensis',
+        latinCode: 'alaarv'));
+    species.add(Species(
+        english: 'Common Swift',
+        local: 'Martinet noir, Mauersegler, Gierzwaluw',
+        latin: 'Apus apus',
+        latinCode: 'apuapu'));
+    species.add(Species(
+        english: 'Common Kestrel',
+        local: 'Faucon crécerelle, Turmfalke, Torenvalk',
+        latin: 'Falco tinnunculus',
+        latinCode: 'faltin'));
+    species.add(Species(
+        english: 'Common Linnet',
+        local: 'Linotte mélodieuse, Bluthänfling, Kneu',
+        latin: 'Linaria cannabina',
+        latinCode: 'lincan'));
+    species.add(Species(
+        english: 'Carrion Crow',
+        local: 'Corneille noire, Rabenkrahe, Zwarte Kraai',
+        latin: 'Corvus corone',
+        latinCode: 'corcor'));
+    species.add(Species(
+        english: 'Great Cormorant',
+        local: 'Grand Cormoran, Kormoran, Aalscholver',
+        latin: 'Phalacrocorax carbo',
+        latinCode: 'phacar'));
+    species.add(Species(
+        english: 'Common Tern',
+        local: 'Sterne pierregarin, Flussseeschwalbe, Visdief',
+        latin: 'Sterna hirundo',
+        latinCode: 'sterhi'));
+    species.add(Species(
+        english: 'Black-headed Gull',
+        local: 'Mouette rieuse, Lachmöwe, Kokmeeuw',
+        latin: 'Chroicocephalus ridibundus',
+        latinCode: 'chreri'));
+    species.add(Species(
+        english: 'Lesser Black-backed Gull',
+        local: 'Goéland brun, Heringsmöwe, Kleine Mantelmeeuw',
+        latin: 'Larus fuscus',
+        latinCode: 'larfus'));
+    species.add(Species(
+        english: 'Herring Gull',
+        local: 'Goéland argenté, Silbermöwe, Zilvermeeuw',
+        latin: 'Larus argentatus',
+        latinCode: 'lararg'));
+    species.add(Species(
+        english: 'Yellow-legged Gull',
+        local: 'Goéland leucophée, Mittelmeermöwe, Geelpootmeeuw',
+        latin: 'Larus michahellis',
+        latinCode: 'larmic'));
+    species.add(Species(
+        english: 'Caspian Gull',
+        local: 'Goéland pontique, Steppenmöwe, Pontische Meeuw',
+        latin: 'Larus cachinnans',
+        latinCode: 'larcac'));
+    species.add(Species(
+        english: 'Iceland Gull',
+        local: 'Goéland arctique, Polarmöwe, Kleine Burgemeester',
+        latin: 'Larus glaucoides',
+        latinCode: 'largla'));
+    species.add(Species(
+        english: 'Glaucous Gull',
+        local: 'Goéland bourgmestre, Eismöwe, Grote Burgemeester',
+        latin: 'Larus hyperboreus',
+        latinCode: 'larhyp'));
+
+    return list;
+  }
+
   factory LocalSpeciesList.fromStringList(List<String> species) {
     LocalSpeciesList list = LocalSpeciesList();
     for (String specie in species) {

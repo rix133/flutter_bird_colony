@@ -68,6 +68,23 @@ void main() {
       expect(list.species[1].english, 'European Herring Gull');
     });
 
+    test('creation from factory example ', () {
+      var list = LocalSpeciesList.example();
+      expect(list.species.length, 33);
+      bool hasDuplicates = list.species.toSet().length != list.species.length;
+      expect(hasDuplicates, false);
+
+      //check for duplicate english names
+      hasDuplicates = list.species.map((e) => e.english).toSet().length !=
+          list.species.length;
+      expect(hasDuplicates, false, reason: 'Duplicate english names found');
+
+      //check for duplicate latin names
+      hasDuplicates = list.species.map((e) => e.latin).toSet().length !=
+          list.species.length;
+      expect(hasDuplicates, false, reason: 'Duplicate latin names found');
+    });
+
     test('name should return local name when it is not empty', () {
       final species = Species(
         english: 'Test English',

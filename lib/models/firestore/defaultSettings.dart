@@ -218,7 +218,7 @@ class DefaultSettings implements FirestoreItem {
             setState(() {});
           },
           species: defaultSpecies,
-          speciesList: sps?.speciesList ?? LocalSpeciesList(),
+          speciesList: sps?.speciesList ?? LocalSpeciesList.example(),
           borderColor: Colors.white38,
           bgColor: Colors.amberAccent,
           labelTxt: 'Default species',

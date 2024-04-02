@@ -131,9 +131,14 @@ class SharedPreferencesService extends ChangeNotifier {
   }
 
   LocalSpeciesList get speciesList {
-    return LocalSpeciesList.fromSpeciesList(
-   _sharedPreferences.getStringList('defaultSpeciesList')?.map((e) => Species.fromJson(jsonDecode(e))).toList() ??
-            []);
+    List<String>? speciesJsonList =
+        _sharedPreferences.getStringList('defaultSpeciesList');
+    if (speciesJsonList != null) {
+      return LocalSpeciesList.fromSpeciesList(
+          speciesJsonList.map((e) => Species.fromJson(jsonDecode(e))).toList());
+    } else {
+      return LocalSpeciesList.example();
+    }
   }
 
 
