@@ -22,12 +22,22 @@ used by researchers and conservationists working with seabirds.
 
 ## Getting started
 
-If you want to try out the app, you can download the app from the Google Play Store. Setting up
-for use with your colony requires a bit more work and some knowledge of Flutter and Firebase 
-will be helpful. The setup process is described below. It's a one-time process and once set up
-the app can be used to manage your colony without understanding the details of the setup.
+If you want to try out the app you can use the testing colony. You can download and install the app
+from  [Google Play Store](https://play.google.com/store/apps/details?id=ee.ut.adapt.flutter_bird_colony)
+Alternatively, you can check out the web version of the app
+at [Bird Colony](https://managebirdcolony.web.app/). If you want to use the app with your own colony
+you can set up the app for your colony.
 
 ### Setting up the app
+
+Setting up for use with your colony has two options:
+
+- Write to richard.meitern@ut.ee to have your colony set up. This is the easiest option and once set
+  up you can use the Play Store app to manage your colony.
+- Set up the app for your colony yourself. This requires a bit more work and some knowledge of
+  Flutter and Firebase
+  will be helpful. The setup process is described below. It's a one-time process and once set up
+  the app can be used to manage your colony without understanding the details of the setup.
 
 To get started with the app install flutter and the flutter command line tools. You can find
 instructions for installing [Flutter](https://flutter.dev/docs/get-started/install).
@@ -52,25 +62,6 @@ MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
 You can find more information about setting up the key.properties file
 from [Flutter docs](https://docs.flutter.dev/deployment/android).
 
-## Dependencies
-
-The app uses the following dependencies:
-
-- `geolocator`
-- `firebase_core`
-- `cloud_firestore`
-- `firebase_auth`
-- `google_sign_in`
-- `google_maps_flutter`
-- `flutter_compass`
-- `shared_preferences`
-- `provider`
-- `flutter_colorpicker`
-- `intl`
-- `path`
-- `share_plus`
-- `path_provider`
-- `excel`
 
 ## Tests
 
@@ -78,7 +69,11 @@ The app includes a number of test cases to ensure its functionality. Run the tes
 
 ## Contributing
 
-Contributions are welcome! Clone the repository and create a pull request with your changes.
+Contributions are welcome! Clone the repository and create a pull request with your changes. Once
+you are a happy with your changes and all tests pass create a pull request and the changes will be
+reviewed.
+It is recommended to create an issue before starting work on a new feature or bug fix and define
+test case(s) for the new feature or bug fix.
 
 ## Issues
 
@@ -90,5 +85,5 @@ See the contributors in github for a list of authors.
 
 ## License
 
-This project will be licensed under the MIT License. See the LICENSE file for details.
+This project will be licensed under the AGPL-3.0 License. See the LICENSE file for details.
 
