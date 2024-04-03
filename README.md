@@ -62,6 +62,32 @@ MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
 You can find more information about setting up the key.properties file
 from [Flutter docs](https://docs.flutter.dev/deployment/android).
 
+### Cloud Firestore setup 
+
+Saving to Excel requires you set up a query that requires a COLLECTION_GROUP_ASC index for collection egg and field discover_date. 
+
+For firestore rules we recomend something like this that allows only selected users:
+``` 
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if 
+      	request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.token.email));
+    }
+    // Specific rules for 'users' collection
+    match /users/{document=**} {
+      allow read, write: if request.auth.uid != null && request.auth != null && (
+        request.auth.uid == "gdshgsdhd" || //Admin 1 UID
+        request.auth.uid == "gdy454rjg" || //Admin 2 UID
+   
+        );
+    }
+  }
+}
+```
+
+
 
 ## Tests
 
