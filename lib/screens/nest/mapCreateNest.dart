@@ -19,29 +19,31 @@ class MapCreateNest extends GoogleMapScreen {
 }
 
 class _MapCreateNestState extends GoogleMapScreenState {
-  Nest nest = Nest(
-    coordinates: GeoPoint(0, 0),
-    accuracy: "loading...",
-    last_modified: DateTime.now(),
-    discover_date: DateTime.now(),
-    responsible: null,
-    measures: [Measure.note()],
-  );
-
-  updateNest(bool withDefaults) {
+  Nest getNest(bool withDefaults, String? id) {
+    Nest nest = Nest(
+      coordinates: GeoPoint(0, 0),
+      accuracy: "loading...",
+      last_modified: DateTime.now(),
+      discover_date: DateTime.now(),
+      responsible: null,
+      measures: [Measure.note()],
+    );
     nest.coordinates = coordinates;
     nest.setAccuracy(accuracy);
     nest.last_modified = DateTime.now();
     if (withDefaults) {
+      nest.id = id;
       nest.species = sps?.defaultSpecies;
       nest.responsible = sps?.userName;
     }
+    return nest;
   }
 
   @override
   GestureDetector lastFloatingButton() {
     return GestureDetector(
       onLongPress: () {
+        String? nextId;
         widget.firestoreInstance
             .collection('recent')
             .doc("nest")
@@ -50,20 +52,20 @@ class _MapCreateNestState extends GoogleMapScreenState {
           if (value.data() != null) {
             int? next = int.tryParse(value.data()!['id']);
             if (next != null) {
-              nest.id = (next + 1).toString();
+              nextId = (next + 1).toString();
             }
             //reserve the id!?
             //lastId.set({'id': nest.id});
           }
-          updateNest(true);
-          Navigator.pushNamed(context, '/createNest', arguments: nest);
+          Navigator.pushNamed(context, '/createNest',
+              arguments: getNest(true, nextId));
         });
       },
       child: FloatingActionButton(
         heroTag: "addNest",
         onPressed: () {
-          updateNest(false);
-          Navigator.pushNamed(context, '/createNest', arguments: nest);
+          Navigator.pushNamed(context, '/createNest',
+              arguments: getNest(false, null));
         },
         child: const Icon(Icons.add),
       ),

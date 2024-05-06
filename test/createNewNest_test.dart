@@ -131,6 +131,101 @@ void main() {
     });
   });
 
+  group('Multiple nest creation tests', () {
+    testWidgets(
+        "will go to create nest page without id set on second nest addition",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // add first nest
+      await tester.tap(find.text("add nest"));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+
+      tester = await setSpecies(tester);
+
+      Finder textFieldFinder = find.byKey(Key('enter nest ID')).last;
+      await tester.enterText(textFieldFinder, "2");
+      await tester.pumpAndSettle();
+
+      expect(textFieldFinder, findsOneWidget);
+      TextFormField textField = tester.widget(textFieldFinder);
+      TextEditingController nestIDCntr = textField.controller!;
+      expect(nestIDCntr.text, "2");
+
+      await tester.tap(find.text("add nest"));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EditNest), findsOneWidget);
+
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MapCreateNest), findsOneWidget);
+      //add next nest
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CreateNest), findsOneWidget);
+      expect(find.text("Next: 3"), findsOneWidget);
+      //print all text on all fields
+      textFieldFinder = find.byKey(Key('enter nest ID')).last;
+      expect(textFieldFinder, findsOneWidget);
+      textField = tester.widget(textFieldFinder);
+      nestIDCntr = textField.controller!;
+      expect(nestIDCntr.text, "");
+    });
+    testWidgets(
+        "will go to create nest page with id set on second nest addition with long press",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // add first nest
+      await tester.tap(find.text("add nest"));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+
+      tester = await setSpecies(tester);
+
+      Finder textFieldFinder = find.byKey(Key('enter nest ID')).last;
+      await tester.enterText(textFieldFinder, "2");
+      await tester.pumpAndSettle();
+
+      expect(textFieldFinder, findsOneWidget);
+      TextFormField textField = tester.widget(textFieldFinder);
+      TextEditingController nestIDCntr = textField.controller!;
+      expect(nestIDCntr.text, "2");
+
+      await tester.tap(find.text("add nest"));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EditNest), findsOneWidget);
+
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MapCreateNest), findsOneWidget);
+      //add next nest with long press
+      await tester.longPress(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CreateNest), findsOneWidget);
+      expect(find.text("Next: 3"), findsOneWidget);
+      //print all text on all fields
+      textFieldFinder = find.byKey(Key('enter nest ID')).last;
+      expect(textFieldFinder, findsOneWidget);
+      textField = tester.widget(textFieldFinder);
+      nestIDCntr = textField.controller!;
+      expect(nestIDCntr.text, "3");
+    });
+  });
+
   group('Location tests', () {
     testWidgets("can refresh position on map", (WidgetTester tester) async {
       await tester.pumpWidget(myApp);
