@@ -210,7 +210,65 @@ void main() async {
       expect(find.byType(AlertDialog), findsNWidgets(1));
     });
 
+    testWidgets('Can fail login with google', (WidgetTester tester) async {
+      // Initialize the app
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Tap the 'Login with email' button to open the dialog
+      await tester.tap(find.byKey(Key('loginWithGoogleButton')));
+      await tester.pumpAndSettle();
+
+      //for(Element e in find.byType(Text).evaluate()){
+      //  print((e.widget as Text).data);
+      //}
+
+      // Check if the page is not changed
+      expect(find.text("Login failed, please try again."), findsOneWidget);
+      expect(find.byType(AlertDialog), findsOneWidget);
+      //push OK
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+    });
+
     testWidgets('Create new account', (WidgetTester tester) async {
+      // Initialize the app
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // Tap the 'Login with email' button to open the dialog
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
+
+      // Enter email and password
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Email'), 'test@example.com');
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Password'), 'password123');
+
+      // Tap the 'Create new account' button
+      await tester.tap(find.text('Login/Register'));
+      await tester.pumpAndSettle();
+      /*
+      for(Element e in find.byType(Text).evaluate()){
+        print((e.widget as Text).data);
+      }
+       */
+
+      // Check if the account creation was successful
+      expect(find.byType(MyHomePage), findsOneWidget);
+    });
+
+    testWidgets('Create new account on empty database',
+        (WidgetTester tester) async {
+      //clear all users
+      await firestore.collection('users').get().then((value) {
+        for (var doc in value.docs) {
+          doc.reference.delete();
+        }
+      });
+
       // Initialize the app
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();

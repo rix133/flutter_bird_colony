@@ -100,4 +100,31 @@ void main() {
       expect(measure.required, equals(true));
     });
   });
+  group('Measure.text factory tests', () {
+    test(
+        'Measure.text factory should return a new instance with isNumber false',
+        () {
+      final measure = Measure.text(name: 'test', value: '10', unit: 'kg');
+
+      expect(measure.name, equals('test'));
+      expect(measure.value, equals('10'));
+      expect(measure.isNumber, equals(false));
+      expect(measure.unit, equals('kg'));
+      expect(measure.type, equals('any'));
+      expect(measure.required, equals(false));
+    });
+
+    test('Measure.text factory should return a new instance with required true',
+        () {
+      final measure =
+          Measure.text(name: 'test', value: '10', unit: 'kg', required: true);
+
+      expect(measure.name, equals('test'));
+      expect(measure.value, equals('10'));
+      expect(measure.isNumber, equals(false));
+      expect(measure.unit, equals('kg'));
+      expect(measure.type, equals('any'));
+      expect(measure.required, equals(true));
+    });
+  });
 }

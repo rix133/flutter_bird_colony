@@ -164,6 +164,75 @@ void main() {
     });
   });
 
+  group('Bird timeSpan method', () {
+    test('should return true when range is "All"', () {
+      final bird = Bird(
+        band: "AA",
+        ringed_date: DateTime.now(),
+        ringed_as_chick: true,
+        measures: [],
+      );
+
+      final result = bird.timeSpan("All");
+      expect(result, true);
+    });
+
+    test('should return true when range is "Today" and ringed_date is today',
+        () {
+      final bird = Bird(
+        band: "AA",
+        ringed_date: DateTime.now(),
+        ringed_as_chick: true,
+        measures: [],
+      );
+
+      final result = bird.timeSpan("Today");
+      expect(result, true);
+    });
+
+    test(
+        'should return true when range is "This year" and ringed_date is this year',
+        () {
+      final bird = Bird(
+        band: "AA",
+        ringed_date: DateTime.now(),
+        ringed_as_chick: true,
+        measures: [],
+      );
+
+      final result = bird.timeSpan("This year");
+      expect(result, true);
+    });
+
+    test(
+        'should return true when range is a year and ringed_date is the same year',
+        () {
+      final bird = Bird(
+        band: "AA",
+        ringed_date: DateTime(2022),
+        ringed_as_chick: true,
+        measures: [],
+      );
+
+      final result = bird.timeSpan("2022");
+      expect(result, true);
+    });
+
+    test(
+        'should return false when range is a year and ringed_date is not the same year',
+        () {
+      final bird = Bird(
+        band: "AA",
+        ringed_date: DateTime(2021),
+        ringed_as_chick: true,
+        measures: [],
+      );
+
+      final result = bird.timeSpan("2022");
+      expect(result, false);
+    });
+  });
+
   test("should overwrite existing bird if requested", () async {
     Bird bird = Bird(
       band: "Band5",

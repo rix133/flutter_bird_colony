@@ -327,39 +327,6 @@ class Measure implements Comparable<Measure> {
     return this.modified.compareTo(other.modified);
   }
 
-  ListTile getMeasureTileEdit(){
-    valueCntr.text = value;
-    return ListTile(
-      title: Text(
-          name + (unit == "" ? "" : " (" + unit + ")" + (required ? "*" : ""))),
-      trailing: TextFormField(
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        controller: valueCntr,
-        textAlign: TextAlign.center,
-        decoration: InputDecoration(
-          labelText: value,
-          labelStyle: TextStyle(color: Colors.yellow),
-          hintText: unit,
-          fillColor: (required && value.isEmpty) ? Colors.red : Colors.orange,
-          focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(25),
-              borderSide: (BorderSide(
-                  color: Colors.indigo
-              ))
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(25.0),
-            borderSide: BorderSide(
-              color:
-                  (required && value.isEmpty) ? Colors.red : Colors.deepOrange,
-              width: 1.5,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget getMeasureFormWithAddButton(
       Function(Measure) onPressed, bool hideValue) {
     String label = name + (unit == "" ? "" : " (" + unit + ")");

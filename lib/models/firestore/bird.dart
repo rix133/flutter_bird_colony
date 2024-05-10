@@ -195,13 +195,6 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     }));
   }
 
-  bool seenThisYear(bool chick) {
-    if (chick || last_modified == null) {
-      return this.ringed_date.year == DateTime.now().year;
-    } else {
-      return this.last_modified!.year == DateTime.now().year;
-    }
-  }
 
   bool people(String range, String me) {
     if (range == "Everybody") {
