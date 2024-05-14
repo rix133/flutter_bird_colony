@@ -40,7 +40,9 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
             Navigator.pushNamed(context, '/editBird');
           },
           icon: Icon(Icons.add),
-          label: Padding(child:Text("Add Bird", style: TextStyle(fontSize: 18)), padding: EdgeInsets.all(12)),
+          label: Padding(
+              child: Text("Add adult", style: TextStyle(fontSize: 18)),
+              padding: EdgeInsets.all(12)),
           style: ButtonStyle(
               backgroundColor: MaterialStateProperty.all(Colors.grey)
           )

@@ -55,7 +55,7 @@ class _EditBirdState extends State<EditBird> {
 
   Egg? egg;
 
-  String ageType = "any";
+  String ageType = "parent"; //defaults to adult
 
   Bird bird = Bird(
     species: "",

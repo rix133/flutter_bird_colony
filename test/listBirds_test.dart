@@ -278,15 +278,51 @@ void main() {
     expect(find.byType(AlertDialog), findsNothing);
   });
 
-  testWidgets("will go to edit bird page when add bird is pressed",
+  testWidgets("will go to edit bird page when add adult is pressed",
       (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
-    //find the search input
+    //find the add bird button
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
 
-    //check if the list of birds is displayed
+    //check if the bird input form is displayed
     expect(find.byType(EditBird), findsOneWidget);
+  });
+  testWidgets("will save a new bird from edit bird when add adult is pressed",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the add bird button
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    //enter letters
+    await tester.enterText(find.byKey(Key("band_letCntr")), "bb");
+    await tester.pumpAndSettle();
+
+    //find by key band_numCntr
+    expect(find.byKey(Key("band_numCntr")), findsOneWidget);
+    //enter numbers
+    await tester.enterText(find.byKey(Key("band_numCntr")), "1235");
+    await tester.pumpAndSettle();
+
+    final finder = find.byWidgetPredicate((Widget widget) =>
+        widget is InputDecorator &&
+        widget.decoration.labelText == 'color ring');
+
+    expect(finder, findsOneWidget);
+
+    await tester.enterText(finder, "A1b2");
+    await tester.pumpAndSettle();
+
+    //save the bird
+    await tester.tap(find.byKey(Key("saveButton")));
+    await tester.pumpAndSettle();
+
+    //expect to find the bird in firestore
+    var bird = await firestore.collection("Birds").doc("BB1235").get();
+    expect(bird.exists, true);
+    expect(bird.data()!['color_band'], "A1B2");
   });
 }
