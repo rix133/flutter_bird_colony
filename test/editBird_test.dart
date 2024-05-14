@@ -303,6 +303,96 @@ void main() {
       expect(find.text("Arctic tern"), findsOneWidget);
     });
   });
+
+  group("Bird Measures", () {
+    late Bird parent;
+    late Egg egg;
+    late Nest nest;
+    setUp(() async {
+      parent = masterParent.copy();
+      egg = masterEgg.copy();
+      nest = masterNest.copy();
+      //reset the database
+      await firestore.collection('recent').doc("nest").set({"id": "1"});
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .set(nest.toJson());
+      await firestore.collection("Birds").doc(parent.band).set(parent.toJson());
+      //add egg to nest
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .set(egg.toJson());
+      await firestore
+          .collection('experiments')
+          .doc(experiment.id)
+          .set(experiment.toJson());
+    });
+
+    testWidgets("Will show note measure after band input on chick",
+        (WidgetTester tester) async {
+      myApp = getInitApp({"nest": nest, "egg": egg});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //expect not to find text note
+      expect(find.text("note"), findsNothing);
+
+      //find next band button
+      expect(find.text("AA1235"), findsOneWidget);
+      await tester.tap(find.text("AA1235"));
+      await tester.pumpAndSettle();
+
+      expect(find.text("note"), findsOneWidget);
+    });
+
+    testWidgets("Will show chick weight measure after band input on chick",
+        (WidgetTester tester) async {
+      sharedPreferencesService.defaultMeasures = [
+        Measure.note(),
+        Measure.numeric(name: "weight", type: "chick")
+      ];
+      myApp = getInitApp({"nest": nest, "egg": egg});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //expect not to find text note
+      expect(find.text("weight"), findsNothing);
+
+      //find next band button
+      expect(find.text("AA1235"), findsOneWidget);
+      await tester.tap(find.text("AA1235"));
+      await tester.pumpAndSettle();
+
+      expect(find.text("weight"), findsOneWidget);
+    });
+
+    testWidgets("Won't show egg weight measure after band input on chick",
+        (WidgetTester tester) async {
+      sharedPreferencesService.defaultMeasures = [
+        Measure.note(),
+        Measure.numeric(name: "weight", type: "egg")
+      ];
+      myApp = getInitApp({"nest": nest, "egg": egg});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //expect not to find text note
+      expect(find.text("weight"), findsNothing);
+
+      //find next band button
+      expect(find.text("AA1235"), findsOneWidget);
+      await tester.tap(find.text("AA1235"));
+      await tester.pumpAndSettle();
+
+      //expect not to find measure weight
+      expect(find.text("weight"), findsNothing);
+    });
+  });
+
   group("Save Bird", () {
     late Bird parent;
     late Egg egg;
@@ -621,6 +711,7 @@ void main() {
       expect(parentObj.responsible, parent.responsible);
     });
   });
+
   group("Delete Bird", () {
     late Egg egg;
     late Bird parent;

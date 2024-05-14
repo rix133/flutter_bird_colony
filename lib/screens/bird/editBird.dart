@@ -170,7 +170,7 @@ class _EditBirdState extends State<EditBird> {
         }
       }
     }
-    addMissingMeasuresToBird();
+    bird.addMissingMeasures(allMeasures, ageType);
     //ensure that correct nests are referenced
     nests = widget.firestore.collection(bird.nest_year.toString());
   }
@@ -191,7 +191,7 @@ class _EditBirdState extends State<EditBird> {
       backgroundColor: Colors.red,
       duration: Duration(seconds: 5),
     ));
-    return Bird(
+    Bird b = Bird(
       species: nest.species,
       ringed_date: DateTime.now(),
       ringed_as_chick: false,
@@ -199,9 +199,11 @@ class _EditBirdState extends State<EditBird> {
       responsible: sps?.userName ?? "unknown",
       nest: nest.name,
       nest_year: nest.discover_date.year,
-      measures: allMeasures,
+      measures: [],
       experiments: nest.experiments,
     );
+    b.addMissingMeasures(allMeasures, b.getType());
+    return b;
   }
 
   void updateBirdWithNestInfo() {
@@ -210,10 +212,6 @@ class _EditBirdState extends State<EditBird> {
     bird.species = nest.species;
   }
 
-  void addMissingMeasuresToBird() {
-    //filter for bird type measures
-    bird.addMissingMeasures(allMeasures, ageType);
-  }
 
   void handleEgg(Map<String, dynamic> map) {
     egg = map["egg"] as Egg;
@@ -226,9 +224,10 @@ class _EditBirdState extends State<EditBird> {
       responsible: sps?.userName ?? "unknown",
       nest: nest.name,
       nest_year: nest.discover_date.year,
-      measures: allMeasures,
+      measures: [],
       experiments: nest.experiments,
     );
+    bird.addMissingMeasures(allMeasures, "chick");
   }
 
   void handleNoBirdNoEgg() {
@@ -240,9 +239,10 @@ class _EditBirdState extends State<EditBird> {
       responsible: sps?.userName ?? "unknown",
       nest: nest.name,
       nest_year: nest.discover_date.year,
-      measures: allMeasures,
+      measures: [],
       experiments: nest.experiments,
     );
+    bird.addMissingMeasures(allMeasures, ageType);
   }
 
   void handleNoMap() {
