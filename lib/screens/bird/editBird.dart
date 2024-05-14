@@ -424,6 +424,12 @@ class _EditBirdState extends State<EditBird> {
     String cb = color_band.valueCntr.text.toUpperCase();
     bird.nest = nestnr.valueCntr.text;
     bird.color_band = cb.isEmpty ? null : cb;
+    if (bird.prevBird != null) {
+      //the current nest year is changed now as well
+      if (bird.nest != bird.prevBird!.nest) {
+        bird.nest_year = DateTime.now().year;
+      }
+    }
     return bird;
   }
 
@@ -585,7 +591,7 @@ class _EditBirdState extends State<EditBird> {
                   bird.isChick() ? Container() : color_band.getSimpleMeasureForm(),
                   SizedBox(height: 10),
                   ModifyingButtons(firestore: widget.firestore, context:context,setState:setState, getItem:getBird, type:ageType, otherItems:nests,
-                      silentOverwrite: (ageType == "parent"),
+                      silentOverwrite: false,
                       onSaveOK: saveOk, onDeleteOK: deleteOk),
                   SizedBox(height: 10),
                   nestnr.getSimpleMeasureForm(),

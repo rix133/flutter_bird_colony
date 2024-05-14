@@ -466,6 +466,14 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       CollectionReference birds =
           firestore.collection("Birds");
 
+      //allow silent overwrites if the bird is saved before
+      // and the band and nest have not changed
+      if (prevBird != null && !allowOverwrite) {
+        if (prevBird!.band == band && prevBird!.nest == nest) {
+          allowOverwrite = true;
+        }
+      }
+
       if (allowOverwrite) {
         //if a band is changed overwrite the previous bird should never be allowed
         if (prevBird != null && prevBird!.band != band) {
@@ -478,7 +486,15 @@ class Bird extends ExperimentedItem implements FirestoreItem{
           if (!value.exists) {
             return await _saveOverwrite(firestore, otherItems, type);
           } else {
-            return UpdateResult.error(message: " Bird with this band already exists! ");
+            //check if there is a previous bird and if the band has changed
+            String prevNestMsg = "";
+            if (prevBird != null) {
+              String prevNest = prevBird!.nest ?? "";
+              String prevNestYear = prevBird!.nest_year.toString();
+              prevNestMsg = "\nPrevious nest: $prevNest (year: $prevNestYear)";
+            }
+            return UpdateResult.error(
+                message: " Bird with this band already exists! $prevNestMsg");
           }
         });
       }

@@ -116,6 +116,8 @@ void main() {
         id: "AA11",
         ringed_date: DateTime.now().subtract(Duration(days: 2000)),
         responsible: "Admin",
+        nest: "1",
+        nest_year: DateTime.now().year,
         band: "AA11",
         last_modified: DateTime.now().subtract(Duration(days: 1)),
         species: "Common gull",

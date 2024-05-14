@@ -380,6 +380,7 @@ void main() {
     });
     testWidgets("Will save color band on new parent",
         (WidgetTester tester) async {
+      parent = masterParent.copy();
       parent.id = null;
       await firestore.collection("Birds").doc(parent.band).delete();
       myApp = getInitApp({"bird": parent});
@@ -393,7 +394,7 @@ void main() {
       //find by key band_numCntr
       expect(find.byKey(Key("band_numCntr")), findsOneWidget);
       //enter numbers
-      await tester.enterText(find.byKey(Key("band_numCntr")), "1235");
+      await tester.enterText(find.byKey(Key("band_numCntr")), "1234");
       await tester.pumpAndSettle();
 
       final finder = find.byWidgetPredicate((Widget widget) =>
@@ -409,10 +410,150 @@ void main() {
       //save the bird
       await tester.tap(find.byKey(Key("saveButton")));
       await tester.pumpAndSettle();
+
       //expect to find the bird in firestore
-      var bird = await firestore.collection("Birds").doc("AA1235").get();
+      var bird = await firestore.collection("Birds").doc("AA1234").get();
       expect(bird.exists, true);
       expect(bird.data()!['color_band'], "A1B2");
+    });
+
+    testWidgets("Will save nest on new parent that exists after alert dialog",
+        (WidgetTester tester) async {
+      myApp = getInitApp({"nest": nest});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //enter letters
+      await tester.enterText(find.byKey(Key("band_letCntr")), "aa");
+      await tester.pumpAndSettle();
+
+      //find by key band_numCntr
+      expect(find.byKey(Key("band_numCntr")), findsOneWidget);
+      //enter numbers
+      await tester.enterText(find.byKey(Key("band_numCntr")), "1234");
+      await tester.pumpAndSettle();
+
+      //save the bird
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      //expect an AlertDialog
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      //tap the overwite button
+      await tester.tap(find.text("Overwrite"));
+      await tester.pumpAndSettle();
+
+      //expect to find the bird in firestore
+      var bird = await firestore.collection("Birds").doc("AA1234").get();
+      expect(bird.exists, true);
+      Bird parentObj = Bird.fromDocSnapshot(bird);
+      expect(parentObj.nest, nest.id);
+      expect(parentObj.nest_year, nest.discover_date.year);
+    });
+
+    testWidgets("Will update parent nest and nest year after alert dialog",
+        (WidgetTester tester) async {
+      myApp = getInitApp({"bird": parent});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      String year = DateTime.now().year.toString();
+
+      final finder = find.byWidgetPredicate((Widget widget) =>
+          widget is InputDecorator &&
+          widget.decoration.labelText == 'nest ($year)');
+
+      expect(finder, findsOneWidget);
+
+      await tester.enterText(finder, "22");
+      await tester.pumpAndSettle();
+
+      //save the bird
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      //expect an AlertDialog
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      //tap the overwite button
+      await tester.tap(find.text("Overwrite"));
+      await tester.pumpAndSettle();
+
+      //expect to find the bird in firestore
+      var bird = await firestore.collection("Birds").doc(parent.band).get();
+      expect(bird.exists, true);
+      Bird parentObj = Bird.fromDocSnapshot(bird);
+      expect(parentObj.nest, "22");
+      expect(parentObj.nest_year, DateTime.now().year);
+    });
+
+    testWidgets(
+        "Wont update parent nest and nest year after alert dialog if canceled",
+        (WidgetTester tester) async {
+      myApp = getInitApp({"bird": parent});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+      String year = DateTime.now().year.toString();
+
+      final finder = find.byWidgetPredicate((Widget widget) =>
+          widget is InputDecorator &&
+          widget.decoration.labelText == 'nest ($year)');
+
+      expect(finder, findsOneWidget);
+
+      await tester.enterText(finder, "22");
+      await tester.pumpAndSettle();
+
+      //save the bird
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      //expect an AlertDialog
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      //tap the cancel button
+      await tester.tap(find.text("Cancel"));
+      await tester.pumpAndSettle();
+
+      //expect to find the bird in firestore
+      var bird = await firestore.collection("Birds").doc(parent.band).get();
+      expect(bird.exists, true);
+      Bird parentObj = Bird.fromDocSnapshot(bird);
+      expect(parentObj.nest, parent.nest);
+      expect(parentObj.nest_year, parent.nest_year);
+    });
+
+    testWidgets("Won't save new parent if band exists",
+        (WidgetTester tester) async {
+      myApp = getInitApp({});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //enter letters
+      await tester.enterText(find.byKey(Key("band_letCntr")), "aa");
+      await tester.pumpAndSettle();
+
+      //find by key band_numCntr
+      expect(find.byKey(Key("band_numCntr")), findsOneWidget);
+      //enter numbers
+      await tester.enterText(find.byKey(Key("band_numCntr")), "1234");
+      await tester.pumpAndSettle();
+
+      //save the bird
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      //expect an AlertDialog
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      //expect to find the bird in firestore
+      var bird = await firestore.collection("Birds").doc("AA1234").get();
+      expect(bird.exists, true);
+      // expect the bird to be unchanged
+      Bird parentObj = Bird.fromDocSnapshot(bird);
+      expect(parentObj.band, "AA1234");
+      expect(parentObj.last_modified, parent.last_modified);
+      expect(parentObj.responsible, parent.responsible);
     });
 
     testWidgets("will update color band on nest parent",
