@@ -138,17 +138,40 @@ class FSItemMixin {
     List<String> types = [type];
 
     if(type == "experiments"){
-      String year = start!.year.toString();
+      String year = start?.year.toString() ?? DateTime.now().year.toString();
       List<String> allExpNests = [];
       allExpNests.addAll(items.expand((e) => (e as Experiment).nests ?? []).cast<String>().toList());
-        if(allExpNests.isNotEmpty){
-        QuerySnapshot nests = await firestore
-            .collection(year)
-            .where(FieldPath.documentId, whereIn: allExpNests)
-            .get();
-        if(nests.docs.isNotEmpty){
-          List<FirestoreItem> nestItems = nests.docs.map((e) => Nest.fromDocSnapshot(e)).toList();
-          Map<String, dynamic> nestSortedDataMap = await createSortedData(nestItems);
+      if (allExpNests.isNotEmpty) {
+        // Split allExpNests into chunks of 10
+        List<List<String>> chunks =
+            allExpNests.fold<List<List<String>>>([], (all, one) {
+          if (all.isEmpty || all.last.length == 10)
+            all.add([one]);
+          else
+            all.last.add(one);
+          return all;
+        });
+
+        // Initialize an empty list to hold all nestItems
+        List<FirestoreItem> allNestItems = [];
+
+        // Perform a query for each chunk and gather all nestItems
+        for (List<String> chunk in chunks) {
+          QuerySnapshot nests = await firestore
+              .collection(year)
+              .where(FieldPath.documentId, whereIn: chunk)
+              .get();
+          if (nests.docs.isNotEmpty) {
+            List<FirestoreItem> nestItems =
+                nests.docs.map((e) => Nest.fromDocSnapshot(e)).toList();
+            allNestItems.addAll(nestItems);
+          }
+        }
+
+        // Now process allNestItems
+        if (allNestItems.isNotEmpty) {
+          Map<String, dynamic> nestSortedDataMap =
+              await createSortedData(allNestItems);
           List<List<CellValue>> nestSheetData = nestSortedDataMap['sortedData'];
           start = nestSortedDataMap['start'];
           end = nestSortedDataMap['end'];
@@ -159,13 +182,35 @@ class FSItemMixin {
       List<String> allExpsBirds = [];
       allExpsBirds.addAll(items.expand((e) => (e as Experiment).birds ?? []).cast<String>().toList());
       if(allExpsBirds.isNotEmpty){
-        QuerySnapshot birds = await firestore
-            .collection("Bird")
-            .where(FieldPath.documentId, whereIn: allExpsBirds)
-            .get();
-        if(birds.docs.isNotEmpty){
-          List<FirestoreItem> birdItems = birds.docs.map((e) => Bird.fromDocSnapshot(e)).toList();
-          Map<String, dynamic> birdSortedDataMap = await createSortedData(birdItems);
+        // Split allExpsBirds into chunks of 10
+        var chunks = allExpsBirds.fold<List<List<String>>>([], (all, one) {
+          if (all.isEmpty || all.last.length == 10)
+            all.add([one]);
+          else
+            all.last.add(one);
+          return all;
+        });
+
+        // Initialize an empty list to hold all birdItems
+        List<FirestoreItem> allBirdItems = [];
+
+        // Perform a query for each chunk and gather all birdItems
+        for (var chunk in chunks) {
+          QuerySnapshot birds = await firestore
+              .collection("Bird")
+              .where(FieldPath.documentId, whereIn: chunk)
+              .get();
+          if (birds.docs.isNotEmpty) {
+            List<FirestoreItem> birdItems =
+                birds.docs.map((e) => Bird.fromDocSnapshot(e)).toList();
+            allBirdItems.addAll(birdItems);
+          }
+        }
+
+        // Now process allBirdItems
+        if (allBirdItems.isNotEmpty) {
+          Map<String, dynamic> birdSortedDataMap =
+              await createSortedData(allBirdItems);
           List<List<CellValue>> birdSheetData = birdSortedDataMap['sortedData'];
           sheets.add(birdSheetData);
           types.add("birds");
@@ -195,7 +240,6 @@ class FSItemMixin {
     }
 
     if (sheets.isNotEmpty && !test) {
-      print(sheets);
       return await saveAsExcel(sheets, types);
     } else if (test) {
       return sheets;
