@@ -28,8 +28,8 @@ import 'screens/listDatas.dart';
 import 'screens/nest/mapCreateNest.dart';
 import 'screens/nest/mapNests.dart';
 import 'screens/settings/editSpecies.dart';
+import 'services/nestsService.dart';
 import 'services/sharedPreferencesService.dart';
-
 
 late FirebaseApp firebaseApp;
 String appName = 'unknown';
@@ -51,8 +51,15 @@ void main() async{
   });
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => SharedPreferencesService(sharedPreferences),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => SharedPreferencesService(sharedPreferences),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => NestsService(firestore),
+        ),
+      ],
       child: MyApp(firestore: firestore),
     ),
   );
