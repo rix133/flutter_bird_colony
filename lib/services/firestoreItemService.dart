@@ -17,13 +17,27 @@ abstract class FirestoreItemService<T extends FirestoreItem>
   StreamController<List<T>>? _controller;
   String? currentCollectionName;
 
+  List<String> multiCollection = [];
+
+  CollectionReference<Map<String, dynamic>> _collection() {
+    if (currentCollectionName == null)
+      throw Exception("Collection name is not set");
+    if (multiCollection.length == 2) {
+      return _firestore
+          .collection(multiCollection[0])
+          .doc(currentCollectionName!)
+          .collection(multiCollection[1]);
+    } else
+      return _firestore.collection(currentCollectionName!);
+  }
+
   T convertToFirestoreItem(DocumentSnapshot<Map<String, dynamic>> doc);
 
   Stream<List<T>> watchItems(String collectionName) {
     if (_controller == null || currentCollectionName != collectionName) {
       currentCollectionName = collectionName;
       _controller = StreamController<List<T>>.broadcast();
-      _firestore.collection(collectionName).snapshots().listen((snapshot) {
+      _collection().snapshots().listen((snapshot) {
         _latestSnapshot =
             snapshot.docs.map((doc) => convertToFirestoreItem(doc)).toList();
         _controller!.sink.add(_latestSnapshot!);

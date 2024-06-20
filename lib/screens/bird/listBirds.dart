@@ -18,7 +18,6 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
 
   String? _selectedSpecies;
   int? _selectedAge;
-  CollectionReference? collection;
 
   @override
   void initState() {

@@ -6,7 +6,7 @@ class NestsService extends FirestoreItemService<Nest> {
   NestsService(FirebaseFirestore firestore) : super(firestore);
 
   @override
-  Nest convertToFirestoreItem(DocumentSnapshot<Map<String, dynamic>> doc) {
+  Nest convertToFirestoreItem(DocumentSnapshot<Object?> doc) {
     return Nest.fromDocSnapshot(doc);
   }
 }
