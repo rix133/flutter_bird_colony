@@ -10,14 +10,13 @@ import 'package:flutter_bird_colony/screens/nest/editNest.dart';
 import 'package:flutter_bird_colony/screens/nest/mapNests.dart';
 import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
-import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
 import 'mocks/mockLocationService.dart';
 import 'mocks/mockSharedPreferencesService.dart';
+import 'testApp.dart';
 
 void main() {
   final authService = MockAuthService();
@@ -48,10 +47,11 @@ void main() {
     responsible: "Admin",
   );
 
-  Widget getInitApp(Object? args) {
-    return (ChangeNotifierProvider<SharedPreferencesService>(
-      create: (_) => sharedPreferencesService,
-      child: MaterialApp(
+  TestApp getInitApp(Object? args) {
+    return TestApp(
+      firestore: firestore,
+      sps: sharedPreferencesService,
+      app: MaterialApp(
         initialRoute: '/mapNests',
         onGenerateRoute: (settings) {
           if (settings.name == '/createNest') {
@@ -86,7 +86,7 @@ void main() {
           );
         },
       ),
-    ));
+    );
   }
 
   setUpAll(() async {

@@ -15,20 +15,19 @@ import 'package:flutter_bird_colony/screens/homepage.dart';
 import 'package:flutter_bird_colony/screens/nest/mapNests.dart';
 import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
-import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
 import 'mocks/mockLocationService.dart';
 import 'mocks/mockSharedPreferencesService.dart';
+import 'testApp.dart';
 
 void main() {
   final authService = MockAuthService();
   final sharedPreferencesService = MockSharedPreferencesService();
   final firestore = FakeFirebaseFirestore();
   MockLocationAccuracy10 locationAccuracy10 = MockLocationAccuracy10();
-  late Widget myApp;
+  late TestApp myApp;
   final userEmail = "test@example.com";
   final Nest nest1 = Nest(
     id: "1",
@@ -142,9 +141,10 @@ void main() {
           .doc(userEmail)
           .set({'isAdmin': false});
 
-      myApp = ChangeNotifierProvider<SharedPreferencesService>(
-        create: (_) => sharedPreferencesService,
-        child: MaterialApp(initialRoute: '/listExperiments', routes: {
+      myApp = TestApp(
+        firestore: firestore,
+        sps: sharedPreferencesService,
+        app: MaterialApp(initialRoute: '/listExperiments', routes: {
           '/': (context) => MyHomePage(title: "Nest app"),
           '/listExperiments': (context) =>
               ListExperiments(firestore: firestore),
@@ -269,9 +269,10 @@ void main() {
           .doc(userEmail)
           .set({'isAdmin': false});
 
-      myApp = ChangeNotifierProvider<SharedPreferencesService>(
-        create: (_) => sharedPreferencesService,
-        child: MaterialApp(initialRoute: '/listExperiments', routes: {
+      myApp = TestApp(
+        firestore: firestore,
+        sps: sharedPreferencesService,
+        app: MaterialApp(initialRoute: '/listExperiments', routes: {
           '/': (context) => MyHomePage(title: "Nest app"),
           '/listExperiments': (context) =>
               ListExperiments(firestore: firestore),
@@ -359,9 +360,10 @@ void main() {
           .doc(userEmail)
           .set({'isAdmin': false});
 
-      myApp = ChangeNotifierProvider<SharedPreferencesService>(
-        create: (_) => sharedPreferencesService,
-        child: MaterialApp(initialRoute: '/listExperiments', routes: {
+      myApp = TestApp(
+        firestore: firestore,
+        sps: sharedPreferencesService,
+        app: MaterialApp(initialRoute: '/listExperiments', routes: {
           '/': (context) => MyHomePage(title: "Nest app"),
           '/listExperiments': (context) =>
               ListExperiments(firestore: firestore),

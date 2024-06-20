@@ -6,6 +6,9 @@ import 'package:flutter_bird_colony/models/firestore/nest.dart';
 
 class NestsService extends ChangeNotifier {
   final FirebaseFirestore _firestore;
+  List<Nest>? _latestNestsSnapshot;
+
+  List<Nest> get nests => _latestNestsSnapshot ?? [];
 
   NestsService(this._firestore);
 
@@ -17,9 +20,9 @@ class NestsService extends ChangeNotifier {
       currentCollectionName = collectionName;
       _nestsController = StreamController<List<Nest>>.broadcast();
       _firestore.collection(collectionName).snapshots().listen((snapshot) {
-        List<Nest> _nests =
+        _latestNestsSnapshot =
             snapshot.docs.map((doc) => Nest.fromDocSnapshot(doc)).toList();
-        _nestsController!.sink.add(_nests);
+        _nestsController!.sink.add(_latestNestsSnapshot!);
       });
     }
     return _nestsController!.stream;

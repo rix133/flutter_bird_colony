@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/firestore/bird.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/services/nestsService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
@@ -23,9 +24,11 @@ class _StatisticsState extends State<Statistics> {
   LocalSpeciesList _speciesList = LocalSpeciesList();
 
   CollectionReference? birds;
-  CollectionReference? nests;
+
+  //CollectionReference? nests;
   Query? birdsQuery;
-  Stream<QuerySnapshot> _nestsStream =  Stream.empty();
+  NestsService? nestsService;
+  Stream<List<Nest>> _nestsStream = Stream.empty();
   Stream<QuerySnapshot> _birdsStream = Stream.empty();
 
   String username = "";
@@ -47,11 +50,14 @@ class _StatisticsState extends State<Statistics> {
   void initState() {
     super.initState();
     birds = widget.firestore.collection('Birds');
-    nests = widget.firestore.collection(_selectedYear.toString());
+    //nests = widget.firestore.collection(_selectedYear.toString());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
+      nestsService = Provider.of<NestsService>(context, listen: false);
       _speciesList = sps!.speciesList;
       username = sps!.userName;
+      _nestsStream = nestsService?.watchNests(DateTime.now().year.toString()) ??
+          Stream.empty();
       setState(() {});
     });
   }
@@ -63,9 +69,10 @@ class _StatisticsState extends State<Statistics> {
 
   _refreshStreams() {
     if(_selectedYear == 2022){
-      nests = widget.firestore.collection("Nest");
+      _nestsStream = nestsService?.watchNests("Nest") ?? Stream.empty();
     } else {
-      nests = widget.firestore.collection(_selectedYear.toString());
+      _nestsStream =
+          nestsService?.watchNests(_selectedYear.toString()) ?? Stream.empty();
     }
     DateTime startDate = DateTime(_selectedYear);
     DateTime endDate = DateTime(_selectedYear + 1);
@@ -77,8 +84,30 @@ class _StatisticsState extends State<Statistics> {
     }
 
 
-    _nestsStream = nests?.snapshots() ?? Stream.empty();
     _birdsStream = birdsQuery?.snapshots() ?? Stream.empty();
+  }
+
+  Widget buildNestList(List<Nest> nests) {
+    if (nests.length != 0) {
+      nests = nests.where((Nest n) => n.timeSpan(dropdownValue)).toList();
+      nests = nests
+          .where((Nest n) => n.people(dropdownValuePeople, username))
+          .toList();
+      return ListView(
+        children: [
+          ListTile(
+              title: Text("Total nests"),
+              trailing: Text(nests.length.toString())),
+          ..._speciesList.species
+              .map((Species sp) => getNestListTile(sp.english, nests))
+              .toList(),
+          getNestListTile("", nests),
+        ],
+      );
+    } else {
+      return Container(
+          padding: EdgeInsets.all(40.0), child: Text("loading nests..."));
+    }
   }
 
   Widget build(BuildContext context) {
@@ -148,30 +177,14 @@ class _StatisticsState extends State<Statistics> {
             Expanded(
                 child: StreamBuilder(
                     stream: _nestsStream,
-                    builder:
-                        (context, AsyncSnapshot<QuerySnapshot> snapshot_nests) {
-                      if (snapshot_nests.hasData) {
-                        List<Nest> nests = snapshot_nests.data!.docs
-                            .map((DocumentSnapshot e) => Nest.fromDocSnapshot(e))
-                            .toList();
-                        nests = nests.where((Nest n) => n.timeSpan(dropdownValue)).toList();
-                        nests = nests.where((Nest n) => n.people(dropdownValuePeople, username)).toList();
-                        return ListView(
-
-                          children: [
-                            ListTile(
-                                title: Text("Total nests"),
-                                trailing: Text(nests.length.toString())),
-                            ..._speciesList.species.map((Species sp) => getNestListTile(sp.english, nests)).toList(),
-                            getNestListTile("", nests),
-                          ],
-                        );
-                      } else {
-                        return Container(
-                            padding: EdgeInsets.all(40.0),
-                            child: Text("loading nests..."));
-                      }
-                    })),
+                    builder: (context,
+                            AsyncSnapshot<List<Nest>> snapshot_nests) {
+                          List<Nest> nests = nestsService?.nests ?? [];
+                          if (snapshot_nests.hasData) {
+                            nests = snapshot_nests.data!;
+                          }
+                          return buildNestList(nests);
+                        })),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
             color: Theme.of(context).scaffoldBackgroundColor,  // Replace with your desired color
