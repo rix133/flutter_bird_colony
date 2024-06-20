@@ -66,10 +66,10 @@ class _StatisticsState extends State<Statistics> {
 
   _refreshStreams() {
     if(_selectedYear == 2022){
-      _nestsStream = nestsService?.watchNests("Nest") ?? Stream.empty();
+      _nestsStream = nestsService?.watchItems("Nest") ?? Stream.empty();
     } else {
       _nestsStream =
-          nestsService?.watchNests(_selectedYear.toString()) ?? Stream.empty();
+          nestsService?.watchItems(_selectedYear.toString()) ?? Stream.empty();
     }
     DateTime startDate = DateTime(_selectedYear);
     DateTime endDate = DateTime(_selectedYear + 1);
@@ -181,7 +181,7 @@ class _StatisticsState extends State<Statistics> {
                     stream: _nestsStream,
                     builder: (context,
                             AsyncSnapshot<List<Nest>> snapshot_nests) {
-                          List<Nest> nests = nestsService?.nests ?? [];
+                          List<Nest> nests = nestsService?.items ?? [];
                           if (snapshot_nests.hasData) {
                             nests = snapshot_nests.data!;
                           }

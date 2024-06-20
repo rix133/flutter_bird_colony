@@ -76,7 +76,7 @@ class _MapNestsState extends State<MapNests> {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       nestsService = Provider.of<NestsService>(context, listen: false);
       _setDefaultLocation(sps!.defaultLocation);
-      _nestStream = nestsService!.watchNests(year);
+      _nestStream = nestsService!.watchItems(year);
       //take the latest stream snapshot and update the markers
 
       loc = location.getPositionStream();
@@ -163,7 +163,7 @@ class _MapNestsState extends State<MapNests> {
             if (snapshot.hasData) {
               updateMarkersToShow(snapshot.data!);
             } else {
-              updateMarkersToShow(nestsService?.nests ?? []);
+              updateMarkersToShow(nestsService?.items ?? []);
             }
             return nestsMap();
           }),
