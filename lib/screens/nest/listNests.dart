@@ -2,11 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/listScreenWidget.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
+import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
+import 'package:provider/provider.dart';
 
 import '../../design/minMaxInput.dart';
+import '../../services/nestsService.dart';
 
 class ListNests extends ListScreenWidget<Nest> {
   const ListNests({Key? key, required FirebaseFirestore firestore})
@@ -38,7 +41,8 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
   }
   @override
   void initState() {
-    collection = widget.firestore.collection(DateTime.now().year.toString());
+    collectionName = DateTime.now().year.toString();
+    fsService = Provider.of<NestsService>(context, listen: false);
     super.initState();
   }
 
@@ -49,7 +53,11 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
       child: ElevatedButton.icon(
           key: Key("showFilteredNestButton"),
           onPressed: () {
-            List<String?> nest_ids = items.map((e) => e.id.toString()).toList();
+            // Get the current items at the time the button is pressed
+            List<FirestoreItem> currentItems =
+                getFilteredItems(fsService?.items ?? []);
+            List<String?> nest_ids =
+                currentItems.map((e) => e.id.toString()).toList();
             Navigator.pushNamed(context, '/mapNests', arguments: {
               'nest_ids': nest_ids,
               "year": selectedYear.toString()
@@ -155,10 +163,9 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
   }
 
   updateYearFilter(int value) {
-    collection =
-        widget.firestore.collection(value.toString());
+    collectionName = value.toString();
     setState(() {
-      stream = collection?.snapshots() ?? Stream.empty();
+      stream = fsService?.watchItems(collectionName) ?? Stream.empty();
     });
   }
 
@@ -232,9 +239,8 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
     return eggCount > _minEggs! - 1 && eggCount < _maxEggs! - 1;
   }
 
-    List<Nest> getFilteredItems(AsyncSnapshot snapshot) {
-    List<Nest> nests =
-        snapshot.data!.docs.map<Nest>((e) => Nest.fromDocSnapshot(e)).toList();
+  List<Nest> getFilteredItems(List<FirestoreItem> items) {
+    List<Nest> nests = items.map((e) => e as Nest).toList();
 
     nests = nests.where(filterByText).toList();
     nests = nests.where(filterByExperiments).toList();

@@ -1,11 +1,14 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bird_colony/models/firestore/bird.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/services/birdsService.dart';
+import 'package:flutter_bird_colony/services/nestsService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
+
+import '../models/firestore/bird.dart';
 
 class Statistics extends StatefulWidget {
   final FirebaseFirestore firestore;
@@ -22,11 +25,13 @@ class _StatisticsState extends State<Statistics> {
   SharedPreferencesService? sps;
   LocalSpeciesList _speciesList = LocalSpeciesList();
 
-  CollectionReference? birds;
-  CollectionReference? nests;
+  CollectionReference? birdsCollection;
+
+  //CollectionReference? nests;
   Query? birdsQuery;
-  Stream<QuerySnapshot> _nestsStream =  Stream.empty();
-  Stream<QuerySnapshot> _birdsStream = Stream.empty();
+  NestsService? nestsService;
+  BirdsService? birdsService;
+  Stream<List<Nest>> _nestsStream = Stream.empty();
 
   String username = "";
 
@@ -46,12 +51,15 @@ class _StatisticsState extends State<Statistics> {
   @override
   void initState() {
     super.initState();
-    birds = widget.firestore.collection('Birds');
-    nests = widget.firestore.collection(_selectedYear.toString());
+    birdsCollection = widget.firestore.collection('Birds');
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
+      nestsService = Provider.of<NestsService>(context, listen: false);
+      birdsService = Provider.of<BirdsService>(context, listen: false);
       _speciesList = sps!.speciesList;
       username = sps!.userName;
+      _refreshStreams();
       setState(() {});
     });
   }
@@ -63,27 +71,52 @@ class _StatisticsState extends State<Statistics> {
 
   _refreshStreams() {
     if(_selectedYear == 2022){
-      nests = widget.firestore.collection("Nest");
+      _nestsStream = nestsService?.watchItems("Nest") ?? Stream.empty();
     } else {
-      nests = widget.firestore.collection(_selectedYear.toString());
+      _nestsStream =
+          nestsService?.watchItems(_selectedYear.toString()) ?? Stream.empty();
     }
     DateTime startDate = DateTime(_selectedYear);
     DateTime endDate = DateTime(_selectedYear + 1);
 
-    if(birds != null){
-      birdsQuery = birds!
+    if (birdsCollection != null) {
+      if (dropdownValue == "Today") {
+        // from 00:00 to 00:00
+        startDate = DateTime(
+            DateTime.now().year, DateTime.now().month, DateTime.now().day);
+        endDate = startDate.add(Duration(days: 1)); // Midnight next day
+      }
+      birdsQuery = birdsCollection!
           .where("ringed_date", isGreaterThanOrEqualTo: startDate)
           .where("ringed_date", isLessThan: endDate);
     }
 
+  }
 
-    _nestsStream = nests?.snapshots() ?? Stream.empty();
-    _birdsStream = birdsQuery?.snapshots() ?? Stream.empty();
+  Widget buildNestList(List<Nest> nests) {
+    if (nests.length != 0) {
+      nests = nests.where((Nest n) => n.timeSpan(dropdownValue)).toList();
+      nests = nests
+          .where((Nest n) => n.people(dropdownValuePeople, username))
+          .toList();
+      return ListView(
+        children: [
+          ListTile(
+              title: Text("Total nests"),
+              trailing: Text(nests.length.toString())),
+          ..._speciesList.species
+              .map((Species sp) => getNestListTile(sp.english, nests))
+              .toList(),
+          getNestListTile("", nests),
+        ],
+      );
+    } else {
+      return Container(
+          padding: EdgeInsets.all(40.0), child: Text("loading nests..."));
+    }
   }
 
   Widget build(BuildContext context) {
-    _refreshStreams();
-
     return Scaffold(
         appBar: AppBar(
           title: Text("Some statistics", style: TextStyle(color: Colors.black)),
@@ -110,7 +143,8 @@ class _StatisticsState extends State<Statistics> {
                   onChanged: (int? newValue) {
                     setState(() {
                       _selectedYear = newValue!;
-                    });
+                            _refreshStreams();
+                          });
                   },
                 )
               ]),
@@ -126,7 +160,8 @@ class _StatisticsState extends State<Statistics> {
                       //print(newValue);
                       setState(() {
                         dropdownValue = newValue!;
-                      });
+                          _refreshStreams();
+                        });
                     },
                   )
                 ],
@@ -142,67 +177,37 @@ class _StatisticsState extends State<Statistics> {
                     onChanged: (String? newValue) {
                       setState(() {
                         dropdownValuePeople = newValue!;
-                      });
+                            _refreshStreams();
+                          });
                     },
                   )]),
             Expanded(
                 child: StreamBuilder(
                     stream: _nestsStream,
-                    builder:
-                        (context, AsyncSnapshot<QuerySnapshot> snapshot_nests) {
-                      if (snapshot_nests.hasData) {
-                        List<Nest> nests = snapshot_nests.data!.docs
-                            .map((DocumentSnapshot e) => Nest.fromDocSnapshot(e))
-                            .toList();
-                        nests = nests.where((Nest n) => n.timeSpan(dropdownValue)).toList();
-                        nests = nests.where((Nest n) => n.people(dropdownValuePeople, username)).toList();
-                        return ListView(
-
-                          children: [
-                            ListTile(
-                                title: Text("Total nests"),
-                                trailing: Text(nests.length.toString())),
-                            ..._speciesList.species.map((Species sp) => getNestListTile(sp.english, nests)).toList(),
-                            getNestListTile("", nests),
-                          ],
-                        );
-                      } else {
-                        return Container(
-                            padding: EdgeInsets.all(40.0),
-                            child: Text("loading nests..."));
-                      }
-                    })),
+                    builder: (context,
+                            AsyncSnapshot<List<Nest>> snapshot_nests) {
+                          List<Nest> nests = nestsService?.items ?? [];
+                          if (snapshot_nests.hasData) {
+                            nests = snapshot_nests.data!;
+                          }
+                          return buildNestList(nests);
+                        })),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
             color: Theme.of(context).scaffoldBackgroundColor,  // Replace with your desired color
                 child: Row(children: [Text("Banding data:")]),
             ),
             Expanded(
-                child: StreamBuilder(
-                    stream: _birdsStream,
-                    builder:
-                        (context, AsyncSnapshot<QuerySnapshot> snapshot_birds) {
-                      if (snapshot_birds.hasData) {
-                        List<Bird> birds = snapshot_birds.data!.docs
-                            .map((DocumentSnapshot e) => Bird.fromDocSnapshot(e))
-                            .toList();
-                        birds = birds.where((Bird b) => b.timeSpan(dropdownValue)).toList();
-                        birds = birds.where((Bird b) => b.people(dropdownValuePeople, username)).toList();
-                        return ListView(
-                          children: [
-                            ListTile(
-                                title: Text("Total ringed"),
-                                trailing: Text(birds.length.toString())),
-                            ..._speciesList.species.map((Species sp) => getBirdsListTile(sp.english, birds)).toList(),
-                          ],
-                        );
-                      } else {
-                        return Container(
-                            padding: EdgeInsets.all(40.0),
-                            child: Text("loading birds..."));
-                      }
-                    }))
-          ],
+                    child: ListView(
+                  children: [
+                    getBirdsListTile("Total", birdsQuery),
+                    ..._speciesList.species
+                        .map((Species sp) =>
+                            getBirdsListTile(sp.english, birdsQuery))
+                        .toList(),
+                  ],
+                ))
+              ],
         )));
   }
 
@@ -218,29 +223,85 @@ class _StatisticsState extends State<Statistics> {
     if(selectedNests.length == 0){return SizedBox.shrink();}
     ListTile list_tile = ListTile(
         title: Text(species == "" ? "No species nests" : "$species nests"),
-        //leading: Text(selectedNests.map((Nest e) => e.eggCount()).reduce((a, b) => a + b).toString()),
         trailing: Text(selectedNests.length.toString()),
         onTap: () => showNestsonMap(selectedNests));
 
     return list_tile;
   }
-  Widget  getBirdsListTile(String species, List<Bird> birds){
-    List<Bird> selectedBirds = birds
-        .where((Bird bird) =>
-    bird.species == species)
+
+  Widget getLocalBirdsListTile(String species) {
+    List<Bird> selectedBirds = birdsService!.items;
+    if (species != "Total") {
+      selectedBirds =
+          selectedBirds.where((Bird bird) => bird.species == species).toList();
+    }
+    //filter by selected year
+    selectedBirds = selectedBirds
+        .where((Bird bird) => bird.ringed_date.year == _selectedYear)
         .toList();
-    if(selectedBirds.length == 0){return SizedBox.shrink();}
+
+    if (dropdownValue == "Today") {
+      selectedBirds = selectedBirds
+          .where((Bird bird) =>
+              bird.ringed_date.toIso8601String().split("T")[0] == today)
+          .toList();
+    }
+
+    if (dropdownValuePeople == "Me") {
+      selectedBirds = selectedBirds
+          .where((Bird bird) => bird.responsible == username)
+          .toList();
+    }
+    if (selectedBirds.length == 0 && species != "Total") {
+      return SizedBox.shrink();
+    }
     ListTile list_tile = ListTile(
-        title: Text("$species ringed"),
+        title: Text(species == "" ? "No species birds" : "$species ringed"),
         trailing: Text(selectedBirds.length.toString()));
 
     return list_tile;
   }
 
-  void showNestsonMap(List<Nest> nests){
-    Set<String?> nestList = nests.map((Nest n) => n.id).toSet();
-    //remove nulls
-    nestList.removeWhere((element) => element == null);
-    Navigator.pushNamed(context, '/mapNests', arguments: {"nest_ids": nestList});
+  Widget getBirdsListTile(String species, Query? birdsQuery) {
+    if (birdsService == null) {
+      return Text("loading birds...");
+    } else {
+      if (birdsService!.items.length != 0) {
+        return getLocalBirdsListTile(species);
+      }
+      if (species != "Total") {
+        birdsQuery = birdsQuery?.where("species", isEqualTo: species);
+      }
+      if (dropdownValuePeople == "Me") {
+        birdsQuery = birdsQuery?.where("responsible", isEqualTo: username);
+      }
+
+      return FutureBuilder<AggregateQuerySnapshot>(
+        future: birdsQuery?.count().get(),
+        builder: (BuildContext context,
+            AsyncSnapshot<AggregateQuerySnapshot> snapshot) {
+          if (snapshot.hasData) {
+            int count = snapshot.data?.count ?? 0;
+            if (count == 0 && species != "Total") {
+              return SizedBox.shrink();
+            }
+            return ListTile(
+              title: Text("$species ringed"),
+              trailing: Text(count.toString()),
+            );
+          } else if (snapshot.hasError) {
+            print(snapshot.error);
+            return Text('Error: getting $species data');
+          } else {
+            return SizedBox.shrink();
+          }
+        },
+      );
+    }
+  }
+
+  void showNestsonMap(List<Nest> nests) {
+    List<String> nestIds = nests.map((Nest n) => n.id ?? "").toList();
+    Navigator.pushNamed(context, '/mapNests', arguments: {"nest_ids": nestIds});
   }
 }

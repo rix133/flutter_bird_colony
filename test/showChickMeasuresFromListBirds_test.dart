@@ -7,19 +7,18 @@ import 'package:flutter_bird_colony/screens/bird/editBird.dart';
 import 'package:flutter_bird_colony/screens/bird/listBirds.dart';
 import 'package:flutter_bird_colony/screens/homepage.dart';
 import 'package:flutter_bird_colony/services/authService.dart';
-import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
 import 'mocks/mockSharedPreferencesService.dart';
+import 'testApp.dart';
 
 void main() {
   final authService = MockAuthService();
   final sharedPreferencesService = MockSharedPreferencesService();
   final firestore = FakeFirebaseFirestore();
 
-  late Widget myApp;
+  late TestApp myApp;
   final userEmail = "test@example.com";
   final Measure m = Measure(
     name: 'weight',
@@ -63,9 +62,10 @@ void main() {
 
     await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
 
-    myApp = ChangeNotifierProvider<SharedPreferencesService>(
-      create: (_) => sharedPreferencesService,
-      child: MaterialApp(initialRoute: '/listBirds', routes: {
+    myApp = myApp = TestApp(
+      firestore: firestore,
+      sps: sharedPreferencesService,
+      app: MaterialApp(initialRoute: '/listBirds', routes: {
         '/': (context) => MyHomePage(title: "Nest app"),
         '/listBirds': (context) => ListBirds(firestore: firestore),
         '/editBird': (context) => EditBird(firestore: firestore),

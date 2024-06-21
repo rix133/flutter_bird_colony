@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/listScreenWidget.dart';
 import 'package:flutter_bird_colony/models/firestore/experiment.dart';
 import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
+import 'package:provider/provider.dart';
+
+import '../../models/firestore/firestoreItem.dart';
+import '../../services/experimentsService.dart';
 
 class ListExperiments extends ListScreenWidget<Experiment> {
   const ListExperiments({Key? key, required FirebaseFirestore firestore}) : super(key: key, title: 'experiments with nests and eggs', icon: Icons.science, firestore: firestore);
@@ -21,7 +25,8 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
 
   @override
   initState() {
-    collection = widget.firestore.collection('experiments');
+    collectionName = 'experiments';
+    fsService = Provider.of<ExperimentsService>(context, listen: false);
     super.initState();
   }
 
@@ -73,10 +78,8 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
     });
   }
 
-  getFilteredItems(AsyncSnapshot<QuerySnapshot<Object?>> snapshot) {
-    List<Experiment> exps = snapshot.data!.docs
-        .map<Experiment>((DocumentSnapshot<Object?> e) => Experiment.fromDocSnapshot(e))
-        .toList();
+  getFilteredItems(List<FirestoreItem> items) {
+    List<Experiment> exps = items.map((e) => e as Experiment).toList();
     exps = exps.where(filterByText).toList();
     exps = exps.where(filterByYear).toList();
     return exps;

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
+import 'package:flutter_bird_colony/services/nestsService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
@@ -29,11 +30,11 @@ class _MapNestsState extends State<MapNests> {
   bool _locOK = false;
   GoogleMapController? _googleMapController;
   Stream<Position> loc = Stream.empty();
-  Stream<QuerySnapshot> _nestStream = Stream.empty();
+  Stream<List<Nest>> _nestStream = Stream.empty();
   String visible = "";
+  NestsService? nestsService;
   SharedPreferencesService? sps;
 
-  CollectionReference? nestsCollection;
   Set<Circle> circle = {
     Circle(
       circleId: CircleId("myLocEmpty"),
@@ -42,7 +43,6 @@ class _MapNestsState extends State<MapNests> {
   final search = TextEditingController();
   final focus = FocusNode();
   ValueNotifier<Set<Marker>> markersToShow = ValueNotifier<Set<Marker>>({});
-  Set <Nest> nests = {};
   Query? query;
   List<String>? bigFilter;
   LocationService location = LocationService.instance;
@@ -55,7 +55,7 @@ class _MapNestsState extends State<MapNests> {
   @override
   initState() {
     super.initState();
-    nestsCollection =  widget.firestore.collection(DateTime.now().year.toString());
+    String year = DateTime.now().year.toString();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       auth.isUserSignedIn().then((value) {
         if (value == false) {
@@ -67,28 +67,20 @@ class _MapNestsState extends State<MapNests> {
       if(map != null){
         map = map as Map<String, dynamic>;
         if (map["year"] != null) {
-          nestsCollection = widget.firestore.collection(map["year"].toString());
+          year = map["year"].toString();
         }
-
         if(map["nest_ids"] != null) {
-          if (nestsCollection != null &&
-              map["nest_ids"].length > 0 &&
-              map["nest_ids"] is List<String> &&
-              map["nest_ids"].length < 30) {
-            query = nestsCollection!.where(
-                FieldPath.documentId, whereIn: map["nest_ids"]);
-          } else if (map["nest_ids"].length > 29 &&
-              map["nest_ids"] is List<String>) {
-            bigFilter = map["nest_ids"] as List<String>;
-          }
+          bigFilter = map["nest_ids"] as List<String>;
         }
       }
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
+      nestsService = Provider.of<NestsService>(context, listen: false);
       _setDefaultLocation(sps!.defaultLocation);
-      _nestStream = query?.snapshots() ?? nestsCollection?.snapshots() ?? Stream.empty();
+      //take the latest stream snapshot and update the markers
+      _nestStream = nestsService!.watchItems(year);
+      //init the markers
+      updateMarkersToShow(nestsService?.items ?? []);
       loc = location.getPositionStream();
-
-      updateMarkersToShow();
       setState(() {});
     });
   }
@@ -102,8 +94,13 @@ class _MapNestsState extends State<MapNests> {
     super.dispose();
   }
 
-  updateMarkersToShow() {
-    Set<Nest> nestsToShow = nests;
+  updateMarkersToShow(List<Nest> nests) {
+    Set<Nest> nestsToShow = nests.toSet();
+    //apply the bigfilter
+    if (bigFilter != null) {
+      nestsToShow =
+          nests.where((element) => bigFilter!.contains(element.id)).toSet();
+    }
     if(search.text.isNotEmpty){
       //split by comma and space
       Set<String> searches = search.text.split(RegExp(r',\s*|\s+')).toSet();
@@ -118,7 +115,7 @@ class _MapNestsState extends State<MapNests> {
         return false;
       }).toSet();
     } else {
-      nestsToShow = nests;
+      nestsToShow = nests.toSet();
     }
     markersToShow.value = nestsToShow
         .map((e) => e.getMarker(context, true, sps?.markerColorGroups ?? []))
@@ -126,32 +123,6 @@ class _MapNestsState extends State<MapNests> {
   }
 
 
-  void handleNestChanges(BuildContext context, QuerySnapshot snapshot) {
-    Nest snap;
-    snapshot.docChanges.forEach((DocumentChange<Object?> change) {
-      if (change.type == DocumentChangeType.added) {
-        snap = Nest.fromDocSnapshot(change.doc);
-        if (bigFilter == null) {
-          nests.add(snap);
-        } else if (bigFilter!.contains(snap.id)) {
-          nests.add(snap);
-        }
-      } else if (change.type == DocumentChangeType.modified) {
-        snap = Nest.fromDocSnapshot(change.doc);
-        if (bigFilter == null) {
-          nests.removeWhere((element) => element.id == snap.id);
-          nests.add(snap);
-        } else if (bigFilter!.contains(snap.id)) {
-          nests.removeWhere((element) => element.id == snap.id);
-          nests.add(snap);
-        }
-      } else if (change.type == DocumentChangeType.removed) {
-        snap = Nest.fromDocSnapshot(change.doc);
-        nests.removeWhere((element) => element.id == snap.id);
-      }
-    });
-    updateMarkersToShow();
-  }
 
   _updateCameraPosition(AsyncSnapshot snapshot, AsyncSnapshot<CompassEvent> snapshot1) {
     _googleMapController?.animateCamera(
@@ -166,40 +137,41 @@ class _MapNestsState extends State<MapNests> {
         )));
   }
 
+  Column nestsMap() {
+    return Column(
+      children: [
+        Flexible(
+          child: ValueListenableBuilder<Set<Marker>>(
+            valueListenable: markersToShow,
+            builder: (context, value, child) {
+              return GoogleMap(
+                circles: circle,
+                mapToolbarEnabled: false,
+                compassEnabled: true,
+                markers: value,
+                mapType: MapType.satellite,
+                zoomControlsEnabled: false,
+                initialCameraPosition: initCamera,
+                onMapCreated: (controller) => _googleMapController = controller,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       body: StreamBuilder(
           stream: _nestStream,
-          builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          builder: (context, AsyncSnapshot<List<Nest>> snapshot) {
             if (snapshot.hasData) {
-              handleNestChanges(context, snapshot.data!);
-              return Column(
-                children: [
-                  Flexible(
-                    child: ValueListenableBuilder<Set<Marker>>(
-                      valueListenable: markersToShow,
-                      builder: (context, value, child) {
-                        return GoogleMap(
-                          circles: circle,
-                          mapToolbarEnabled: false,
-                          compassEnabled: true,
-                          markers: value,
-                          mapType: MapType.satellite,
-                          zoomControlsEnabled: false,
-                          initialCameraPosition: initCamera,
-                          onMapCreated: (controller) =>
-                          _googleMapController = controller,
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              );
+              updateMarkersToShow(snapshot.data!);
             } else {
-              return Center(
-                child: CircularProgressIndicator(),
-              );
+              updateMarkersToShow(nestsService?.items ?? []);
             }
+            return nestsMap();
           }),
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -278,7 +250,6 @@ class _MapNestsState extends State<MapNests> {
                             controller: search,
                             onEditingComplete: () async {
                               setState(() {
-                                updateMarkersToShow();
                                 focus.unfocus();
                                 Navigator.pop(context, 'exit');
                               });

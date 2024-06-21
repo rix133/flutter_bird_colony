@@ -6,6 +6,8 @@ import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
 
 import '../../design/listScreenWidget.dart';
+import '../../models/firestore/firestoreItem.dart';
+import '../../services/speciesService.dart';
 
 class ListSpecies extends ListScreenWidget<Species> {
   const ListSpecies({Key? key, required FirebaseFirestore firestore})  : super(key: key, title: 'species', icon: Icons.nat_rounded, firestore: firestore);
@@ -23,11 +25,9 @@ class _ListSpeciesState extends ListScreenWidgetState<Species> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
-      collection = widget.firestore
-          .collection('settings')
-          .doc(sps?.settingsType)
-          .collection("species");
-      stream = collection?.snapshots() ?? Stream.empty();
+      collectionName = sps?.settingsType ?? "default";
+      fsService = Provider.of<SpeciesService>(context, listen: false);
+      stream = fsService?.watchItems(collectionName) ?? Stream.empty();
 
       setState(() {});
     });
@@ -97,10 +97,8 @@ class _ListSpeciesState extends ListScreenWidgetState<Species> {
     return true;
   }
 
-  getFilteredItems(AsyncSnapshot<QuerySnapshot<Object?>> snapshot) {
-    species = snapshot.data!.docs
-        .map<Species>((DocumentSnapshot<Object?> e) => Species.fromDocSnapshot(e))
-        .toList();
+  List<Species> getFilteredItems(List<FirestoreItem> items) {
+    species = items.map((e) => e as Species).toList();
     species = species.where(filterByText).toList();
     return species;
   }

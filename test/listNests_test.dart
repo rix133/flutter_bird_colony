@@ -14,15 +14,13 @@ import 'package:flutter_bird_colony/screens/nest/listNests.dart';
 import 'package:flutter_bird_colony/screens/nest/mapNests.dart';
 import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
-import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
 import 'mocks/mockLocationService.dart';
 import 'mocks/mockNavigatorObserver.dart';
 import 'mocks/mockSharedPreferencesService.dart';
-
+import 'testApp.dart';
 
 void main() {
   final authService = MockAuthService();
@@ -31,7 +29,7 @@ void main() {
   final firestore = FakeFirebaseFirestore();
   MockLocationAccuracy10 locationAccuracy10 = MockLocationAccuracy10();
 
-  late Widget myApp;
+  late TestApp myApp;
   final userEmail = "test@example.com";
   final Nest nest1 = Nest(
     id: "1",
@@ -132,13 +130,11 @@ void main() {
 
     await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
 
-
-    myApp = ChangeNotifierProvider<SharedPreferencesService>(
-      create: (_) => sharedPreferencesService,
-      child: MaterialApp(
-          initialRoute: '/listNests',
-          routes: {
-            '/': (context) => MyHomePage(title: "Nest app"),
+    myApp = myApp = TestApp(
+      firestore: firestore,
+      sps: sharedPreferencesService,
+      app: MaterialApp(initialRoute: '/listNests', routes: {
+        '/': (context) => MyHomePage(title: "Nest app"),
             '/listNests': (context) => ListNests(firestore: firestore),
             '/editNest': (context) => EditNest(firestore: firestore),
         '/mapNests': (context) => MapNests(firestore: firestore),
@@ -376,9 +372,10 @@ void main() {
       (WidgetTester tester) async {
     final mapRoute = MaterialPageRoute(builder: (_) => Container());
     await tester.pumpWidget(
-      ChangeNotifierProvider<SharedPreferencesService>(
-        create: (_) => sharedPreferencesService,
-        child: MaterialApp(
+      TestApp(
+        firestore: firestore,
+        sps: sharedPreferencesService,
+        app: MaterialApp(
             home: ListNests(firestore: firestore),
             navigatorObservers: [mockObserver],
             onGenerateRoute: (RouteSettings settings) {
@@ -417,9 +414,10 @@ void main() {
   testWidgets("will show all nests on the map", (WidgetTester tester) async {
     final mapRoute = MaterialPageRoute(builder: (_) => Container());
     await tester.pumpWidget(
-      ChangeNotifierProvider<SharedPreferencesService>(
-        create: (_) => sharedPreferencesService,
-        child: MaterialApp(
+      TestApp(
+        firestore: firestore,
+        sps: sharedPreferencesService,
+        app: MaterialApp(
             home: ListNests(firestore: firestore),
             navigatorObservers: [mockObserver],
             onGenerateRoute: (RouteSettings settings) {
@@ -449,9 +447,10 @@ void main() {
       return (Container());
     });
     await tester.pumpWidget(
-      ChangeNotifierProvider<SharedPreferencesService>(
-        create: (_) => sharedPreferencesService,
-        child: MaterialApp(
+      TestApp(
+        firestore: firestore,
+        sps: sharedPreferencesService,
+        app: MaterialApp(
             home: ListNests(firestore: firestore),
             navigatorObservers: [mockObserver],
             onGenerateRoute: (RouteSettings settings) {

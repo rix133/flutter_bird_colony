@@ -5,11 +5,10 @@ import 'package:flutter_bird_colony/models/firestore/bird.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/screens/statistics.dart';
-import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 
 import 'mocks/mockSharedPreferencesService.dart';
+import 'testApp.dart';
 
 void main() {
   final sharedPreferencesService = MockSharedPreferencesService();
@@ -60,17 +59,20 @@ void main() {
       last_modified: DateTime.now().subtract(Duration(days: 3)),
       species: 'Common gull');
 
-  late Widget myApp;
+  late TestApp myApp;
 
   setUpAll(() async {
     //add one common gull nest to firestore nests
     await nest3.save(firestore);
     await firestore.collection('Birds').doc(parent.band).set(parent.toJson());
     await chick.save(firestore);
-
-    myApp = ChangeNotifierProvider<SharedPreferencesService>(
-        create: (_) => sharedPreferencesService,
-        child: MaterialApp(home: Statistics(firestore: firestore)));
+    myApp = TestApp(
+      firestore: firestore,
+      sps: sharedPreferencesService,
+      app: MaterialApp(
+        home: Statistics(firestore: firestore),
+      ),
+    );
   });
 
   //run after each test
@@ -93,7 +95,6 @@ void main() {
   testWidgets('Statistics widget should update selected year correctly',
       (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
-
     // Verify initial selected year
     expect(find.text(DateTime.now().year.toString()), findsOneWidget);
 

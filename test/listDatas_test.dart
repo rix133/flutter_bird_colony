@@ -5,22 +5,22 @@ import 'package:flutter_bird_colony/screens/bird/listBirds.dart';
 import 'package:flutter_bird_colony/screens/experiment/listExperiments.dart';
 import 'package:flutter_bird_colony/screens/listDatas.dart';
 import 'package:flutter_bird_colony/screens/nest/listNests.dart';
-import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 
 import 'mocks/mockSharedPreferencesService.dart';
+import 'testApp.dart';
 
 void main() {
   final sharedPreferencesService = MockSharedPreferencesService();
   final firestore = FakeFirebaseFirestore();
 
-  late Widget myApp;
+  late TestApp myApp;
   group('ListDatas', () {
     setUpAll(() {
-      myApp = ChangeNotifierProvider<SharedPreferencesService>(
-          create: (_) => sharedPreferencesService,
-          child: MaterialApp(home: ListDatas(firestore: firestore)));
+      myApp = TestApp(
+          firestore: firestore,
+          sps: sharedPreferencesService,
+          app: MaterialApp(home: ListDatas(firestore: firestore)));
     });
 
     testWidgets('renders the correct number of tabs',
