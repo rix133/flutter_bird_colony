@@ -3,9 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/services/birdsService.dart';
 import 'package:flutter_bird_colony/services/nestsService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
+
+import '../models/firestore/bird.dart';
 
 class Statistics extends StatefulWidget {
   final FirebaseFirestore firestore;
@@ -27,6 +30,7 @@ class _StatisticsState extends State<Statistics> {
   //CollectionReference? nests;
   Query? birdsQuery;
   NestsService? nestsService;
+  BirdsService? birdsService;
   Stream<List<Nest>> _nestsStream = Stream.empty();
 
   String username = "";
@@ -52,6 +56,7 @@ class _StatisticsState extends State<Statistics> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       nestsService = Provider.of<NestsService>(context, listen: false);
+      birdsService = Provider.of<BirdsService>(context, listen: false);
       _speciesList = sps!.speciesList;
       username = sps!.userName;
       _refreshStreams();
@@ -224,34 +229,75 @@ class _StatisticsState extends State<Statistics> {
     return list_tile;
   }
 
-  Widget getBirdsListTile(String species, Query? birdsQuery) {
+  Widget getLocalBirdsListTile(String species) {
+    List<Bird> selectedBirds = birdsService!.items;
     if (species != "Total") {
-      birdsQuery = birdsQuery?.where("species", isEqualTo: species);
+      selectedBirds =
+          selectedBirds.where((Bird bird) => bird.species == species).toList();
     }
+    //filter by selected year
+    selectedBirds = selectedBirds
+        .where((Bird bird) => bird.ringed_date.year == _selectedYear)
+        .toList();
+
+    if (dropdownValue == "Today") {
+      selectedBirds = selectedBirds
+          .where((Bird bird) =>
+              bird.ringed_date.toIso8601String().split("T")[0] == today)
+          .toList();
+    }
+
     if (dropdownValuePeople == "Me") {
-      birdsQuery = birdsQuery?.where("responsible", isEqualTo: username);
+      selectedBirds = selectedBirds
+          .where((Bird bird) => bird.responsible == username)
+          .toList();
     }
-    return FutureBuilder<AggregateQuerySnapshot>(
-      future: birdsQuery?.count().get(),
-      builder: (BuildContext context,
-          AsyncSnapshot<AggregateQuerySnapshot> snapshot) {
-        if (snapshot.hasData) {
-          int count = snapshot.data?.count ?? 0;
-          if (count == 0) {
+    if (selectedBirds.length == 0 && species != "Total") {
+      return SizedBox.shrink();
+    }
+    ListTile list_tile = ListTile(
+        title: Text(species == "" ? "No species birds" : "$species ringed"),
+        trailing: Text(selectedBirds.length.toString()));
+
+    return list_tile;
+  }
+
+  Widget getBirdsListTile(String species, Query? birdsQuery) {
+    if (birdsService == null) {
+      return Text("loading birds...");
+    } else {
+      if (birdsService!.items.length != 0) {
+        return getLocalBirdsListTile(species);
+      }
+      if (species != "Total") {
+        birdsQuery = birdsQuery?.where("species", isEqualTo: species);
+      }
+      if (dropdownValuePeople == "Me") {
+        birdsQuery = birdsQuery?.where("responsible", isEqualTo: username);
+      }
+
+      return FutureBuilder<AggregateQuerySnapshot>(
+        future: birdsQuery?.count().get(),
+        builder: (BuildContext context,
+            AsyncSnapshot<AggregateQuerySnapshot> snapshot) {
+          if (snapshot.hasData) {
+            int count = snapshot.data?.count ?? 0;
+            if (count == 0 && species != "Total") {
+              return SizedBox.shrink();
+            }
+            return ListTile(
+              title: Text("$species ringed"),
+              trailing: Text(count.toString()),
+            );
+          } else if (snapshot.hasError) {
+            print(snapshot.error);
+            return Text('Error: getting $species data');
+          } else {
             return SizedBox.shrink();
           }
-          return ListTile(
-            title: Text("$species ringed"),
-            trailing: Text(count.toString()),
-          );
-        } else if (snapshot.hasError) {
-          print(snapshot.error);
-          return Text('Error: getting $species data');
-        } else {
-          return SizedBox.shrink();
-        }
-      },
-    );
+        },
+      );
+    }
   }
 
   void showNestsonMap(List<Nest> nests) {

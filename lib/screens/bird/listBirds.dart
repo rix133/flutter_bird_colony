@@ -2,10 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/firestore/bird.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:provider/provider.dart';
 
 import '../../design/listScreenWidget.dart';
 import '../../design/speciesRawAutocomplete.dart';
+import '../../models/firestore/firestoreItem.dart';
 import '../../models/firestoreItemMixin.dart';
+import '../../services/birdsService.dart';
 
 class ListBirds extends ListScreenWidget<Bird> {
   const ListBirds({Key? key, required FirebaseFirestore firestore})  : super(key: key, title: 'birds', icon: Icons.nat_sharp, firestore: firestore);
@@ -21,7 +24,8 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
 
   @override
   void initState() {
-    collection = widget.firestore.collection("Birds");
+    collectionName = "Birds";
+    fsService = Provider.of<BirdsService>(context, listen: false);
     super.initState();
   }
 
@@ -127,11 +131,8 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
     return (FSItemMixin().downloadExcel(items, "birds", widget.firestore));
   }
 
-  List<Bird> getFilteredItems(AsyncSnapshot snapshot) {
-    List<Bird> birds = snapshot.data!.docs
-        .map<Bird>(
-            (DocumentSnapshot document) => Bird.fromDocSnapshot(document))
-        .toList();
+  List<Bird> getFilteredItems(List<FirestoreItem> items) {
+    List<Bird> birds = items as List<Bird>;
 
     birds = birds.where(filterByText).toList();
     birds = birds.where(filterByExperiments).toList();

@@ -76,9 +76,10 @@ class _MapNestsState extends State<MapNests> {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       nestsService = Provider.of<NestsService>(context, listen: false);
       _setDefaultLocation(sps!.defaultLocation);
-      _nestStream = nestsService!.watchItems(year);
       //take the latest stream snapshot and update the markers
-
+      _nestStream = nestsService!.watchItems(year);
+      //init the markers
+      updateMarkersToShow(nestsService?.items ?? []);
       loc = location.getPositionStream();
       setState(() {});
     });
@@ -95,6 +96,11 @@ class _MapNestsState extends State<MapNests> {
 
   updateMarkersToShow(List<Nest> nests) {
     Set<Nest> nestsToShow = nests.toSet();
+    //apply the bigfilter
+    if (bigFilter != null) {
+      nestsToShow =
+          nests.where((element) => bigFilter!.contains(element.id)).toSet();
+    }
     if(search.text.isNotEmpty){
       //split by comma and space
       Set<String> searches = search.text.split(RegExp(r',\s*|\s+')).toSet();

@@ -3,16 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/screens/settings/editSpecies.dart';
 import 'package:flutter_bird_colony/screens/settings/listSpecies.dart';
-import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 
 import 'mocks/mockSharedPreferencesService.dart';
+import 'testApp.dart';
 
 void main() {
   final firestore = FakeFirebaseFirestore();
   final sharedPreferencesService = MockSharedPreferencesService();
-  late Widget myApp;
+  late TestApp myApp;
 
   final species1 = Species(
     english: 'Common Gull',
@@ -40,9 +39,10 @@ void main() {
         .doc('2')
         .set(species2.toJson());
 
-    myApp = ChangeNotifierProvider<SharedPreferencesService>(
-        create: (_) => sharedPreferencesService,
-        child: MaterialApp(home: ListSpecies(firestore: firestore), routes: {
+    myApp = TestApp(
+        firestore: firestore,
+        sps: sharedPreferencesService,
+        app: MaterialApp(home: ListSpecies(firestore: firestore), routes: {
           '/editSpecies': (context) => EditSpecies(firestore: firestore),
         }));
   });

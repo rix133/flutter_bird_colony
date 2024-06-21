@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/experimentedItem.dart';
 import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
+import 'package:flutter_bird_colony/services/experimentsService.dart';
+import 'package:flutter_bird_colony/services/firestoreItemService.dart';
 import 'package:provider/provider.dart';
 
 import '../models/firestore/experiment.dart';
@@ -20,12 +22,13 @@ abstract class ListScreenWidget<T> extends StatefulWidget {
 abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
   int selectedYear = DateTime.now().year;
   String? selectedExperiments;
-  Stream<QuerySnapshot> stream = Stream.empty();
-  CollectionReference? collection;
-  List<Experiment> allExperiments = [];
+  Stream<List<FirestoreItem>> stream = Stream.empty();
+  ExperimentsService? experimentsService;
+  Stream<List<Experiment>> experimentStream = Stream.empty();
   TextEditingController searchController = TextEditingController();
   bool downloading = false;
-
+  String collectionName = "";
+  FirestoreItemService? fsService;
 
   SharedPreferencesService? sps;
   List<FirestoreItem> items = [];
@@ -41,11 +44,11 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
-      stream = collection?.snapshots() ?? Stream.empty();
-      widget.firestore.collection('experiments').get().then((value) {
-        allExperiments =
-            value.docs.map((e) => Experiment.fromDocSnapshot(e)).toList();
-      });
+      experimentsService =
+          Provider.of<ExperimentsService>(context, listen: false);
+      stream = fsService?.watchItems(collectionName) ?? Stream.empty();
+      experimentStream =
+          experimentsService?.watchItems("experiments") ?? Stream.empty();
 
       setState(() {});
     });
@@ -153,15 +156,13 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
   void openFilterDialog(BuildContext context);
 
+  List<FirestoreItem> getFilteredItems(List<FirestoreItem> items);
 
-
-  List<FirestoreItem> getFilteredItems(AsyncSnapshot<QuerySnapshot> snapshot);
-
-  ListView listAllItems(BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+  ListView listAllItems(BuildContext context, List<FirestoreItem> items) {
     //disable if not current year and user is not admin
     bool disabled =
         selectedYear != DateTime.now().year && !(sps?.isAdmin ?? false);
-    items = getFilteredItems(snapshot);
+    items = getFilteredItems(items);
     return ListView.builder(
         itemCount: items.length,
         itemBuilder: (context, index) {
@@ -172,21 +173,26 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
 
   Widget experimentInput(BuildContext context) {
-    return DropdownButton<String>(
-      value: selectedExperiments,
-      style: TextStyle(color: Colors.deepPurpleAccent),
-      items: allExperiments.map((Experiment e) {
-        return DropdownMenuItem<String>(
-          value: e.name,
-          child: Text(e.name,
-              style: TextStyle(color: Colors.deepPurpleAccent)),
+    return StreamBuilder<List<Experiment>>(
+      stream: experimentStream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return Container();
+        return DropdownButton<String>(
+          value: selectedExperiments,
+          style: TextStyle(color: Colors.deepPurpleAccent),
+          items: snapshot.data!.map((Experiment e) {
+            return DropdownMenuItem<String>(
+              value: e.name,
+              child: Text(e.name,
+                  style: TextStyle(color: Colors.deepPurpleAccent)),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            setState(() {
+              selectedExperiments = newValue;
+            });
+          },
         );
-      }).toList(),
-      onChanged: (String? newValue) {
-        setState(() {
-          selectedExperiments = newValue;
-          Navigator.pop(context);
-        });
       },
     );
   }
@@ -228,17 +234,26 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
             Expanded(
                 child: StreamBuilder(
                     stream: stream,
-                    builder:
-                        (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                      if (snapshot.hasData) {
-                        return(listAllItems(context, snapshot));
-                      } else {
-                        return Container(
-                            padding: EdgeInsets.all(40.0),
-                            child: Text("loading items..."));
-                      }
-                    })),
-            SingleChildScrollView(
+                        builder: (context,
+                            AsyncSnapshot<List<FirestoreItem>> snapshot) {
+                          if (snapshot.hasData) {
+                            return (listAllItems(context, snapshot.data!));
+                          } else if (snapshot.hasError) {
+                            return Container(
+                                padding: EdgeInsets.all(40.0),
+                                child: Text("Error loading items"));
+                          } else {
+                            if (fsService?.items.length == 0) {
+                              return Container(
+                                  padding: EdgeInsets.all(40.0),
+                                  child: Text("loading items..."));
+                            } else {
+                              return listAllItems(
+                                  context, fsService?.items ?? []);
+                            }
+                          }
+                        })),
+                SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child:Row(
                   mainAxisAlignment: MainAxisAlignment.center,
