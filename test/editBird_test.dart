@@ -1282,4 +1282,162 @@ void main() {
       }
     });
   });
+
+  group("Edit Bird", () {
+    late Egg egg;
+    late Bird parent;
+    late Nest nest;
+    late Bird chickChick;
+    late Bird eggChick;
+    late Egg chickEgg;
+    late Egg eggEgg;
+    setUp(() async {
+      parent = masterParent.copy();
+      egg = masterEgg.copy();
+      nest = masterNest.copy();
+      chickChick = masterChickChick.copy();
+      eggChick = masterEggChick.copy();
+      chickEgg = masterChickEgg.copy();
+      eggEgg = masterEggEgg.copy();
+
+      chickEgg.discover_date = chickChick.ringed_date;
+
+      parent.id = parent.band;
+      parent.nest = nest.id;
+      parent.nest_year = nest.discover_date.year;
+      chickChick.id = chickChick.band;
+      eggChick.id = eggChick.band;
+
+      nest.parents = [parent];
+      //reset the database
+      await firestore.collection('recent').doc("nest").set({"id": "1"});
+      await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .set(nest.toJson());
+      await firestore.collection("Birds").doc(parent.id).set(parent.toJson());
+      await firestore
+          .collection("Birds")
+          .doc(chickChick.id)
+          .set(chickChick.toJson());
+      await firestore
+          .collection("Birds")
+          .doc(eggChick.id)
+          .set(eggChick.toJson());
+      //add eggs to nest
+      await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .set(egg.toJson());
+      await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(chickEgg.id)
+          .set(chickEgg.toJson());
+      await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(eggEgg.id)
+          .set(eggEgg.toJson());
+      await firestore
+          .collection('experiments')
+          .doc(experiment.id)
+          .set(experiment.toJson());
+    });
+
+    tearDown(() async {
+      await firestore.collection("Birds").get().then((value) {
+        for (var doc in value.docs) {
+          doc.reference.delete();
+        }
+      });
+      //delete all eggs from nest 1
+      await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .get()
+          .then((value) {
+        for (var doc in value.docs) {
+          doc.reference.delete();
+        }
+      });
+      //delete all nests
+      await firestore
+          .collection(nest.discover_date.year.toString())
+          .get()
+          .then((value) {
+        for (var doc in value.docs) {
+          doc.reference.delete();
+        }
+      });
+    });
+
+    testWidgets("when a note is added to bird the  is saved",
+        (WidgetTester tester) async {
+      chickChick = await firestore
+          .collection("Birds")
+          .doc(eggChick.band)
+          .get()
+          .then((value) => Bird.fromDocSnapshot(value));
+      myApp = getInitApp({"bird": chickChick});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //for(Element e in find.byType(Text).evaluate()){
+      //     print((e.widget as Text).data);
+      // }
+
+      expect(find.text("Metal: AA1236"), findsOneWidget);
+
+      //press the add note button
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+
+      //find the note widget and insert a note
+      Finder noteFinder = find.byWidgetPredicate((Widget widget) =>
+          widget is InputDecorator && widget.decoration.labelText == 'note');
+
+      expect(noteFinder, findsOneWidget, reason: "note input not found");
+
+      await tester.enterText(noteFinder, "dead");
+
+      //find the save button
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      //expect the bird to be still there
+      var bird = await firestore.collection("Birds").doc(chickChick.band).get();
+      expect(bird.exists, true);
+      //add note measure to chickChick
+      chickChick.measures.add(Measure.note(value: "dead"));
+
+      //expect that all other fields are unchanged
+      Bird newBird = Bird.fromDocSnapshot(bird);
+      expect(newBird.band, "AA1236");
+      expect(newBird.ringed_date, chickChick.ringed_date,
+          reason: "ringed date should not change");
+      expect(newBird.ringed_as_chick, chickChick.ringed_as_chick);
+      expect(newBird.measures.length, chickChick.measures.length);
+      //chek that the value for each measures is the same
+      for (var i = 0; i < newBird.measures.length; i++) {
+        expect(newBird.measures[i].value, chickChick.measures[i].value);
+      }
+      expect(newBird.nest, chickChick.nest);
+      expect(newBird.nest_year, chickChick.nest_year);
+      expect(newBird.responsible, isNot(chickChick.responsible),
+          reason: "responsible should change");
+      expect(newBird.last_modified, isNot(chickChick.last_modified));
+      expect(newBird.species, chickChick.species);
+      expect(newBird.color_band, chickChick.color_band,
+          reason: "color band should not change");
+      expect(newBird.egg, chickChick.egg);
+      expect(newBird.age, chickChick.age);
+      expect(newBird.experiments?.length, chickChick.experiments?.length);
+    });
+  });
 }
