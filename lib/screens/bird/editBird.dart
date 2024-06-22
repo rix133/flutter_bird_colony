@@ -350,6 +350,7 @@ class _EditBirdState extends State<EditBird> {
         hideNext
             ? Container()
             : ElevatedButton(
+                key: Key("nextBandButton"),
                 onPressed: _recentMetalBand.isNotEmpty
                     ? () {
                   setState(() {

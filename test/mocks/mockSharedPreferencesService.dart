@@ -22,7 +22,8 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
 
   String _band = "AA1234";
   String getRecentMetalBand(String species) => _band;
-  setRecentMetalBand(String species, String band) => _band = band;
+
+  setRecentBand(String species, String band) => _band = band;
 
   @override
   String get userName => 'Test User';

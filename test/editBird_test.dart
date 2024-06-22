@@ -79,7 +79,7 @@ void main() {
 
   final Bird masterParent = Bird(
       ringed_date: DateTime.now().subtract(Duration(days: 360 * 3)),
-      band: 'AA1234',
+      band: 'AA1111',
       ringed_as_chick: true,
       measures: [Measure.note(value: "test")],
       nest: "234",
@@ -237,6 +237,7 @@ void main() {
 
     testWidgets("Will load bird without band", (WidgetTester tester) async {
       parent.band = "";
+      parent.id = null;
       myApp = getInitApp({"bird": parent});
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
@@ -248,7 +249,7 @@ void main() {
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
 
-      expect(find.text("Metal: AA1234"), findsOneWidget);
+      expect(find.text("Metal: AA1111"), findsOneWidget);
     });
 
     testWidgets("Will allow edit band on egg", (WidgetTester tester) async {
@@ -309,6 +310,8 @@ void main() {
     late Egg egg;
     late Nest nest;
     setUp(() async {
+      sharedPreferencesService.setRecentBand("All", "AA1234");
+
       parent = masterParent.copy();
       egg = masterEgg.copy();
       nest = masterNest.copy();
@@ -384,8 +387,10 @@ void main() {
       expect(find.text("weight"), findsNothing);
 
       //find next band button
+      expect(find.byKey(Key("nextBandButton")), findsOneWidget);
+      //check the next band is correct
       expect(find.text("AA1235"), findsOneWidget);
-      await tester.tap(find.text("AA1235"));
+      await tester.tap(find.byKey(Key("nextBandButton")));
       await tester.pumpAndSettle();
 
       //expect not to find measure weight
@@ -398,10 +403,17 @@ void main() {
     late Egg egg;
     late Nest nest;
     setUp(() async {
+      sharedPreferencesService.setRecentBand("All", "AA1234");
       parent = masterParent.copy();
       egg = masterEgg.copy();
       nest = masterNest.copy();
       //reset the database
+      await firestore.collection("Birds").get().then((value) {
+        for (var doc in value.docs) {
+          doc.reference.delete();
+        }
+      });
+
       await firestore.collection('recent').doc("nest").set({"id": "1"});
       await firestore
           .collection(DateTime.now().year.toString())
@@ -422,21 +434,46 @@ void main() {
     });
 
     testWidgets("Will set next band on egg", (WidgetTester tester) async {
+      String nextBand = "AA1235";
+      var bird = await firestore.collection("Birds").doc(nextBand).get();
+      expect(bird.exists, false, reason: "Next bird already exists");
       myApp = getInitApp({"nest": nest, "egg": egg});
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
 
       //fnd tnext band button
-      expect(find.text("AA1235"), findsOneWidget);
-      await tester.tap(find.text("AA1235"));
+      expect(find.text(nextBand), findsOneWidget);
+      await tester.tap(find.text(nextBand));
       await tester.pumpAndSettle();
 
       //save the bird
       await tester.tap(find.byKey(Key("saveButton")));
       await tester.pumpAndSettle();
       //expect to find the bird in firestore
-      var bird = await firestore.collection("Birds").doc("AA1235").get();
+      bird = await firestore.collection("Birds").doc(nextBand).get();
       expect(bird.exists, true);
+    });
+
+    testWidgets("Will save next band to local storage",
+        (WidgetTester tester) async {
+      String nextBand = "AA1235";
+      var bird = await firestore.collection("Birds").doc(nextBand).get();
+      expect(bird.exists, false, reason: "Next bird already exists");
+      myApp = getInitApp({"nest": nest, "egg": egg});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //fnd tnext band button
+      expect(find.text(nextBand), findsOneWidget);
+      await tester.tap(find.text(nextBand));
+      await tester.pumpAndSettle();
+
+      //save the bird
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      expect(sharedPreferencesService.getRecentMetalBand("All"), nextBand,
+          reason: "Recent band not saved");
     });
 
     testWidgets("Will save color band on existing parent",
@@ -464,7 +501,7 @@ void main() {
       await tester.tap(find.byKey(Key("saveButton")));
       await tester.pumpAndSettle();
       //expect to find the bird in firestore
-      var bird = await firestore.collection("Birds").doc("AA1234").get();
+      var bird = await firestore.collection("Birds").doc(parent.band).get();
       expect(bird.exists, true);
       expect(bird.data()!['color_band'], "A1B2");
     });
@@ -520,7 +557,7 @@ void main() {
       //find by key band_numCntr
       expect(find.byKey(Key("band_numCntr")), findsOneWidget);
       //enter numbers
-      await tester.enterText(find.byKey(Key("band_numCntr")), "1234");
+      await tester.enterText(find.byKey(Key("band_numCntr")), "1111");
       await tester.pumpAndSettle();
 
       //save the bird
@@ -535,7 +572,7 @@ void main() {
       await tester.pumpAndSettle();
 
       //expect to find the bird in firestore
-      var bird = await firestore.collection("Birds").doc("AA1234").get();
+      var bird = await firestore.collection("Birds").doc("AA1111").get();
       expect(bird.exists, true);
       Bird parentObj = Bird.fromDocSnapshot(bird);
       expect(parentObj.nest, nest.id);
@@ -626,7 +663,7 @@ void main() {
       //find by key band_numCntr
       expect(find.byKey(Key("band_numCntr")), findsOneWidget);
       //enter numbers
-      await tester.enterText(find.byKey(Key("band_numCntr")), "1234");
+      await tester.enterText(find.byKey(Key("band_numCntr")), "1111");
       await tester.pumpAndSettle();
 
       //save the bird
@@ -637,11 +674,11 @@ void main() {
       expect(find.byType(AlertDialog), findsOneWidget);
 
       //expect to find the bird in firestore
-      var bird = await firestore.collection("Birds").doc("AA1234").get();
+      var bird = await firestore.collection("Birds").doc("AA1111").get();
       expect(bird.exists, true);
       // expect the bird to be unchanged
       Bird parentObj = Bird.fromDocSnapshot(bird);
-      expect(parentObj.band, "AA1234");
+      expect(parentObj.band, "AA1111");
       expect(parentObj.last_modified, parent.last_modified);
       expect(parentObj.responsible, parent.responsible);
     });
@@ -672,7 +709,7 @@ void main() {
       await tester.tap(find.byKey(Key("saveButton")));
       await tester.pumpAndSettle();
       //expect to find the bird in firestore
-      var bird = await firestore.collection("Birds").doc("AA1234").get();
+      var bird = await firestore.collection("Birds").doc(parent.band).get();
       expect(bird.exists, true);
       expect(bird.data()!['color_band'], "A1B2");
       Nest fsNest = await firestore
@@ -692,7 +729,7 @@ void main() {
       //find the letters and numbers inputs
       await tester.enterText(find.byKey(Key("band_letCntr")), "AA");
       await tester.pumpAndSettle();
-      await tester.enterText(find.byKey(Key("band_numCntr")), "1234");
+      await tester.enterText(find.byKey(Key("band_numCntr")), "1111");
       await tester.pumpAndSettle();
 
       //save the bird
@@ -702,11 +739,11 @@ void main() {
       expect(find.byType(AlertDialog), findsOneWidget);
 
       //expect to find the bird in firestore
-      var bird = await firestore.collection("Birds").doc("AA1234").get();
+      var bird = await firestore.collection("Birds").doc("AA1111").get();
       expect(bird.exists, true);
       //expect the bird to be unchanged
       Bird parentObj = Bird.fromDocSnapshot(bird);
-      expect(parentObj.band, "AA1234");
+      expect(parentObj.band, "AA1111");
       expect(parentObj.last_modified, parent.last_modified);
       expect(parentObj.responsible, parent.responsible);
     });
@@ -733,6 +770,8 @@ void main() {
       parent.nest_year = nest.discover_date.year;
       chickChick.id = chickChick.band;
       eggChick.id = eggChick.band;
+
+      sharedPreferencesService.setRecentBand("All", "AA1234");
 
       nest.parents = [parent];
       //reset the database
@@ -788,8 +827,8 @@ void main() {
     await tester.pumpAndSettle();
 
     //expect to find the bird in firestore
-    var bird = await firestore.collection("Birds").doc("AA1234").get();
-    expect(bird.exists, false);
+      var bird = await firestore.collection("Birds").doc("AA1111").get();
+      expect(bird.exists, false);
   });
 
     testWidgets("can delete chick bird artefacts from egg",
@@ -914,6 +953,8 @@ void main() {
       chickChick.id = chickChick.band;
       eggChick.id = eggChick.band;
 
+      sharedPreferencesService.setRecentBand("All", "AA1234");
+
       nest.parents = [parent];
       //reset the database
       await firestore.collection('recent').doc("nest").set({"id": "1"});
@@ -996,7 +1037,7 @@ void main() {
       await tester.pumpAndSettle();
 
       //find the band text band and long press it
-      await tester.longPress(find.text("Metal: AA1234"));
+      await tester.longPress(find.text("Metal: ${parent.band}"));
       await tester.pumpAndSettle();
 
       //expect an alert dialog
@@ -1013,7 +1054,7 @@ void main() {
       await tester.pumpAndSettle();
 
       //expect the old bird to be deleted
-      var bird = await firestore.collection("Birds").doc("AA1234").get();
+      var bird = await firestore.collection("Birds").doc(parent.band).get();
       expect(bird.exists, false);
       //expect the new bird to be saved
       bird = await firestore.collection("Birds").doc("BB1235").get();
@@ -1062,7 +1103,7 @@ void main() {
       await tester.pumpAndSettle();
 
       //find the band text band and long press it
-      await tester.longPress(find.text("Metal: AA1234"));
+      await tester.longPress(find.text("Metal: ${parent.band}"));
       await tester.pumpAndSettle();
 
       //expect an alert dialog
@@ -1079,7 +1120,7 @@ void main() {
       await tester.pumpAndSettle();
 
       //expect the old bird not to be deleted
-      var bird = await firestore.collection("Birds").doc("AA1234").get();
+      var bird = await firestore.collection("Birds").doc(parent.band).get();
       expect(bird.exists, true);
       //expect the exiting bird is not overwritten
       bird = await firestore.collection("Birds").doc("AA1235").get();
@@ -1118,7 +1159,7 @@ void main() {
       await tester.pumpAndSettle();
 
       //find the band text band and long press it
-      await tester.longPress(find.text("Metal: AA1234"));
+      await tester.longPress(find.text("Metal: ${parent.band}"));
       await tester.pumpAndSettle();
 
       //expect an alert dialog
@@ -1135,7 +1176,7 @@ void main() {
       await tester.pumpAndSettle();
 
       //expect the old bird to be deleted
-      var bird = await firestore.collection("Birds").doc("AA1234").get();
+      var bird = await firestore.collection("Birds").doc(parent.band).get();
       expect(bird.exists, false);
       //expect the new bird to be saved
       bird = await firestore.collection("Birds").doc("BB1235").get();
@@ -1302,6 +1343,8 @@ void main() {
 
       chickEgg.discover_date = chickChick.ringed_date;
 
+      sharedPreferencesService.setRecentBand("All", "AA1234");
+
       parent.id = parent.band;
       parent.nest = nest.id;
       parent.nest_year = nest.discover_date.year;
@@ -1377,7 +1420,8 @@ void main() {
       });
     });
 
-    testWidgets("when a note is added to bird the  is saved",
+    testWidgets(
+        "when a note is added to bird it is saved with default settings",
         (WidgetTester tester) async {
       chickChick = await firestore
           .collection("Birds")
@@ -1419,6 +1463,195 @@ void main() {
       //expect that all other fields are unchanged
       Bird newBird = Bird.fromDocSnapshot(bird);
       expect(newBird.band, "AA1236");
+      expect(newBird.ringed_date, chickChick.ringed_date,
+          reason: "ringed date should not change");
+      expect(newBird.ringed_as_chick, chickChick.ringed_as_chick);
+      expect(newBird.measures.length, chickChick.measures.length);
+      //chek that the value for each measures is the same
+      for (var i = 0; i < newBird.measures.length; i++) {
+        expect(newBird.measures[i].value, chickChick.measures[i].value);
+      }
+      expect(newBird.nest, chickChick.nest);
+      expect(newBird.nest_year, chickChick.nest_year);
+      expect(newBird.responsible, isNot(chickChick.responsible),
+          reason: "responsible should change");
+      expect(newBird.last_modified, isNot(chickChick.last_modified));
+      expect(newBird.species, chickChick.species);
+      expect(newBird.color_band, chickChick.color_band,
+          reason: "color band should not change");
+      expect(newBird.egg, chickChick.egg);
+      expect(newBird.age, chickChick.age);
+      expect(newBird.experiments?.length, chickChick.experiments?.length);
+    });
+
+    testWidgets("when a note is added to bird next band is not changed",
+        (WidgetTester tester) async {
+      chickChick = await firestore
+          .collection("Birds")
+          .doc(eggChick.band)
+          .get()
+          .then((value) => Bird.fromDocSnapshot(value));
+      //set the current next band
+      String nextBand = "AA1";
+      sharedPreferencesService.setRecentBand(parent.species ?? "", nextBand);
+      myApp = getInitApp({"bird": chickChick});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      expect(find.text("Metal: AA1236"), findsOneWidget);
+
+      //press the add note button
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+
+      //find the note widget and insert a note
+      Finder noteFinder = find.byWidgetPredicate((Widget widget) =>
+          widget is InputDecorator && widget.decoration.labelText == 'note');
+
+      expect(noteFinder, findsOneWidget, reason: "note input not found");
+
+      await tester.enterText(noteFinder, "dead");
+
+      //find the save button
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      //expect no next band change
+      expect(
+          sharedPreferencesService.getRecentMetalBand(chickChick.species ?? ""),
+          nextBand,
+          reason: "next band should not change on update");
+    });
+
+    testWidgets(
+        "when a note is added to bird it is saved with auto assign parent next bands",
+        (WidgetTester tester) async {
+      parent = await firestore
+          .collection("Birds")
+          .doc(parent.band)
+          .get()
+          .then((value) => Bird.fromDocSnapshot(value));
+
+      sharedPreferencesService.autoNextBandParent = true;
+      sharedPreferencesService.setRecentBand(parent.species ?? "", "TT1");
+      myApp = getInitApp({"bird": parent});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //check that bird TT2 deos not exist
+      var bird = await firestore.collection("Birds").doc("TT2").get();
+      expect(bird.exists, false);
+
+      expect(sharedPreferencesService.getRecentMetalBand(parent.species ?? ""),
+          "TT1");
+      expect(find.text("Metal: ${parent.band}"), findsOneWidget);
+
+      //press the add note button
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+
+      //find the note widget and insert a note
+      Finder noteFinder = find.byWidgetPredicate((Widget widget) =>
+          widget is InputDecorator && widget.decoration.labelText == 'note');
+
+      expect(noteFinder, findsOneWidget, reason: "note input not found");
+
+      await tester.enterText(noteFinder, "dead");
+
+      //find the save button
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      //expect there is no bird with the new band
+      bird = await firestore.collection("Birds").doc("TT2").get();
+      expect(bird.exists, false, reason: "new band should not exist");
+
+      //expect the original bird to be still there
+      bird = await firestore.collection("Birds").doc(parent.band).get();
+      expect(bird.exists, true, reason: "original bird should exist");
+      //add note measure to chickChick
+      parent.measures.add(Measure.note(value: "dead"));
+
+      //expect that all other fields are unchanged
+      Bird newBird = Bird.fromDocSnapshot(bird);
+      expect(newBird.band, parent.band);
+      expect(newBird.ringed_date, parent.ringed_date,
+          reason: "ringed date should not change");
+      expect(newBird.ringed_as_chick, parent.ringed_as_chick);
+      expect(newBird.measures.length, parent.measures.length);
+      //chek that the value for each measures is the same
+      for (var i = 0; i < newBird.measures.length; i++) {
+        expect(newBird.measures[i].value, parent.measures[i].value);
+      }
+      expect(newBird.nest, parent.nest);
+      expect(newBird.nest_year, parent.nest_year);
+      expect(newBird.responsible, isNot(parent.responsible),
+          reason: "responsible should change");
+      expect(newBird.last_modified, isNot(parent.last_modified));
+      expect(newBird.species, parent.species);
+      expect(newBird.color_band, parent.color_band,
+          reason: "color band should not change");
+      expect(newBird.egg, parent.egg);
+      expect(newBird.age, parent.age);
+      expect(newBird.experiments?.length, parent.experiments?.length);
+    });
+
+    testWidgets(
+        "when a note is added to bird it is saved with auto assign chick next bands",
+        (WidgetTester tester) async {
+      chickChick = await firestore
+          .collection("Birds")
+          .doc(chickChick.band)
+          .get()
+          .then((value) => Bird.fromDocSnapshot(value));
+
+      sharedPreferencesService.autoNextBand = true;
+      sharedPreferencesService.setRecentBand(chickChick.species ?? "", "TT1");
+      myApp = getInitApp({"bird": chickChick});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //for(Element e in find.byType(Text).evaluate()){
+      //     print((e.widget as Text).data);
+      // }
+      //check that bird TT2 deos not exist
+      var bird = await firestore.collection("Birds").doc("TT2").get();
+      expect(bird.exists, false);
+
+      expect(
+          sharedPreferencesService.getRecentMetalBand(chickChick.species ?? ""),
+          "TT1");
+      expect(find.text("Metal: ${chickChick.band}"), findsOneWidget);
+
+      //press the add note button
+      await tester.tap(find.byIcon(Icons.add));
+      await tester.pumpAndSettle();
+
+      //find the note widget and insert a note
+      Finder noteFinder = find.byWidgetPredicate((Widget widget) =>
+          widget is InputDecorator && widget.decoration.labelText == 'note');
+
+      expect(noteFinder, findsOneWidget, reason: "note input not found");
+
+      await tester.enterText(noteFinder, "dead");
+
+      //find the save button
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      //expect there is no bird with the new band
+      bird = await firestore.collection("Birds").doc("TT2").get();
+      expect(bird.exists, false, reason: "new band should not exist");
+
+      //expect the original bird to be still there
+      bird = await firestore.collection("Birds").doc(chickChick.band).get();
+      expect(bird.exists, true, reason: "original bird should exist");
+      //add note measure to chickChick
+      chickChick.measures.add(Measure.note(value: "dead"));
+
+      //expect that all other fields are unchanged
+      Bird newBird = Bird.fromDocSnapshot(bird);
+      expect(newBird.band, chickChick.band);
       expect(newBird.ringed_date, chickChick.ringed_date,
           reason: "ringed date should not change");
       expect(newBird.ringed_as_chick, chickChick.ringed_as_chick);
