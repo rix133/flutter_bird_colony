@@ -387,7 +387,11 @@ class _EditBirdState extends State<EditBird> {
   }
 
   void saveOk() {
-    sps?.setRecentBand(bird.species ?? '', bird.band);
+    if (bird.prevBird == null) {
+      //update the recent band its a newly ringed bird
+      sps?.setRecentBand(bird.species ?? '', bird.band);
+    }
+
     if(previousRouteName == '/editNest' && ageType == "parent"){
       Navigator.pushNamedAndRemoveUntil(context, '/editNest', ModalRoute.withName('/findNest'), arguments: {"nest_id": nest.name});
     } else {
