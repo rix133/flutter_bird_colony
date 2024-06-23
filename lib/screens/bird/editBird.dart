@@ -387,7 +387,7 @@ class _EditBirdState extends State<EditBird> {
   }
 
   void saveOk() {
-    if (bird.prevBird == null) {
+    if (bird.id == null) {
       //update the recent band its a newly ringed bird
       sps?.setRecentBand(bird.species ?? '', bird.band);
     }
@@ -552,6 +552,8 @@ class _EditBirdState extends State<EditBird> {
   }
 
   autoAssignNextMetalBand(String recentBand) {
+    if (bird.id != null)
+      return; //no need to auto assign if the bird already exists
     if ((ageType == "chick" && (sps?.autoNextBand ?? false)) ||
         (ageType == "parent" && (sps?.autoNextBandParent ?? false))) {
       assignNextMetalBand(recentBand);
