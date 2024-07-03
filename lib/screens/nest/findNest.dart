@@ -14,6 +14,7 @@ class FindNest extends StatefulWidget {
 class _FindNestState extends State<FindNest> {
   CollectionReference? nests;
   final FocusNode _focusNode = FocusNode();
+  final FocusNode _widgetFocusNode = FocusNode();
   bool enableBtn = true;
   void submitForm(){
     setState(() {
@@ -26,22 +27,33 @@ class _FindNestState extends State<FindNest> {
   void initState() {
     super.initState();
     nests = widget.firestore.collection(DateTime.now().year.toString());
+    _widgetFocusNode.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    if (_widgetFocusNode.hasFocus) {
+      setState(() {
+        enableBtn = true;
+      });
+    }
   }
 
   @override
   void dispose() {
+    _widgetFocusNode.removeListener(_onFocusChange);
+    _widgetFocusNode.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
+  void resetButtonState() {
+    setState(() {
+      enableBtn = true;
+    });
+  }
+
   void searchNest(String target) async {
-    if(target.isEmpty){
-      setState(() {
-        enableBtn = true;
-      });
-      return;
-    }
-    if(nests == null){
+    if (target.isEmpty || nests == null) {
       setState(() {
         enableBtn = true;
       });
@@ -80,15 +92,18 @@ class _FindNestState extends State<FindNest> {
   final nestID = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
+    return Focus(
+        focusNode: _widgetFocusNode,
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
       body: Center(
         child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               buildForm(context, "enter nest ID", null, nestID,true, searchNest, _focusNode),
               new ElevatedButton.icon(
-                  onPressed: enableBtn ? submitForm : null,
+                      key: Key('findNestButton'),
+                      onPressed: enableBtn ? submitForm : null,
                   icon: Icon(
                     Icons.search,
                     color: Colors.black87,
@@ -98,6 +113,6 @@ class _FindNestState extends State<FindNest> {
             ]
         ),
       ),
-    );
+        ));
   }
 }

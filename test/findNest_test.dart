@@ -82,6 +82,58 @@ void main() {
     expect(find.byType(EditNest), findsOneWidget);
   });
 
+  testWidgets("Has the Find nest button also after comming back from nest",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    //find the find nest button on homepage
+    await tester.tap(find.text("find nest"));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), '1');
+    await tester.pumpAndSettle();
+
+    Finder buttonFinder = find.byKey(Key('findNestButton'));
+    ElevatedButton button = tester.widget<ElevatedButton>(buttonFinder);
+    ButtonStyle? buttonStyle = button.style as ButtonStyle?;
+    Color? backgroundColor1 = buttonStyle?.backgroundColor?.resolve({});
+    expect(button.onPressed, isNotNull);
+
+    await tester.tap(buttonFinder);
+    await tester.pumpAndSettle();
+
+    //check if routed to nestManage
+    expect(find.byType(EditNest), findsOneWidget);
+
+    //save the nest
+    await tester.tap(find.byKey(Key("saveButton")));
+    await tester.pumpAndSettle();
+
+    //find the AlertDialog
+    expect(find.byType(AlertDialog), findsOneWidget);
+    //find the save anyway button
+    await tester.tap(find.text("save anyway"));
+    await tester.pumpAndSettle();
+    //expect to be back in the find nest page
+    expect(find.byType(FindNest), findsOneWidget);
+
+    // Check the button's color
+    buttonFinder = find.byKey(Key('findNestButton'));
+    button = tester.widget<ElevatedButton>(buttonFinder);
+    buttonStyle = button.style as ButtonStyle?;
+    Color? backgroundColor2 = buttonStyle?.backgroundColor?.resolve({});
+
+    expect(backgroundColor2, backgroundColor1,
+        reason:
+            "The button's color should not change after coming back from the nest page");
+
+    //check if the button is enabled
+    expect(button.onPressed, isNotNull,
+        reason:
+            "The button should be enabled after coming back from the nest page");
+  });
+
   testWidgets(
       "Can go to modify nest page through search and save nest without filling required measure",
       (WidgetTester tester) async {
