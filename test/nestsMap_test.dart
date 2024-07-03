@@ -36,6 +36,16 @@ void main() {
     species: "Common gull",
     measures: [Measure.note()],
   );
+  final Nest nest2 = Nest(
+    id: "2",
+    coordinates: GeoPoint(58.776218, 23.430532),
+    accuracy: "3.22m",
+    last_modified: DateTime.now().subtract(Duration(days: 5)),
+    discover_date: DateTime.now(),
+    responsible: "Admin",
+    species: "Common gull",
+    measures: [Measure.note()],
+  );
 
   final Experiment experiment = Experiment(
     id: "1",
@@ -106,6 +116,7 @@ void main() {
     await nests
         .doc(nest.id)
         .set(nest.toJson());
+    await nests.doc(nest2.id).set(nest2.toJson());
   });
 
   testWidgets("Will render nest map", (WidgetTester tester) async {
@@ -181,7 +192,7 @@ void main() {
 
     GoogleMap g = mapFinder.first.evaluate().first.widget as GoogleMap;
 
-    expect(g.markers.length, 1);
+    expect(g.markers.length, 2);
 
     // Find the FloatingActionButton with the "search" hero tag and tap it
     Finder searchButton = find.byWidgetPredicate(
@@ -202,7 +213,7 @@ void main() {
     await tester.pumpAndSettle();
 
     g = mapFinder.first.evaluate().first.widget as GoogleMap;
-    expect(g.markers.length, 0);
+    expect(g.markers.length, 1);
 
     // Check if the AlertDialog is no longer present in the widget tree
     expect(find.byType(AlertDialog), findsNothing);
@@ -237,9 +248,7 @@ void main() {
 
   testWidgets("will go to nest when marker is tapped ",
       (WidgetTester tester) async {
-    myApp = getInitApp({
-      "nest_ids": ["1"]
-    });
+    myApp = getInitApp(null);
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
     expect(find.byType(MapNests), findsOneWidget);
@@ -249,7 +258,7 @@ void main() {
 
     GoogleMap g = mapFinder.first.evaluate().first.widget as GoogleMap;
 
-    expect(g.markers.length, 1);
+    expect(g.markers.length, 2);
     //tap the first marker
     g.markers.first.infoWindow.onTap!();
     await tester.pumpAndSettle();
@@ -356,17 +365,19 @@ void main() {
 
     GoogleMap g = mapFinder.first.evaluate().first.widget as GoogleMap;
 
-    expect(g.markers.length, 1);
+    expect(g.markers.length, 2);
     //remove the nest from firestore
     await nests.doc("1").delete();
     await tester.pumpAndSettle();
 
     g = mapFinder.first.evaluate().first.widget as GoogleMap;
-    expect(g.markers.length, 0);
+    expect(g.markers.length, 1);
   });
   testWidgets("will update a nest marker when firestore is updated",
       (WidgetTester tester) async {
-    myApp = getInitApp(null);
+    myApp = getInitApp({
+      "nest_ids": ["1"]
+    });
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
     expect(find.byType(MapNests), findsOneWidget);

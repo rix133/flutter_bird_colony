@@ -79,7 +79,7 @@ class _MapNestsState extends State<MapNests> {
       //take the latest stream snapshot and update the markers
       _nestStream = nestsService!.watchItems(year);
       //init the markers
-      updateMarkersToShow(nestsService?.items ?? []);
+      //updateMarkersToShow(nestsService?.items ?? []);
       loc = location.getPositionStream();
       setState(() {});
     });
@@ -97,14 +97,16 @@ class _MapNestsState extends State<MapNests> {
   updateMarkersToShow(List<Nest> nests) {
     Set<Nest> nestsToShow = nests.toSet();
     //apply the bigfilter
+
     if (bigFilter != null) {
-      nestsToShow =
-          nests.where((element) => bigFilter!.contains(element.id)).toSet();
+      nestsToShow = nestsToShow
+          .where((element) => bigFilter!.contains(element.id))
+          .toSet();
     }
     if(search.text.isNotEmpty){
       //split by comma and space
       Set<String> searches = search.text.split(RegExp(r',\s*|\s+')).toSet();
-      nestsToShow = nests.where((element) {
+      nestsToShow = nestsToShow.where((element) {
         for (String search in searches) {
           if (element.name.toLowerCase().contains(search.toLowerCase()) ||
               (element.species?.toLowerCase() ?? "").contains(search.toLowerCase()) ||
@@ -114,8 +116,6 @@ class _MapNestsState extends State<MapNests> {
         }
         return false;
       }).toSet();
-    } else {
-      nestsToShow = nests.toSet();
     }
     markersToShow.value = nestsToShow
         .map((e) => e.getMarker(context, true, sps?.markerColorGroups ?? []))
@@ -166,11 +166,9 @@ class _MapNestsState extends State<MapNests> {
       body: StreamBuilder(
           stream: _nestStream,
           builder: (context, AsyncSnapshot<List<Nest>> snapshot) {
-            if (snapshot.hasData) {
-              updateMarkersToShow(snapshot.data!);
-            } else {
-              updateMarkersToShow(nestsService?.items ?? []);
-            }
+            List<Nest> nests =
+                snapshot.hasData ? snapshot.data! : (nestsService?.items ?? []);
+            updateMarkersToShow(nests);
             return nestsMap();
           }),
       floatingActionButton: Column(
