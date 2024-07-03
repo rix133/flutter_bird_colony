@@ -309,6 +309,57 @@ void main() {
       expect(eggObj.status.toString(), "hatched");
       expect(eggObj.discover_date, newBird.ringed_date);
     });
+
+    testWidgets("will update ringed count when egg ringed",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //has Ringed(0) shown
+      expect(find.text("Ringed (0)"), findsOneWidget);
+
+      await tester.longPress(find.text('Egg 1 intact 2 days old'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EditBird), findsOneWidget);
+
+      //find the letters and numbers inputs
+      await tester.enterText(find.byKey(Key("band_letCntr")), "bb");
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(Key("band_numCntr")), "1235");
+      await tester.pumpAndSettle();
+
+      //save the bird
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+      //expect to be redirected to the nest
+      expect(find.byType(EditNest), findsOneWidget);
+      expect(find.text("Ringed (1)"), findsOneWidget,
+          reason: "Ringed count not updated after save");
+    });
+
+    testWidgets("will show ringed count when egg is ringed",
+        (WidgetTester tester) async {
+      await firestore.collection("Birds").doc("BB1235").set({
+        "id": "BB1235",
+        "species": "Common gull",
+        "nest": "1",
+        "nest_year": nest.discover_date.year,
+        "ringed_as_chick": true,
+        "ringed_date": DateTime.now().subtract(Duration(days: 1)),
+      });
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .update({"ring": "BB1235", "status": "hatched"});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //has Ringed(0) shown
+      expect(find.text("Ringed (1)"), findsOneWidget);
+    });
   });
 
   group("validate required measures", () {

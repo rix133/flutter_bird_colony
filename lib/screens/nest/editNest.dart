@@ -212,7 +212,10 @@ class _EditNestState extends State<EditNest> {
       return [Text('No data')];
     }
     List<Egg> eggs = snapshot.data!.docs.map((e) => Egg.fromDocSnapshot(e)).toList();
-    int amount = eggs.where((e) => e.ring != null && e.discover_date.year != DateTime.now().year).length;
+    int amount = eggs
+        .where((e) =>
+            e.ring != null && e.discover_date.year == nest?.discover_date.year)
+        .length;
     int new_egg_nr = eggs.where((e) => e.type() == "egg").length + 1;
 
     return [
