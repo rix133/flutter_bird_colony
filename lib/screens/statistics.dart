@@ -222,9 +222,12 @@ class _StatisticsState extends State<Statistics> {
         .toList();
     if(selectedNests.length == 0){return SizedBox.shrink();}
     ListTile list_tile = ListTile(
+        leading: IconButton(
+            onPressed: () => showNestsonMap(selectedNests),
+            icon: Icon(Icons.map)),
         title: Text(species == "" ? "No species nests" : "$species nests"),
         trailing: Text(selectedNests.length.toString()),
-        onTap: () => showNestsonMap(selectedNests));
+        onTap: () => null);
 
     return list_tile;
   }

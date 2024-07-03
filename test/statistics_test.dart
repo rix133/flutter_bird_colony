@@ -4,15 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/firestore/bird.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/screens/nest/mapNests.dart';
 import 'package:flutter_bird_colony/screens/statistics.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
+import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'mocks/mockAuthService.dart';
+import 'mocks/mockLocationService.dart';
 import 'mocks/mockSharedPreferencesService.dart';
 import 'testApp.dart';
 
 void main() {
+  final authService = MockAuthService();
   final sharedPreferencesService = MockSharedPreferencesService();
   final firestore = FakeFirebaseFirestore();
+  MockLocationAccuracy10 locationAccuracy10 = MockLocationAccuracy10();
+
   final Nest nest1 = Nest(
     id: "1",
     coordinates: GeoPoint(0, 0),
@@ -21,6 +29,17 @@ void main() {
     discover_date: DateTime(2023, 5, 1),
     responsible: "Admin",
     species: "Common Gull",
+    measures: [],
+  );
+
+  final Nest nest2 = Nest(
+    id: "12",
+    coordinates: GeoPoint(0, 0),
+    accuracy: "3.22m",
+    last_modified: DateTime.now(),
+    discover_date: DateTime.now().subtract(Duration(days: 1)),
+    responsible: "Admin",
+    species: "Common gull",
     measures: [],
   );
 
@@ -62,22 +81,24 @@ void main() {
   late TestApp myApp;
 
   setUpAll(() async {
-    //add one common gull nest to firestore nests
+    AuthService.instance = authService;
+    LocationService.instance = locationAccuracy10;
+    //add 2 common gull nest to firestore nests
     await nest3.save(firestore);
+    await nest2.save(firestore);
     await firestore.collection('Birds').doc(parent.band).set(parent.toJson());
     await chick.save(firestore);
     myApp = TestApp(
       firestore: firestore,
       sps: sharedPreferencesService,
-      app: MaterialApp(
-        home: Statistics(firestore: firestore),
-      ),
+      app: MaterialApp(initialRoute: '/statistics', routes: {
+        '/statistics': (context) => Statistics(firestore: firestore),
+        '/mapNests': (context) => MapNests(firestore: firestore),
+      }),
     );
   });
 
-  //run after each test
-  tearDown(() async {
-    await firestore.collection('Nest').doc(nest1.id).delete();
+  setUp(() async {
     sharedPreferencesService.speciesList =
         LocalSpeciesList.fromStringList(["Common gull"]);
   });
@@ -231,5 +252,35 @@ void main() {
     expect(find.text("Common gull ringed"), findsOneWidget);
 
     // Add more checks to ensure the accuracy of bird statistics
+  });
+
+  testWidgets(
+      'Map icon tap should navigate to the Map screen with the correct nest',
+      (WidgetTester tester) async {
+    // Initialize the app
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    // Check if the 'Common gull ringed' statistic is correct
+    final commonGullRingedTile =
+        find.widgetWithText(ListTile, 'Common gull nests');
+    expect(find.descendant(of: commonGullRingedTile, matching: find.text('1')),
+        findsOneWidget);
+
+    // Verify the presence of 'Common gull ringed' statistic
+    expect(find.text("Common gull nests"), findsOneWidget);
+
+    expect(
+        find.descendant(
+            of: commonGullRingedTile, matching: find.byIcon(Icons.map)),
+        findsOneWidget,
+        reason: "Map icon not found");
+
+    // Tap on the map icon that it is in the common gull ringed tile
+    await tester.tap(find.byIcon(Icons.map));
+    await tester.pumpAndSettle();
+
+    // Verify that the Map screen is displayed
+    expect(find.byType(MapNests), findsOneWidget);
   });
 }

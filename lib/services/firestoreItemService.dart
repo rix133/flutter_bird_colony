@@ -33,21 +33,35 @@ abstract class FirestoreItemService<T extends FirestoreItem>
 
   T convertToFirestoreItem(DocumentSnapshot<Map<String, dynamic>> doc);
 
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _subscription;
+
   Stream<List<T>> watchItems(String collectionName) {
     if (_controller == null || currentCollectionName != collectionName) {
+      // Cancel previous subscription if it exists
+      _subscription?.cancel();
+
       currentCollectionName = collectionName;
       _controller = StreamController<List<T>>.broadcast();
-      _collection().snapshots().listen((snapshot) {
-        _latestSnapshot =
-            snapshot.docs.map((doc) => convertToFirestoreItem(doc)).toList();
-        _controller!.sink.add(_latestSnapshot!);
+
+      _subscription = _collection().snapshots().listen((snapshot) {
+        if (!_controller!.isClosed) {
+          _latestSnapshot =
+              snapshot.docs.map((doc) => convertToFirestoreItem(doc)).toList();
+          _controller!.add(_latestSnapshot!);
+        }
+      }, onError: (error) {
+        if (!_controller!.isClosed) {
+          _controller!.addError(error);
+        }
       });
     }
     return _controller!.stream;
   }
 
+  @override
   void dispose() {
-    super.dispose();
+    _subscription?.cancel();
     _controller?.close();
+    super.dispose();
   }
 }
