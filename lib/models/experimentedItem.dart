@@ -120,16 +120,19 @@ class ExperimentedItem{
 
     // Populate the measuresMap and find the maximum length
     for (Measure measure in measures) {
-      if (!measuresMap.containsKey(measure.name)) {
-        measuresMap[measure.name] = [measure];
-        if (maxLen < 1) {
-          maxLen = 1;
-        }
-      } else {
-        measuresMap[measure.name]!.add(measure);
-        int len = measuresMap[measure.name]!.length;
-        if (len > maxLen) {
-          maxLen = len;
+      if (measure.value.isNotEmpty) {
+        // Only add measures with non-empty values
+        if (!measuresMap.containsKey(measure.name)) {
+          measuresMap[measure.name] = [measure];
+          if (maxLen < 1) {
+            maxLen = 1;
+          }
+        } else {
+          measuresMap[measure.name]!.add(measure);
+          int len = measuresMap[measure.name]!.length;
+          if (len > maxLen) {
+            maxLen = len;
+          }
         }
       }
     }

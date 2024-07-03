@@ -158,11 +158,12 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
   List<FirestoreItem> getFilteredItems(List<FirestoreItem> items);
 
-  ListView listAllItems(BuildContext context, List<FirestoreItem> items) {
+  ListView listAllItems(BuildContext context, List<FirestoreItem> inputItems) {
     //disable if not current year and user is not admin
     bool disabled =
         selectedYear != DateTime.now().year && !(sps?.isAdmin ?? false);
-    items = getFilteredItems(items);
+    //the items need to be asigned for Downlaoding purposes
+    items = getFilteredItems(inputItems);
     return ListView.builder(
         itemCount: items.length,
         itemBuilder: (context, index) {
