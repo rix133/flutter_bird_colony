@@ -5,12 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 abstract class GoogleMapScreen extends StatefulWidget {
-  final autoUpdateLoc;
+  final bool autoUpdateLoc;
 
   const GoogleMapScreen({Key? key, required this.autoUpdateLoc})
       : super(key: key);
@@ -105,7 +106,78 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
         ?.animateCamera(CameraUpdate.newCameraPosition(camPosCurrent));
   }
 
+  void _updateCameraPosition(
+      AsyncSnapshot<Position> snapshot, AsyncSnapshot<CompassEvent> snapshot1) {
+    _googleMapController?.animateCamera(
+      CameraUpdate.newCameraPosition(CameraPosition(
+        target: LatLng(
+          snapshot.data?.latitude ?? camPosCurrent.target.latitude,
+          snapshot.data?.longitude ?? camPosCurrent.target.longitude,
+        ),
+        bearing: snapshot1.hasData
+            ? snapshot1.data!.heading ?? camPosCurrent.bearing
+            : camPosCurrent.bearing,
+        zoom: camPosCurrent.zoom,
+      )),
+    );
+    focus.unfocus();
+  }
+
+  Widget compassButton() {
+    return StreamBuilder<Position>(
+      stream: location.getPositionStream(),
+      builder: (context, AsyncSnapshot<Position> snapshot) {
+        return StreamBuilder<CompassEvent>(
+          stream: FlutterCompass.events,
+          builder: (context, snapshot1) {
+            return FloatingActionButton(
+              heroTag: "compass",
+              onPressed: () => _updateCameraPosition(snapshot, snapshot1),
+              child: const Icon(Icons.compass_calibration),
+            );
+          },
+        );
+      },
+    );
+  }
+
   GestureDetector lastFloatingButton();
+
+  List<Widget> baseFloatingActionButtons() {
+    return [
+      compassButton(),
+      SizedBox(height: 10),
+      FloatingActionButton(
+        heroTag: "RefreshLocation",
+        onPressed: () {
+          location
+              .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+              .then((value) {
+            _updateLocation(value);
+          });
+          focus.unfocus();
+        },
+        child: const Icon(Icons.my_location),
+      ),
+      SizedBox(height: 10),
+      FloatingActionButton(
+        heroTag: "zoomIn",
+        onPressed: () {
+          _googleMapController
+              ?.animateCamera(CameraUpdate.newCameraPosition(camPosDefault));
+          focus.unfocus();
+        },
+        child: const Icon(Icons.zoom_in_map_outlined),
+      ),
+    ];
+  }
+
+  List<Widget> floatingActionButtons() {
+    List<Widget> buttons = baseFloatingActionButtons();
+    buttons.add(SizedBox(height: 10));
+    buttons.add(lastFloatingButton());
+    return buttons;
+  }
 
   @override
   void dispose() {
@@ -144,32 +216,7 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: "RefreshLocation",
-            onPressed: () {
-              location
-                  .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
-                  .then((value) {
-                _updateLocation(value);
-              });
-              focus.unfocus();
-            },
-            child: const Icon(Icons.my_location),
-          ),
-          SizedBox(height: 10),
-          FloatingActionButton(
-            heroTag: "zoomIn",
-            onPressed: () {
-              _googleMapController?.animateCamera(
-                  CameraUpdate.newCameraPosition(camPosDefault));
-              focus.unfocus();
-            },
-            child: const Icon(Icons.zoom_in_map_outlined),
-          ),
-          SizedBox(height: 10),
-          lastFloatingButton(),
-        ],
+        children: floatingActionButtons(),
       ),
     );
   }

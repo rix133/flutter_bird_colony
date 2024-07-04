@@ -142,6 +142,7 @@ void main() {
     await tester.pumpAndSettle();
 
     Finder fab = find.byType(FloatingActionButton);
+
     expect(fab, findsNWidgets(5));
   });
 
