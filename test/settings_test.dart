@@ -324,6 +324,7 @@ void main() async {
 
   group('Settings for normal user', () {
     setUp(() async {
+      sharedPreferencesService.showAppBar = true;
       AuthService.instance = authService;
       await firestore
           .collection('users')
@@ -513,14 +514,49 @@ void main() async {
 
       //find the switchlisttiles and toogle them
       Finder switchFinder = find.byType(Switch);
-      expect(switchFinder, findsNWidgets(2));
-      for (int i = 0; i < 2; i++) {
+      expect(switchFinder, findsNWidgets(3));
+      for (int i = 0; i < 3; i++) {
         await tester.tap(switchFinder.at(i));
         await tester.pumpAndSettle();
       }
 
       expect(sharedPreferencesService.autoNextBand, true);
       expect(sharedPreferencesService.autoNextBandParent, true);
+      expect(sharedPreferencesService.showAppBar, false);
+    });
+
+    testWidgets("expect AppBar to exist by default",
+        (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = false;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //go to settings page
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppBar), findsOneWidget);
+    });
+
+    testWidgets("expect AppBar not to exist if showAppBar is set to false",
+        (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = false;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //go to settings page
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppBar), findsOneWidget);
+      //find showAppBarSwitch
+      Finder switchFinder = find.byKey(Key('showAppBarSwitch'));
+      expect(switchFinder, findsOneWidget);
+      await tester.tap(switchFinder);
+      await tester.pumpAndSettle();
+      expect(find.byType(AppBar), findsNothing);
     });
 
     testWidgets("default species is changed", (WidgetTester tester) async {
@@ -618,6 +654,7 @@ void main() async {
   group("Settings for admin user", () {
     FirebaseFirestore firestore = FakeFirebaseFirestore();
     setUp(() async {
+      sharedPreferencesService.showAppBar = true;
       AuthService.instance = authService;
       await firestore
           .collection('users')

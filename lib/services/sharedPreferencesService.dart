@@ -59,6 +59,13 @@ class SharedPreferencesService extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool get showAppBar => _sharedPreferences.getBool('showAppBar') ?? true;
+
+  set showAppBar(bool value) {
+    _sharedPreferences.setBool('showAppBar', value);
+    notifyListeners();
+  }
+
   String get userName => _sharedPreferences.getString('userName') ?? '';
 
   set userName(String value) {
