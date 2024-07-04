@@ -216,10 +216,7 @@ class _EditExperimentState extends State<EditExperiment> {
   Widget build(BuildContext context) {
     bool spsOK = sps != null;
     return Scaffold(
-        appBar: AppBar(
-          title: Text("Edit Experiment", style: TextStyle(color: Colors.black)),
-          backgroundColor: Colors.redAccent,
-        ),
+        appBar: AppBar(title: Text("Edit Experiment")),
         body: Container(
             color: Theme.of(context).scaffoldBackgroundColor,
             child: SingleChildScrollView(child:Column(

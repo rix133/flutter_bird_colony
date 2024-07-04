@@ -64,22 +64,7 @@ class _TextFormItemState extends State<TextFormItem> {
                   onFieldSubmitted: widget.submitFun,
                   decoration: InputDecoration(
                     labelText: widget.label,
-                    labelStyle: TextStyle(color: Colors.yellow),
                     hintText: widget.label,
-                    fillColor: Colors.orange,
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25),
-                      borderSide: BorderSide(
-                        color: Colors.indigo,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25.0),
-                      borderSide: BorderSide(
-                        color: Colors.deepOrange,
-                        width: 1.5,
-                      ),
-                    ),
                   ),
                 ))),
       ],

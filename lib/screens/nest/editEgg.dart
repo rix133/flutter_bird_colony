@@ -91,17 +91,6 @@ class _EditEggState extends State<EditEgg> {
             decoration: InputDecoration(
               labelText: "status",
               hintText: "enter status",
-              fillColor: Colors.orange,
-              focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: (BorderSide(color: Colors.indigo))),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25.0),
-                borderSide: BorderSide(
-                  color: Colors.deepOrange,
-                  width: 1.5,
-                ),
-              ),
             ),
             focusNode: focusNode,
             onFieldSubmitted: (String value) {

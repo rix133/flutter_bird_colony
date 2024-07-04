@@ -294,19 +294,7 @@ class _EditBirdState extends State<EditBird> {
             },
             decoration: InputDecoration(
               labelText: "Letters",
-              labelStyle: TextStyle(color: Colors.yellow),
               hintText: "UA",
-              fillColor: Colors.orange,
-              focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: (BorderSide(color: Colors.indigo))),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25.0),
-                borderSide: BorderSide(
-                  color: Colors.deepOrange,
-                  width: 1.5,
-                ),
-              ),
             ),
           ),
         ),
@@ -329,19 +317,7 @@ class _EditBirdState extends State<EditBird> {
             textAlign: TextAlign.center,
             decoration: InputDecoration(
               labelText: "Numbers",
-              labelStyle: TextStyle(color: Colors.yellow),
               hintText: "12325",
-              fillColor: Colors.orange,
-              focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: (BorderSide(color: Colors.indigo))),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25.0),
-                borderSide: BorderSide(
-                  color: Colors.deepOrange,
-                  width: 1.5,
-                ),
-              ),
             ),
           ),
         ),

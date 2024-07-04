@@ -126,6 +126,7 @@ class MyApp extends StatelessWidget {
         textButtonTheme: TextButtonThemeData(style: flatButtonStyle),
         elevatedButtonTheme: ElevatedButtonThemeData(style: raisedButtonStyle),
         outlinedButtonTheme: OutlinedButtonThemeData(style: outlineButtonStyle),
+        inputDecorationTheme: inputDecorationTheme,
         listTileTheme: listTileTheme,
         appBarTheme: AppBarTheme(
           color: Colors.black, // This is your AppBar background color

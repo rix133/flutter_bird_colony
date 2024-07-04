@@ -41,3 +41,19 @@ final ListTileThemeData listTileTheme = ListTileThemeData(
   minVerticalPadding: 5, // minimum vertical padding in the tile
   minLeadingWidth: 40, // minimum width of the leading widget
 );
+
+final InputDecorationTheme inputDecorationTheme = InputDecorationTheme(
+  labelStyle: TextStyle(color: Colors.yellow),
+  fillColor: Colors.orange,
+  focusedBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(25),
+    borderSide: BorderSide(color: Colors.indigo),
+  ),
+  enabledBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(25.0),
+    borderSide: BorderSide(
+      color: Colors.deepOrange,
+      width: 1.5,
+    ),
+  ),
+);

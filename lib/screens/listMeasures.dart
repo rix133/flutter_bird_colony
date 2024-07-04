@@ -102,8 +102,9 @@ class _ListMeasuresState extends State<ListMeasures>{
           children: [
             Text("Measures", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             SizedBox(height: 5,),
-            Row(children: [
-              Expanded(child: TextField(
+            widget.measures.length > 5
+                ? Row(children: [
+                    Expanded(child: TextField(
                 controller: searchController,
                 onChanged: (value) {
                   setState(() {});
@@ -112,13 +113,15 @@ class _ListMeasuresState extends State<ListMeasures>{
                   labelText: "Search",
                   hintText: "Search by name or type",
                   prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                  ),
                 ),
               )),
-            ]),
-            SizedBox(height: 20,),
+                  ])
+                : Container(),
+            widget.measures.length > 5
+                ? SizedBox(
+                    height: 20,
+                  )
+                : Container(),
             ...listAllItems(context),
           Row(
                   mainAxisAlignment: MainAxisAlignment.center,
