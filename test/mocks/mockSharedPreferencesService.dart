@@ -20,6 +20,12 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
   List<MarkerColorGroup> markerColorGroups = [];
   double desiredAccuracy = 4.0;
 
+  CameraPosition _mockCameraPosition = CameraPosition(
+    target: LatLng(58.766218, 23.430432),
+    bearing: 0,
+    zoom: 6,
+  );
+
   String _band = "AA1234";
   String getRecentMetalBand(String species) => _band;
 
@@ -32,11 +38,10 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
   String get userEmail => 'test@example.com';
 
   @override
-  CameraPosition get defaultLocation => CameraPosition(
-    target: LatLng(58.766218, 23.430432),
-    bearing: 270,
-    zoom: 16.35,
-  );
+  CameraPosition get defaultLocation => _mockCameraPosition;
+
+  @override
+  set defaultLocation(CameraPosition value) => _mockCameraPosition = value;
 
   setFromDefaultSettings(DefaultSettings defaultSettings) {
     desiredAccuracy = defaultSettings.desiredAccuracy;

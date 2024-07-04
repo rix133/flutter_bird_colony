@@ -70,7 +70,10 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
           zoom: camPosDefault.zoom,
           bearing: camPosDefault.bearing);
       mapType = sps!.mapType;
-      setState(() {});
+      setState(() {
+        _googleMapController
+            ?.animateCamera(CameraUpdate.newCameraPosition(camPosCurrent));
+      });
       if (widget.autoUpdateLoc) {
         _positionStreamSubscription =
             location.getPositionStream().listen((Position position) {
@@ -125,11 +128,15 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
               markers: markers,
               mapType: mapType,
               zoomControlsEnabled: false,
-              initialCameraPosition: camPosDefault,
+              initialCameraPosition: camPosCurrent,
               onCameraMove: (position) {
                 camPosCurrent = position;
               },
-              onMapCreated: (controller) => _googleMapController = controller,
+              onMapCreated: (controller) {
+                _googleMapController = controller;
+                _googleMapController?.animateCamera(
+                    CameraUpdate.newCameraPosition(camPosCurrent));
+              },
             ),
           ),
         ],
