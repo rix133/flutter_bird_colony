@@ -72,12 +72,16 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit default settings'),
-      ),
-      body: Padding(padding: EdgeInsets.all(16.0),
-      child:SingleChildScrollView(child:Column(
-        children: [
+        appBar: (sps?.showAppBar ?? true)
+            ? AppBar(
+                title: Text('Edit Default Settings'),
+              )
+            : null,
+        body: SafeArea(
+            child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                    child: Column(children: [
     ...defaultSettings.getDefaultSettingsForm(context, setState, sps),
               ListMeasures(
                   measures: defaultSettings.measures,
@@ -103,6 +107,6 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
                   type: type,
                   otherItems: null,
                   onSaveOK: updateLocalSettings)
-            ]))));
+                ])))));
   }
 }

@@ -51,15 +51,19 @@ class _EditSpeciesState extends State<EditSpecies> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Species'),
-      ),
-      body: Container(padding: EdgeInsets.all(16.0),
-      child:SingleChildScrollView(child:Column(
-        children: [
+        appBar: (sps?.showAppBar ?? true)
+            ? AppBar(
+                title: Text('Edit Species'),
+              )
+            : null,
+        body: SafeArea(
+            child: Container(
+                padding: EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                    child: Column(children: [
     ...species.getSpeciesForm(context, setState),
     SizedBox(height: 20),
           ModifyingButtons(firestore: widget.firestore, context:context, setState:setState, getItem: getSpecies, type:type, otherItems: null)
-          ]))));
+                ])))));
   }
 }

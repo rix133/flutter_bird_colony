@@ -190,7 +190,13 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
+      appBar: (sps?.showAppBar ?? true)
+          ? AppBar(
+              title: Text('Nests Map'),
+            )
+          : null,
+      body: SafeArea(
+          child: Column(
         children: [
           Flexible(
             child: GoogleMap(
@@ -212,7 +218,7 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
             ),
           ),
         ],
-      ),
+      )),
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,

@@ -2,6 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/buildForm.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
+import 'package:provider/provider.dart';
+
+import '../../services/sharedPreferencesService.dart';
 
 class FindNest extends StatefulWidget {
   final FirebaseFirestore firestore;
@@ -15,6 +18,7 @@ class _FindNestState extends State<FindNest> {
   CollectionReference? nests;
   final FocusNode _focusNode = FocusNode();
   final FocusNode _widgetFocusNode = FocusNode();
+  SharedPreferencesService? sps;
   bool enableBtn = true;
   void submitForm(){
     setState(() {
@@ -28,6 +32,10 @@ class _FindNestState extends State<FindNest> {
     super.initState();
     nests = widget.firestore.collection(DateTime.now().year.toString());
     _widgetFocusNode.addListener(_onFocusChange);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      sps = Provider.of<SharedPreferencesService>(context, listen: false);
+      setState(() {});
+    });
   }
 
   void _onFocusChange() {
@@ -97,9 +105,15 @@ class _FindNestState extends State<FindNest> {
         focusNode: _widgetFocusNode,
         child: Scaffold(
           resizeToAvoidBottomInset: false,
-      body: Center(
-        child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            appBar: (sps?.showAppBar ?? true)
+                ? AppBar(
+                    title: Text('Search nests'),
+                  )
+                : null,
+            body: SafeArea(
+              child: Center(
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               buildForm(context, "enter nest ID", null, nestID,true, searchNest, _focusNode),
               new ElevatedButton.icon(
@@ -114,6 +128,6 @@ class _FindNestState extends State<FindNest> {
             ]
         ),
       ),
-        ));
+            )));
   }
 }

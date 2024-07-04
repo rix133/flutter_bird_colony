@@ -541,13 +541,18 @@ class _EditBirdState extends State<EditBird> {
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        body: Align(
-          alignment: Alignment.topCenter,
-          child: Container(
-              padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
-              child: SingleChildScrollView(
-                child: Column(children: [
+          appBar: (sps?.showAppBar ?? true)
+              ? AppBar(
+                  title: Text('Edit Bird'),
+                )
+              : null,
+          body: SafeArea(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Container(
+                  padding: EdgeInsets.fromLTRB(10, 0, 10, 15),
+                  child: SingleChildScrollView(
+                    child: Column(children: [
                   GestureDetector(
                     onLongPress: () {
                       changeMetalBand();
@@ -589,6 +594,6 @@ class _EditBirdState extends State<EditBird> {
               )),
         ),
       ),
-    );
+        ));
   }
 }

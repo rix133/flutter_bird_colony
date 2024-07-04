@@ -138,9 +138,15 @@ class _EditEggState extends State<EditEgg> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: isInit
-          ?  Container(
-                  padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
+        appBar: (sps?.showAppBar ?? true)
+            ? AppBar(
+                title: Text('Edit Egg'),
+              )
+            : null,
+        body: SafeArea(
+          child: isInit
+              ? Container(
+                  padding: EdgeInsets.fromLTRB(10, 0, 10, 15),
                   child: SingleChildScrollView(
                       child:Align(
                         alignment: Alignment.topCenter,
@@ -161,6 +167,6 @@ class _EditEggState extends State<EditEgg> {
           : Center(
               child: CircularProgressIndicator(),
             ),
-    );
+        ));
   }
 }

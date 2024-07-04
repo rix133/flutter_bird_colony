@@ -139,11 +139,17 @@ class _CreateNestState extends State<CreateNest> {
 
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Container(
-          padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+        appBar: (sps?.showAppBar ?? true)
+            ? AppBar(
+                title: Text('Settings'),
+              )
+            : null,
+        body: SafeArea(
+          child: Center(
+            child: Container(
+              padding: EdgeInsets.fromLTRB(10, 0, 10, 15),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Expanded(
@@ -222,6 +228,6 @@ class _CreateNestState extends State<CreateNest> {
           ),
         ),
       ),
-    );
+        ));
   }
 }

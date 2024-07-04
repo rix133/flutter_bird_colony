@@ -118,12 +118,15 @@ class _StatisticsState extends State<Statistics> {
 
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text("Some statistics"),
-        ),
-        body: Container(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          child: Column(
+        appBar: (sps?.showAppBar ?? true)
+            ? AppBar(
+                title: Text('Some statistics'),
+              )
+            : null,
+        body: SafeArea(
+            child: Container(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: Column(
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -207,7 +210,7 @@ class _StatisticsState extends State<Statistics> {
                   ],
                 ))
               ],
-        )));
+                ))));
   }
 
   void onChangedTimespan(value) {
