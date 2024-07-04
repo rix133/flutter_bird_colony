@@ -92,6 +92,7 @@ class _MapNestsState extends GoogleMapScreenState {
         return AlertDialog(
           content: TextFormField(
             controller: search,
+            style: TextStyle(color: Colors.black),
             onEditingComplete: () {
               setState(() {
                 focus.unfocus();
@@ -100,16 +101,12 @@ class _MapNestsState extends GoogleMapScreenState {
             },
             focusNode: focus,
             decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(vertical: 35),
-              fillColor: Colors.orange,
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
-                borderSide: BorderSide(color: Colors.indigo),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25.0),
-                borderSide: BorderSide(color: Colors.deepOrange, width: 1.5),
-              ),
+              labelText: 'Search',
+              hintText: 'nests or species',
+              labelStyle: TextStyle(color: Colors.black),
+              hintStyle: TextStyle(color: Colors.grey),
+              prefixIcon: Icon(Icons.search),
+              counterStyle: TextStyle(color: Colors.black),
             ),
           ),
         );
