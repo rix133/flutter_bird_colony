@@ -119,8 +119,7 @@ class _StatisticsState extends State<Statistics> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text("Some statistics", style: TextStyle(color: Colors.black)),
-          backgroundColor: Colors.amberAccent,
+          title: Text("Some statistics"),
         ),
         body: Container(
           color: Theme.of(context).scaffoldBackgroundColor,

@@ -67,6 +67,7 @@ class _FindNestState extends State<FindNest> {
             "nest": Nest.fromDocSnapshot(data),
           });
       nestID.text="";
+      enableBtn = true;
     }
     else {
       // Dismiss the keyboard
