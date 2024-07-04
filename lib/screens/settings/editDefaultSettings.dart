@@ -62,7 +62,11 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
   updateLocalSettings() {
     sps!.setFromDefaultSettings(defaultSettings);
     //refresh settings
-    Navigator.popAndPushNamed(context, "/settings");
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      Navigator.pushReplacementNamed(context, "/settings");
+    }
   }
 
   @override

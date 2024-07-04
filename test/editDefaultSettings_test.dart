@@ -78,24 +78,37 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets("updates default camera position", (WidgetTester tester) async {
+  testWidgets('redirected to settings page when the save button is pressed',
+      (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
-    //find the map button setDefaultLocation and tap it
-    final mapButton = find.byKey(Key("setDefaultMap"));
-    expect(mapButton, findsOneWidget);
+    final saveButton = find.byKey(Key("saveButton"));
+        expect(saveButton, findsOneWidget);
 
-    await tester.ensureVisible(mapButton);
-    await tester.tap(mapButton);
+        //ensure visible
+        await tester.ensureVisible(saveButton);
+        await tester.tap(saveButton);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SettingsPage), findsOneWidget);
+      });
+
+  testWidgets('when the save button is pressed', (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
-    //find the  setDefaultLocation in the map and tap it
-    final setDefaultLocation = find.byKey(Key("setDefaultLocation"));
-    expect(setDefaultLocation, findsOneWidget);
-    await tester.tap(setDefaultLocation);
-    await tester.pumpAndSettle();
-  });
+    final saveButton = find.byKey(Key("saveButton"));
+        expect(saveButton, findsOneWidget);
+
+        //ensure visible
+        await tester.ensureVisible(saveButton);
+        await tester.tap(saveButton);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SettingsPage), findsOneWidget);
+      });
+
 
   testWidgets(
       'updates default settings in firestore when save button is pressed',
