@@ -1,11 +1,82 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:flutter_bird_colony/models/eggStatus.dart';
 import 'package:flutter_bird_colony/models/firestore/bird.dart';
+import 'package:flutter_bird_colony/models/firestore/egg.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   FirebaseFirestore firestore = FakeFirebaseFirestore();
+
+  group('Bird instance methods', () {
+    test('should get egg if it exists', () async {
+      final bird = Bird(
+        band: "AA1234",
+        egg: "1",
+        nest: "1",
+        ringed_date: DateTime.now(),
+        ringed_as_chick: true,
+        measures: [],
+      );
+      final egg = Egg(
+          id: "1 egg 1",
+          discover_date: DateTime.now().subtract(Duration(days: 2)),
+          responsible: "Admin",
+          ring: "AA1234",
+          last_modified: DateTime.now().subtract(Duration(days: 1)),
+          status: EggStatus('hatched'),
+          measures: []);
+      await egg.save(firestore);
+      final result = await bird.getEgg(firestore);
+      expect(result != null, true);
+      expect(result!.id, "1 egg 1");
+    });
+
+    test('should not get egg if not ringed as chick', () async {
+      final bird = Bird(
+        band: "AA1234",
+        egg: "1",
+        nest: "1",
+        ringed_date: DateTime.now(),
+        ringed_as_chick: false,
+        measures: [],
+      );
+      final egg = Egg(
+          id: "1 egg 1",
+          discover_date: DateTime.now().subtract(Duration(days: 2)),
+          responsible: "Admin",
+          ring: "AA1234",
+          last_modified: DateTime.now().subtract(Duration(days: 1)),
+          status: EggStatus('hatched'),
+          measures: []);
+      await egg.save(firestore);
+      final result = await bird.getEgg(firestore);
+      expect(result == null, true);
+    });
+
+    test('should not get egg if no nest', () async {
+      final bird = Bird(
+        band: "AA1234",
+        egg: "1",
+        nest: "",
+        ringed_date: DateTime.now(),
+        ringed_as_chick: true,
+        measures: [],
+      );
+      final egg = Egg(
+          id: "1 egg 1",
+          discover_date: DateTime.now().subtract(Duration(days: 2)),
+          responsible: "Admin",
+          ring: "AA1234",
+          last_modified: DateTime.now().subtract(Duration(days: 1)),
+          status: EggStatus('hatched'),
+          measures: []);
+      await egg.save(firestore);
+      final result = await bird.getEgg(firestore);
+      expect(result == null, true);
+    });
+  });
 
   group('Bird save method', () {
     test('should return error when band and name are empty', () async {
