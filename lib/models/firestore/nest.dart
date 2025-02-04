@@ -272,7 +272,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
         firestore.collection(discover_date.year.toString());
 
       //check if the item is already in deleted collection
-    return FSItemMixin().deleteFiresoreItem(this, items);
+    return FSItemMixin().deleteFirestoreItem(this, items);
   }
 
   double getAccuracy() {
@@ -290,7 +290,17 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     accuracy = value.toStringAsFixed(2) + "m";
   }
 
-  Future<List<List<CellValue>>> toExcelRows() async {
+  Future<List<List<CellValue>>> toExcelRows(
+      {List<FirestoreItem>? otherItems}) async {
+    //check if otherItems is a list of eggs
+    int count = 0;
+    if (otherItems != null) {
+      //convert to Egg list if possible
+      List<Egg> eggs = otherItems.map((e) => e as Egg).toList();
+      count =
+          eggs.where((e) => e.type() == 'egg' && e.getNest() == this.id).length;
+    }
+    final firstApril = DateTime(DateTime.now().year, 4, 1);
     List<CellValue> baseItems = [
       TextCellValue(name),
       DoubleCellValue(getAccuracy()),
@@ -308,8 +318,10 @@ class Nest extends ExperimentedItem implements FirestoreItem {
       first_egg != null
           ? DateCellValue.fromDateTime(first_egg!)
           : TextCellValue(''),
+      IntCellValue(firstApril.difference(first_egg ?? DateTime(2200)).inDays),
       IntCellValue(
           DateTime.now().difference(first_egg ?? DateTime(2200)).inDays),
+      IntCellValue(count),
       TextCellValue(experiments?.map((e) => e.name).join(";\r") ?? ""),
       TextCellValue(parents?.map((p) => p.name).join(";\r") ?? "")
     ];
@@ -329,10 +341,13 @@ class Nest extends ExperimentedItem implements FirestoreItem {
       TextCellValue('last_modified_by'),
       TextCellValue('last_modified'),
       TextCellValue('first_egg_date'),
+      TextCellValue('first_egg_days_since_1st_april'),
       TextCellValue("days_since_first_egg"),
+      TextCellValue('egg_count'),
       TextCellValue('experiments'),
       TextCellValue('parents')
     ];
+
     Map<String, List<Measure>> measuresMap = getMeasuresMap();
     List<TextCellValue> measureItems = measuresMap
         .map((key, value) => MapEntry(key, value.first.toExcelRowHeader()))

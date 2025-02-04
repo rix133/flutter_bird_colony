@@ -106,6 +106,9 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   @override
   Future <UpdateResult> save(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, type = "default"}) async {
     String? nestId = getNest();
+    print("nestId: $nestId");
+    print(this.toJson());
+    print(this.id);
     if(nestId == null){
       return UpdateResult.error(message: "No nest found");
     } else{
@@ -161,7 +164,8 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   }
 
   @override
-  Future<List<List<CellValue>>> toExcelRows() async {
+  Future<List<List<CellValue>>> toExcelRows(
+      {List<FirestoreItem>? otherItems}) async {
     List<CellValue> baseItems = [
       TextCellValue(getNest() ?? ""),
       TextCellValue(getNr() ?? ""),

@@ -240,6 +240,29 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     return nbird;
   }
 
+  Future<Egg?> getEgg(FirebaseFirestore firestore) async {
+    if (egg == null || nest == null || !ringed_as_chick) {
+      return null;
+    }
+    if (egg == "" || nest == "") {
+      return null;
+    }
+    String year = ringed_date.year.toString();
+    print("nest: $nest, egg: $egg, year: $year");
+    return firestore
+        .collection(year)
+        .doc(nest)
+        .collection("egg")
+        .doc("$nest egg $egg")
+        .get()
+        .then((value) {
+      if (!value.exists) {
+        return null;
+      }
+      return Egg.fromDocSnapshot(value);
+    });
+  }
+
   factory Bird.fromEgg(Egg egg) {
     return Bird(
         ringed_date: egg.discover_date,
@@ -540,7 +563,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     if (ur.success) {
       return ur;
     }
-    return FSItemMixin().deleteFiresoreItem(this, items);
+    return FSItemMixin().deleteFirestoreItem(this, items);
   }
 
   @override
@@ -572,7 +595,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   }
 
   @override
-  Future<List<List<CellValue>>> toExcelRows() async {
+  Future<List<List<CellValue>>> toExcelRows(
+      {List<FirestoreItem>? otherItems}) async {
     List<CellValue> baseItems = [
       TextCellValue(band),
       TextCellValue(color_band ?? ""),

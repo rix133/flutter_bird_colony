@@ -15,7 +15,7 @@ void main() {
         responsible: 'John Doe',
         measures: [],
       );
-
+      final firstApril = DateTime(DateTime.now().year, 4, 1);
       final rows = await nest.toExcelRows();
       expect((rows[0][0] as TextCellValue).value, nest.name);
       expect((rows[0][1] as DoubleCellValue).value, nest.getAccuracy());
@@ -26,10 +26,13 @@ void main() {
       expect(
           nest.first_egg != null ? (rows[0][8] as DateCellValue).year : "", "");
       expect((rows[0][9] as IntCellValue).value,
+          firstApril.difference(nest.first_egg ?? DateTime(2200)).inDays);
+      expect((rows[0][10] as IntCellValue).value,
           DateTime.now().difference(nest.first_egg ?? DateTime(2200)).inDays);
-      expect((rows[0][10] as TextCellValue).value,
+      expect((rows[0][11] as IntCellValue).value, 0);
+      expect((rows[0][12] as TextCellValue).value,
           nest.experiments?.map((e) => e.name).join(";\r") ?? "");
-      expect((rows[0][11] as TextCellValue).value,
+      expect((rows[0][13] as TextCellValue).value,
           nest.parents?.map((p) => p.name).join(";\r") ?? "");
     });
 
@@ -54,9 +57,11 @@ void main() {
       expect(headers[6].value, 'last_modified_by');
       expect(headers[7].value, 'last_modified');
       expect(headers[8].value, 'first_egg_date');
-      expect(headers[9].value, "days_since_first_egg");
-      expect(headers[10].value, 'experiments');
-      expect(headers[11].value, 'parents');
+      expect(headers[9].value, 'first_egg_days_since_1st_april');
+      expect(headers[10].value, "days_since_first_egg");
+      expect(headers[11].value, "egg_count");
+      expect(headers[12].value, 'experiments');
+      expect(headers[13].value, 'parents');
     });
   });
 }

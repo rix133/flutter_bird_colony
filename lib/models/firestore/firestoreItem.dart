@@ -36,7 +36,8 @@ abstract class FirestoreItem{
       String type = "default"});
 
   //get a row in an excel table
-  Future<List<List<CellValue>>> toExcelRows();
+  Future<List<List<CellValue>>> toExcelRows(
+      {List<FirestoreItem>? otherItems = null});
 
   List<TextCellValue> toExcelRowHeader();
 

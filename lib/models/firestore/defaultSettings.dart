@@ -156,7 +156,8 @@ class DefaultSettings implements FirestoreItem {
     if (id == null) {
       return Future.value(UpdateResult.deleteOK(item: this));
     }
-    return (FSItemMixin().deleteFiresoreItem(this, firestore.collection('settings')));
+    return (FSItemMixin()
+        .deleteFirestoreItem(this, firestore.collection('settings')));
   }
 
   @override
@@ -186,7 +187,7 @@ class DefaultSettings implements FirestoreItem {
   }
 
   @override
-  Future<List<List<CellValue>>> toExcelRows() {
+  Future<List<List<CellValue>>> toExcelRows({List<FirestoreItem>? otherItems}) {
     return Future.value([
       [
         TextCellValue(desiredAccuracy.toString()),

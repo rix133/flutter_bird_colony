@@ -133,8 +133,7 @@ class Species implements FirestoreItem {
     if (id == null) {
       return Future.value(UpdateResult.deleteOK(item: this));
     }
-    return (FSItemMixin().deleteFiresoreItem(
-        this,
+    return (FSItemMixin().deleteFirestoreItem(this,
         firestore
             .collection('settings').doc(type).collection("species")));
   }
@@ -204,7 +203,7 @@ class Species implements FirestoreItem {
   }
 
   @override
-  Future<List<List<CellValue>>> toExcelRows() {
+  Future<List<List<CellValue>>> toExcelRows({List<FirestoreItem>? otherItems}) {
     return Future.value([
       [
         TextCellValue(english),

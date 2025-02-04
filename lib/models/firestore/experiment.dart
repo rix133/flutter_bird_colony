@@ -385,7 +385,7 @@ class Experiment implements FirestoreItem {
     _updateNestCollection(firestore, previousNests, delete: true);
     _updateBirdsCollection(firestore, previousBirds, delete: true);
 
-    return FSItemMixin().deleteFiresoreItem(this, expCollection);
+    return FSItemMixin().deleteFirestoreItem(this, expCollection);
   }
 
   @override
@@ -451,7 +451,8 @@ class Experiment implements FirestoreItem {
   }
 
   @override
-  Future<List<List<CellValue>>> toExcelRows() async {
+  Future<List<List<CellValue>>> toExcelRows(
+      {List<FirestoreItem>? otherItems}) async {
     List<List<CellValue>> rows = [];
     List<CellValue> baseItems = [
       TextCellValue(name),
