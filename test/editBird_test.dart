@@ -62,7 +62,7 @@ void main() {
       discover_date: DateTime(1900),
       responsible: "Admin",
       ring: "AA1235",
-      last_modified: DateTime.now().subtract(Duration(days: 36)),
+      last_modified: DateTime.now().subtract(Duration(days: 32)),
       status: EggStatus('hatched'),
       measures: []);
   final Experiment experiment = Experiment(
@@ -93,18 +93,18 @@ void main() {
       species: 'Common gull');
 
   final Bird masterChickChick = Bird(
-      ringed_date: DateTime.now().subtract(Duration(days: 36)),
+      ringed_date: DateTime.now().subtract(Duration(days: 32)),
       band: 'AA1235',
       ringed_as_chick: true,
       measures: [Measure.note(value: "test")],
       nest: "1",
       nest_year: DateTime.now().year,
       responsible: 'Admin',
-      last_modified: DateTime.now().subtract(Duration(days: 36)),
+      last_modified: DateTime.now().subtract(Duration(days: 32)),
       species: 'Common gull');
 
   final Bird masterEggChick = Bird(
-      ringed_date: DateTime.now().subtract(Duration(days: 36)),
+      ringed_date: DateTime.now().subtract(Duration(days: 32)),
       band: 'AA1236',
       ringed_as_chick: true,
       measures: [Measure.note(value: "test")],
@@ -112,7 +112,7 @@ void main() {
       egg: "2",
       nest_year: DateTime.now().year,
       responsible: 'Admin',
-      last_modified: DateTime.now().subtract(Duration(days: 36)),
+      last_modified: DateTime.now().subtract(Duration(days: 32)),
       species: 'Common gull');
 
   setUpAll(() async {
