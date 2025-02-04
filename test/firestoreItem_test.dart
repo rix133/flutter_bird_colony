@@ -34,6 +34,16 @@ void main() {
       last_modified: DateTime.now().subtract(Duration(days: 1)),
       status: EggStatus('intact'),
       measures: [Measure.note()]);
+
+  final Egg egg_nest2 = Egg(
+      id: "2 egg 1",
+      discover_date: DateTime.now().subtract(Duration(days: 2)),
+      responsible: "Admin",
+      ring: null,
+      last_modified: DateTime.now().subtract(Duration(days: 1)),
+      status: EggStatus('intact'),
+      measures: [Measure.note()]);
+
   final Experiment experiment = Experiment(
     id: "1",
     name: "New Experiment",
@@ -149,6 +159,7 @@ void main() {
     setUpAll(() async {
       await nest1.save(firestore);
       await egg.save(firestore);
+      await egg_nest2.save(firestore);
       await experiment.save(firestore);
       await parent.save(firestore);
       await chick.save(firestore);
@@ -172,6 +183,25 @@ void main() {
           await mixin.downloadExcel(items, 'nests', firestore, test: true);
       expect(result, isNotNull);
       expect(result, isA<List<List<List<CellValue>>>>());
+      //expect the result to have nest and egg sheets
+      expect(result!.length, 2);
+      expect(result[0], isNotNull);
+      expect(result[1], isNotNull);
+    });
+
+    test(
+        'downloadExcel returns only related eggs when test is true and type is nests',
+        () async {
+      final items = <Nest>[nest1];
+      final result =
+          await mixin.downloadExcel(items, 'nests', firestore, test: true);
+      expect(result, isNotNull);
+      expect(result, isA<List<List<List<CellValue>>>>());
+      //expect the result to have nest and egg sheets
+      expect(result!.length, 2);
+      expect(result[0], isNotNull);
+      expect(result[1], isNotNull);
+      expect(result[1].length, 2); //only header and one egg
     });
 
     test('downloadExcel returns sheets when test is true and type is bird',
