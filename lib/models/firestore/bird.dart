@@ -248,7 +248,6 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       return null;
     }
     String year = ringed_date.year.toString();
-    print("nest: $nest, egg: $egg, year: $year");
     return firestore
         .collection(year)
         .doc(nest)
