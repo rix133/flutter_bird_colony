@@ -69,6 +69,7 @@ void main() {
   final chick = Bird(
       ringed_date: DateTime.now().subtract(Duration(days: 3)),
       band: 'AA1235',
+      egg: "1",
       ringed_as_chick: true,
       measures: [],
       nest: "1",
@@ -80,78 +81,98 @@ void main() {
   group('FSItemMixin', () {
     late FSItemMixin fsItemMixin;
 
-    setUp(() {
+    setUpAll(() async {
+      await nest1.save(firestore);
+      await egg.save(firestore);
+      await egg_nest2.save(firestore);
+      await experiment.save(firestore);
+      await parent.save(firestore);
+      await chick.save(firestore);
+
       fsItemMixin = FSItemMixin();
     });
 
     test('createSortedData_emptyList_returnsEmptyData', () async {
-      var result = await fsItemMixin.createSortedData([]);
+      var result = await fsItemMixin.createSortedData([], firestore);
 
       expect(result['start'], null);
       expect(result['end'], null);
       expect(result['sortedData'], isEmpty);
+      expect(result['otherItems'], isEmpty);
     });
 
     test('createSortedData_singleItem_returnsSortedData', () async {
-      var result = await fsItemMixin.createSortedData([nest1]);
+      var result = await fsItemMixin.createSortedData([nest1], firestore);
 
       expect(result['start'], isNotNull);
       expect(result['end'], isNotNull);
       expect(result['sortedData'], isNotEmpty);
+      expect(result['otherItems'], isNotEmpty);
 
-      result = await fsItemMixin.createSortedData([egg]);
-
-      expect(result['start'], isNotNull);
-      expect(result['end'], isNotNull);
-      expect(result['sortedData'], isNotEmpty);
-
-      result = await fsItemMixin.createSortedData([experiment]);
+      result = await fsItemMixin.createSortedData([egg], firestore);
 
       expect(result['start'], isNotNull);
       expect(result['end'], isNotNull);
       expect(result['sortedData'], isNotEmpty);
+      expect(result['otherItems'], isEmpty);
+
+      result = await fsItemMixin.createSortedData([experiment], firestore);
+
+      expect(result['start'], isNotNull);
+      expect(result['end'], isNotNull);
+      expect(result['sortedData'], isNotEmpty);
+      expect(result['otherItems'], isEmpty);
     });
 
     test("createSortedData from bird returnsSortedData", () async {
-      var result = await fsItemMixin.createSortedData([parent]);
+      var result = await fsItemMixin.createSortedData([parent], firestore);
 
       expect(result['start'], isNotNull);
       expect(result['end'], isNotNull);
       expect(result['sortedData'], isNotEmpty);
+      expect(result['otherItems'], isEmpty);
 
-      result = await fsItemMixin.createSortedData([chick]);
+      result = await fsItemMixin.createSortedData([chick], firestore);
 
       expect(result['start'], isNotNull);
       expect(result['end'], isNotNull);
       expect(result['sortedData'], isNotEmpty);
+      expect(result['otherItems'], isNotEmpty);
     });
 
     test("createSortedData from birds returnsSortedData", () async {
-      var result = await fsItemMixin.createSortedData([parent, chick]);
+      var result =
+          await fsItemMixin.createSortedData([parent, chick], firestore);
 
       expect(result['start'], isNotNull);
       expect(result['end'], isNotNull);
       expect(result['sortedData'], isNotEmpty);
+      expect(result['otherItems'], isNotEmpty);
     });
 
     test('createSortedData_multipleItems_returnsSortedData', () async {
-      var result = await fsItemMixin.createSortedData([nest1, nest1]);
+      var result =
+          await fsItemMixin.createSortedData([nest1, nest1], firestore);
 
       expect(result['start'], isNotNull);
       expect(result['end'], isNotNull);
       expect(result['sortedData'], isNotEmpty);
+      expect(result['otherItems'], isNotEmpty);
 
-      result = await fsItemMixin.createSortedData([egg, egg]);
-
-      expect(result['start'], isNotNull);
-      expect(result['end'], isNotNull);
-      expect(result['sortedData'], isNotEmpty);
-
-      result = await fsItemMixin.createSortedData([experiment, experiment]);
+      result = await fsItemMixin.createSortedData([egg, egg], firestore);
 
       expect(result['start'], isNotNull);
       expect(result['end'], isNotNull);
       expect(result['sortedData'], isNotEmpty);
+      expect(result['otherItems'], isEmpty);
+
+      result = await fsItemMixin
+          .createSortedData([experiment, experiment], firestore);
+
+      expect(result['start'], isNotNull);
+      expect(result['end'], isNotNull);
+      expect(result['sortedData'], isNotEmpty);
+      expect(result['otherItems'], isEmpty);
     });
   });
 
@@ -204,11 +225,33 @@ void main() {
       expect(result[1].length, 2); //only header and one egg
     });
 
+    test('downloadExcel returns nests with correct egg count', () async {
+      final items = <Nest>[nest1];
+      final result =
+          await mixin.downloadExcel(items, 'nests', firestore, test: true);
+      expect(result, isNotNull);
+      expect(result, isA<List<List<List<CellValue>>>>());
+      //expect the result to have nest and egg sheets
+      expect(result!.length, 2);
+      expect(result[0], isNotNull);
+      expect(result[0].length, 2); //only header and one nest
+
+      List<CellValue> nestRow = result[0][1]; //nest data row
+      //cehck that nestrow has 14 items
+      expect(nestRow.length, 14);
+      //check that the egg count is correct (1)
+      for (var cell in nestRow) {
+        print(cell);
+      }
+      expect(nestRow[11], isA<IntCellValue>());
+      expect((nestRow[11] as IntCellValue).value, 1);
+    });
+
     test('downloadExcel returns sheets when test is true and type is bird',
         () async {
       final items = <FirestoreItem>[parent, chick];
       final result =
-          await mixin.downloadExcel(items, 'bird', firestore, test: true);
+          await mixin.downloadExcel(items, 'birds', firestore, test: true);
       expect(result, isNotNull);
       expect(result, isA<List<List<List<CellValue>>>>());
     });
@@ -270,10 +313,10 @@ void main() {
       expect(result, isA<List<List<List<CellValue>>>>());
     });
 
-    test('downloadChangeLog returns sheets when test is true and type is bird',
+    test('downloadChangeLog returns sheets when test is true and type is birds',
         () async {
       final result = await mixin.downloadChangeLog(
-          chick.changeLog(firestore), 'bird', firestore,
+          chick.changeLog(firestore), 'birds', firestore,
           test: true);
       expect(result, isNotNull);
       expect(result, isA<List<List<List<CellValue>>>>());

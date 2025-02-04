@@ -271,7 +271,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     CollectionReference items =
         firestore.collection(discover_date.year.toString());
 
-      //check if the item is already in deleted collection
+    //check if the item is already in deleted collection
     return FSItemMixin().deleteFirestoreItem(this, items);
   }
 
@@ -318,9 +318,12 @@ class Nest extends ExperimentedItem implements FirestoreItem {
       first_egg != null
           ? DateCellValue.fromDateTime(first_egg!)
           : TextCellValue(''),
-      IntCellValue(firstApril.difference(first_egg ?? DateTime(2200)).inDays),
-      IntCellValue(
-          DateTime.now().difference(first_egg ?? DateTime(2200)).inDays),
+      first_egg != null
+          ? IntCellValue(first_egg!.difference(firstApril).inDays)
+          : TextCellValue(''),
+      first_egg != null
+          ? IntCellValue(DateTime.now().difference(first_egg!).inDays)
+          : TextCellValue(''),
       IntCellValue(count),
       TextCellValue(experiments?.map((e) => e.name).join(";\r") ?? ""),
       TextCellValue(parents?.map((p) => p.name).join(";\r") ?? "")

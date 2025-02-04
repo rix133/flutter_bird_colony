@@ -15,8 +15,8 @@ import 'firestore/egg.dart';
 import 'firestore/nest.dart';
 
 class FSItemMixin {
-  // Workaround Way to run functions on firestoreitems
-  Future<UpdateResult> deleteFiresoreItem(
+  // Workaround Way to run functions on firestoreItems
+  Future<UpdateResult> deleteFirestoreItem(
       FirestoreItem item, CollectionReference from) async {
     String deletedTime = DateTime.now().toString();
     return from
@@ -42,9 +42,11 @@ class FSItemMixin {
         .catchError((error) => UpdateResult.error(message: error.toString())));
   }
 
-  Future<Map<String, dynamic>> createSortedData(List<FirestoreItem> items) async {
+  Future<Map<String, dynamic>> createSortedData(
+      List<FirestoreItem> items, FirebaseFirestore firestore) async {
     DateTime? start;
     DateTime? end;
+    List<Egg> otherItems = [];
     List<List<TextCellValue>> headers = [];
     List<List<CellValue>> data = [];
     List<List<CellValue>> itemRows = [];
@@ -58,9 +60,24 @@ class FSItemMixin {
         if (end == null || (last != null && last.isAfter(end))) {
           end = last;
         }
-        itemRows = await item.toExcelRows();
+        // check if the item is a class Nest and add its eggs
+        if (item is Nest) {
+          List<Egg> eggs = await item.eggs(firestore);
+          otherItems.addAll(eggs);
+          itemRows = await item.toExcelRows(otherItems: eggs);
+        } else if (item is Bird) {
+          Egg? egg = await item.getEgg(firestore);
+          if (egg != null) {
+            otherItems.add(egg);
+            itemRows = await item.toExcelRows(otherItems: [egg]);
+          } else {
+            itemRows = await item.toExcelRows();
+          }
+        } else {
+          itemRows = await item.toExcelRows();
+        }
         //ensure data and headers have the same length
-        for(var i = 0; i < itemRows.length; i++){
+        for (var i = 0; i < itemRows.length; i++) {
           headers.add(item.toExcelRowHeader());
         }
         data.addAll(itemRows);
@@ -69,18 +86,23 @@ class FSItemMixin {
 
       List<List<CellValue>> sortedData = [uniqueHeaders.toList()];
       for (var i = 0; i < data.length; i++) {
-          Map<String, CellValue> rowMap =
-          Map.fromIterables(headers[i].map((h) => h.value), data[i]);
-          List<CellValue> sortedRow = uniqueHeaders
-              .map((h) => rowMap.containsKey(h.value)
-              ? rowMap[h.value]!
-              : TextCellValue(""))
-              .toList();
-          sortedData.add(sortedRow);
+        Map<String, CellValue> rowMap =
+            Map.fromIterables(headers[i].map((h) => h.value), data[i]);
+        List<CellValue> sortedRow = uniqueHeaders
+            .map((h) => rowMap.containsKey(h.value)
+                ? rowMap[h.value]!
+                : TextCellValue(""))
+            .toList();
+        sortedData.add(sortedRow);
       }
-      return {'start': start, 'end': end, 'sortedData': sortedData};
+      return {
+        'start': start,
+        'end': end,
+        'sortedData': sortedData,
+        'otherItems': otherItems
+      };
     } else {
-      return {'start': null, 'end': null, 'sortedData': []};
+      return {'start': null, 'end': null, 'sortedData': [], 'otherItems': []};
     }
   }
 
@@ -90,8 +112,8 @@ class FSItemMixin {
       FirebaseFirestore firestore,
       {DateTime? start,
       bool test = false}) async {
-    if (type == "nest") {
-      List<String> types = ["nest"];
+    if (type == "nests") {
+      List<String> types = ["nests"];
       List<Nest> nests = await items as List<Nest>;
 
       List<List<List<CellValue>>>? nestLog =
@@ -125,22 +147,33 @@ class FSItemMixin {
   Future<List<List<List<CellValue>>>?> downloadExcel(
       List<FirestoreItem> items, String type, FirebaseFirestore firestore,
       {DateTime? start, bool test = false}) async {
-    Map<String, dynamic> sortedDataMap = await createSortedData(items);
+    //list to hold all eggs
+    List<Egg> eggs = [];
+
+    Map<String, dynamic> sortedDataMap =
+        await createSortedData(items, firestore);
     if (sortedDataMap['sortedData'].isEmpty) {
       return null;
     }
     List<List<CellValue>> sheetData = sortedDataMap['sortedData'];
-    if(start == null){
+    if (start == null) {
       start = sortedDataMap['start'];
     }
-    DateTime? end = sortedDataMap['end'];
+
+    if (type == "nests" || type == "birds") {
+      eggs.addAll(sortedDataMap['otherItems']);
+    }
+
     List<List<List<CellValue>>> sheets = [sheetData];
     List<String> types = [type];
 
-    if(type == "experiments"){
+    if (type == "experiments") {
       String year = start?.year.toString() ?? DateTime.now().year.toString();
       List<String> allExpNests = [];
-      allExpNests.addAll(items.expand((e) => (e as Experiment).nests ?? []).cast<String>().toList());
+      allExpNests.addAll(items
+          .expand((e) => (e as Experiment).nests ?? [])
+          .cast<String>()
+          .toList());
       if (allExpNests.isNotEmpty) {
         // Split allExpNests into chunks of 10
         List<List<String>> chunks =
@@ -171,17 +204,20 @@ class FSItemMixin {
         // Now process allNestItems
         if (allNestItems.isNotEmpty) {
           Map<String, dynamic> nestSortedDataMap =
-              await createSortedData(allNestItems);
+              await createSortedData(allNestItems, firestore);
           List<List<CellValue>> nestSheetData = nestSortedDataMap['sortedData'];
           start = nestSortedDataMap['start'];
-          end = nestSortedDataMap['end'];
+          eggs.addAll(nestSortedDataMap['otherItems']);
           sheets.add(nestSheetData);
           types.add("nests");
         }
       }
       List<String> allExpsBirds = [];
-      allExpsBirds.addAll(items.expand((e) => (e as Experiment).birds ?? []).cast<String>().toList());
-      if(allExpsBirds.isNotEmpty){
+      allExpsBirds.addAll(items
+          .expand((e) => (e as Experiment).birds ?? [])
+          .cast<String>()
+          .toList());
+      if (allExpsBirds.isNotEmpty) {
         // Split allExpsBirds into chunks of 10
         var chunks = allExpsBirds.fold<List<List<String>>>([], (all, one) {
           if (all.isEmpty || all.last.length == 10)
@@ -210,33 +246,20 @@ class FSItemMixin {
         // Now process allBirdItems
         if (allBirdItems.isNotEmpty) {
           Map<String, dynamic> birdSortedDataMap =
-              await createSortedData(allBirdItems);
+              await createSortedData(allBirdItems, firestore);
           List<List<CellValue>> birdSheetData = birdSortedDataMap['sortedData'];
+          eggs.addAll(birdSortedDataMap['otherItems']);
           sheets.add(birdSheetData);
           types.add("birds");
         }
       }
     }
-
-    if (type == "nests" || type == "experiments") {
-      if (start != null && end != null) {
-        Timestamp startTimestamp = Timestamp.fromDate(start);
-        Timestamp endTimestamp = Timestamp.fromDate(end);
-        //get all eggs between start and end
-        QuerySnapshot eggs = await firestore
-            .collectionGroup("egg")
-            .where("discover_date", isGreaterThanOrEqualTo: startTimestamp)
-            .where("discover_date", isLessThanOrEqualTo: endTimestamp)
-            .get();
-        if (eggs.docs.isNotEmpty) {
-          List<FirestoreItem> eggItems =
-              eggs.docs.map((e) => Egg.fromDocSnapshot(e)).toList();
-          Map<String, dynamic> eggSortedDataMap = await createSortedData(eggItems);
-          List<List<CellValue>> eggSheetData = eggSortedDataMap['sortedData'];
-          sheets.add(eggSheetData);
-          types.add("egg");
-        }
-      }
+    if (eggs.isNotEmpty) {
+      Map<String, dynamic> eggSortedDataMap =
+          await createSortedData(eggs, firestore);
+      List<List<CellValue>> eggSheetData = eggSortedDataMap['sortedData'];
+      sheets.add(eggSheetData);
+      types.add("eggs");
     }
 
     if (sheets.isNotEmpty && !test) {
