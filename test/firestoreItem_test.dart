@@ -240,9 +240,6 @@ void main() {
       //cehck that nestrow has 14 items
       expect(nestRow.length, 14);
       //check that the egg count is correct (1)
-      for (var cell in nestRow) {
-        print(cell);
-      }
       expect(nestRow[11], isA<IntCellValue>());
       expect((nestRow[11] as IntCellValue).value, 1);
     });

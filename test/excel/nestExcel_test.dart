@@ -8,8 +8,9 @@ void main() {
     test('toExcelRows should return correct rows', () async {
       final nest = Nest(
         id: "123",
-        discover_date: DateTime.now(),
+        discover_date: DateTime.now().subtract(Duration(days: 3)),
         last_modified: DateTime.now(),
+        first_egg: DateTime.now().subtract(Duration(days: 2)),
         accuracy: 'high',
         coordinates: GeoPoint(0, 0),
         responsible: 'John Doe',
@@ -23,13 +24,16 @@ void main() {
       expect((rows[0][3] as DoubleCellValue).value, nest.coordinates.longitude);
       expect((rows[0][4] as TextCellValue).value, nest.species ?? "");
       expect((rows[0][6] as TextCellValue).value, nest.responsible ?? "");
-      expect(
-          nest.first_egg != null ? (rows[0][8] as DateCellValue).year : "", "");
+      //cehck first egg date
+      expect((rows[0][8] as DateCellValue).year, nest.first_egg!.year);
+      expect((rows[0][8] as DateCellValue).month, nest.first_egg!.month);
+      expect((rows[0][8] as DateCellValue).day, nest.first_egg!.day);
       expect((rows[0][9] as IntCellValue).value,
-          firstApril.difference(nest.first_egg ?? DateTime(2200)).inDays);
+          nest.first_egg!.difference(firstApril).inDays);
       expect((rows[0][10] as IntCellValue).value,
-          DateTime.now().difference(nest.first_egg ?? DateTime(2200)).inDays);
-      expect((rows[0][11] as IntCellValue).value, 0);
+          DateTime.now().difference(nest.first_egg!).inDays);
+      expect((rows[0][11] as IntCellValue).value,
+          0); // no eggs as the egg is not in firestore
       expect((rows[0][12] as TextCellValue).value,
           nest.experiments?.map((e) => e.name).join(";\r") ?? "");
       expect((rows[0][13] as TextCellValue).value,
