@@ -237,8 +237,8 @@ void main() {
       expect(result[0].length, 2); //only header and one nest
 
       List<CellValue> nestRow = result[0][1]; //nest data row
-      //cehck that nestrow has 14 items
-      expect(nestRow.length, 14);
+      //cehck that nestrow has 16 items
+      expect(nestRow.length, 16);
       //check that the egg count is correct (1)
       expect(nestRow[11], isA<IntCellValue>());
       expect((nestRow[11] as IntCellValue).value, 1);

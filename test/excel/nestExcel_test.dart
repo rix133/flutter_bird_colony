@@ -29,7 +29,7 @@ void main() {
       expect((rows[0][8] as DateCellValue).month, nest.first_egg!.month);
       expect((rows[0][8] as DateCellValue).day, nest.first_egg!.day);
       expect((rows[0][9] as IntCellValue).value,
-          nest.first_egg!.difference(firstApril).inDays);
+          nest.first_egg!.difference(firstApril).inDays + 1);
       expect((rows[0][10] as IntCellValue).value,
           DateTime.now().difference(nest.first_egg!).inDays);
       expect((rows[0][11] as IntCellValue).value,
@@ -38,6 +38,8 @@ void main() {
           nest.experiments?.map((e) => e.name).join(";\r") ?? "");
       expect((rows[0][13] as TextCellValue).value,
           nest.parents?.map((p) => p.name).join(";\r") ?? "");
+      expect((rows[0][14] as IntCellValue).value, 0);
+      expect((rows[0][15] as DoubleCellValue).value, 0.0);
     });
 
     test('toExcelRowHeader should return correct headers', () {
@@ -66,6 +68,8 @@ void main() {
       expect(headers[11].value, "egg_count");
       expect(headers[12].value, 'experiments');
       expect(headers[13].value, 'parents');
+      expect(headers[14].value, "hatched_count");
+      expect(headers[15].value, "total_eggs_mass");
     });
   });
 }

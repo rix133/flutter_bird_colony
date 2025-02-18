@@ -30,6 +30,10 @@ class EggStatus {
             ? Colors.red
             : Colors.orange[800]);
   }
+
+  bool hasHatched() {
+    return (status == "hatched" || status == "dead chick");
+  }
 }
 
 class EggStatuses {

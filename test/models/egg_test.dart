@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_bird_colony/models/eggStatus.dart';
 import 'package:flutter_bird_colony/models/firestore/egg.dart';
+import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -24,11 +25,33 @@ void main() {
       var egg = Egg(
         discover_date: DateTime.now(),
         responsible: 'Responsible Person',
-        status: EggStatus('intact'),
+        status: EggStatus('hatched'),
         ring: 'Ring',
         measures: [],
       );
       expect(egg.ringed, true);
+    });
+
+    test('Egg hatched status when hatched', () {
+      var egg = Egg(
+        discover_date: DateTime.now(),
+        responsible: 'Responsible Person',
+        status: EggStatus('hatched'),
+        ring: 'Ring',
+        measures: [],
+      );
+      expect(egg.hatched, true);
+    });
+
+    test('Egg hatched status when not hatched', () {
+      var egg = Egg(
+        discover_date: DateTime.now(),
+        responsible: 'Responsible Person',
+        status: EggStatus('intact'),
+        ring: 'Ring',
+        measures: [],
+      );
+      expect(egg.hatched, false);
     });
 
     test('Egg ringed status when ring is null', () {
@@ -122,6 +145,44 @@ void main() {
       );
       var ageRow = egg.getAgeRow();
       expect(ageRow, isNotNull);
+    });
+  });
+
+  group('Egg mass', () {
+    test('Egg has mass', () {
+      var egg = Egg(
+        discover_date: DateTime.now().subtract(Duration(days: 5)),
+        responsible: 'Responsible Person',
+        status: EggStatus('intact'),
+        measures: [
+          Measure(
+              name: "Weight",
+              value: "2.1",
+              isNumber: true,
+              unit: "g",
+              modified: DateTime.now(),
+              type: "required")
+        ],
+      );
+      expect(egg.getEggMass(), 2.1);
+    });
+
+    test('Egg has no mass', () {
+      var egg = Egg(
+        discover_date: DateTime.now().subtract(Duration(days: 5)),
+        responsible: 'Responsible Person',
+        status: EggStatus('intact'),
+        measures: [
+          Measure(
+              name: "Length",
+              value: "2.1",
+              isNumber: true,
+              unit: "g",
+              modified: DateTime.now(),
+              type: "required")
+        ],
+      );
+      expect(egg.getEggMass(), 0.0);
     });
   });
 

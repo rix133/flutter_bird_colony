@@ -294,11 +294,22 @@ class Nest extends ExperimentedItem implements FirestoreItem {
       {List<FirestoreItem>? otherItems}) async {
     //check if otherItems is a list of eggs
     int count = 0;
+    int hatchCount = 0;
+    double totalEggMass = 0.0;
+
     if (otherItems != null) {
       //convert to Egg list if possible
       List<Egg> eggs = otherItems.map((e) => e as Egg).toList();
       count =
           eggs.where((e) => e.type() == 'egg' && e.getNest() == this.id).length;
+
+      hatchCount = eggs
+          .where((e) => e.status.hasHatched() && e.getNest() == this.id)
+          .length;
+      totalEggMass = eggs
+          .where((e) => e.type() == 'egg' && e.getNest() == this.id)
+          .map((e) => e.getEggMass())
+          .fold(0.0, (a, b) => a + b);
     }
     final firstApril = DateTime(DateTime.now().year, 4, 1);
     List<CellValue> baseItems = [
@@ -319,14 +330,16 @@ class Nest extends ExperimentedItem implements FirestoreItem {
           ? DateCellValue.fromDateTime(first_egg!)
           : TextCellValue(''),
       first_egg != null
-          ? IntCellValue(first_egg!.difference(firstApril).inDays)
+          ? IntCellValue(first_egg!.difference(firstApril).inDays + 1)
           : TextCellValue(''),
       first_egg != null
           ? IntCellValue(DateTime.now().difference(first_egg!).inDays)
           : TextCellValue(''),
       IntCellValue(count),
       TextCellValue(experiments?.map((e) => e.name).join(";\r") ?? ""),
-      TextCellValue(parents?.map((p) => p.name).join(";\r") ?? "")
+      TextCellValue(parents?.map((p) => p.name).join(";\r") ?? ""),
+      IntCellValue(hatchCount),
+      DoubleCellValue(totalEggMass)
     ];
 
     List<List<CellValue>> rows = addMeasuresToRow(baseItems);
@@ -348,7 +361,9 @@ class Nest extends ExperimentedItem implements FirestoreItem {
       TextCellValue("days_since_first_egg"),
       TextCellValue('egg_count'),
       TextCellValue('experiments'),
-      TextCellValue('parents')
+      TextCellValue('parents'),
+      TextCellValue("hatched_count"),
+      TextCellValue("total_eggs_mass")
     ];
 
     Map<String, List<Measure>> measuresMap = getMeasuresMap();

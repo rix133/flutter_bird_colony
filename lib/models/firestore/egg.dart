@@ -85,6 +85,17 @@ class Egg extends ExperimentedItem implements FirestoreItem {
         measures: measures.map((e) => e.copy()).toList());
   }
 
+  double getEggMass() {
+    final matchingMeasures =
+        measures.where((element) => element.name.toLowerCase() == "weight");
+    if (matchingMeasures.isEmpty) {
+      return 0.0; // No measure found
+    }
+    return double.tryParse(matchingMeasures.first.value) ?? 0;
+  }
+
+  bool get hatched => status.hasHatched();
+
   @override
   factory Egg.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
