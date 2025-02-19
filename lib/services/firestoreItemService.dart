@@ -15,6 +15,7 @@ abstract class FirestoreItemService<T extends FirestoreItem>
   FirestoreItemService(this._firestore);
 
   StreamController<List<T>>? _controller;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _subscription;
   String? currentCollectionName;
 
   List<String> multiCollection = [];
@@ -37,17 +38,22 @@ abstract class FirestoreItemService<T extends FirestoreItem>
     if (_controller == null || currentCollectionName != collectionName) {
       currentCollectionName = collectionName;
       _controller = StreamController<List<T>>.broadcast();
-      _collection().snapshots().listen((snapshot) {
+      _subscription = _collection().snapshots().listen((snapshot) {
         _latestSnapshot =
             snapshot.docs.map((doc) => convertToFirestoreItem(doc)).toList();
-        _controller!.sink.add(_latestSnapshot!);
+        if (!_controller!.isClosed) {
+          _controller!.sink.add(_latestSnapshot!);
+        }
       });
     }
     return _controller!.stream;
   }
 
+  @override
   void dispose() {
-    super.dispose();
+    _subscription?.cancel();
     _controller?.close();
+    super.dispose();
   }
+
 }
