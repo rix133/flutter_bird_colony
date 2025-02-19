@@ -1,5 +1,5 @@
 //backend selection items
-import 'package:flutter_bird_colony/models/firebase_options_selector.dart';
+import 'package:flutter_bird_colony/models/firebaseOptionsSelector.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
