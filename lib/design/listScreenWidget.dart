@@ -164,7 +164,7 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
     bool disabled =
         selectedYear != DateTime.now().year && !(sps?.isAdmin ?? false);
     //the items need to be asigned for Downlaoding purposes
-    items = getFilteredItems(inputItems);
+    List<FirestoreItem> items = getFilteredItems(inputItems);
     return ListView.builder(
         itemCount: items.length,
         itemBuilder: (context, index) {

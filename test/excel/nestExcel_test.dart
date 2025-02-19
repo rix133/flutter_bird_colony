@@ -108,7 +108,7 @@ void main() {
 
       expect(rows.length, 1);
       expect(rows[0].length, 1); // Only base item, no empty note
-      expect((rows[0][0] as TextCellValue).value, "Base Item");
+      expect((rows[0][0] as TextCellValue).value.text, "Base Item");
     });
 
     test('should correctly handle Measure.note(value: "test")', () async {
@@ -128,8 +128,8 @@ void main() {
 
       expect(rows.length, 1);
       expect(rows[0].length, 3); // Base item + value + modified date
-      expect((rows[0][0] as TextCellValue).value, "Base Item");
-      expect((rows[0][1] as TextCellValue).value, testNote);
+      expect((rows[0][0] as TextCellValue).value.text, "Base Item");
+      expect((rows[0][1] as TextCellValue).value.text, testNote);
       expect(rows[0][2], isA<DateTimeCellValue>());
       expect((rows[0][2] as DateTimeCellValue), isNotNull);
     });
