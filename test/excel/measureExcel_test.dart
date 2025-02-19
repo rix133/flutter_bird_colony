@@ -35,7 +35,7 @@ void main() {
       );
 
       final rows = measure.toExcelRow();
-      expect((rows[0] as TextCellValue).value, measure.value);
+      expect((rows[0] as TextCellValue).value.text, measure.value);
       expect((rows[1] as DateTimeCellValue).year, measure.modified.year);
       expect((rows[1] as DateTimeCellValue).month, measure.modified.month);
       expect((rows[1] as DateTimeCellValue).day, measure.modified.day);
@@ -53,8 +53,8 @@ void main() {
       );
 
       final headers = measure.toExcelRowHeader();
-      expect(headers[0].value, measure.name + "_" + measure.unit);
-      expect(headers[1].value, measure.name + '_time');
+      expect(headers[0].value.text, measure.name + "_" + measure.unit);
+      expect(headers[1].value.text, measure.name + '_time');
     });
   });
 }

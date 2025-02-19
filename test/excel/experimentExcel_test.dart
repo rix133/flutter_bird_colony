@@ -16,15 +16,15 @@ void main() {
       );
 
       final headers = experiment.toExcelRowHeader();
-      expect(headers[0].value, 'experiment_name');
-      expect(headers[1].value, 'experiment_description');
-      expect(headers[2].value, 'experiment_responsible');
-      expect(headers[3].value, 'experiment_year');
-      expect(headers[4].value, 'experiment_type');
-      expect(headers[5].value, 'experiment_last_modified');
-      expect(headers[6].value, 'experiment_created');
-      expect(headers[7].value, 'nest');
-      expect(headers[8].value, 'bird');
+      expect(headers[0].value.text, 'experiment_name');
+      expect(headers[1].value.text, 'experiment_description');
+      expect(headers[2].value.text, 'experiment_responsible');
+      expect(headers[3].value.text, 'experiment_year');
+      expect(headers[4].value.text, 'experiment_type');
+      expect(headers[5].value.text, 'experiment_last_modified');
+      expect(headers[6].value.text, 'experiment_created');
+      expect(headers[7].value.text, 'nest');
+      expect(headers[8].value.text, 'bird');
     });
 
     test(
@@ -41,11 +41,13 @@ void main() {
       );
 
       final rows = await experiment.toExcelRows();
-      expect((rows[0][0] as TextCellValue).value, experiment.name);
-      expect((rows[0][1] as TextCellValue).value, experiment.description ?? "");
-      expect((rows[0][2] as TextCellValue).value, experiment.responsible ?? "");
+      expect((rows[0][0] as TextCellValue).value.text, experiment.name);
+      expect((rows[0][1] as TextCellValue).value.text,
+          experiment.description ?? "");
+      expect((rows[0][2] as TextCellValue).value.text,
+          experiment.responsible ?? "");
       expect((rows[0][3] as IntCellValue).value, experiment.year ?? 1900);
-      expect((rows[0][4] as TextCellValue).value, experiment.type);
+      expect((rows[0][4] as TextCellValue).value.text, experiment.type);
     });
 
     test(
@@ -60,11 +62,13 @@ void main() {
       );
 
       final rows = await experiment.toExcelRows();
-      expect((rows[0][0] as TextCellValue).value, experiment.name);
-      expect((rows[0][1] as TextCellValue).value, experiment.description ?? "");
-      expect((rows[0][2] as TextCellValue).value, experiment.responsible ?? "");
+      expect((rows[0][0] as TextCellValue).value.text, experiment.name);
+      expect((rows[0][1] as TextCellValue).value.text,
+          experiment.description ?? "");
+      expect((rows[0][2] as TextCellValue).value.text,
+          experiment.responsible ?? "");
       expect((rows[0][3] as IntCellValue).value, experiment.year ?? 1900);
-      expect((rows[0][4] as TextCellValue).value, experiment.type);
+      expect((rows[0][4] as TextCellValue).value.text, experiment.type);
     });
   });
 }

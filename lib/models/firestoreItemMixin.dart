@@ -87,7 +87,7 @@ class FSItemMixin {
       List<List<CellValue>> sortedData = [uniqueHeaders.toList()];
       for (var i = 0; i < data.length; i++) {
         Map<String, CellValue> rowMap = Map.fromIterables(
-            headers[i].map((h) => h.value.toString()), data[i]);
+            headers[i].map((h) => h.value.text ?? ""), data[i]);
         List<CellValue> sortedRow = uniqueHeaders
             .map((h) => rowMap.containsKey(h.value)
                 ? rowMap[h.value]!
