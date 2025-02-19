@@ -189,7 +189,7 @@ void main() {
             expect(marker.consumeTapEvents, false);
             expect(marker.visible, true);
             expect(marker.markerId, MarkerId(nest.id!));
-            expect(marker.icon.runtimeType, BitmapDescriptor);
+            expect(marker.icon.runtimeType.toString(), 'DefaultMarker');
             expect(marker.position.latitude, nest.coordinates.latitude);
             expect(marker.position.longitude, nest.coordinates.longitude);
             return Placeholder();
@@ -219,7 +219,8 @@ void main() {
             expect(marker.consumeTapEvents, false);
             expect(marker.visible, false);
             expect(marker.markerId, MarkerId(nest.id!));
-            expect(marker.icon.runtimeType, BitmapDescriptor);
+            //expect(marker.icon.runtimeType, BitmapDescriptor);
+            expect(marker.icon.runtimeType.toString(), 'DefaultMarker');
             expect(marker.position.latitude, nest.coordinates.latitude);
             expect(marker.position.longitude, nest.coordinates.longitude);
             return Placeholder();
