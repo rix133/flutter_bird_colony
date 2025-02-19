@@ -31,7 +31,8 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
   FirestoreItemService? fsService;
 
   SharedPreferencesService? sps;
-  List<FirestoreItem> items = [];
+
+  List<FirestoreItem> get items => getFilteredItems(fsService?.items ?? []);
 
   @override
   void dispose() {
