@@ -72,6 +72,7 @@ android {
             ndk.debugSymbolLevel = 'SYMBOL_TABLE'
         }
     }
+    namespace 'ee.ut.adapt.flutter_bird_colony'
 
 }
 

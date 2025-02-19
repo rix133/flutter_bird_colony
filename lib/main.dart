@@ -27,6 +27,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'design/styles.dart';
 import 'firebase_options_default.dart' as manageBirdColony;
 import 'firebase_options_kakrarahu.dart' as kakrarahuColony;
+import 'firebase_options_redsquirrel.dart' as redSquirrelColony;
 import 'screens/listDatas.dart';
 import 'screens/nest/mapCreateNest.dart';
 import 'screens/nest/mapNests.dart';
@@ -44,6 +45,7 @@ void main() async{
  await FirebaseOptionsSelector.initialize(defaultKey, {
     defaultKey: manageBirdColony.DefaultFirebaseOptions.currentPlatform,
     "Kakrarahu": kakrarahuColony.DefaultFirebaseOptions.currentPlatform,
+    "RedSquirrel": redSquirrelColony.DefaultFirebaseOptions.currentPlatform,
   });
   appName = await FirebaseOptionsSelector.getCurrentSelection();
   final sharedPreferences = await SharedPreferences.getInstance();
