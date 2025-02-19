@@ -568,6 +568,20 @@ class _SettingsPageState extends State<SettingsPage> {
         ? [
             Row(
               children: <Widget>[
+                Text('Show app navigation buttons:'),
+                Switch(
+                  key: Key('showAppBarSwitch'),
+                  value: sps?.showAppBar ?? true,
+                  onChanged: (value) {
+                    sps?.showAppBar = value;
+                    setState(() {});
+                  },
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Row(
+              children: <Widget>[
                 Text('Auto set guessed metal band for chicks:'),
                 Switch(
                   value: sps?.autoNextBand ?? false,
@@ -765,10 +779,13 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text('Settings'),
-        ),
-        body: Padding(
+        appBar: (sps?.showAppBar ?? true)
+            ? AppBar(
+                title: Text('Settings'),
+              )
+            : null,
+        body: SafeArea(
+            child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: SingleChildScrollView(
             child: Column(
@@ -791,6 +808,6 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
           ),
-        ));
+        )));
   }
 }

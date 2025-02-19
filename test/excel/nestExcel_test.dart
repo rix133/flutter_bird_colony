@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
+import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -87,6 +88,50 @@ void main() {
       expect(headers[13].value.text, 'parents');
       expect(headers[14].value.text, "hatched_count");
       expect(headers[15].value.text, "total_eggs_mass");
+    });
+  });
+
+  group('Nest addMeasuresToRow', () {
+    test('should correctly handle empty Measure.note()', () async {
+      final nest = Nest(
+        id: "123",
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now(),
+        accuracy: 'high',
+        coordinates: GeoPoint(0, 0),
+        responsible: 'John Doe',
+        measures: [Measure.note()],
+      );
+
+      final baseItems = [TextCellValue("Base Item")];
+      final rows = nest.addMeasuresToRow(baseItems);
+
+      expect(rows.length, 1);
+      expect(rows[0].length, 1); // Only base item, no empty note
+      expect((rows[0][0] as TextCellValue).value, "Base Item");
+    });
+
+    test('should correctly handle Measure.note(value: "test")', () async {
+      final testNote = "test";
+      final nest = Nest(
+        id: "123",
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now(),
+        accuracy: 'high',
+        coordinates: GeoPoint(0, 0),
+        responsible: 'John Doe',
+        measures: [Measure.note(value: testNote)],
+      );
+
+      final baseItems = [TextCellValue("Base Item")];
+      final rows = nest.addMeasuresToRow(baseItems);
+
+      expect(rows.length, 1);
+      expect(rows[0].length, 3); // Base item + value + modified date
+      expect((rows[0][0] as TextCellValue).value, "Base Item");
+      expect((rows[0][1] as TextCellValue).value, testNote);
+      expect(rows[0][2], isA<DateTimeCellValue>());
+      expect((rows[0][2] as DateTimeCellValue), isNotNull);
     });
   });
 }

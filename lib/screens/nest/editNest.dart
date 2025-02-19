@@ -42,7 +42,7 @@ class _EditNestState extends State<EditNest> {
   CollectionReference? eggCollection;
   Query? experimentsQuery;
   Stream<QuerySnapshot> _eggStream = Stream.empty();
-  late SharedPreferencesService sps;
+  SharedPreferencesService? sps;
   LocationService location = LocationService.instance;
   //AuthService auth = AuthService.instance;
 
@@ -80,7 +80,7 @@ class _EditNestState extends State<EditNest> {
           headingAccuracy: 0.0,
           speed: 0.0,
           speedAccuracy: 0.0);
-      nest!.addMissingMeasures(sps.defaultMeasures, "nest");
+      nest!.addMissingMeasures(sps?.defaultMeasures, "nest");
       setState(() {   });
     }
   }
@@ -93,9 +93,9 @@ class _EditNestState extends State<EditNest> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
-      _desiredAccuracy = sps.desiredAccuracy;
+      _desiredAccuracy = sps?.desiredAccuracy ?? 4;
       var data = ModalRoute.of(context)?.settings.arguments as Map;
-      speciesList = sps.speciesList;
+      speciesList = sps?.speciesList ?? LocalSpeciesList();
       if (data["year"] != null) {
         nests = widget.firestore.collection(data["year"].toString());
       }
@@ -153,7 +153,7 @@ class _EditNestState extends State<EditNest> {
   Nest getNest() {
     if (nest != null) {
       nest!.species = species.english;
-      nest!.responsible = sps.userName;
+      nest!.responsible = sps?.userName;
       return nest!;
     }
     throw Exception("Nest is not initialized");
@@ -212,7 +212,10 @@ class _EditNestState extends State<EditNest> {
       return [Text('No data')];
     }
     List<Egg> eggs = snapshot.data!.docs.map((e) => Egg.fromDocSnapshot(e)).toList();
-    int amount = eggs.where((e) => e.ring != null && e.discover_date.year != DateTime.now().year).length;
+    int amount = eggs
+        .where((e) =>
+            e.ring != null && e.discover_date.year == nest?.discover_date.year)
+        .length;
     int new_egg_nr = eggs.where((e) => e.type() == "egg").length + 1;
 
     return [
@@ -226,8 +229,8 @@ class _EditNestState extends State<EditNest> {
           onPressed: () {
               Egg egg = Egg(
                   discover_date: DateTime.now(),
-                  responsible: sps.userName,
-                  measures: [],
+                responsible: sps?.userName,
+                measures: [],
                   experiments: nest?.experiments ?? [],
                   last_modified: DateTime.now(),
                 status: EggStatus("intact"),
@@ -256,7 +259,7 @@ class _EditNestState extends State<EditNest> {
               "egg": Egg(
                   discover_date: DateTime.now(),
                   last_modified: DateTime.now(),
-                  responsible: sps.userName,
+                  responsible: sps?.userName,
                   measures: [],
                   experiments: nest?.experiments ?? [],
                   status: EggStatus("unknown"),
@@ -421,26 +424,38 @@ class _EditNestState extends State<EditNest> {
     if (nest == null) {
       // Return a CircularProgressIndicator while nest is loading
       return Scaffold(
-        body: Center(
-          child: Container(
-            padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
+          appBar: (sps?.showAppBar ?? true)
+              ? AppBar(
+                  title: Text('Edit Nest'),
+                )
+              : null,
+          body: SafeArea(
+            child: Center(
+              child: Container(
+                padding: EdgeInsets.fromLTRB(10, 0, 10, 15),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[CircularProgressIndicator()],
             ),
           ),
         ),
-      );
+          ));
     }
 
     return Scaffold(
-      body: Align(
-          alignment: Alignment.topCenter,
-          child: SingleChildScrollView(
+        appBar: (sps?.showAppBar ?? true)
+            ? AppBar(
+                title: Text('Edit Nest'),
+              )
+            : null,
+        body: SafeArea(
+          child: Align(
+              alignment: Alignment.topCenter,
+              child: SingleChildScrollView(
               child: Container(
-            padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
+                padding: EdgeInsets.fromLTRB(10, 0, 10, 15),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 getTitleRow(),
                 listExperiments(nest!), //list of experiments
@@ -457,9 +472,9 @@ class _EditNestState extends State<EditNest> {
                   locationButton(),]),
                 SizedBox(height: 15),
                 ...nest!.measures
-                    .map((Measure m) =>
-                        m.getMeasureForm(addMeasure, sps.biasedRepeatedMeasures))
-                    .toList(),
+                    .map((Measure m) => m.getMeasureForm(
+                            addMeasure, sps?.biasedRepeatedMeasures ?? false))
+                        .toList(),
                 SizedBox(height: 15),
                 _getParentsRow(nest!.parents, context),
                 _getEggsStream(_eggStream),
@@ -476,6 +491,6 @@ class _EditNestState extends State<EditNest> {
               ],
             ),
           ))),
-    );
+        ));
   }
 }

@@ -37,7 +37,7 @@ void main() async {
           .collection('users')
           .doc(userEmail)
           .set({'isAdmin': false});
-      myApp = myApp = TestApp(
+      myApp = TestApp(
         firestore: firestore,
         sps: sharedPreferencesService,
         app: MaterialApp(initialRoute: '/settings', routes: {
@@ -324,6 +324,7 @@ void main() async {
 
   group('Settings for normal user', () {
     setUp(() async {
+      sharedPreferencesService.showAppBar = true;
       AuthService.instance = authService;
       await firestore
           .collection('users')
@@ -333,7 +334,7 @@ void main() async {
           .collection('users')
           .doc(userEmail)
           .set({'isAdmin': false});
-      myApp = myApp = TestApp(
+      myApp = TestApp(
         firestore: firestore,
         sps: sharedPreferencesService,
         app: MaterialApp(initialRoute: '/', routes: {
@@ -513,14 +514,49 @@ void main() async {
 
       //find the switchlisttiles and toogle them
       Finder switchFinder = find.byType(Switch);
-      expect(switchFinder, findsNWidgets(2));
-      for (int i = 0; i < 2; i++) {
+      expect(switchFinder, findsNWidgets(3));
+      for (int i = 0; i < 3; i++) {
         await tester.tap(switchFinder.at(i));
         await tester.pumpAndSettle();
       }
 
       expect(sharedPreferencesService.autoNextBand, true);
       expect(sharedPreferencesService.autoNextBandParent, true);
+      expect(sharedPreferencesService.showAppBar, false);
+    });
+
+    testWidgets("expect AppBar to exist by default",
+        (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = false;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //go to settings page
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppBar), findsOneWidget);
+    });
+
+    testWidgets("expect AppBar not to exist if showAppBar is set to false",
+        (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = false;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //go to settings page
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppBar), findsOneWidget);
+      //find showAppBarSwitch
+      Finder switchFinder = find.byKey(Key('showAppBarSwitch'));
+      expect(switchFinder, findsOneWidget);
+      await tester.tap(switchFinder);
+      await tester.pumpAndSettle();
+      expect(find.byType(AppBar), findsNothing);
     });
 
     testWidgets("default species is changed", (WidgetTester tester) async {
@@ -618,6 +654,7 @@ void main() async {
   group("Settings for admin user", () {
     FirebaseFirestore firestore = FakeFirebaseFirestore();
     setUp(() async {
+      sharedPreferencesService.showAppBar = true;
       AuthService.instance = authService;
       await firestore
           .collection('users')
@@ -627,7 +664,7 @@ void main() async {
           .collection('users')
           .doc(userEmail)
           .set({'isAdmin': false});
-      myApp = myApp = TestApp(
+      myApp = TestApp(
         firestore: firestore,
         sps: sharedPreferencesService,
         app: MaterialApp(initialRoute: '/settings', routes: {
@@ -702,6 +739,45 @@ void main() async {
       expect(find.text('Logout'), findsOneWidget);
       expect(find.text('Edit default settings'), findsOneWidget);
       expect(find.text('Manage species'), findsOneWidget);
+    });
+
+    testWidgets('Default settings saving add no extra route to stack',
+        (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = true;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //ensure that button is visible
+      final btn = find.text('Edit default settings');
+      expect(btn, findsOneWidget);
+
+      //ensure visible
+      await tester.ensureVisible(btn);
+      await tester.tap(btn);
+      await tester.pumpAndSettle();
+
+      // Check if the edit default settings page is displayed
+      expect(find.byType(EditDefaultSettings), findsOneWidget);
+
+      final saveButton = find.byKey(Key("saveButton"));
+      expect(saveButton, findsOneWidget);
+
+      //ensure visible
+      await tester.ensureVisible(saveButton);
+      await tester.tap(saveButton);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SettingsPage), findsOneWidget);
+
+      //Pop navigation stack
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SettingsPage), findsNothing);
+
+      //expect to be on the home page
+      expect(find.byType(MyHomePage), findsOneWidget);
     });
 
     testWidgets('Edit default settings button pressed',

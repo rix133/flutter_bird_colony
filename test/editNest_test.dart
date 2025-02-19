@@ -55,7 +55,7 @@ void main() {
     LocationService.instance = locationAccuracy10;
     sharedPreferencesService.defaultMeasures = [
       Measure.numeric(name: "weight", type: "chick"),
-      Measure.note()
+      Measure.numeric(name: "test", type: "egg", required: true),
     ];
     await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
     myApp = ChangeNotifierProvider<SharedPreferencesService>(
@@ -171,6 +171,65 @@ void main() {
           .get());
       expect(nestObj.parents?.length, 1);
       expect(nestObj.parents?[0].band, "BB1235");
+    });
+
+    testWidgets(
+        "will show no validation errors when egg with missing required measures is ringed",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Egg 1 intact 2 days old'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EditEgg), findsOneWidget);
+      //tap on save button
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      //expecte an alert dialog
+      expect(find.byType(AlertDialog), findsOneWidget);
+      //tap on save anyway
+      await tester.tap(find.text("save anyway"));
+      await tester.pumpAndSettle();
+
+      await tester.longPress(find.text('Egg 1 intact 2 days old'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EditBird), findsOneWidget);
+
+      //find the letters and numbers inputs
+      await tester.enterText(find.byKey(Key("band_letCntr")), "bb");
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(Key("band_numCntr")), "1235");
+      await tester.pumpAndSettle();
+
+      //save the bird
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      //show no validation errors
+      expect(find.byType(AlertDialog), findsNothing);
+
+      //expect to find the bird in firestore
+      var bird = await firestore.collection("Birds").doc("BB1235").get();
+      expect(bird.exists, true);
+      Bird newBird = Bird.fromDocSnapshot(bird);
+      expect(newBird.id, "BB1235");
+      expect(newBird.species, "Common gull");
+      expect(newBird.nest, "1");
+      expect(newBird.nest_year, nest.discover_date.year);
+      expect(newBird.ringed_as_chick, true);
+      expect(newBird.isChick(), true);
+
+      Egg eggObj = Egg.fromDocSnapshot(await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .get());
+      expect(eggObj.ring, "BB1235");
+      expect(eggObj.status.toString(), "hatched");
     });
 
     testWidgets("will add a bird when egg is long pressed",
@@ -308,6 +367,57 @@ void main() {
       expect(eggObj.ring, "BB1235");
       expect(eggObj.status.toString(), "hatched");
       expect(eggObj.discover_date, newBird.ringed_date);
+    });
+
+    testWidgets("will update ringed count when egg ringed",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //has Ringed(0) shown
+      expect(find.text("Ringed (0)"), findsOneWidget);
+
+      await tester.longPress(find.text('Egg 1 intact 2 days old'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EditBird), findsOneWidget);
+
+      //find the letters and numbers inputs
+      await tester.enterText(find.byKey(Key("band_letCntr")), "bb");
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(Key("band_numCntr")), "1235");
+      await tester.pumpAndSettle();
+
+      //save the bird
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+      //expect to be redirected to the nest
+      expect(find.byType(EditNest), findsOneWidget);
+      expect(find.text("Ringed (1)"), findsOneWidget,
+          reason: "Ringed count not updated after save");
+    });
+
+    testWidgets("will show ringed count when egg is ringed",
+        (WidgetTester tester) async {
+      await firestore.collection("Birds").doc("BB1235").set({
+        "id": "BB1235",
+        "species": "Common gull",
+        "nest": "1",
+        "nest_year": nest.discover_date.year,
+        "ringed_as_chick": true,
+        "ringed_date": DateTime.now().subtract(Duration(days: 1)),
+      });
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .update({"ring": "BB1235", "status": "hatched"});
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      //has Ringed(0) shown
+      expect(find.text("Ringed (1)"), findsOneWidget);
     });
   });
 

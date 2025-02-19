@@ -118,13 +118,15 @@ class _StatisticsState extends State<Statistics> {
 
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text("Some statistics", style: TextStyle(color: Colors.black)),
-          backgroundColor: Colors.amberAccent,
-        ),
-        body: Container(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          child: Column(
+        appBar: (sps?.showAppBar ?? true)
+            ? AppBar(
+                title: Text('Some statistics'),
+              )
+            : null,
+        body: SafeArea(
+            child: Container(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: Column(
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -208,7 +210,7 @@ class _StatisticsState extends State<Statistics> {
                   ],
                 ))
               ],
-        )));
+                ))));
   }
 
   void onChangedTimespan(value) {
@@ -222,9 +224,12 @@ class _StatisticsState extends State<Statistics> {
         .toList();
     if(selectedNests.length == 0){return SizedBox.shrink();}
     ListTile list_tile = ListTile(
+        leading: IconButton(
+            onPressed: () => showNestsonMap(selectedNests),
+            icon: Icon(Icons.map)),
         title: Text(species == "" ? "No species nests" : "$species nests"),
         trailing: Text(selectedNests.length.toString()),
-        onTap: () => showNestsonMap(selectedNests));
+        onTap: () => null);
 
     return list_tile;
   }

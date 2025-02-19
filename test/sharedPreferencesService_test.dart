@@ -78,6 +78,15 @@ void main() {
       expect(sharedPreferencesService.markerColorGroups, []);
     });
 
+    test('showAppBar should return the set value', () {
+      sharedPreferencesService.showAppBar = false;
+      expect(sharedPreferencesService.showAppBar, false);
+    });
+
+    test('showAppBar should return true if not set', () {
+      expect(sharedPreferencesService.showAppBar, true);
+    });
+
     test('autoNextBand should return the set value', () {
       sharedPreferencesService.autoNextBand = true;
       expect(sharedPreferencesService.autoNextBand, true);

@@ -294,19 +294,7 @@ class _EditBirdState extends State<EditBird> {
             },
             decoration: InputDecoration(
               labelText: "Letters",
-              labelStyle: TextStyle(color: Colors.yellow),
               hintText: "UA",
-              fillColor: Colors.orange,
-              focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: (BorderSide(color: Colors.indigo))),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25.0),
-                borderSide: BorderSide(
-                  color: Colors.deepOrange,
-                  width: 1.5,
-                ),
-              ),
             ),
           ),
         ),
@@ -329,19 +317,7 @@ class _EditBirdState extends State<EditBird> {
             textAlign: TextAlign.center,
             decoration: InputDecoration(
               labelText: "Numbers",
-              labelStyle: TextStyle(color: Colors.yellow),
               hintText: "12325",
-              fillColor: Colors.orange,
-              focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: (BorderSide(color: Colors.indigo))),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25.0),
-                borderSide: BorderSide(
-                  color: Colors.deepOrange,
-                  width: 1.5,
-                ),
-              ),
             ),
           ),
         ),
@@ -565,13 +541,18 @@ class _EditBirdState extends State<EditBird> {
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        body: Align(
-          alignment: Alignment.topCenter,
-          child: Container(
-              padding: EdgeInsets.fromLTRB(10, 50, 10, 15),
-              child: SingleChildScrollView(
-                child: Column(children: [
+          appBar: (sps?.showAppBar ?? true)
+              ? AppBar(
+                  title: Text('Edit Bird'),
+                )
+              : null,
+          body: SafeArea(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Container(
+                  padding: EdgeInsets.fromLTRB(10, 0, 10, 15),
+                  child: SingleChildScrollView(
+                    child: Column(children: [
                   GestureDetector(
                     onLongPress: () {
                       changeMetalBand();
@@ -613,6 +594,6 @@ class _EditBirdState extends State<EditBird> {
               )),
         ),
       ),
-    );
+        ));
   }
 }

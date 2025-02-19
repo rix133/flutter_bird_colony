@@ -216,13 +216,15 @@ class _EditExperimentState extends State<EditExperiment> {
   Widget build(BuildContext context) {
     bool spsOK = sps != null;
     return Scaffold(
-        appBar: AppBar(
-          title: Text("Edit Experiment", style: TextStyle(color: Colors.black)),
-          backgroundColor: Colors.redAccent,
-        ),
-        body: Container(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            child: SingleChildScrollView(child:Column(
+        appBar: (sps?.showAppBar ?? true)
+            ? AppBar(
+                title: Text('Edit Experiment'),
+              )
+            : null,
+        body: SafeArea(
+            child: Container(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: SingleChildScrollView(child:Column(
               children: [
                 spsOK ? getExperimentForm(context) : Container(),
                 SizedBox(height:15),
@@ -238,7 +240,7 @@ class _EditExperimentState extends State<EditExperiment> {
                     otherItems: otherCollection)
                 : Container(),
           ])),
-        ));
+        )));
   }
 
 }

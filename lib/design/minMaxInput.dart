@@ -33,9 +33,6 @@ class _MinMaxInputState extends State<MinMaxInput> {
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: "Min",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                  ),
                 ),
                 initialValue: widget.min?.toString() ?? "",
                 onChanged: widget.minFun)),
@@ -45,12 +42,7 @@ class _MinMaxInputState extends State<MinMaxInput> {
                 key: Key(widget.label + "Max"),
                 keyboardType: TextInputType.number,
                 initialValue: widget.max?.toString() ?? "",
-                decoration: InputDecoration(
-                  labelText: "Max",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                  ),
-                ),
+                decoration: InputDecoration(labelText: "Max"),
                 onChanged: widget.maxFun)),
       ]),
     );

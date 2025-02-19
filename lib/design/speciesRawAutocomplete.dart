@@ -92,19 +92,7 @@ class _SpeciesRawAutocompleteState extends State<SpeciesRawAutocomplete> {
           controller: textEditingController,
           decoration: InputDecoration(
             labelText: widget.labelTxt,
-            labelStyle: TextStyle(color: widget.labelColor),
             hintText: "enter species",
-            fillColor: widget.bgColor,
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
-                borderSide: (BorderSide(color: Colors.indigo))),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(25.0),
-              borderSide: BorderSide(
-                color: widget.borderColor,
-                width: 1.5,
-              ),
-            ),
           ),
           focusNode: focusNode,
           onFieldSubmitted: (String value) {

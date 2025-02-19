@@ -243,24 +243,8 @@ class Measure implements Comparable<Measure> {
           decoration: InputDecoration(
             labelText: name +
                 (unit == "" ? "" : " (" + unit + ")" + (required ? "*" : "")),
-            labelStyle: TextStyle(color: Colors.yellow),
             hintText: unit,
             fillColor: (required && value.isEmpty) ? Colors.red : Colors.orange,
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(25),
-              borderSide: (BorderSide(
-                  color: Colors.indigo
-              ))
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(25.0),
-              borderSide: BorderSide(
-                color: (required && value.isEmpty)
-                    ? Colors.red
-                    : Colors.deepOrange,
-                width: 1.5,
-              ),
-            ),
           ),
         ));
   }
@@ -358,22 +342,12 @@ class Measure implements Comparable<Measure> {
             },
             decoration: InputDecoration(
               labelText: label,
-              labelStyle: TextStyle(color: Colors.yellow),
               hintText: value,
                   fillColor:
                       (required && value.isEmpty) ? Colors.red : Colors.orange,
                   focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25),
                   borderSide: (BorderSide(color: Colors.indigo))),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25.0),
-                borderSide: BorderSide(
-                      color: (required && value.isEmpty)
-                          ? Colors.red
-                          : Colors.deepOrange,
-                      width: 1.5,
-                ),
-              ),
             ),
           ),
         ),

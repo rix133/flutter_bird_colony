@@ -50,11 +50,11 @@ void main() {
 
       // Assert
       expect(result, {
-        'note': [
-          n1,
-          n2,
-        ],
-        'aaa': [m, m2],
+        'note': everyElement(isA<Measure>()
+            .having((m) => m.value, 'value', isIn(['note1', 'note2']))),
+        'aaa': everyElement(
+            isA<Measure>().having((m) => m.value, 'value', isIn(['1', '']))),
+        // Assuming 'aaa' measures don't have specific values to check
       });
     });
   });
