@@ -31,6 +31,17 @@ class FSItemMixin {
         .catchError((error) => UpdateResult.error(message: error.toString()));
   }
 
+  String? getCellKey(CellValue cell) {
+    if (cell is TextCellValue) {
+      return cell.value.text;
+    } else if (cell is DoubleCellValue) {
+      return cell.value.toString();
+    } else if (cell is IntCellValue) {
+      return cell.value.toString();
+    }
+    return "";
+  }
+
   Future<UpdateResult> saveChangeLog(
       FirestoreItem item, CollectionReference to) async {
     return (to
@@ -87,10 +98,10 @@ class FSItemMixin {
       List<List<CellValue>> sortedData = [uniqueHeaders.toList()];
       for (var i = 0; i < data.length; i++) {
         Map<String, CellValue> rowMap = Map.fromIterables(
-            headers[i].map((h) => h.value.text ?? ""), data[i]);
+            headers[i].map((h) => getCellKey(h) ?? "empty"), data[i]);
         List<CellValue> sortedRow = uniqueHeaders
-            .map((h) => rowMap.containsKey(h.value)
-                ? rowMap[h.value]!
+            .map((h) => rowMap.containsKey(getCellKey(h))
+                ? rowMap[getCellKey(h)]!
                 : TextCellValue(""))
             .toList();
         sortedData.add(sortedRow);
@@ -149,7 +160,6 @@ class FSItemMixin {
       {DateTime? start, bool test = false}) async {
     //list to hold all eggs
     List<Egg> eggs = [];
-
     Map<String, dynamic> sortedDataMap =
         await createSortedData(items, firestore);
     if (sortedDataMap['sortedData'].isEmpty) {
