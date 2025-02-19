@@ -40,7 +40,7 @@ def getMapsApiKey() {
 
 android {
     ndkVersion = "25.1.8937393"
-    compileSdkVersion 35
+    compileSdkVersion 34
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -51,7 +51,7 @@ android {
         applicationId "ee.ut.adapt.flutter_bird_colony"
         minSdkVersion 23
         multiDexEnabled=true
-        targetSdkVersion 35
+        targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         def mapsApiKey = getMapsApiKey()
