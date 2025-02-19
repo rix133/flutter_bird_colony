@@ -311,7 +311,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
           .map((e) => e.getEggMass())
           .fold(0.0, (a, b) => a + b);
     }
-    final firstApril = DateTime(DateTime.now().year, 4, 1);
+    final firstApril = DateTime(first_egg?.year ?? 1900, 4, 1);
     List<CellValue> baseItems = [
       TextCellValue(name),
       DoubleCellValue(getAccuracy()),

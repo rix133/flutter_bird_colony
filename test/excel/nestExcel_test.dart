@@ -42,6 +42,23 @@ void main() {
       expect((rows[0][15] as DoubleCellValue).value, 0.0);
     });
 
+    test('toExcelRows should return correct first april days for other years',
+        () async {
+      final nest = Nest(
+        id: "123",
+        discover_date: DateTime(2022, 4, 4),
+        last_modified: DateTime(2022, 7, 8),
+        first_egg: DateTime(2022, 4, 6),
+        accuracy: 'high',
+        coordinates: GeoPoint(0, 0),
+        responsible: 'John Doe',
+        measures: [],
+      );
+
+      final rows = await nest.toExcelRows();
+      expect((rows[0][9] as IntCellValue).value, 6);
+    });
+
     test('toExcelRowHeader should return correct headers', () {
       final nest = Nest(
         id: "123",
