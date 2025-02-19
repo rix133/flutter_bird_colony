@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bird_colony/models/firebaseOptionsSelector.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,7 +12,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import 'package:restart_app/restart_app.dart';
-//import 'package:universal_html/html.dart' as html;
+import 'package:universal_html/html.dart' as html;
 
 import '../../models/markerColorGroup.dart';
 import 'listMarkerColorGroups.dart';
@@ -744,7 +745,11 @@ class _SettingsPageState extends State<SettingsPage> {
                       onPressed: () async {
                         Navigator.of(context).pop();
                         if (_colonyHasChanged) {
-                          await Restart.restartApp();
+                          if (kIsWeb) {
+                            html.window.location.reload();
+                          } else {
+                            await Restart.restartApp();
+                          }
                         }
                       },
                     ),
