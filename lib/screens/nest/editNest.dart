@@ -350,15 +350,15 @@ class _EditNestState extends State<EditNest> {
                   },
                   child: Text(b.name),
                   style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(Colors.white60),
+                    backgroundColor: WidgetStateProperty.all(Colors.white60),
                   ),
                 );
               }).toList(),
               (_parents?.length == 0 || _parents == null)
                   ? ElevatedButton.icon(
                       style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all(
-                              _getParentButtonColor())),
+                          backgroundColor:
+                              WidgetStateProperty.all(_getParentButtonColor())),
                       onPressed: addParent,
                       icon: Icon(Icons.add),
                       label: Text("add parent"))
@@ -367,7 +367,7 @@ class _EditNestState extends State<EditNest> {
                       onPressed: addParent,
                       style: ButtonStyle(
                         backgroundColor:
-                            MaterialStateProperty.all<Color>(Colors.white60),
+                            WidgetStateProperty.all<Color>(Colors.white60),
                       ),
                     ),
             ],
