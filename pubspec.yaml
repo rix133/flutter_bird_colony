@@ -27,7 +27,9 @@ dependencies:
   cloud_firestore: ^5.6.5
   firebase_auth: ^5.5.1
   firebase_core: ^3.12.1
+  firebase_storage: ^12.4.4
   google_sign_in: ^6.3.0
+  image_picker: ^1.1.2
   cupertino_icons: ^1.0.8
   excel: ^4.0.6
   flutter_colorpicker: ^1.0.3

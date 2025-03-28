@@ -786,6 +786,43 @@ void main() {
     });
   });
 
+  group("upload image", () {
+    setUp(() async {
+      //reset the database
+      nest.accuracy = "3.22m";
+      await firestore.collection('recent').doc("nest").set({"id": "1"});
+      await nest.save(firestore);
+      egg.measures = [];
+      //add egg to nest
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .set(egg.toJson());
+
+      myApp = await getMyApp();
+    });
+
+    tearDown(() async {
+      //delete nest
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .delete();
+    });
+
+    testWidgets("will show image dialog", (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.camera_alt));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+    });
+  });
+
   group("save undefined species", () {
     setUp(() async {
       //reset the database

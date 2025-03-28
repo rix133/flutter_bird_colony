@@ -17,7 +17,7 @@ import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
-
+import 'optionsNestImage.dart';
 
 class EditNest extends StatefulWidget {
   final FirebaseFirestore firestore;
@@ -134,8 +134,9 @@ class _EditNestState extends State<EditNest> {
       child:
         ElevatedButton.icon(
         style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all(accuracyDiff < 0 ? Colors.green : Colors.red)),
-        onPressed: () => updateFun(),
+                backgroundColor: WidgetStateProperty.all(
+                    accuracyDiff < 0 ? Colors.green : Colors.red)),
+            onPressed: () => updateFun(),
         icon: Icon(
           Icons.my_location,
           color: Colors.black87,
@@ -224,8 +225,7 @@ class _EditNestState extends State<EditNest> {
         style: TextStyle(fontSize: 10),
       ),
       ElevatedButton.icon(
-          style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.grey)),
+          style: ButtonStyle(backgroundColor: WidgetStatePropertyAll(Colors.grey)),
           onPressed: () {
               Egg egg = Egg(
                   discover_date: DateTime.now(),
@@ -400,25 +400,54 @@ class _EditNestState extends State<EditNest> {
   GestureDetector getTitleRow() {
     return GestureDetector(
       onLongPress: _addNewExperiment,
-    child:
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-      Text(
-        nest!.name,
-        style: TextStyle(fontSize: 30, fontStyle: FontStyle.italic),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            padding: EdgeInsets.all(5),
+            iconSize: 40,
+            icon: const Icon(Icons.camera_alt),
+            onPressed: () {
+              if (nest != null && nests != null) {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      content: NestImageOptions(
+                        nestDoc: nests!.doc(nest!.name),
+                        firestore: widget.firestore,
+                      ),
+                    );
+                  },
+                );
+              }
+            },
+          ),
+          const SizedBox(width: 5),
+          Text(
+            nest!.name,
+            style: const TextStyle(fontSize: 30, fontStyle: FontStyle.italic),
+          ),
+          const SizedBox(width: 5),
+          Column(
+            children: [
+              Text(
+                nest!.checkedStr(),
+                style: TextStyle(
+                  fontSize: 14.0,
+                  color: nest!.chekedAgo().inDays == 0
+                      ? Colors.green
+                      : Colors.yellow.shade700,
+                ),
+              ),
+              const Text("(long press to add experiment)",
+                  style: TextStyle(fontSize: 10)),
+            ],
+          ),
+        ],
       ),
-     SizedBox(width: 5,),
-     Column(children: [
-    Text(
-    nest!.checkedStr(),
-    style: TextStyle(
-    fontSize: 14.0,
-    color: nest!.chekedAgo().inDays == 0
-    ? Colors.green
-        : Colors.yellow.shade700),
-    ),
-    Text("(long press to add experiment)", style: TextStyle(fontSize: 10))])]));
+    );
   }
-
 
   Widget build(BuildContext context) {
     if (nest == null) {
