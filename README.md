@@ -66,7 +66,7 @@ from [Flutter docs](https://docs.flutter.dev/deployment/android).
 
 Saving to Excel requires you set up a query that requires a COLLECTION_GROUP_ASC index for collection egg and field discover_date. 
 
-For firestore rules we recomend something like this that allows only selected users:
+For firestore rules we recommend something like this that allows only selected users:
 ``` 
 rules_version = '2';
 service cloud.firestore {
@@ -87,6 +87,18 @@ service cloud.firestore {
 }
 ```
 
+To enable nest photo upload you need to set up Firebase Storage and add the storage rules.
+
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /nest_images/{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
 
 
 ## Tests
