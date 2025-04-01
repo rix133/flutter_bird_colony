@@ -8,6 +8,7 @@ import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
 import 'package:flutter_bird_colony/models/markerColorGroup.dart';
 import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -202,7 +203,7 @@ class DefaultSettings implements FirestoreItem {
     ]);
   }
 
-  List<Widget> getDefaultSettingsForm(
+  List<Widget> getDefaultSettingsForm(AuthService authService,
       BuildContext context, Function setState, SharedPreferencesService? sps) {
     return ([
       SizedBox(height: 10),
@@ -279,7 +280,7 @@ class DefaultSettings implements FirestoreItem {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => EditDefaultMap(),
+                builder: (context) => EditDefaultMap(auth: authService),
               ),
             ).then((value) {
               if (value is CameraPosition) {

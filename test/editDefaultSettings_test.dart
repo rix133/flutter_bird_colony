@@ -22,14 +22,15 @@ void main() {
   final userEmail = "test@example.com";
 
   setUpAll(() async {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
     await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
     myApp = ChangeNotifierProvider<SharedPreferencesService>(
         create: (_) => sharedPreferencesService,
         child: MaterialApp(
-            home: EditDefaultSettings(firestore: firestore),
+            home: EditDefaultSettings(firestore: firestore, auth: authService),
             routes: {
-              '/settings': (context) => SettingsPage(firestore: firestore),
+              '/settings': (context) =>
+                  SettingsPage(firestore: firestore, auth: authService),
             }));
   });
 

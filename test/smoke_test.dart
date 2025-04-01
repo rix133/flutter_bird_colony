@@ -44,7 +44,8 @@ void main() {
           }
           // Other routes...
           return MaterialPageRoute(
-            builder: (context) => MyHomePage(title: "Nest app"),
+            builder: (context) =>
+                MyHomePage(title: "Nest app", auth: authService),
           );
         },
       ),
@@ -52,7 +53,7 @@ void main() {
   }
 
   setUpAll(() async {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
   });
 
   testWidgets('Smoke test', (WidgetTester tester) async {

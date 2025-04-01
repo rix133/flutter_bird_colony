@@ -9,13 +9,18 @@ import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/screens/listMeasures.dart';
 import 'package:flutter_bird_colony/screens/settings/listMarkerColorGroups.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:provider/provider.dart';
 
 class EditDefaultSettings extends StatefulWidget {
   final FirebaseFirestore firestore;
-  const EditDefaultSettings({Key? key, required this.firestore})  : super(key: key);
+  final AuthService auth;
 
-@override
+  const EditDefaultSettings(
+      {Key? key, required this.firestore, required this.auth})
+      : super(key: key);
+
+  @override
 State<EditDefaultSettings> createState() => _EditDefaultSettingsState();
 }
 
@@ -82,8 +87,9 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
                 padding: EdgeInsets.all(16.0),
                 child: SingleChildScrollView(
                     child: Column(children: [
-    ...defaultSettings.getDefaultSettingsForm(context, setState, sps),
-              ListMeasures(
+                  ...defaultSettings.getDefaultSettingsForm(
+                      widget.auth, context, setState, sps),
+                  ListMeasures(
                   measures: defaultSettings.measures,
                   onMeasuresUpdated: (measures) {
                     setState(() {

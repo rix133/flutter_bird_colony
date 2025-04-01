@@ -25,7 +25,7 @@ void main() async {
   final userEmail = "test@example.com";
 
   group("Login flow messages", () {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
     setUp(() async {
       authService.isLoggedIn = false;
       sharedPreferencesService.isAdmin = false;
@@ -41,8 +41,9 @@ void main() async {
         firestore: firestore,
         sps: sharedPreferencesService,
         app: MaterialApp(initialRoute: '/settings', routes: {
-          '/': (context) => MyHomePage(title: "Nest app"),
-          '/settings': (context) => SettingsPage(firestore: firestore),
+          '/': (context) => MyHomePage(title: "Nest app", auth: authService),
+          '/settings': (context) =>
+              SettingsPage(firestore: firestore, auth: authService),
         }),
       );
     });
@@ -325,7 +326,7 @@ void main() async {
   group('Settings for normal user', () {
     setUp(() async {
       sharedPreferencesService.showAppBar = true;
-      AuthService.instance = authService;
+      //AuthService.instance = authService;
       await firestore
           .collection('users')
           .doc(adminEmail)
@@ -338,8 +339,9 @@ void main() async {
         firestore: firestore,
         sps: sharedPreferencesService,
         app: MaterialApp(initialRoute: '/', routes: {
-          '/': (context) => MyHomePage(title: "Nest app"),
-          '/settings': (context) => SettingsPage(firestore: firestore),
+          '/': (context) => MyHomePage(title: "Nest app", auth: authService),
+          '/settings': (context) =>
+              SettingsPage(firestore: firestore, auth: authService),
         }),
       );
     });
@@ -655,7 +657,7 @@ void main() async {
     FirebaseFirestore firestore = FakeFirebaseFirestore();
     setUp(() async {
       sharedPreferencesService.showAppBar = true;
-      AuthService.instance = authService;
+      //AuthService.instance = authService;
       await firestore
           .collection('users')
           .doc(adminEmail)
@@ -668,11 +670,12 @@ void main() async {
         firestore: firestore,
         sps: sharedPreferencesService,
         app: MaterialApp(initialRoute: '/settings', routes: {
-          '/': (context) => MyHomePage(title: "Nest app"),
-          '/settings': (context) => SettingsPage(firestore: firestore),
+          '/': (context) => MyHomePage(title: "Nest app", auth: authService),
+          '/settings': (context) =>
+              SettingsPage(firestore: firestore, auth: authService),
           '/listSpecies': (context) => ListSpecies(firestore: firestore),
           '/editDefaultSettings': (context) =>
-              EditDefaultSettings(firestore: firestore),
+              EditDefaultSettings(firestore: firestore, auth: authService),
         }),
       );
     });

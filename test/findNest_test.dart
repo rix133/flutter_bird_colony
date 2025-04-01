@@ -38,7 +38,7 @@ void main() {
   );
 
   setUpAll(() async {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
     LocationService.instance = locationAccuracy10;
 
 
@@ -48,9 +48,10 @@ void main() {
       child: MaterialApp(
           initialRoute: '/',
           routes: {
-            '/': (context) => MyHomePage(title: "Nest app"),
-            '/settings': (context) => SettingsPage(firestore: firestore),
-            '/editNest':(context)=>EditNest(firestore: firestore),
+        '/': (context) => MyHomePage(title: "Nest app", auth: authService),
+        '/settings': (context) =>
+            SettingsPage(firestore: firestore, auth: authService),
+        '/editNest':(context)=>EditNest(firestore: firestore),
             '/findNest':(context)=>FindNest(firestore: firestore),
           }
       ),

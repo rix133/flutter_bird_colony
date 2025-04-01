@@ -19,17 +19,20 @@ import 'listMarkerColorGroups.dart';
 
 class SettingsPage extends StatefulWidget {
   final FirebaseFirestore firestore;
+  final AuthService auth;
   final testApp;
 
   const SettingsPage(
-      {super.key, required this.firestore, this.testApp = false});
+      {super.key,
+      required this.firestore,
+      required this.auth,
+      this.testApp = false});
 
   @override
   _SettingsPageState createState() => _SettingsPageState();
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final _auth = AuthService.instance;
   String? _userName;
   String? _userEmail;
   String? _userPassword;
@@ -50,7 +53,7 @@ class _SettingsPageState extends State<SettingsPage> {
       setState(() {});
     });
     sps = Provider.of<SharedPreferencesService>(context, listen: false);
-    _auth.isUserSignedIn().then((value) => setState(() {
+    widget.auth.isUserSignedIn().then((value) => setState(() {
           _isLoggedIn = value;
         }));
     _userName = sps!.userName;
@@ -182,8 +185,8 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<User?> signInWithNewEmail() async {
     if (_userEmail == null || _userPassword == null) return null;
     try {
-      UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential = await widget.auth
+          .createUserWithEmailAndPassword(
               email: _userEmail, password: _userPassword);
       userCredential.user!.updateDisplayName(_userEmail!.split('@').first);
       return userCredential.user;
@@ -237,7 +240,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<User?> signInWithExistingEmail() async {
     try {
-      UserCredential userCredential = await AuthService.instance
+      UserCredential userCredential = await widget.auth
           .signInWithEmailAndPassword(
               email: _userEmail ?? '', password: _userPassword ?? '');
       userCredential.user!.updateDisplayName(_userEmail!.split('@').first);
@@ -264,7 +267,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ? null
                             : () {
                                 Navigator.pop(context);
-                                AuthService.instance
+                                widget.auth
                                     .sendPasswordResetEmail(_userEmail ?? '');
                               },
                         child: Text('Reset password'),
@@ -287,7 +290,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<User?> signInWithGoogle() async {
     try {
       // Trigger the authentication flow
-      final GoogleSignIn googleSignIn = _auth.getGoogleSignIn();
+      final GoogleSignIn googleSignIn = widget.auth.getGoogleSignIn();
       GoogleSignInAccount? googleUser = await googleSignIn.signInSilently();
 
       if (googleUser == null) {
@@ -306,13 +309,13 @@ class _SettingsPageState extends State<SettingsPage> {
       );
 
       // Once signed in, return the UserCredential
-      return (await _auth.signInWithCredential(credential)).user;
+      return (await widget.auth.signInWithCredential(credential)).user;
     } catch (e) {
       print('Sign in failed: $e');
       print(
           'Likely SHA-1 fingerprint is missing from https://console.cloud.google.com/apis/credentials?project=flutter_bird_colony');
       //sign out from google
-      await _auth.googleSignOut();
+      await widget.auth.googleSignOut();
       // Create a new credential
 
       return null;
@@ -413,7 +416,9 @@ class _SettingsPageState extends State<SettingsPage> {
             Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
             return true;
           } else {
-            await _auth.googleSignOut().then((value) => _auth.signOut());
+            await widget.auth
+                .googleSignOut()
+                .then((value) => widget.auth.signOut());
             reset();
             showDialog(
               context: context,
@@ -481,7 +486,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   _logout() async {
-    await _auth.googleSignOut().then((value) => _auth.signOut());
+    await widget.auth.googleSignOut().then((value) => widget.auth.signOut());
     reset();
   }
 
@@ -744,6 +749,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                           setState(() {
                                             _selectedColony = newValue;
                                             _colonyHasChanged = true;
+                                            sps?.colonyName = newValue;
                                           });
                                         }
                                       },

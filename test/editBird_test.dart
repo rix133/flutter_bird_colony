@@ -116,7 +116,7 @@ void main() {
       species: 'Common gull');
 
   setUpAll(() async {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
     LocationService.instance = locationAccuracy10;
 
 
@@ -142,7 +142,8 @@ void main() {
           }
           // Other routes...
           return MaterialPageRoute(
-            builder: (context) => MyHomePage(title: "Nest app"),
+            builder: (context) =>
+                MyHomePage(title: "Nest app", auth: authService),
           );
         },
       ),

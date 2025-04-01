@@ -81,7 +81,7 @@ void main() {
   late TestApp myApp;
 
   setUpAll(() async {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
     LocationService.instance = locationAccuracy10;
     //add 2 common gull nest to firestore nests
     await nest3.save(firestore);
@@ -93,7 +93,8 @@ void main() {
       sps: sharedPreferencesService,
       app: MaterialApp(initialRoute: '/statistics', routes: {
         '/statistics': (context) => Statistics(firestore: firestore),
-        '/mapNests': (context) => MapNests(firestore: firestore),
+        '/mapNests': (context) =>
+            MapNests(firestore: firestore, auth: authService),
       }),
     );
   });

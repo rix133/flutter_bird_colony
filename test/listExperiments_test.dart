@@ -105,7 +105,7 @@ void main() {
       species: 'Common gull');
   group('Navigation and loading', () {
     setUpAll(() async {
-      AuthService.instance = authService;
+      //AuthService.instance = authService;
       LocationService.instance = locationAccuracy10;
 
       await firestore.collection('recent').doc("nest").set({"id": "2"});
@@ -145,11 +145,12 @@ void main() {
         firestore: firestore,
         sps: sharedPreferencesService,
         app: MaterialApp(initialRoute: '/listExperiments', routes: {
-          '/': (context) => MyHomePage(title: "Nest app"),
+          '/': (context) => MyHomePage(title: "Nest app", auth: authService),
           '/listExperiments': (context) =>
               ListExperiments(firestore: firestore),
           '/editExperiment': (context) => EditExperiment(firestore: firestore),
-          '/mapNests': (context) => MapNests(firestore: firestore),
+          '/mapNests': (context) =>
+              MapNests(firestore: firestore, auth: authService),
         }),
       );
     });
@@ -223,7 +224,7 @@ void main() {
 
   group('Filtering', () {
     setUpAll(() async {
-      AuthService.instance = authService;
+      //AuthService.instance = authService;
       LocationService.instance = locationAccuracy10;
 
       await firestore.collection('recent').doc("nest").set({"id": "2"});
@@ -273,11 +274,12 @@ void main() {
         firestore: firestore,
         sps: sharedPreferencesService,
         app: MaterialApp(initialRoute: '/listExperiments', routes: {
-          '/': (context) => MyHomePage(title: "Nest app"),
+          '/': (context) => MyHomePage(title: "Nest app", auth: authService),
           '/listExperiments': (context) =>
               ListExperiments(firestore: firestore),
           '/editExperiment': (context) => EditExperiment(firestore: firestore),
-          '/mapNests': (context) => MapNests(firestore: firestore),
+          '/mapNests': (context) =>
+              MapNests(firestore: firestore, auth: authService),
         }),
       );
     });
@@ -324,7 +326,7 @@ void main() {
 
   group('Exporting', () {
     setUpAll(() async {
-      AuthService.instance = authService;
+      //AuthService.instance = authService;
       LocationService.instance = locationAccuracy10;
 
       await firestore.collection('recent').doc("nest").set({"id": "2"});
@@ -364,11 +366,12 @@ void main() {
         firestore: firestore,
         sps: sharedPreferencesService,
         app: MaterialApp(initialRoute: '/listExperiments', routes: {
-          '/': (context) => MyHomePage(title: "Nest app"),
+          '/': (context) => MyHomePage(title: "Nest app", auth: authService),
           '/listExperiments': (context) =>
               ListExperiments(firestore: firestore),
           '/editExperiment': (context) => EditExperiment(firestore: firestore),
-          '/mapNests': (context) => MapNests(firestore: firestore),
+          '/mapNests': (context) =>
+              MapNests(firestore: firestore, auth: authService),
         }),
       );
     });

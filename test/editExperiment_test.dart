@@ -147,13 +147,15 @@ void main() {
           }
           if (settings.name == '/mapNests') {
             return MaterialPageRoute(
-              builder: (context) => MapNests(firestore: firestore),
+              builder: (context) =>
+                  MapNests(firestore: firestore, auth: authService),
               settings: settings,
             );
           }
           // Other routes...
           return MaterialPageRoute(
-            builder: (context) => MyHomePage(title: "Nest app"),
+            builder: (context) =>
+                MyHomePage(title: "Nest app", auth: authService),
           );
         },
       ),
@@ -162,7 +164,7 @@ void main() {
 
   group("nest experiment options", () {
     setUpAll(() async {
-      AuthService.instance = authService;
+      //AuthService.instance = authService;
       LocationService.instance = locationAccuracy10;
 
       await firestore.collection('recent').doc("nest").set({"id": "2"});
@@ -615,7 +617,7 @@ void main() {
   });
   group("bird experiment options", () {
     setUpAll(() async {
-      AuthService.instance = authService;
+      //AuthService.instance = authService;
       LocationService.instance = locationAccuracy10;
 
       await firestore.collection('recent').doc("nest").set({"id": "2"});

@@ -24,7 +24,7 @@ void main() {
   late CollectionReference speciesCollection;
 
   setUpAll(() async {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
     speciesCollection =
         firestore.collection('settings').doc("default").collection("species");
     await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
@@ -55,7 +55,8 @@ void main() {
           }
           // Other routes...
           return MaterialPageRoute(
-            builder: (context) => MyHomePage(title: "Nest app"),
+            builder: (context) =>
+                MyHomePage(title: "Nest app", auth: authService),
           );
         },
       ),

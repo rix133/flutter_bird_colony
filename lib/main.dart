@@ -21,6 +21,7 @@ import 'package:flutter_bird_colony/screens/statistics.dart';
 import 'package:flutter_bird_colony/services/birdsService.dart';
 import 'package:flutter_bird_colony/services/experimentsService.dart';
 import 'package:flutter_bird_colony/services/speciesService.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -40,18 +41,23 @@ String appName = 'unknown';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
-  const defaultKey = 'testing';
 
- await FirebaseOptionsSelector.initialize(defaultKey, {
-    defaultKey: manageBirdColony.DefaultFirebaseOptions.currentPlatform,
+  final sharedPreferences = await SharedPreferences.getInstance();
+  String colonyName = sharedPreferences.getString('colonyName') ?? 'testing';
+
+  firebaseApp = await FirebaseOptionsSelector.initialize(colonyName, {
+    "testing": manageBirdColony.DefaultFirebaseOptions.currentPlatform,
     "Kakrarahu": kakrarahuColony.DefaultFirebaseOptions.currentPlatform,
     "RedSquirrel": redSquirrelColony.DefaultFirebaseOptions.currentPlatform,
   });
   appName = await FirebaseOptionsSelector.getCurrentSelection();
-  final sharedPreferences = await SharedPreferences.getInstance();
-  final firestore = FirebaseFirestore.instance;
 
-  FirebaseAuth.instance.authStateChanges().listen((User? user) {
+  final firestore = FirebaseFirestore.instanceFor(app: firebaseApp);
+  final auth = FirebaseAuth.instanceFor(app: firebaseApp);
+
+  final authService = AuthService(auth);
+
+  auth.authStateChanges().listen((User? user) {
     handleAuthStateChanges(user, sharedPreferences);
   });
 
@@ -70,7 +76,7 @@ void main() async{
         ChangeNotifierProvider(create: (_) => ExperimentsService(firestore)),
         ChangeNotifierProvider(create: (_) => SpeciesService(firestore)),
       ],
-      child: MyApp(firestore: firestore),
+      child: MyApp(firestore: firestore, authService: authService),
     ),
   );
 }
@@ -89,7 +95,10 @@ void handleAuthStateChanges(User? user, SharedPreferences sharedPreferences) {
 
 class MyApp extends StatelessWidget {
   final FirebaseFirestore firestore;
-  MyApp({Key? key, required this.firestore}) : super(key: key);
+  final AuthService authService;
+
+  MyApp({Key? key, required this.firestore, required this.authService})
+      : super(key: key);
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -97,22 +106,27 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context)=>MyHomePage(title: appName),
+        '/': (context) => MyHomePage(title: appName, auth: authService),
         '/editEgg': (context)=>EditEgg(firestore: firestore),
         '/createNest':(context)=> CreateNest(firestore: firestore),
         '/editNest':(context)=>  EditNest(firestore: firestore),
-        '/settings': (context) =>
-            SettingsPage(firestore: firestore, testApp: appName == 'testing'),
-        '/mapNests':(context)=> MapNests(firestore: firestore),
+        '/settings': (context) => SettingsPage(
+            firestore: firestore,
+            auth: authService,
+            testApp: appName == 'testing'),
+        '/mapNests': (context) =>
+            MapNests(firestore: firestore, auth: authService),
         '/statistics':(context)=> Statistics(firestore: firestore),
-        '/mapCreateNest':(context)=>MapCreateNest(firestore: firestore),
+        '/mapCreateNest': (context) =>
+            MapCreateNest(firestore: firestore, auth: authService),
         '/findNest':(context)=>FindNest(firestore: firestore),
         '/editBird':(context)=>EditBird(firestore: firestore),
         '/listBirds':(context)=>ListBirds(firestore: firestore),
         '/listExperiments':(context)=>ListExperiments(firestore: firestore),
         '/listNests':(context)=>ListNests(firestore: firestore),
         '/editExperiment':(context)=>EditExperiment(firestore: firestore),
-        '/editDefaultSettings':(context)=>EditDefaultSettings(firestore: firestore),
+        '/editDefaultSettings': (context) =>
+            EditDefaultSettings(firestore: firestore, auth: authService),
         '/listDatas':(context)=>ListDatas(firestore: firestore),
         '/listSpecies':(context)=>ListSpecies(firestore: firestore),
         '/editSpecies':(context)=>EditSpecies(firestore: firestore),

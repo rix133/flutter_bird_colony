@@ -2,14 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
+  final FirebaseAuth _auth;
 
-  static AuthService instance = AuthService();
-
-
+  AuthService(this._auth);
 
   Future<bool> isUserSignedIn() async {
     // Check if user is signed in with email
-    final User? firebaseUser = FirebaseAuth.instance.currentUser;
+    final User? firebaseUser = _auth.currentUser;
     if (firebaseUser != null) {
       return true;
     }
@@ -18,36 +17,34 @@ class AuthService {
   }
 
   String? userName() {
-    return FirebaseAuth.instance.currentUser?.displayName;
+    return _auth.currentUser?.displayName;
   }
 
   Future<UserCredential> createUserWithEmailAndPassword(
       {String? email, String? password}) async {
     if (email == null || password == null)
       return throw (FirebaseAuthException(code: 'invalid-email'));
-    return await FirebaseAuth.instance
-        .createUserWithEmailAndPassword(email: email, password: password);
+    return await _auth.createUserWithEmailAndPassword(email: email, password: password);
   }
 
   Future<UserCredential> signInWithEmailAndPassword(
       {String? email, String? password}) async {
     if (email == null || password == null)
       return throw (FirebaseAuthException(code: 'invalid-email'));
-    return await FirebaseAuth.instance
-        .signInWithEmailAndPassword(email: email, password: password);
+    return await _auth.signInWithEmailAndPassword(email: email, password: password);
   }
 
   Future<UserCredential> signInWithCredential(
       OAuthCredential credential) async {
-    return await FirebaseAuth.instance.signInWithCredential(credential);
+    return await _auth.signInWithCredential(credential);
   }
 
   Future<void> sendPasswordResetEmail(String email) {
-    return (FirebaseAuth.instance.sendPasswordResetEmail(email: email));
+    return (_auth.sendPasswordResetEmail(email: email));
   }
 
   Future<void> signOut() async {
-    await FirebaseAuth.instance.signOut();
+    await _auth.signOut();
   }
 
   GoogleSignIn getGoogleSignIn() {

@@ -109,7 +109,7 @@ void main() {
       species: 'Common gull');
 
   setUpAll(() async {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
     LocationService.instance = locationAccuracy10;
 
     await firestore.collection('recent').doc("nest").set({"id": "2"});
@@ -134,10 +134,11 @@ void main() {
       firestore: firestore,
       sps: sharedPreferencesService,
       app: MaterialApp(initialRoute: '/listNests', routes: {
-        '/': (context) => MyHomePage(title: "Nest app"),
-            '/listNests': (context) => ListNests(firestore: firestore),
+        '/': (context) => MyHomePage(title: "Nest app", auth: authService),
+        '/listNests': (context) => ListNests(firestore: firestore),
             '/editNest': (context) => EditNest(firestore: firestore),
-        '/mapNests': (context) => MapNests(firestore: firestore),
+        '/mapNests': (context) =>
+            MapNests(firestore: firestore, auth: authService),
       }
       ),
     );

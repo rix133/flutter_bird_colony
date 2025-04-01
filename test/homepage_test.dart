@@ -20,16 +20,18 @@ void main() {
   late Widget myApp;
 
   setUpAll(() {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
     FirebaseFirestore firestore = FakeFirebaseFirestore();
     myApp = ChangeNotifierProvider<SharedPreferencesService>(
       create: (_) => sharedPreferencesService,
       child: MaterialApp(
           initialRoute: '/',
           routes: {
-        '/': (context) => MyHomePage(title: "Bird Colony nests"),
-        '/settings': (context) => SettingsPage(firestore: firestore),
-          }
+        '/': (context) =>
+            MyHomePage(title: "Bird Colony nests", auth: authService),
+        '/settings': (context) =>
+            SettingsPage(firestore: firestore, auth: authService),
+      }
       ),
     );
   });

@@ -83,8 +83,7 @@ void main() {
           } else if (settings.name == '/mapNests') {
             return MaterialPageRoute(
               builder: (context) => MapNests(
-                firestore: firestore,
-              ),
+                firestore: firestore, auth: authService),
               settings: RouteSettings(
                 arguments: args, // get initial args
               ),
@@ -92,7 +91,8 @@ void main() {
           }
           // Other routes...
           return MaterialPageRoute(
-            builder: (context) => MyHomePage(title: "Nest app"),
+            builder: (context) =>
+                MyHomePage(title: "Nest app", auth: authService),
           );
         },
       ),
@@ -100,7 +100,7 @@ void main() {
   }
 
   setUpAll(() async {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
     LocationService.instance = locationAccuracy10;
 
     await firestore.collection('users').doc(userEmail).set({'isAdmin': false});

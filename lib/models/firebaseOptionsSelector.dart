@@ -1,17 +1,13 @@
 import 'package:firebase_core/firebase_core.dart'
-    show Firebase, FirebaseOptions, defaultFirebaseAppName;
+    show Firebase, FirebaseOptions, FirebaseApp, defaultFirebaseAppName;
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Main class for persisting a Firebase environment in [SharedPreferences]
 class FirebaseOptionsSelector {
   static const _storageKey = 'environment';
-  static String _productionKey = '';
   static Map<String, FirebaseOptions> _availableOptions = {};
-  static String _selectedKey = '';
-
-  /// Check if we are using the production environment
-  static bool get isProduction => selectedKey == _productionKey;
+  static String _selectedKey = 'testing';
 
   /// Map environment names to [FirebaseOptions]
   static Map<String, FirebaseOptions> get availableOptions => _availableOptions;
@@ -21,27 +17,23 @@ class FirebaseOptionsSelector {
 
   /// Read environment selection from [SharedPreferences] and run
   /// [Firebase.initializeApp] with the selected [FirebaseOptions]
-  static Future<void> initialize(String productionKey,
+  static Future<FirebaseApp> initialize(String productionKey,
       Map<String, FirebaseOptions> availableOptions) async {
-    _productionKey = productionKey;
     _availableOptions = availableOptions;
 
-    WidgetsFlutterBinding.ensureInitialized();
-
-    _selectedKey = await getCurrentSelection();
-
-    await Firebase.initializeApp(
-      options: availableOptions[selectedKey],
-      name: defaultFirebaseAppName,
-    );
+    print('Initializing Firebase with $productionKey');
+    print('Available options: $availableOptions');
+    return (Firebase.initializeApp(
+      options: availableOptions[productionKey],
+      name: productionKey,
+    ));
   }
 
   /// Get the current selection from [SharedPreferences]
   static Future<String> getCurrentSelection() async {
     final prefs = await SharedPreferences.getInstance();
     final value = prefs.getString(_storageKey);
-    return availableOptions.keys.firstWhere((element) => element == value,
-        orElse: () => _productionKey);
+    return availableOptions.keys.firstWhere((element) => element == value, orElse: () => 'testing');
   }
 
   /// Shortcut to use [FirebaseOptionsBanner] as the builder for [MaterialApp]
@@ -67,13 +59,6 @@ class FirebaseOptionsBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (FirebaseOptionsSelector.isProduction) {
       return child;
-    }
-    return Banner(
-        textDirection: TextDirection.ltr,
-        location: BannerLocation.bottomEnd,
-        message: FirebaseOptionsSelector.selectedKey,
-        child: child);
   }
 }

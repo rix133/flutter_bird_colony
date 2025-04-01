@@ -53,7 +53,7 @@ void main() {
   late Bird chick;
 
   setUpAll(() async {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
 
     await firestore
         .collection('experiments')
@@ -66,7 +66,7 @@ void main() {
       firestore: firestore,
       sps: sharedPreferencesService,
       app: MaterialApp(initialRoute: '/listBirds', routes: {
-        '/': (context) => MyHomePage(title: "Nest app"),
+        '/': (context) => MyHomePage(title: "Nest app", auth: authService),
         '/listBirds': (context) => ListBirds(firestore: firestore),
         '/editBird': (context) => EditBird(firestore: firestore),
       }),

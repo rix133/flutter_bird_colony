@@ -8,8 +8,8 @@ import '../../models/measure.dart';
 class MapCreateNest extends GoogleMapScreen {
   final FirebaseFirestore firestore;
 
-  const MapCreateNest({Key? key, required this.firestore})
-      : super(key: key, autoUpdateLoc: true);
+  const MapCreateNest({Key? key, required auth, required this.firestore})
+      : super(key: key, auth: auth, autoUpdateLoc: true);
 
   @override
   FirebaseFirestore get firestoreInstance => firestore;

@@ -15,6 +15,14 @@ class SharedPreferencesService extends ChangeNotifier {
 
   String get settingsType => _sharedPreferences.getString('settingsType') ?? 'default';
 
+  String get colonyName =>
+      _sharedPreferences.getString('colonyName') ?? 'testing';
+
+  set colonyName(String value) {
+    _sharedPreferences.setString('colonyName', value);
+    notifyListeners();
+  }
+
   List<MarkerColorGroup> get markerColorGroups =>
       _sharedPreferences.getStringList('markerColorGroups') != null
           ? _sharedPreferences

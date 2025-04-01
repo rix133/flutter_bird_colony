@@ -94,7 +94,7 @@ void main() {
       species: 'Common tern');
 
   setUpAll(() async {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
     LocationService.instance = locationAccuracy10;
 
     await firestore.collection('recent').doc("nest").set({"id": "1"});
@@ -120,8 +120,8 @@ void main() {
       firestore: firestore,
       sps: sharedPreferencesService,
       app: MaterialApp(initialRoute: '/listBirds', routes: {
-        '/': (context) => MyHomePage(title: "Nest app"),
-            '/listBirds': (context) => ListBirds(firestore: firestore),
+        '/': (context) => MyHomePage(title: "Nest app", auth: authService),
+        '/listBirds': (context) => ListBirds(firestore: firestore),
             '/editBird': (context) => EditBird(firestore: firestore),
           }
       ),

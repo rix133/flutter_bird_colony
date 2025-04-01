@@ -49,7 +49,7 @@ void main() {
   );
 
   setUpAll(() async {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
     LocationService.instance = locationAccuracy10;
 
     await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
@@ -77,7 +77,8 @@ void main() {
           }
           // Other routes...
           return MaterialPageRoute(
-            builder: (context) => MyHomePage(title: "Nest app"),
+            builder: (context) =>
+                MyHomePage(title: "Nest app", auth: authService),
           );
         },
       ),

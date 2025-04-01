@@ -9,8 +9,8 @@ import 'package:provider/provider.dart';
 class MapNests extends GoogleMapScreen {
   final FirebaseFirestore firestore;
 
-  const MapNests({Key? key, required this.firestore})
-      : super(key: key, autoUpdateLoc: false);
+  const MapNests({Key? key, required auth, required this.firestore})
+      : super(key: key, auth: auth, autoUpdateLoc: false);
 
   @override
   FirebaseFirestore get firestoreInstance => firestore;

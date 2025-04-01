@@ -4,7 +4,10 @@ import 'package:flutter_bird_colony/services/authService.dart';
 
 class MyHomePage extends StatefulWidget {
   final String title;
-  MyHomePage({Key? key, required this.title}) : super(key: key);
+  final AuthService auth;
+
+  MyHomePage({Key? key, required this.title, required this.auth})
+      : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -12,11 +15,10 @@ class MyHomePage extends StatefulWidget {
 
 
 class _MyHomePageState extends State<MyHomePage> {
-  AuthService _auth = AuthService.instance;
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: _auth.isUserSignedIn(),
+      future: widget.auth.isUserSignedIn(),
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.data == true) {
@@ -50,13 +52,13 @@ class _MyHomePageState extends State<MyHomePage> {
                               icon: Icons.map_outlined,
                               label: "map",
                               color: Colors.green[800]!,
-                              auth: _auth),
+                              auth: widget.auth),
                           HomePageButton(
                               route: '/mapCreateNest',
                               icon: Icons.add,
                               label: "add nest",
                               color: Colors.purple[800]!,
-                              auth: _auth),
+                              auth: widget.auth),
                         ],
                       ),
                     ),
@@ -74,13 +76,13 @@ class _MyHomePageState extends State<MyHomePage> {
                                     icon: Icons.science,
                                     label: "data",
                                     color: Colors.blue[700]!,
-                                    auth: _auth),
+                                    auth: widget.auth),
                                 HomePageButton(
                                     route: "/statistics",
                                     icon: Icons.bar_chart,
                                     label: "stats",
                                     color: Colors.amber[700]!,
-                                    auth: _auth),
+                                    auth: widget.auth),
                               ],
                             ),
                           ),
@@ -89,7 +91,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               icon: Icons.search,
                               label: "find nest",
                               color: Colors.red[900]!,
-                              auth: _auth),
+                              auth: widget.auth),
                         ],
                       ),
                     ),

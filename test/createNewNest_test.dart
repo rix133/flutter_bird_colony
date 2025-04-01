@@ -48,7 +48,7 @@ void main() {
   }
 
   setUpAll(() async {
-    AuthService.instance = authService;
+    //AuthService.instance = authService;
     LocationService.instance = locationAccuracy10;
     sharedPreferencesService.desiredAccuracy = 12;
 
@@ -58,10 +58,12 @@ void main() {
       child: MaterialApp(
           initialRoute: '/',
           routes: {
-            '/': (context) => MyHomePage(title: "Nest app"),
-            '/settings': (context) => SettingsPage(firestore: firestore),
-            '/mapCreateNest': (context) => MapCreateNest(firestore: firestore),
-            '/createNest':(context)=>CreateNest(firestore: firestore),
+        '/': (context) => MyHomePage(title: "Nest app", auth: authService),
+        '/settings': (context) =>
+            SettingsPage(firestore: firestore, auth: authService),
+        '/mapCreateNest': (context) =>
+            MapCreateNest(firestore: firestore, auth: authService),
+        '/createNest':(context)=>CreateNest(firestore: firestore),
             '/editNest':(context)=>EditNest(firestore: firestore),
           }
       ),

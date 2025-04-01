@@ -12,8 +12,10 @@ import 'package:provider/provider.dart';
 
 abstract class GoogleMapScreen extends StatefulWidget {
   final bool autoUpdateLoc;
+  final AuthService auth;
 
-  const GoogleMapScreen({Key? key, required this.autoUpdateLoc})
+  const GoogleMapScreen(
+      {Key? key, required this.autoUpdateLoc, required this.auth})
       : super(key: key);
 
   get firestoreInstance => null;
@@ -51,12 +53,11 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
 
   StreamSubscription<Position>? _positionStreamSubscription;
   LocationService location = LocationService.instance;
-  AuthService auth = AuthService.instance;
 
   @override
   void initState() {
     super.initState();
-    auth.isUserSignedIn().then((value) {
+    widget.auth.isUserSignedIn().then((value) {
       if (value == false) {
         Navigator.pushReplacementNamed(context, "/settings");
       }
