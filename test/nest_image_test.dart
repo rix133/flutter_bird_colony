@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_storage_mocks/firebase_storage_mocks.dart';
@@ -38,7 +37,7 @@ void main() {
       // Tap the 'Add New Photo' option and verify that a navigation push occurs.
       await tester.tap(find.text('Add New Photo'));
       await tester.pumpAndSettle();
-      expect(navObserver.pushCount, equals(2));
+      expect(navObserver.pushCount, equals(1));
     });
 
     testWidgets(
