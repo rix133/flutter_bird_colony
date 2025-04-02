@@ -21,8 +21,6 @@ class FirebaseOptionsSelector {
       Map<String, FirebaseOptions> availableOptions) async {
     _availableOptions = availableOptions;
 
-    print('Initializing Firebase with $productionKey');
-    print('Available options: $availableOptions');
     return (Firebase.initializeApp(
       options: availableOptions[productionKey],
       name: productionKey,

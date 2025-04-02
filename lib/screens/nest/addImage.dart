@@ -8,12 +8,14 @@ class AddImageScreen extends StatefulWidget {
   final DocumentReference nestDoc;
   final FirebaseFirestore firestore;
   final String storageFolder;
+  final FirebaseStorage storage;
 
   const AddImageScreen(
       {Key? key,
       required this.nestDoc,
       required this.firestore,
-      required this.storageFolder})
+      required this.storageFolder,
+      required this.storage})
       : super(key: key);
 
   @override
@@ -54,7 +56,7 @@ class _AddImageScreenState extends State<AddImageScreen> {
 
     try {
       final fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      final storageRef = FirebaseStorage.instance.ref().child(
+      final storageRef = widget.storage.ref().child(
           '${widget.storageFolder}/$year/${widget.nestDoc.id}/$fileName');
       print(storageRef.fullPath);
       final uploadTask = storageRef.putFile(_image!);

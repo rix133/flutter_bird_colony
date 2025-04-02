@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:firebase_storage_mocks/firebase_storage_mocks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/firestore/experiment.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
@@ -20,6 +21,7 @@ import 'testApp.dart';
 
 void main() {
   final authService = MockAuthService();
+  final storage = MockFirebaseStorage();
   final sharedPreferencesService = MockSharedPreferencesService();
   final firestore = FakeFirebaseFirestore();
   MockLocationAccuracy10 locationAccuracy10 = MockLocationAccuracy10();
@@ -77,6 +79,7 @@ void main() {
             return MaterialPageRoute(
               builder: (context) => EditNest(
                 firestore: firestore,
+                storage: storage,
               ),
               settings: settings, // get nest from settings
             );

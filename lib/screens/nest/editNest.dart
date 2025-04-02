@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design//modifingButtons.dart';
 import 'package:flutter_bird_colony/design/experimentDropdown.dart';
@@ -21,8 +22,9 @@ import 'optionsNestImage.dart';
 
 class EditNest extends StatefulWidget {
   final FirebaseFirestore firestore;
+  final FirebaseStorage storage;
 
-  const EditNest({super.key, required this.firestore});
+  const EditNest({super.key, required this.firestore, required this.storage});
 
   @override
   State<EditNest> createState() => _EditNestState();
@@ -416,6 +418,7 @@ class _EditNestState extends State<EditNest> {
                       content: NestImageOptions(
                         nestDoc: nests!.doc(nest!.name),
                         firestore: widget.firestore,
+                        storage: widget.storage,
                       ),
                     );
                   },

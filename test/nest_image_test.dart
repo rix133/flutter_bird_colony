@@ -1,6 +1,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:firebase_storage_mocks/firebase_storage_mocks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bird_colony/screens/nest/addImage.dart';
@@ -11,9 +12,10 @@ void main() {
   group("Nest Image Widgets", () {
     late FakeFirebaseFirestore firestore;
     late DocumentReference nestDoc;
-
+    late MockFirebaseStorage storage;
     setUp(() {
       firestore = FakeFirebaseFirestore();
+      storage = MockFirebaseStorage();
       nestDoc = firestore.collection('nests').doc('nest1');
     });
 
@@ -24,7 +26,8 @@ void main() {
       final navObserver = TestNavigatorObserver();
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
-          body: NestImageOptions(nestDoc: nestDoc, firestore: firestore),
+          body: NestImageOptions(
+              nestDoc: nestDoc, firestore: firestore, storage: storage),
         ),
         navigatorObservers: [navObserver],
       ));
@@ -45,7 +48,8 @@ void main() {
       final navObserver = TestNavigatorObserver();
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
-          body: NestImageOptions(nestDoc: nestDoc, firestore: firestore),
+          body: NestImageOptions(
+              nestDoc: nestDoc, firestore: firestore, storage: storage),
         ),
         navigatorObservers: [navObserver],
       ));
@@ -92,6 +96,7 @@ void main() {
           nestDoc: nestDoc,
           firestore: firestore,
           storageFolder: 'nest_images',
+          storage: storage,
         ),
       ));
       expect(find.text('Add Image'), findsOneWidget);
@@ -110,6 +115,7 @@ void main() {
           key: addImageKey,
           nestDoc: nestDoc,
           firestore: firestore,
+          storage: storage,
           storageFolder: 'nest_images',
         ),
       ));

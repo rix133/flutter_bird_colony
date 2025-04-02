@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/screens/nest/showNestImages.dart';
 
@@ -7,11 +8,13 @@ import 'addImage.dart';
 class NestImageOptions extends StatelessWidget {
   final DocumentReference nestDoc;
   final FirebaseFirestore firestore;
+  final FirebaseStorage storage;
 
   const NestImageOptions({
     Key? key,
     required this.nestDoc,
     required this.firestore,
+    required this.storage,
   }) : super(key: key);
 
   @override
@@ -29,6 +32,7 @@ class NestImageOptions extends StatelessWidget {
                 builder: (context) => AddImageScreen(
                     nestDoc: nestDoc,
                     firestore: firestore,
+                    storage: storage,
                     storageFolder: 'nest_images'),
               ),
             );

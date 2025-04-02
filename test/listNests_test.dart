@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:firebase_storage_mocks/firebase_storage_mocks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
 import 'package:flutter_bird_colony/models/eggStatus.dart';
@@ -24,6 +25,7 @@ import 'testApp.dart';
 
 void main() {
   final authService = MockAuthService();
+  final storage = MockFirebaseStorage();
   final mockObserver = MockNavigatorObserver();
   final sharedPreferencesService = MockSharedPreferencesService();
   final firestore = FakeFirebaseFirestore();
@@ -136,7 +138,8 @@ void main() {
       app: MaterialApp(initialRoute: '/listNests', routes: {
         '/': (context) => MyHomePage(title: "Nest app", auth: authService),
         '/listNests': (context) => ListNests(firestore: firestore),
-            '/editNest': (context) => EditNest(firestore: firestore),
+        '/editNest': (context) =>
+            EditNest(firestore: firestore, storage: storage),
         '/mapNests': (context) =>
             MapNests(firestore: firestore, auth: authService),
       }

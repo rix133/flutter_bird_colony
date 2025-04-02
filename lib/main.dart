@@ -1,4 +1,5 @@
 //backend selection items
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_bird_colony/models/firebaseOptionsSelector.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -54,7 +55,7 @@ void main() async{
 
   final firestore = FirebaseFirestore.instanceFor(app: firebaseApp);
   final auth = FirebaseAuth.instanceFor(app: firebaseApp);
-
+  final storage = FirebaseStorage.instanceFor(app: firebaseApp);
   final authService = AuthService(auth);
 
   auth.authStateChanges().listen((User? user) {
@@ -76,7 +77,8 @@ void main() async{
         ChangeNotifierProvider(create: (_) => ExperimentsService(firestore)),
         ChangeNotifierProvider(create: (_) => SpeciesService(firestore)),
       ],
-      child: MyApp(firestore: firestore, authService: authService),
+      child: MyApp(
+          firestore: firestore, authService: authService, storage: storage),
     ),
   );
 }
@@ -96,8 +98,13 @@ void handleAuthStateChanges(User? user, SharedPreferences sharedPreferences) {
 class MyApp extends StatelessWidget {
   final FirebaseFirestore firestore;
   final AuthService authService;
+  final FirebaseStorage storage;
 
-  MyApp({Key? key, required this.firestore, required this.authService})
+  MyApp(
+      {Key? key,
+      required this.firestore,
+      required this.authService,
+      required this.storage})
       : super(key: key);
   // This widget is the root of your application.
   @override
@@ -109,7 +116,8 @@ class MyApp extends StatelessWidget {
         '/': (context) => MyHomePage(title: appName, auth: authService),
         '/editEgg': (context)=>EditEgg(firestore: firestore),
         '/createNest':(context)=> CreateNest(firestore: firestore),
-        '/editNest':(context)=>  EditNest(firestore: firestore),
+        '/editNest': (context) =>
+            EditNest(firestore: firestore, storage: storage),
         '/settings': (context) => SettingsPage(
             firestore: firestore,
             auth: authService,

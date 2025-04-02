@@ -16,7 +16,7 @@ import 'package:flutter_bird_colony/screens/homepage.dart';
 import 'package:flutter_bird_colony/screens/listMeasures.dart';
 import 'package:flutter_bird_colony/screens/nest/editNest.dart';
 import 'package:flutter_bird_colony/screens/nest/mapNests.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
+import 'package:firebase_storage_mocks/firebase_storage_mocks.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,6 +28,7 @@ import 'mocks/mockSharedPreferencesService.dart';
 
 void main() {
   final authService = MockAuthService();
+  final storage = MockFirebaseStorage();
   final sharedPreferencesService = MockSharedPreferencesService();
   final firestore = FakeFirebaseFirestore();
   MockLocationAccuracy10 locationAccuracy10 = MockLocationAccuracy10();
@@ -135,7 +136,8 @@ void main() {
           }
           if (settings.name == '/editNest') {
             return MaterialPageRoute(
-              builder: (context) => EditNest(firestore: firestore),
+              builder: (context) =>
+                  EditNest(firestore: firestore, storage: storage),
               settings: settings,
             );
           }

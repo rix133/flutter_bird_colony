@@ -295,7 +295,6 @@ class _StatisticsState extends State<Statistics> {
               trailing: Text(count.toString()),
             );
           } else if (snapshot.hasError) {
-            print(snapshot.error);
             return Text('Error: getting $species data');
           } else {
             return SizedBox.shrink();

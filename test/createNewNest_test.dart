@@ -7,19 +7,20 @@ import 'package:flutter_bird_colony/screens/nest/createNest.dart';
 import 'package:flutter_bird_colony/screens/nest/editNest.dart';
 import 'package:flutter_bird_colony/screens/nest/mapCreateNest.dart';
 import 'package:flutter_bird_colony/screens/settings/settings.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
+import 'package:firebase_storage_mocks/firebase_storage_mocks.dart';
 import 'mocks/mockLocationService.dart';
 import 'mocks/mockSharedPreferencesService.dart';
 
 
 void main() {
   final authService = MockAuthService();
+  final storage = MockFirebaseStorage();
   final sharedPreferencesService = MockSharedPreferencesService();
   final firestore = FakeFirebaseFirestore();
   MockLocationAccuracy10 locationAccuracy10 = MockLocationAccuracy10();
@@ -64,8 +65,9 @@ void main() {
         '/mapCreateNest': (context) =>
             MapCreateNest(firestore: firestore, auth: authService),
         '/createNest':(context)=>CreateNest(firestore: firestore),
-            '/editNest':(context)=>EditNest(firestore: firestore),
-          }
+        '/editNest': (context) =>
+            EditNest(firestore: firestore, storage: storage),
+      }
       ),
     );
   });
