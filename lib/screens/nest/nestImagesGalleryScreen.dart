@@ -1,11 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../galleryViewerScreen.dart';
 
-/// This widget retrieves a list of image URLs from the nest document's
-/// 'images' subcollection and displays them in a grid. Each grid image shows a
-/// progress indicator until it finishes loading.
-class NestImagesGalleryScreen extends StatelessWidget {
+class NestImagesGalleryScreen extends StatefulWidget {
   final DocumentReference nestDoc;
   final FirebaseFirestore firestore;
 
@@ -15,8 +13,16 @@ class NestImagesGalleryScreen extends StatelessWidget {
     required this.firestore,
   }) : super(key: key);
 
+  @override
+  _NestImagesGalleryScreenState createState() =>
+      _NestImagesGalleryScreenState();
+}
+
+class _NestImagesGalleryScreenState extends State<NestImagesGalleryScreen> {
+  late Future<List<String>> _imageUrlsFuture;
+
   Future<List<String>> _getImageUrls() async {
-    final snapshot = await nestDoc
+    final snapshot = await widget.nestDoc
         .collection('images')
         .orderBy('timestamp', descending: true)
         .get();
@@ -27,9 +33,15 @@ class NestImagesGalleryScreen extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _imageUrlsFuture = _getImageUrls();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<String>>(
-      future: _getImageUrls(),
+      future: _imageUrlsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -64,23 +76,12 @@ class NestImagesGalleryScreen extends StatelessWidget {
                     ),
                   );
                 },
-                child: Image.network(
-                  imageUrls[index],
+                child: CachedNetworkImage(
+                  imageUrl: imageUrls[index],
                   fit: BoxFit.cover,
-                  // Display a progress indicator while the image is downloading.
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null,
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.error),
+                  placeholder: (context, url) =>
+                      const Center(child: CircularProgressIndicator()),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
                 ),
               );
             },

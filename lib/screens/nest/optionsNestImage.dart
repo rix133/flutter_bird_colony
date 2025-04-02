@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'addImage.dart';
 import 'nestImagesGalleryScreen.dart';
@@ -23,9 +24,12 @@ class NestImageOptions extends StatelessWidget {
       children: [
         ListTile(
           leading: const Icon(Icons.camera_alt),
-          title: const Text('Add New Photo'),
-          onTap: () {
-            Navigator.pop(context);
+          title: const Text(
+              'Add New Photo${kIsWeb ? ' (Not available on web)' : ''}'),
+          onTap: () => kIsWeb
+              ? null
+              : () {
+                  Navigator.pop(context);
             Navigator.push(
               context,
               MaterialPageRoute(
