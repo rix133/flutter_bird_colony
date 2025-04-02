@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bird_colony/screens/nest/showNestImages.dart';
 
 import 'addImage.dart';
+import 'nestImagesGalleryScreen.dart';
 
 class NestImageOptions extends StatelessWidget {
   final DocumentReference nestDoc;
@@ -46,7 +46,7 @@ class NestImageOptions extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ShowNestImagesScreen(
+                builder: (context) => NestImagesGalleryScreen(
                     nestDoc: nestDoc, firestore: firestore),
               ),
             );

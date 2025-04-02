@@ -3,10 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_storage_mocks/firebase_storage_mocks.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/screens/nest/nestImagesGalleryScreen.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bird_colony/screens/nest/addImage.dart';
 import 'package:flutter_bird_colony/screens/nest/optionsNestImage.dart';
-import 'package:flutter_bird_colony/screens/nest/showNestImages.dart';
 
 void main() {
   group("Nest Image Widgets", () {
@@ -66,7 +66,7 @@ void main() {
     testWidgets("ShowNestImagesScreen shows 'No images available' when empty",
         (WidgetTester tester) async {
       await tester.pumpWidget(MaterialApp(
-        home: ShowNestImagesScreen(nestDoc: nestDoc, firestore: firestore),
+        home: NestImagesGalleryScreen(nestDoc: nestDoc, firestore: firestore),
       ));
       await tester.pumpAndSettle();
       expect(find.text('No images available'), findsOneWidget);
