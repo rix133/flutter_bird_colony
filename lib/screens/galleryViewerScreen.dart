@@ -67,11 +67,35 @@ class _GalleryViewerScreenState extends State<GalleryViewerScreen> {
     }
   }
 
+  String constructFileName(String url) {
+    final uri = Uri.parse(url);
+    final encodedPath = uri.path.split('/o/').last;
+    final decodedPath = Uri.decodeComponent(encodedPath);
+    final segments = decodedPath.split('/');
+
+    if (segments.length < 4) {
+      return "nest_image_${DateTime.now().toIso8601String()}.jpg";
+    }
+
+    final nestNumber = segments[2];
+    final timestampStr = segments.last;
+    final timestamp = int.tryParse(timestampStr);
+
+    if (timestamp == null) {
+      return "nest_image_${DateTime.now().toIso8601String()}.jpg";
+    }
+
+    final originalDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
+    final isoDate = originalDate.toIso8601String();
+
+    return "nest_${nestNumber}_$isoDate.jpg";
+  }
+
   Future<void> saveAndShareImageFile(String imageUrl) async {
     setState(() {
       _isDownloading = true;
     });
-    String fName = "nest_image_" + DateTime.now().toIso8601String() + ".jpg";
+    String fName = constructFileName(imageUrl);
 
     if (!kIsWeb) {
       final directory = await getTemporaryDirectory();
