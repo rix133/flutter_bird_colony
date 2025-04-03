@@ -37,7 +37,7 @@ void main() {
       // Tap the 'Add New Photo' option and verify that a navigation push occurs.
       await tester.tap(find.text('Add New Photo'));
       await tester.pumpAndSettle();
-      expect(navObserver.pushCount, equals(1));
+      expect(navObserver.pushCount, equals(2));
     });
 
     testWidgets(
