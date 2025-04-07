@@ -37,7 +37,7 @@ void main() {
       expect(find.byIcon(Icons.science), findsOneWidget);
       expect(find.text('Experiments'), findsOneWidget);
 
-      expect(find.byIcon(Icons.home), findsOneWidget);
+      expect(find.byIcon(Icons.group_work), findsOneWidget);
       expect(find.text('Nests'), findsOneWidget);
 
       expect(find.text('Birds'), findsOneWidget);
@@ -58,7 +58,7 @@ void main() {
       expect(find.byType(ListNests), findsNothing);
       expect(find.byType(ListBirds), findsNothing);
 
-      await tester.tap(find.byIcon(Icons.home));
+      await tester.tap(find.byIcon(Icons.group_work));
       await tester.pumpAndSettle();
 
       expect(find.byType(ListExperiments), findsNothing);

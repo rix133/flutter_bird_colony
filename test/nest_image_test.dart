@@ -1,11 +1,13 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_storage_mocks/firebase_storage_mocks.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bird_colony/screens/nest/nestImagesGalleryScreen.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bird_colony/screens/nest/addImage.dart';
+import 'package:flutter_bird_colony/screens/nest/nestImagesGalleryScreen.dart';
 import 'package:flutter_bird_colony/screens/nest/optionsNestImage.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group("Nest Image Widgets", () {
@@ -124,16 +126,13 @@ void main() {
       ElevatedButton uploadButton = tester.widget(uploadButtonFinder);
       expect(uploadButton.onPressed, isNull);
 
-      /* Access the state via the key and set _image to a dummy File.
-          final state = addImageKey.currentState as dynamic;
-          state.setState(() {
-            state._image = File('dummy_path');
-          });
-          await tester.pump();
+      //Access the state via the key and set _image to a dummy File.
+      final state = addImageKey.currentState as dynamic;
+      state.setDummyImage(File('dummy_path'));
+      await tester.pump();
           final updatedUploadButton =
           tester.widget<ElevatedButton>(uploadButtonFinder);
           expect(updatedUploadButton.onPressed, isNotNull);
-          */
     });
   });
 }
