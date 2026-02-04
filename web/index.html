@@ -28,8 +28,9 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta content="Bird Colony" name="apple-mobile-web-app-title">
+  <meta content="Bird Colony" name="apple-mobile-web-app-title">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
@@ -38,25 +39,9 @@
     <title>Bird Colony</title>
   <link rel="manifest" href="manifest.json">
 
-  <!-- This script adds the flutter initialization JS code -->
-  <script src="flutter.js" defer></script>
+  <!-- Flutter bootstrap -->
   <script async src="flutter_bootstrap.js"></script>
 </head>
 <body>
-  <script>
-    window.addEventListener('load', function(ev) {
-      // Download main.dart.js
-      _flutter.loader.load({
-        serviceWorker: {
-          serviceWorkerVersion: {{flutter_service_worker_version}},
-        },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
-          });
-        }
-      });
-    });
-  </script>
 </body>
 </html>
