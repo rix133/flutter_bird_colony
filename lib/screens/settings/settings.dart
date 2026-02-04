@@ -188,7 +188,7 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       UserCredential userCredential = await widget.auth
           .createUserWithEmailAndPassword(
-              email: _userEmail, password: _userPassword);
+              email: _userEmail ?? "", password: _userPassword ?? "");
       userCredential.user!.updateDisplayName(_userEmail!.split('@').first);
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
@@ -290,38 +290,29 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<User?> signInWithGoogle() async {
     try {
-      // Trigger the authentication flow
-      final GoogleSignIn googleSignIn = widget.auth.getGoogleSignIn();
-      GoogleSignInAccount? googleUser = await googleSignIn.signInSilently();
+      // Ensure initialize() has been awaited exactly once somewhere before this call.
+      // If you prefer doing it here, keep it guarded like in AuthService.ensureGoogleInitialized().
+      await widget.auth.ensureGoogleInitialized();
 
-      if (googleUser == null) {
-        // Prompt the user to interactively sign in.
-        googleUser = await googleSignIn.signIn();
-      }
+      // User-initiated sign-in (recommended in current Firebase + google_sign_in docs).
+      final GoogleSignInAccount? googleUser =
+      await GoogleSignIn.instance.authenticate();
+      if (googleUser == null) return null;
 
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication? googleAuth =
-          await googleUser?.authentication;
+      // Authentication object (ID token for Firebase).
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
-      // Create a new credential
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
-      );
+      final OAuthCredential credential =
+      GoogleAuthProvider.credential(idToken: googleAuth.idToken);
 
-      // Once signed in, return the UserCredential
       return (await widget.auth.signInWithCredential(credential)).user;
     } catch (e) {
-      print('Sign in failed: $e');
-      print(
-          'Likely SHA-1 fingerprint is missing from https://console.cloud.google.com/apis/credentials?project=flutter_bird_colony');
-      //sign out from google
+      // If you suspect a stale/partial session, signing out of Google helps reset state.
       await widget.auth.googleSignOut();
-      // Create a new credential
-
       return null;
     }
   }
+
 
   reset() {
     setState(() {

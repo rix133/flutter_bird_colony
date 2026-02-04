@@ -3,55 +3,59 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth;
+  static bool _googleInitialized = false;
 
   AuthService(this._auth);
 
+  User? get currentUser => _auth.currentUser;
+
+  Stream<User?> authStateChanges() => _auth.authStateChanges();
+
   Future<bool> isUserSignedIn() async {
-    // Check if user is signed in with email
-    final User? firebaseUser = _auth.currentUser;
-    if (firebaseUser != null) {
-      return true;
-    }
-
-    return false;
+    return _auth.currentUser != null;
   }
 
-  String? userName() {
-    return _auth.currentUser?.displayName;
+  String? userName() => _auth.currentUser?.displayName;
+
+  String? userEmail() => _auth.currentUser?.email;
+
+  Future<UserCredential> createUserWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) {
+    return _auth.createUserWithEmailAndPassword(email: email, password: password);
   }
 
-  Future<UserCredential> createUserWithEmailAndPassword(
-      {String? email, String? password}) async {
-    if (email == null || password == null)
-      return throw (FirebaseAuthException(code: 'invalid-email'));
-    return await _auth.createUserWithEmailAndPassword(email: email, password: password);
+  Future<UserCredential> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) {
+    return _auth.signInWithEmailAndPassword(email: email, password: password);
   }
 
-  Future<UserCredential> signInWithEmailAndPassword(
-      {String? email, String? password}) async {
-    if (email == null || password == null)
-      return throw (FirebaseAuthException(code: 'invalid-email'));
-    return await _auth.signInWithEmailAndPassword(email: email, password: password);
-  }
-
-  Future<UserCredential> signInWithCredential(
-      OAuthCredential credential) async {
-    return await _auth.signInWithCredential(credential);
+  Future<UserCredential> signInWithCredential(OAuthCredential credential) {
+    return _auth.signInWithCredential(credential);
   }
 
   Future<void> sendPasswordResetEmail(String email) {
-    return (_auth.sendPasswordResetEmail(email: email));
+    return _auth.sendPasswordResetEmail(email: email);
   }
 
-  Future<void> signOut() async {
-    await _auth.signOut();
+  Future<void> signOut() => _auth.signOut();
+
+  GoogleSignIn getGoogleSignIn() => GoogleSignIn.instance;
+
+  Future<void> ensureGoogleInitialized({
+    String? clientId,
+    String? serverClientId,
+  }) async {
+    if (_googleInitialized) return;
+    await GoogleSignIn.instance.initialize(
+      clientId: clientId,
+      serverClientId: serverClientId,
+    );
+    _googleInitialized = true;
   }
 
-  GoogleSignIn getGoogleSignIn() {
-    return GoogleSignIn();
-  }
-
-  Future<void> googleSignOut() {
-    return (getGoogleSignIn().signOut());
-  }
+  Future<void> googleSignOut() => GoogleSignIn.instance.signOut();
 }
