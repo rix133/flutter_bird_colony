@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/googleMapScreen.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/services/nestsService.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -32,14 +33,14 @@ class _MapNestsState extends GoogleMapScreenState {
   @override
   void initState() {
     super.initState();
-    String year = DateTime.now().year.toString();
+    String year = "";
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       var map = ModalRoute.of(context)!.settings.arguments;
       if (map != null) {
         map = map as Map<String, dynamic>;
         if (map["year"] != null) {
-          year = map["year"].toString();
+          year = nestCollectionNameFromYearOrName(map["year"]);
         }
         if (map["nest_ids"] != null) {
           bigFilter = map["nest_ids"] as List<String>;
@@ -47,6 +48,9 @@ class _MapNestsState extends GoogleMapScreenState {
       }
 
       nestsService = Provider.of<NestsService>(context, listen: false);
+      year = year.isNotEmpty
+          ? year
+          : yearToNestCollectionName(sps?.selectedYear ?? DateTime.now().year);
       _nestStream = nestsService!.watchItems(year);
       setState(() {});
     });
@@ -81,7 +85,8 @@ class _MapNestsState extends GoogleMapScreenState {
       }).toSet();
     }
     markersToShow.value = nestsToShow
-        .map((e) => e.getMarker(context, true, sps?.markerColorGroups ?? []))
+        .map((e) => e.getMarker(context, true, sps?.markerColorGroups ?? [],
+            selectedYear: sps?.selectedYear, isAdmin: sps?.isAdmin ?? false))
         .toSet();
   }
 

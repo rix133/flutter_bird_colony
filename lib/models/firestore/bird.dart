@@ -9,6 +9,7 @@ import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
 import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:intl/intl.dart';
 
 import '../markerColorGroup.dart';
@@ -37,7 +38,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   String get itemName => "bird";
 
   String get current_nest =>
-      (nest_year == DateTime.now().year) ? (nest ?? "") : "";
+      nest ?? "";
 
   @override
   DateTime get created_date => ringed_date;
@@ -107,7 +108,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   }
 
   String get nestString =>
-      nest_year == DateTime.now().year ? ", nest: " + (nest ?? "unknown") : "";
+      (nest?.isNotEmpty ?? false) ? ", nest: " + (nest ?? "unknown") : "";
 
   String get description =>
       "Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)} $nestString, $species";
@@ -247,7 +248,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     if (egg == "" || nest == "") {
       return null;
     }
-    String year = ringed_date.year.toString();
+    String year = yearToNestCollectionName(ringed_date.year);
     return firestore
         .collection(year)
         .doc(nest)
@@ -446,8 +447,12 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     }
   }
 
-  bool isChick() {
-    return (ringed_as_chick == true && ringed_date.year == nest_year && DateTime.now().year == nest_year) && (color_band?.isEmpty ?? true);
+  bool isChick({int? currentYear}) {
+    final year = currentYear ?? DateTime.now().year;
+    return (ringed_as_chick == true &&
+            ringed_date.year == nest_year &&
+            year == nest_year) &&
+        (color_band?.isEmpty ?? true);
   }
 
   int ageInYears() {

@@ -11,6 +11,7 @@ import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:provider/provider.dart';
 
 class EditBird extends StatefulWidget {
@@ -82,6 +83,13 @@ class _EditBirdState extends State<EditBird> {
   CollectionReference? nests;
   CollectionReference? birds;
 
+  int _activeYear() => sps?.selectedYear ?? DateTime.now().year;
+
+  DateTime _dateTimeWithYear(DateTime base, int year) {
+    return DateTime(year, base.month, base.day, base.hour, base.minute,
+        base.second, base.millisecond, base.microsecond);
+  }
+
  @override
  dispose() {
    band_letCntr.dispose();
@@ -94,7 +102,7 @@ class _EditBirdState extends State<EditBird> {
   @override
   void initState() {
     super.initState();
-    nests =   widget.firestore.collection(DateTime.now().year.toString());
+    nests = widget.firestore.collection(yearToNestCollectionName(DateTime.now().year));
     birds = widget.firestore.collection("Birds");
     _lettersFocus.addListener(() {
       if (!_lettersFocus.hasFocus) {
@@ -121,6 +129,9 @@ class _EditBirdState extends State<EditBird> {
   void initializeServices() {
     sps = Provider.of<SharedPreferencesService>(context, listen: false);
     _speciesList = sps?.speciesList ?? LocalSpeciesList();
+    final activeYear = _activeYear();
+    nestnr.unit = activeYear.toString();
+    nests = widget.firestore.collection(yearToNestCollectionName(activeYear));
   }
 
   Future<void> handleMap(Map<String, dynamic> map) async {
@@ -165,14 +176,16 @@ class _EditBirdState extends State<EditBird> {
         }
         updateBirdWithNestInfo();
       } else {
-        if (bird.nest_year != DateTime.now().year) {
+        if (bird.nest_year != _activeYear()) {
           bird.nest = "";
         }
       }
     }
+    ageType = bird.isChick(currentYear: _activeYear()) ? "chick" : "parent";
     bird.addMissingMeasures(allMeasures, ageType);
     //ensure that correct nests are referenced
-    nests = widget.firestore.collection(bird.nest_year.toString());
+    nests = widget.firestore.collection(
+        yearToNestCollectionName(bird.nest_year ?? _activeYear()));
   }
 
   Future<void> reloadBirdFromFirestore(String id) async {
@@ -181,7 +194,7 @@ class _EditBirdState extends State<EditBird> {
         .doc(id)
         .get()
         .then((DocumentSnapshot value) => Bird.fromDocSnapshot(value)).catchError(onSnapshotError);
-    ageType = bird.isChick() ? "chick" : "parent";
+    ageType = bird.isChick(currentYear: _activeYear()) ? "chick" : "parent";
     bird.addNonExistingExperiments(nest.experiments, ageType);
   }
 
@@ -193,7 +206,7 @@ class _EditBirdState extends State<EditBird> {
     ));
     Bird b = Bird(
       species: nest.species,
-      ringed_date: DateTime.now(),
+      ringed_date: _dateTimeWithYear(DateTime.now(), nest.discover_date.year),
       ringed_as_chick: false,
       band: "",
       responsible: sps?.userName ?? "unknown",
@@ -217,7 +230,7 @@ class _EditBirdState extends State<EditBird> {
     egg = map["egg"] as Egg;
     bird = Bird(
       species: nest.species,
-      ringed_date: DateTime.now(),
+      ringed_date: _dateTimeWithYear(DateTime.now(), nest.discover_date.year),
       ringed_as_chick: true,
       egg: egg?.getNr(),
       band: "",
@@ -246,6 +259,12 @@ class _EditBirdState extends State<EditBird> {
   }
 
   void handleNoMap() {
+    final activeYear = _activeYear();
+    bird.nest_year = activeYear;
+    if (bird.ringed_date.year != activeYear) {
+      bird.ringed_date = _dateTimeWithYear(DateTime.now(), activeYear);
+    }
+    nestnr.unit = activeYear.toString();
     bird.measures = allMeasures;
     if (bird.ringed_as_chick) {
       bird.measures.removeWhere((element) => element.name == "age");
@@ -369,7 +388,9 @@ class _EditBirdState extends State<EditBird> {
     }
 
     if(previousRouteName == '/editNest' && ageType == "parent"){
-      Navigator.pushNamedAndRemoveUntil(context, '/editNest', ModalRoute.withName('/findNest'), arguments: {"nest_id": nest.name});
+      Navigator.pushNamedAndRemoveUntil(context, '/editNest',
+          ModalRoute.withName('/findNest'),
+          arguments: {"nest_id": nest.name, "year": nest.discover_date.year});
     } else {
       Navigator.pop(context);
     }
@@ -378,7 +399,9 @@ class _EditBirdState extends State<EditBird> {
   void deleteOk() {
    if(previousRouteName == '/editNest' && ageType == "parent"){
       //update the nest manage page
-     Navigator.pushNamedAndRemoveUntil(context, '/editNest', ModalRoute.withName('/findNest'), arguments: {"nest_id": nest.name});
+     Navigator.pushNamedAndRemoveUntil(context, '/editNest',
+         ModalRoute.withName('/findNest'),
+         arguments: {"nest_id": nest.name, "year": nest.discover_date.year});
 
     }  else {
      Navigator.pop(context);
@@ -408,7 +431,7 @@ class _EditBirdState extends State<EditBird> {
     if (bird.prevBird != null) {
       //the current nest year is changed now as well
       if (bird.nest != bird.prevBird!.nest) {
-        bird.nest_year = DateTime.now().year;
+        bird.nest_year = _activeYear();
       }
     }
     return bird;
@@ -575,8 +598,12 @@ class _EditBirdState extends State<EditBird> {
                     });
                   }, speciesList: sps?.speciesList ?? LocalSpeciesList()),
                   metalBand(),
-                  bird.isChick() ? Container() : SizedBox(height: 10),
-                  bird.isChick() ? Container() : color_band.getSimpleMeasureForm(),
+                  bird.isChick(currentYear: _activeYear())
+                      ? Container()
+                      : SizedBox(height: 10),
+                  bird.isChick(currentYear: _activeYear())
+                      ? Container()
+                      : color_band.getSimpleMeasureForm(),
                   SizedBox(height: 10),
                   ModifyingButtons(firestore: widget.firestore, context:context,setState:setState, getItem:getBird, type:ageType, otherItems:nests,
                       silentOverwrite: false,

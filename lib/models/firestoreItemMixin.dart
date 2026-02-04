@@ -13,6 +13,7 @@ import 'package:share_plus/share_plus.dart';
 import 'firestore/bird.dart';
 import 'firestore/egg.dart';
 import 'firestore/nest.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 
 class FSItemMixin {
   // Workaround Way to run functions on firestoreItems
@@ -178,7 +179,7 @@ class FSItemMixin {
     List<String> types = [type];
 
     if (type == "experiments") {
-      String year = start?.year.toString() ?? DateTime.now().year.toString();
+      String year = yearToNestCollectionName(start?.year ?? DateTime.now().year);
       List<String> allExpNests = [];
       allExpNests.addAll(items
           .expand((e) => (e as Experiment).nests ?? [])
@@ -243,7 +244,7 @@ class FSItemMixin {
         // Perform a query for each chunk and gather all birdItems
         for (var chunk in chunks) {
           QuerySnapshot birds = await firestore
-              .collection("Bird")
+              .collection("Birds")
               .where(FieldPath.documentId, whereIn: chunk)
               .get();
           if (birds.docs.isNotEmpty) {

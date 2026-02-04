@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
+import 'package:flutter_bird_colony/design/yearDropdown.dart';
 import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/services/authService.dart';
@@ -563,6 +564,22 @@ class _SettingsPageState extends State<SettingsPage> {
   List<Widget> getSettings(_isLoggedIn) {
     return _isLoggedIn
         ? [
+            Row(
+              children: <Widget>[
+                Text('Selected app year:'),
+                SizedBox(width: 10),
+                YearDropdown(
+                  dropdownKey: Key('selectedYearDropdown'),
+                  selectedYear: sps?.selectedYear ?? DateTime.now().year,
+                  onChanged: (int newValue) {
+                    setState(() {
+                      sps?.selectedYear = newValue;
+                    });
+                  },
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
             Row(
               children: <Widget>[
                 Text('Show app navigation buttons:'),

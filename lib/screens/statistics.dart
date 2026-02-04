@@ -6,6 +6,7 @@ import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/services/birdsService.dart';
 import 'package:flutter_bird_colony/services/nestsService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:provider/provider.dart';
 
 import '../models/firestore/bird.dart';
@@ -55,6 +56,7 @@ class _StatisticsState extends State<Statistics> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
+      _selectedYear = sps?.selectedYear ?? _selectedYear;
       nestsService = Provider.of<NestsService>(context, listen: false);
       birdsService = Provider.of<BirdsService>(context, listen: false);
       _speciesList = sps!.speciesList;
@@ -70,12 +72,9 @@ class _StatisticsState extends State<Statistics> {
   }
 
   _refreshStreams() {
-    if(_selectedYear == 2022){
-      _nestsStream = nestsService?.watchItems("Nest") ?? Stream.empty();
-    } else {
-      _nestsStream =
-          nestsService?.watchItems(_selectedYear.toString()) ?? Stream.empty();
-    }
+    _nestsStream = nestsService
+            ?.watchItems(yearToNestCollectionName(_selectedYear)) ??
+        Stream.empty();
     DateTime startDate = DateTime(_selectedYear);
     DateTime endDate = DateTime(_selectedYear + 1);
 
@@ -135,8 +134,17 @@ class _StatisticsState extends State<Statistics> {
                 Container(width: 8),
                 DropdownButton<int>(
                   value: _selectedYear,
-                  items: List<int>.generate(DateTime.now().year - 2022 + 1, (int index) => index + 2022)
-                      .map((int year) {
+                  items: (() {
+                    const startYear = 2022;
+                    final maxYear = DateTime.now().year > _selectedYear
+                        ? DateTime.now().year
+                        : _selectedYear;
+                    final years = maxYear >= startYear
+                        ? List<int>.generate(maxYear - startYear + 1,
+                            (int index) => index + startYear)
+                        : <int>[maxYear];
+                    return years;
+                  })().map((int year) {
                     return DropdownMenuItem<int>(
                       value: year,
                       child: Text(year.toString(), style: TextStyle(color: Colors.deepPurpleAccent)),
@@ -306,6 +314,7 @@ class _StatisticsState extends State<Statistics> {
 
   void showNestsonMap(List<Nest> nests) {
     List<String> nestIds = nests.map((Nest n) => n.id ?? "").toList();
-    Navigator.pushNamed(context, '/mapNests', arguments: {"nest_ids": nestIds});
+    Navigator.pushNamed(context, '/mapNests',
+        arguments: {"nest_ids": nestIds, "year": _selectedYear});
   }
 }

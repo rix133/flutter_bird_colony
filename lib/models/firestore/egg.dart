@@ -8,6 +8,7 @@ import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 
 import '../experimentedItem.dart';
 import '../markerColorGroup.dart';
@@ -49,7 +50,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   @override
   Future<List<Egg>> changeLog(FirebaseFirestore firestore) async {
     return (firestore
-        .collection(discover_date.year.toString())
+        .collection(yearToNestCollectionName(discover_date.year))
         .doc(getNest())
         .collection("egg")
         .doc(id)
@@ -124,7 +125,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       //remove empty measures
       measures.removeWhere((element) => element.value.isEmpty);
 
-      CollectionReference<Object?> eggCollection =  firestore.collection(discover_date.year.toString()).doc(nestId).collection("egg");
+      CollectionReference<Object?> eggCollection =  firestore.collection(yearToNestCollectionName(discover_date.year)).doc(nestId).collection("egg");
       if(id == null){
         id = nestId + " egg " + (await eggCollection.get()).docs.length.toString();
         eggCollection.doc(id).set(toJson()).then((value) => FSItemMixin().saveChangeLog(this, eggCollection)).catchError((e) => UpdateResult.error(message: e.toString()));
@@ -143,7 +144,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
     if(nestId == null){
       return UpdateResult.error(message: "No nest found");
     } else{
-      CollectionReference<Object?> eggCollection =  firestore.collection(discover_date.year.toString()).doc(nestId).collection("egg");
+      CollectionReference<Object?> eggCollection =  firestore.collection(yearToNestCollectionName(discover_date.year)).doc(nestId).collection("egg");
       if(id != null){
         return eggCollection.doc(id).delete().then((value) => UpdateResult.deleteOK(item:this)).catchError((e) => UpdateResult.error(message: e.toString()));
       } else {

@@ -6,6 +6,7 @@ import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
 import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
 import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 
 import '../../services/sharedPreferencesService.dart';
 import '../markerColorGroup.dart';
@@ -321,7 +322,7 @@ class Experiment implements FirestoreItem {
   Future<UpdateResult> _updateNestCollection(FirebaseFirestore firestore, List<String>? items,
       {bool delete = false}) async {
     CollectionReference nestCollection =
-        firestore.collection(year.toString());
+        firestore.collection(yearToNestCollectionName(year ?? DateTime.now().year));
     if (items != null) {
       Nest n;
       for (String i in items) {
@@ -350,7 +351,7 @@ class Experiment implements FirestoreItem {
   Future<UpdateResult> _updateBirdsCollection(FirebaseFirestore firestore, List<String>? items,
       {bool delete = false}) async {
     CollectionReference birdCollection =
-        firestore.collection(year.toString());
+        firestore.collection("Birds");
     if (items != null) {
       Bird b;
       for (String i in items) {

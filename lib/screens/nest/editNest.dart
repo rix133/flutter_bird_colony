@@ -15,6 +15,7 @@ import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
@@ -50,6 +51,11 @@ class _EditNestState extends State<EditNest> {
 
   var map = <String, dynamic>{};
 
+  DateTime _dateTimeWithYear(DateTime base, int year) {
+    return DateTime(year, base.month, base.day, base.hour, base.minute,
+        base.second, base.millisecond, base.microsecond);
+  }
+
   void addItem(value, String key) {
     if (value != null) {
       map.addEntries({key: value}.entries);
@@ -67,7 +73,11 @@ class _EditNestState extends State<EditNest> {
   _updateControllers() {
     if(nest != null) {
       species = speciesList.getSpecies(nest!.species);
-      nests = widget.firestore.collection(nest!.discover_date.year.toString());
+      nests = widget.firestore.collection(
+          yearToNestCollectionName(nest!.discover_date.year));
+      experimentsQuery = widget.firestore
+          .collection("experiments")
+          .where("year", isEqualTo: nest!.discover_date.year);
       if(nest!.id != null){
         eggCollection = nests?.doc(nest!.id).collection("egg");
       }
@@ -90,16 +100,25 @@ class _EditNestState extends State<EditNest> {
   @override
   void initState() {
     super.initState();
-    nests = widget.firestore.collection(DateTime.now().year.toString());
-    experimentsQuery = widget.firestore.collection("experiments").where("year", isEqualTo: DateTime.now().year);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       _desiredAccuracy = sps?.desiredAccuracy ?? 4;
       var data = ModalRoute.of(context)?.settings.arguments as Map;
       speciesList = sps?.speciesList ?? LocalSpeciesList();
+      final selectedYear = sps?.selectedYear ?? DateTime.now().year;
+      nests = widget.firestore.collection(yearToNestCollectionName(selectedYear));
+      experimentsQuery = widget.firestore
+          .collection("experiments")
+          .where("year", isEqualTo: selectedYear);
       if (data["year"] != null) {
-        nests = widget.firestore.collection(data["year"].toString());
+        nests = widget.firestore
+            .collection(nestCollectionNameFromYearOrName(data["year"]));
+        final year = int.tryParse(data["year"].toString());
+        if (year != null) {
+          experimentsQuery = widget.firestore
+              .collection("experiments")
+              .where("year", isEqualTo: year);
+        }
       }
       if(data["nest_id"] != null) {
         nests?.doc(data["nest_id"]).get().then((value) {
@@ -220,6 +239,8 @@ class _EditNestState extends State<EditNest> {
             e.ring != null && e.discover_date.year == nest?.discover_date.year)
         .length;
     int new_egg_nr = eggs.where((e) => e.type() == "egg").length + 1;
+    final nestYear = nest?.discover_date.year ?? DateTime.now().year;
+    final discoverDate = _dateTimeWithYear(DateTime.now(), nestYear);
 
     return [
       Text(
@@ -230,7 +251,7 @@ class _EditNestState extends State<EditNest> {
           style: ButtonStyle(backgroundColor: WidgetStatePropertyAll(Colors.grey)),
           onPressed: () {
               Egg egg = Egg(
-                  discover_date: DateTime.now(),
+                  discover_date: discoverDate,
                 responsible: sps?.userName,
                 measures: [],
                   experiments: nest?.experiments ?? [],
@@ -238,7 +259,7 @@ class _EditNestState extends State<EditNest> {
                 status: EggStatus("intact"),
                 ring: null);
               if (new_egg_nr == 1) {
-                nest!.first_egg = DateTime.now();
+                nest!.first_egg = discoverDate;
               }
               String eggID = nest!.name + " egg " + new_egg_nr.toString();
               eggCollection?.doc(eggID)
@@ -259,7 +280,7 @@ class _EditNestState extends State<EditNest> {
               "route": '/editNest',
               //this egg has no number as it has no id
               "egg": Egg(
-                  discover_date: DateTime.now(),
+                  discover_date: discoverDate,
                   last_modified: DateTime.now(),
                   responsible: sps?.userName,
                   measures: [],
@@ -314,7 +335,13 @@ class _EditNestState extends State<EditNest> {
                     exp.nests = [];
                   }
                   exp.nests!.add(nest!.name);
-                  exp.save(widget.firestore).then((v) => Navigator.pushNamedAndRemoveUntil(context, '/editNest', ModalRoute.withName('/findNest'), arguments: {"nest_id": nest!.name})
+                  exp.save(widget.firestore).then((v) =>
+                      Navigator.pushNamedAndRemoveUntil(
+                          context, '/editNest', ModalRoute.withName('/findNest'),
+                          arguments: {
+                            "nest_id": nest!.name,
+                            "year": nest!.discover_date.year,
+                          })
                   );
                 }
               },

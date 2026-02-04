@@ -18,6 +18,7 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
   MapType mapType = MapType.satellite;
   String defaultSpecies = "Common Gull";
   String settingsType = "default";
+  int selectedYear = DateTime.now().year;
   List<MarkerColorGroup> markerColorGroups = [];
   double desiredAccuracy = 4.0;
 

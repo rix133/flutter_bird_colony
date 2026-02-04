@@ -47,6 +47,8 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       experimentsService =
           Provider.of<ExperimentsService>(context, listen: false);
+      selectedYear = sps?.selectedYear ?? selectedYear;
+      updateYearFilter(selectedYear);
       stream = fsService?.watchItems(collectionName) ?? Stream.empty();
       experimentStream =
           experimentsService?.watchItems("experiments") ?? Stream.empty();
@@ -57,11 +59,13 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
 
   void clearFilters() {
+    final defaultYear = sps?.selectedYear ?? DateTime.now().year;
     setState(() {
-      selectedYear = DateTime.now().year;
+      selectedYear = defaultYear;
       selectedExperiments = null;
       searchController.clear();
     });
+    updateYearFilter(defaultYear);
   }
   bool filterByExperiments(ExperimentedItem e) {
     if (selectedExperiments == null) return true;
@@ -72,11 +76,17 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
 
   Widget yearInput(BuildContext context) {
+    const startYear = 2022;
+    final maxYear =
+        DateTime.now().year > selectedYear ? DateTime.now().year : selectedYear;
+    final years = maxYear >= startYear
+        ? List<int>.generate(maxYear - startYear + 1,
+            (int index) => index + startYear)
+        : <int>[maxYear];
     return DropdownButton<int>(
       value: selectedYear,
       style: TextStyle(color: Colors.deepPurpleAccent),
-      items: List<int>.generate(DateTime.now().year - 2022 + 1,
-              (int index) => index + 2022).map((int year) {
+      items: years.map((int year) {
         return DropdownMenuItem<int>(
           value: year,
           child: Text(year.toString(),
@@ -160,9 +170,10 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
   List<FirestoreItem> getFilteredItems(List<FirestoreItem> items);
 
   ListView listAllItems(BuildContext context, List<FirestoreItem> inputItems) {
-    //disable if not current year and user is not admin
-    bool disabled =
-        selectedYear != DateTime.now().year && !(sps?.isAdmin ?? false);
+    // Disable editing when browsing a year different from the app's selected year
+    // (unless admin).
+    final appYear = sps?.selectedYear ?? DateTime.now().year;
+    bool disabled = selectedYear != appYear && !(sps?.isAdmin ?? false);
     //the items need to be asigned for Downlaoding purposes
     List<FirestoreItem> items = getFilteredItems(inputItems);
     return ListView.builder(

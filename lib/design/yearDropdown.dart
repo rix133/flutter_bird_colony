@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 class YearDropdown extends StatefulWidget {
   final int selectedYear;
   final ValueChanged<int> onChanged;
+  final Key? dropdownKey;
 
   YearDropdown({
+    this.dropdownKey,
     required this.selectedYear,
     required this.onChanged,
   });
@@ -24,11 +26,19 @@ class _YearDropdownState extends State<YearDropdown> {
 
   @override
   Widget build(BuildContext context) {
+    const startYear = 2022;
+    final maxYear = DateTime.now().year > widget.selectedYear
+        ? DateTime.now().year
+        : widget.selectedYear;
+    final years = maxYear >= startYear
+        ? List<int>.generate(
+            maxYear - startYear + 1, (int index) => index + startYear)
+        : <int>[maxYear];
     return DropdownButton<int>(
+      key: widget.dropdownKey,
       value: _selectedYear,
       style: TextStyle(color: Colors.deepPurpleAccent),
-      items: List<int>.generate(DateTime.now().year - 2022 + 1,
-              (int index) => index + 2022).map((int year) {
+      items: years.map((int year) {
         return DropdownMenuItem<int>(
           value: year,
           child: Text(year.toString(),

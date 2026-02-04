@@ -10,6 +10,7 @@ import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
@@ -41,6 +42,11 @@ class _CreateNestState extends State<CreateNest> {
     measures: [Measure.note()],
   );
 
+  DateTime _dateTimeWithYear(DateTime base, int year) {
+    return DateTime(year, base.month, base.day, base.hour, base.minute,
+        base.second, base.millisecond, base.microsecond);
+  }
+
 
   void _getCurrentLocation() async {
     setState(() {
@@ -67,7 +73,6 @@ class _CreateNestState extends State<CreateNest> {
 
   @override
   void initState() {
-    nests = widget.firestore.collection(DateTime.now().year.toString());
     recent = widget.firestore.collection('recent').doc("nest");
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -78,6 +83,13 @@ class _CreateNestState extends State<CreateNest> {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       _speciesList = sps!.speciesList;
       nest.responsible = sps!.userName;
+      final activeYear = data != null
+          ? nest.discover_date.year
+          : (sps?.selectedYear ?? DateTime.now().year);
+      nests = widget.firestore.collection(yearToNestCollectionName(activeYear));
+      if (data == null && nest.discover_date.year != activeYear) {
+        nest.discover_date = _dateTimeWithYear(DateTime.now(), activeYear);
+      }
       //nest.species = sps!.defaultSpecies; //to set the default species automatically all the time
       _idStream = recent?.snapshots() ?? Stream.empty();
       setState(() {});

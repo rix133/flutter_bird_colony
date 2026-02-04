@@ -111,13 +111,13 @@ class DefaultSettings implements FirestoreItem {
         : Species.fromJson(json['defaultSpecies']);
     return DefaultSettings(
         id: snapshot.id,
-        desiredAccuracy: (json['desiredAccuracy'] as num).toDouble(),
+        desiredAccuracy: (json['desiredAccuracy'] as num?)?.toDouble() ?? 4.0,
         selectedYear: json['selectedYear'],
         autoNextBand: json['autoNextBand'],
         autoNextBandParent: json['autoNextBandParent'],
         defaultLocation: json['defaultLocation'],
-        defaultCameraZoom: json['defaultCameraZoom'] ?? 16.35,
-        defaultCameraBearing: json['defaultCameraBearing'] ?? 270.0,
+        defaultCameraZoom: (json['defaultCameraZoom'] as num?)?.toDouble() ?? 16.35,
+        defaultCameraBearing: (json['defaultCameraBearing'] as num?)?.toDouble() ?? 270.0,
         biasedRepeatedMeasurements: json['biasedRepeatedMeasurements'],
         measures: json['measures'] == null
             ? []
@@ -241,8 +241,8 @@ class DefaultSettings implements FirestoreItem {
             selectedYear = value.toInt();
           });
         },
-        min: DateTime.now().year.toDouble() - 2,
-        max: DateTime.now().year.toDouble() + 2,
+        min: DateTime.now().year.toDouble() - 4,
+        max: DateTime.now().year.toDouble(),
         divisions: 5,
         label: selectedYear.toString(),
       ),

@@ -19,12 +19,19 @@ class MapCreateNest extends GoogleMapScreen {
 }
 
 class _MapCreateNestState extends GoogleMapScreenState {
+  DateTime _dateTimeWithYear(DateTime base, int year) {
+    return DateTime(year, base.month, base.day, base.hour, base.minute,
+        base.second, base.millisecond, base.microsecond);
+  }
+
   Nest getNest(bool withDefaults, String? id) {
+    final activeYear = sps?.selectedYear ?? DateTime.now().year;
+    final now = DateTime.now();
     Nest nest = Nest(
       coordinates: GeoPoint(0, 0),
       accuracy: "loading...",
       last_modified: DateTime.now(),
-      discover_date: DateTime.now(),
+      discover_date: _dateTimeWithYear(now, activeYear),
       responsible: null,
       measures: [Measure.note()],
     );

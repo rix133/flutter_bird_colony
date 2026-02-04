@@ -84,7 +84,7 @@ class _AddImageScreenState extends State<AddImageScreen> {
   }
 
   Future<void> _uploadImage() async {
-    String year = DateTime.now().year.toString();
+    final String year = widget.nestDoc.parent.id;
     if (kIsWeb && _webImage == null) return;
     if (!kIsWeb && _image == null) return;
     setState(() {

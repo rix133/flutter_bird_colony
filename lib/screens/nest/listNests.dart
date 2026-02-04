@@ -7,6 +7,7 @@ import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 
 import '../../design/minMaxInput.dart';
 import '../../services/nestsService.dart';
@@ -163,7 +164,7 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
   }
 
   updateYearFilter(int value) {
-    collectionName = value.toString();
+    collectionName = yearToNestCollectionName(value);
     setState(() {
       stream = fsService?.watchItems(collectionName) ?? Stream.empty();
     });

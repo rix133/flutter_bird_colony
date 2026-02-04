@@ -244,8 +244,7 @@ void main() async {
 
       // Enter email and password
       await tester.enterText(
-          find.widgetWithText(TextField, 'Email'), 'test@example.com');
-      await tester.enterText(
+          find.widgetWithText(TextField, 'Email'), 'test@example.com');      await tester.enterText(
           find.widgetWithText(TextField, 'Password'), 'password123');
 
       // Tap the 'Create new account' button
@@ -472,6 +471,39 @@ void main() async {
       expect(find.byType(SpeciesRawAutocomplete), findsOneWidget);
     });
 
+    testWidgets("manual app year selection updates SharedPreferencesService",
+        (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = false;
+      
+      // Default year should be current year
+      int currentYear = DateTime.now().year;
+      expect(sharedPreferencesService.selectedYear, currentYear);
+
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      // go to settings page
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
+
+      // Find the dropdown
+      final dropdownFinder = find.byKey(Key('selectedYearDropdown'));
+      expect(dropdownFinder, findsOneWidget);
+
+      // Change year to currentYear - 1
+      int targetYear = currentYear - 1;
+      await tester.tap(dropdownFinder);
+      await tester.pumpAndSettle();
+      
+      // Select the target year from the dropdown list
+      await tester.tap(find.text(targetYear.toString()).last);
+      await tester.pumpAndSettle();
+
+      // Verify service has updated year
+      expect(sharedPreferencesService.selectedYear, targetYear);
+    });
+
     testWidgets("default map type is changed", (WidgetTester tester) async {
       authService.isLoggedIn = true;
       sharedPreferencesService.isAdmin = false;
@@ -514,13 +546,13 @@ void main() async {
       await tester.tap(find.byIcon(Icons.settings));
       await tester.pumpAndSettle();
 
-      //find the switchlisttiles and toogle them
-      Finder switchFinder = find.byType(Switch);
-      expect(switchFinder, findsNWidgets(3));
-      for (int i = 0; i < 3; i++) {
-        await tester.tap(switchFinder.at(i));
-        await tester.pumpAndSettle();
-      }
+       //find the switchlisttiles and toogle them
+       Finder switchFinder = find.byType(Switch);
+       expect(switchFinder, findsNWidgets(3));
+       for (int i = 0; i < 3; i++) {
+         await tester.tap(switchFinder.at(i));
+         await tester.pumpAndSettle();
+       }
 
       expect(sharedPreferencesService.autoNextBand, true);
       expect(sharedPreferencesService.autoNextBandParent, true);

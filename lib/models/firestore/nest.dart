@@ -10,6 +10,7 @@ import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
 import 'package:flutter_bird_colony/models/markerColorGroup.dart';
 import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../services/sharedPreferencesService.dart';
@@ -93,9 +94,11 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   }
 
   Marker getMarker(
-      BuildContext context, bool visibility, List<MarkerColorGroup> group) {
-    //disable button if the nest is from another year
-    bool disabled = DateTime.now().year != discover_date.year;
+      BuildContext context, bool visibility, List<MarkerColorGroup> group,
+      {int? selectedYear, bool isAdmin = false}) {
+    // Disable editing if the nest is from another year (unless admin).
+    final effectiveYear = selectedYear ?? DateTime.now().year;
+    final bool disabled = !isAdmin && effectiveYear != discover_date.year;
     return Marker(
         infoWindow: InfoWindow(
             title: id,
@@ -166,7 +169,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   @override
   Future<List<Nest>> changeLog(FirebaseFirestore firestore) async {
     return (firestore
-        .collection(discover_date.year.toString())
+        .collection(yearToNestCollectionName(discover_date.year))
         .doc(id)
         .collection("changelog")
         .get()
@@ -246,7 +249,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     // the modified date is assigned at write time
     last_modified = DateTime.now();
     CollectionReference nests =
-        firestore.collection(discover_date.year.toString());
+        firestore.collection(yearToNestCollectionName(discover_date.year));
     if (type == "modify" || type == "default") {
       return _write2Firestore(nests);
     }
@@ -269,7 +272,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
       });
     }
     CollectionReference items =
-        firestore.collection(discover_date.year.toString());
+        firestore.collection(yearToNestCollectionName(discover_date.year));
 
     //check if the item is already in deleted collection
     return FSItemMixin().deleteFirestoreItem(this, items);
@@ -519,7 +522,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     if (id == null) {
       return Future.value([]);
     }
-    String year = discover_date.year.toString();
+    String year = yearToNestCollectionName(discover_date.year);
     CollectionReference eggs =
         firestore.collection(year).doc(id).collection("egg");
     return eggs.get().then(

@@ -4,6 +4,7 @@ import 'package:flutter_bird_colony/design/modifingButtons.dart';
 import 'package:flutter_bird_colony/models/dataSearch.dart';
 import 'package:flutter_bird_colony/models/firestore/experiment.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 
@@ -38,14 +39,17 @@ class _EditExperimentState extends State<EditExperiment> {
   void initState() {
     super.initState();
      experiments = widget.firestore.collection('experiments');
-     nestsCollection = widget.firestore.collection(DateTime.now().year.toString());
      birdsCollection = widget.firestore.collection('Birds');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       var map = ModalRoute.of(context)?.settings.arguments;
       if (map != null) {
         experiment = map as Experiment;
+      } else {
+        experiment.year = sps?.selectedYear ?? experiment.year;
       }
+      nestsCollection = widget.firestore.collection(
+          yearToNestCollectionName(experiment.year ?? DateTime.now().year));
       otherCollection = getOtherItems();
       setState(() {  });
     });
@@ -65,7 +69,8 @@ class _EditExperimentState extends State<EditExperiment> {
 
   CollectionReference? getOtherItems() {
     if (experiment.type == "nest") {
-      nestsCollection = widget.firestore.collection(experiment.year.toString());
+      nestsCollection = widget.firestore.collection(
+          yearToNestCollectionName(experiment.year ?? DateTime.now().year));
       return nestsCollection;
     } else if (experiment.type == "bird") {
       return birdsCollection;

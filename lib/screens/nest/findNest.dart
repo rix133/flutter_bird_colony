@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/buildForm.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 
 import '../../services/sharedPreferencesService.dart';
 
@@ -30,10 +31,12 @@ class _FindNestState extends State<FindNest> {
   @override
   void initState() {
     super.initState();
-    nests = widget.firestore.collection(DateTime.now().year.toString());
+    nests = widget.firestore.collection(yearToNestCollectionName(DateTime.now().year));
     _widgetFocusNode.addListener(_onFocusChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
+      nests = widget.firestore
+          .collection(yearToNestCollectionName(sps?.selectedYear ?? DateTime.now().year));
       setState(() {});
     });
   }
