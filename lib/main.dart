@@ -41,7 +41,7 @@ import 'services/sharedPreferencesService.dart';
 late FirebaseApp firebaseApp;
 String appName = 'unknown';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final sharedPreferences = await SharedPreferences.getInstance();
@@ -95,7 +95,6 @@ void handleAuthStateChanges(User? user, SharedPreferences sharedPreferences) {
   }
 }
 
-
 class MyApp extends StatelessWidget {
   final FirebaseFirestore firestore;
   final AuthService authService;
@@ -112,11 +111,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      builder: (context, child) => ColoredBox(
+        color: Colors.black,
+        child: child ?? const SizedBox.shrink(),
+      ),
+      themeMode: ThemeMode.dark,
       initialRoute: '/',
       routes: {
         '/': (context) => MyHomePage(title: appName, auth: authService),
-        '/editEgg': (context)=>EditEgg(firestore: firestore),
-        '/createNest':(context)=> CreateNest(firestore: firestore),
+        '/editEgg': (context) => EditEgg(firestore: firestore),
+        '/createNest': (context) => CreateNest(firestore: firestore),
         '/editNest': (context) =>
             EditNest(firestore: firestore, storage: storage),
         '/settings': (context) => SettingsPage(
@@ -125,30 +129,39 @@ class MyApp extends StatelessWidget {
             testApp: appName == 'testing'),
         '/mapNests': (context) =>
             MapNests(firestore: firestore, auth: authService),
-        '/statistics':(context)=> Statistics(firestore: firestore),
+        '/statistics': (context) => Statistics(firestore: firestore),
         '/mapCreateNest': (context) =>
             MapCreateNest(firestore: firestore, auth: authService),
         '/overwriteNestLocation': (context) =>
             OverwriteNestLocationMap(auth: authService),
-        '/findNest':(context)=>FindNest(firestore: firestore),
-        '/editBird':(context)=>EditBird(firestore: firestore),
-        '/listBirds':(context)=>ListBirds(firestore: firestore),
-        '/listExperiments':(context)=>ListExperiments(firestore: firestore),
-        '/listNests':(context)=>ListNests(firestore: firestore),
-        '/editExperiment':(context)=>EditExperiment(firestore: firestore),
+        '/findNest': (context) => FindNest(firestore: firestore),
+        '/editBird': (context) => EditBird(firestore: firestore),
+        '/listBirds': (context) => ListBirds(firestore: firestore),
+        '/listExperiments': (context) => ListExperiments(firestore: firestore),
+        '/listNests': (context) => ListNests(firestore: firestore),
+        '/editExperiment': (context) => EditExperiment(firestore: firestore),
         '/editDefaultSettings': (context) =>
             EditDefaultSettings(firestore: firestore, auth: authService),
-        '/listDatas':(context)=>ListDatas(firestore: firestore),
-        '/listSpecies':(context)=>ListSpecies(firestore: firestore),
-        '/editSpecies':(context)=>EditSpecies(firestore: firestore),
-
-
+        '/listDatas': (context) => ListDatas(firestore: firestore),
+        '/listSpecies': (context) => ListSpecies(firestore: firestore),
+        '/editSpecies': (context) => EditSpecies(firestore: firestore),
       },
       theme: ThemeData(
-        textSelectionTheme: TextSelectionThemeData(selectionColor: Colors.green[100]),
+        brightness: Brightness.dark,
+        useMaterial3: false,
+        textSelectionTheme:
+            TextSelectionThemeData(selectionColor: Colors.green[100]),
         hintColor: Colors.yellow,
         textTheme: Typography.whiteCupertino,
         scaffoldBackgroundColor: const Color.fromARGB(255, 0, 0, 0),
+        canvasColor: Colors.black,
+        dialogTheme: const DialogThemeData(backgroundColor: Colors.black),
+        cardColor: Colors.black,
+        colorScheme: const ColorScheme.dark(
+          primary: Colors.orange,
+          secondary: Colors.orangeAccent,
+          surface: Colors.black,
+        ),
         primarySwatch: Colors.orange,
         textButtonTheme: TextButtonThemeData(style: flatButtonStyle),
         elevatedButtonTheme: ElevatedButtonThemeData(style: raisedButtonStyle),
@@ -156,18 +169,11 @@ class MyApp extends StatelessWidget {
         inputDecorationTheme: inputDecorationTheme,
         listTileTheme: listTileTheme,
         appBarTheme: AppBarTheme(
-          color: Colors.black, // This is your AppBar background color
+          backgroundColor: Colors.black, // This is your AppBar background color
           titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
           iconTheme: IconThemeData(color: Colors.white),
         ),
       ),
     );
   }
-
-
-
-
 }
-
-
-

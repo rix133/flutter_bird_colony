@@ -61,6 +61,7 @@ class HomePageButton extends StatelessWidget {
                       Icon(
                         icon,
                         size: 70,
+                        color: Colors.black,
                       ),
                       Text(
                         label,
