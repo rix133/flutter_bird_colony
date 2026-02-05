@@ -35,6 +35,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  static const bool _isTest = bool.fromEnvironment('FLUTTER_TEST');
   String? _userName;
   String? _userEmail;
   String? _userPassword;
@@ -325,7 +326,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
       return (await widget.auth.signInWithCredential(credential)).user;
     } catch (e) {
-      debugPrint('Google sign-in failed: $e');
+      if (!_isTest) {
+        debugPrint('Google sign-in failed: $e');
+      }
       // If you suspect a stale/partial session, signing out of Google helps reset state.
       if (!kIsWeb) {
         await widget.auth.googleSignOut();

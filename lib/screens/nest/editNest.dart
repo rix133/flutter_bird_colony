@@ -154,10 +154,12 @@ class _EditNestState extends State<EditNest> {
       padding: const EdgeInsets.all(8.0),
       child:
         ElevatedButton.icon(
+        key: Key("nestAccuracyButton"),
         style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.all(
                     accuracyDiff < 0 ? Colors.green : Colors.red)),
             onPressed: () => updateFun(),
+            onLongPress: () => _startOverwriteLocationFlow(),
         icon: Icon(
           Icons.my_location,
           color: Colors.black87,
@@ -477,6 +479,38 @@ class _EditNestState extends State<EditNest> {
         ],
       ),
     );
+  }
+
+  Future<void> _startOverwriteLocationFlow() async {
+    if (nest == null) return;
+    final result = await Navigator.pushNamed(
+      context,
+      '/overwriteNestLocation',
+      arguments: {"nest": nest},
+    );
+
+    if (result is Map) {
+      final GeoPoint? newCoords = result["coordinates"] as GeoPoint?;
+      final double? newAccuracy = result["accuracy"] as double?;
+      if (newCoords != null && newAccuracy != null) {
+        setState(() {
+          nest!.coordinates = newCoords;
+          nest!.setAccuracy(newAccuracy);
+          position = Position(
+            latitude: newCoords.latitude,
+            longitude: newCoords.longitude,
+            accuracy: newAccuracy,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            timestamp: DateTime.now(),
+            altitudeAccuracy: 0.0,
+            headingAccuracy: 0.0,
+          );
+        });
+      }
+    }
   }
 
   Future<void> _removeExperimentFromNest(Experiment experiment) async {

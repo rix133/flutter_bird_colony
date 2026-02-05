@@ -32,7 +32,13 @@ class MockAuthService extends Mock implements AuthService {
 
   @override
   Future<void> googleSignOut() {
-    return Future.value(null);
+    return Future.value();
+  }
+
+  @override
+  Future<void> ensureGoogleInitialized(
+      {String? clientId, String? serverClientId}) {
+    return Future.value();
   }
 
   @override

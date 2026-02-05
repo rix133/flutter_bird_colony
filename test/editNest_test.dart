@@ -14,10 +14,12 @@ import 'package:flutter_bird_colony/screens/homepage.dart';
 import 'package:flutter_bird_colony/screens/nest/editEgg.dart';
 import 'package:flutter_bird_colony/screens/nest/editNest.dart';
 import 'package:flutter_bird_colony/screens/nest/findNest.dart';
+import 'package:flutter_bird_colony/screens/nest/overwriteNestLocationMap.dart';
 import 'package:firebase_storage_mocks/firebase_storage_mocks.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
@@ -94,6 +96,13 @@ void main() {
             return MaterialPageRoute(
               builder: (context) => EditBird(
                 firestore: firestore,
+              ),
+              settings: settings,
+            );
+          } else if (settings.name == '/overwriteNestLocation') {
+            return MaterialPageRoute(
+              builder: (context) => OverwriteNestLocationMap(
+                auth: authService,
               ),
               settings: settings,
             );
@@ -995,6 +1004,69 @@ void main() {
       Map<String, dynamic> data = nestDoc.data() as Map<String, dynamic>;
       List<dynamic> experiments = data['experiments'] ?? [];
       expect(experiments.length, 0);
+        });
+  });
+
+  group("overwrite nest location", () {
+    setUp(() async {
+      nest.accuracy = "0.20m";
+      await firestore.collection('recent').doc("nest").set({"id": "1"});
+      await nest.save(firestore);
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .set(egg.toJson());
+
+      myApp = await getMyApp();
+    });
+
+    tearDown(() async {
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .get()
+          .then((value) {
+        value.docs.forEach((element) {
+          element.reference.delete();
+        });
+      });
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .delete();
+    });
+
+    testWidgets("can overwrite location with worse accuracy",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      Finder accuracyButton = find.byKey(Key("nestAccuracyButton"));
+      expect(accuracyButton, findsOneWidget);
+
+      await tester.longPress(accuracyButton);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(GoogleMap), findsOneWidget);
+
+      await tester.tap(find.byKey(Key("overwriteLocationButton")));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EditNest), findsOneWidget);
+
+      await tester.tap(find.byKey(Key("saveButton")));
+      await tester.pumpAndSettle();
+
+      Nest nestObj = Nest.fromDocSnapshot(await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .get());
+      expect(nestObj.accuracy, "3.20m");
+      expect(nestObj.coordinates.latitude, closeTo(58.888888, 0.000001));
+      expect(nestObj.coordinates.longitude, closeTo(23.888888, 0.000001));
     });
   });
 }

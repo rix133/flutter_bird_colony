@@ -79,13 +79,13 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
       if (widget.autoUpdateLoc) {
         _positionStreamSubscription =
             location.getPositionStream().listen((Position position) {
-          _updateLocation(position);
+          updateLocation(position);
         });
       }
     });
   }
 
-  _updateLocation(Position value) {
+  void updateLocation(Position value) {
     accuracy = value.accuracy;
     coordinates = GeoPoint(value.latitude, value.longitude);
     camPosCurrent = CameraPosition(
@@ -154,7 +154,7 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
           location
               .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
               .then((value) {
-            _updateLocation(value);
+            updateLocation(value);
           });
           focus.unfocus();
         },

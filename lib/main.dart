@@ -33,6 +33,7 @@ import 'firebase_options_redsquirrel.dart' as redSquirrelColony;
 import 'screens/listDatas.dart';
 import 'screens/nest/mapCreateNest.dart';
 import 'screens/nest/mapNests.dart';
+import 'screens/nest/overwriteNestLocationMap.dart';
 import 'screens/settings/editSpecies.dart';
 import 'services/nestsService.dart';
 import 'services/sharedPreferencesService.dart';
@@ -127,6 +128,8 @@ class MyApp extends StatelessWidget {
         '/statistics':(context)=> Statistics(firestore: firestore),
         '/mapCreateNest': (context) =>
             MapCreateNest(firestore: firestore, auth: authService),
+        '/overwriteNestLocation': (context) =>
+            OverwriteNestLocationMap(auth: authService),
         '/findNest':(context)=>FindNest(firestore: firestore),
         '/editBird':(context)=>EditBird(firestore: firestore),
         '/listBirds':(context)=>ListBirds(firestore: firestore),
