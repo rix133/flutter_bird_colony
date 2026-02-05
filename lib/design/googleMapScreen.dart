@@ -183,7 +183,6 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
   @override
   void dispose() {
     _positionStreamSubscription?.cancel();
-    _googleMapController?.dispose();
     focus.dispose();
     super.dispose();
   }
