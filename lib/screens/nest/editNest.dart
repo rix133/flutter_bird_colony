@@ -479,6 +479,66 @@ class _EditNestState extends State<EditNest> {
     );
   }
 
+  Future<void> _removeExperimentFromNest(Experiment experiment) async {
+    if (nest == null) return;
+    String? expId = experiment.id;
+    String expName = experiment.name;
+
+    bool? confirmed = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Colors.black87,
+            title: Text("Remove experiment"),
+            content: Text("Remove '$expName' from this nest?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text("Remove", style: TextStyle(color: Colors.redAccent)),
+              ),
+            ],
+          );
+        });
+    if (confirmed != true) return;
+
+    setState(() {
+      nest!.experiments = nest!.experiments
+              ?.where((e) => expId != null ? e.id != expId : e.name != expName)
+              .toList() ??
+          [];
+    });
+
+    final nestCollection = nests;
+    if (nestCollection != null) {
+      try {
+        await nestCollection.doc(nest!.name).update({
+          'experiments':
+              nest!.experiments?.map((e) => e.toSimpleJson()).toList(),
+          'last_modified': DateTime.now(),
+        });
+      } catch (error) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Failed to update nest experiments: $error"),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 4),
+        ));
+      }
+    }
+
+    if (expId != null) {
+      widget.firestore
+          .collection('experiments')
+          .doc(expId)
+          .update({'nests': FieldValue.arrayRemove([nest!.name])}).catchError((_) {
+        return;
+      });
+    }
+  }
+
   Widget build(BuildContext context) {
     if (nest == null) {
       // Return a CircularProgressIndicator while nest is loading
@@ -517,7 +577,9 @@ class _EditNestState extends State<EditNest> {
                   mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
                 getTitleRow(),
-                listExperiments(nest!), //list of experiments
+                listExperiments(nest!,
+                    onRemove: _removeExperimentFromNest,
+                    showRemoveHint: true), //list of experiments
                 SizedBox(height: 15),
                 Row(children:[Expanded(child:SpeciesRawAutocomplete(
                   speciesList: speciesList,

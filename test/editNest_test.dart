@@ -5,6 +5,7 @@ import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
 import 'package:flutter_bird_colony/models/eggStatus.dart';
 import 'package:flutter_bird_colony/models/firestore/bird.dart';
 import 'package:flutter_bird_colony/models/firestore/egg.dart';
+import 'package:flutter_bird_colony/models/firestore/experiment.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/models/measure.dart';
@@ -922,5 +923,78 @@ void main() {
               .get());
           expect(nestObj.species, "undefined");
         });
+  });
+
+  group("experiment cleanup", () {
+    setUp(() async {
+      Experiment lingeringExperiment = Experiment(
+        id: "exp-1",
+        name: "Lingering Experiment",
+        color: Colors.orange,
+      );
+      Nest nestWithExperiment = Nest(
+        id: nest.id,
+        coordinates: nest.coordinates,
+        accuracy: nest.accuracy,
+        last_modified: nest.last_modified,
+        discover_date: nest.discover_date,
+        first_egg: nest.first_egg,
+        responsible: nest.responsible,
+        species: nest.species,
+        measures: [Measure.note()],
+        experiments: [lingeringExperiment],
+      );
+      await firestore.collection('recent').doc("nest").set({"id": "1"});
+      await nestWithExperiment.save(firestore);
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .doc(egg.id)
+          .set(egg.toJson());
+      myApp = await getMyApp();
+    });
+
+    tearDown(() async {
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .collection("egg")
+          .get()
+          .then((value) {
+        value.docs.forEach((element) {
+          element.reference.delete();
+        });
+      });
+      await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .delete();
+    });
+
+    testWidgets("can remove lingering experiment from nest",
+        (WidgetTester tester) async {
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      expect(find.text("Lingering Experiment"), findsOneWidget);
+
+      await tester.longPress(find.byKey(Key("experimentTag_exp-1")));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Remove experiment"), findsOneWidget);
+      await tester.tap(find.text("Remove"));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Lingering Experiment"), findsNothing);
+
+      DocumentSnapshot nestDoc = await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest.id)
+          .get();
+      Map<String, dynamic> data = nestDoc.data() as Map<String, dynamic>;
+      List<dynamic> experiments = data['experiments'] ?? [];
+      expect(experiments.length, 0);
+    });
   });
 }

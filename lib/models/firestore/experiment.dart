@@ -504,25 +504,47 @@ Experiment experimentFromSimpleJson(Map<String, dynamic> json) {
   return e;
 }
 
-Container listExperiments(ExperimentedItem item) {
+Container listExperiments(ExperimentedItem item,
+    {void Function(Experiment)? onRemove, bool showRemoveHint = false}) {
   if (!item.hasExperiments) {
     return Container();
   }
+
+  List<Widget> experimentButtons = item.experiments?.map((e) {
+        Widget button = ElevatedButton(
+          key: Key("experimentTag_${e.id ?? e.name}"),
+          onPressed: () => null,
+          onLongPress: onRemove == null ? null : () => onRemove(e),
+          child: Text(e.name),
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all(e.color),
+          ),
+        );
+        return button;
+      }).toList() ??
+      [];
+
+  Widget row = Row(
+    mainAxisAlignment: MainAxisAlignment.start,
+    children: [
+      Text("Exp. "),
+      ...experimentButtons,
+      //add experiment button
+    ],
+  );
+
   return Container(
     padding: EdgeInsets.all(8.0),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Text("Exp. "),
-        ...?item.experiments?.map((e) => ElevatedButton(
-              onPressed: () => null,
-              child: Text(e.name),
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(e.color),
-              ),
-            )),
-        //add experiment button
-      ],
-    ),
+    child: showRemoveHint
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              row,
+              SizedBox(height: 4),
+              Text("(long press experiment to remove)",
+                  style: TextStyle(fontSize: 10)),
+            ],
+          )
+        : row,
   );
 }
