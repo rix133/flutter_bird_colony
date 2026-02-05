@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
@@ -8,6 +9,7 @@ class AuthService {
   AuthService(this._auth);
 
   User? get currentUser => _auth.currentUser;
+  FirebaseAuth get auth => _auth;
 
   Stream<User?> authStateChanges() => _auth.authStateChanges();
 
@@ -57,5 +59,11 @@ class AuthService {
     _googleInitialized = true;
   }
 
-  Future<void> googleSignOut() => GoogleSignIn.instance.signOut();
+  Future<void> googleSignOut() async {
+    if (kIsWeb) return;
+    if (!_googleInitialized) {
+      await ensureGoogleInitialized();
+    }
+    await GoogleSignIn.instance.signOut();
+  }
 }

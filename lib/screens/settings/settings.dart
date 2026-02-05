@@ -42,20 +42,27 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _colonyHasChanged = false;
   bool _isLoggedIn = false;
   bool _isAdmin = false;
+  bool _googleSignInInProgress = false;
   List<String> _allowedUsers = [];
   SharedPreferencesService? sps;
   Species _defaultSpecies = Species.empty();
   List<MarkerColorGroup> _defaultMarkerColorGroups = [];
+  
+  void _setStateIfMounted(VoidCallback fn) {
+    if (!mounted) return;
+    setState(fn);
+  }
 
   @override
   void initState() {
     super.initState();
     FirebaseOptionsSelector.getCurrentSelection().then((v) {
-      _selectedColony = v;
-      setState(() {});
+      _setStateIfMounted(() {
+        _selectedColony = v;
+      });
     });
     sps = Provider.of<SharedPreferencesService>(context, listen: false);
-    widget.auth.isUserSignedIn().then((value) => setState(() {
+    widget.auth.isUserSignedIn().then((value) => _setStateIfMounted(() {
           _isLoggedIn = value;
         }));
     _userName = sps!.userName;
@@ -68,7 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
         value.docs.forEach((element) {
           _allowedUsers.add(element.id);
         });
-        setState(() {});
+        _setStateIfMounted(() {});
       });
     }
   }
@@ -171,7 +178,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   await _addUserByEmail().then((value) {
                     if (value.isNotEmpty) {
                       _allowedUsers.add(value);
-                      setState(() {});
+                      _setStateIfMounted(() {});
                     }
                   });
                 },
@@ -290,27 +297,46 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<User?> signInWithGoogle() async {
+    if (_googleSignInInProgress) return null;
+    setState(() {
+      _googleSignInInProgress = true;
+    });
     try {
+      if (kIsWeb) {
+        final provider = GoogleAuthProvider();
+        provider.setCustomParameters({'prompt': 'select_account'});
+        return (await widget.auth.auth.signInWithPopup(provider)).user;
+      }
+
       // Ensure initialize() has been awaited exactly once somewhere before this call.
       // If you prefer doing it here, keep it guarded like in AuthService.ensureGoogleInitialized().
       await widget.auth.ensureGoogleInitialized();
 
       // User-initiated sign-in (recommended in current Firebase + google_sign_in docs).
       final GoogleSignInAccount? googleUser =
-      await GoogleSignIn.instance.authenticate();
+          await GoogleSignIn.instance.authenticate();
       if (googleUser == null) return null;
 
       // Authentication object (ID token for Firebase).
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
       final OAuthCredential credential =
-      GoogleAuthProvider.credential(idToken: googleAuth.idToken);
+          GoogleAuthProvider.credential(idToken: googleAuth.idToken);
 
       return (await widget.auth.signInWithCredential(credential)).user;
     } catch (e) {
+      debugPrint('Google sign-in failed: $e');
       // If you suspect a stale/partial session, signing out of Google helps reset state.
-      await widget.auth.googleSignOut();
+      if (!kIsWeb) {
+        await widget.auth.googleSignOut();
+      }
       return null;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _googleSignInInProgress = false;
+        });
+      }
     }
   }
 
@@ -331,7 +357,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DefaultSettings defaultSettings =
             DefaultSettings.fromDocSnapshot(value);
         sps?.setFromDefaultSettings(defaultSettings);
-        setState(() {
+        _setStateIfMounted(() {
           _defaultSpecies = sps!.speciesList.getSpecies(sps!.defaultSpecies);
           _defaultMarkerColorGroups = sps!.markerColorGroups;
         });
@@ -699,9 +725,8 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               ElevatedButton.icon(
                 key: Key('loginWithGoogleButton'),
-                onPressed: () {
-                  _login('google');
-                },
+                onPressed:
+                    _googleSignInInProgress ? null : () => _login('google'),
                 label: Padding(
                     child: Text('Login with Google'),
                     padding: EdgeInsets.all(10)),
