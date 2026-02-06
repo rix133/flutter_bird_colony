@@ -75,7 +75,7 @@ class _MapNestsState extends GoogleMapScreenState {
       Set<String> searches = search.text.split(RegExp(r',\s*|\s+')).toSet();
       nestsToShow = nestsToShow.where((element) {
         for (String search in searches) {
-          if (element.name.toLowerCase().contains(search.toLowerCase()) ||
+          if (element.name.toLowerCase() == search.toLowerCase() ||
               (element.species?.toLowerCase() ?? "").contains(search.toLowerCase()) ||
               (element.experiments?.any((element) => element.name.toLowerCase().contains(search.toLowerCase())) ?? false)) {
             return true;
@@ -97,7 +97,7 @@ class _MapNestsState extends GoogleMapScreenState {
         return AlertDialog(
           content: TextFormField(
             controller: search,
-            style: TextStyle(color: Colors.black),
+            style: TextStyle(color: Colors.white),
             onEditingComplete: () {
               setState(() {
                 focus.unfocus();
@@ -111,7 +111,6 @@ class _MapNestsState extends GoogleMapScreenState {
               labelStyle: TextStyle(color: Colors.black),
               hintStyle: TextStyle(color: Colors.grey),
               prefixIcon: Icon(Icons.search),
-              counterStyle: TextStyle(color: Colors.black),
             ),
           ),
         );
