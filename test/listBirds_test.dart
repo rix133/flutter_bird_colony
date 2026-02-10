@@ -11,7 +11,6 @@ import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/screens/bird/editBird.dart';
 import 'package:flutter_bird_colony/screens/bird/listBirds.dart';
 import 'package:flutter_bird_colony/screens/homepage.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -51,9 +50,7 @@ void main() {
     description: "Test experiment",
     last_modified: DateTime.now(),
     created: DateTime.now(),
-    year: DateTime
-        .now()
-        .year,
+    year: DateTime.now().year,
     responsible: "Admin",
   );
 
@@ -98,21 +95,24 @@ void main() {
     LocationService.instance = locationAccuracy10;
 
     await firestore.collection('recent').doc("nest").set({"id": "1"});
-    await firestore.collection(DateTime
-        .now()
-        .year
-        .toString()).doc(nest.id).set(nest.toJson());
+    await firestore
+        .collection(DateTime.now().year.toString())
+        .doc(nest.id)
+        .set(nest.toJson());
     await firestore.collection("Birds").doc(parent.band).set(parent.toJson());
     await firestore.collection("Birds").doc(chick.band).set(chick.toJson());
     await firestore.collection("Birds").doc(tern.band).set(tern.toJson());
     //add egg to nest
-    await firestore.collection(DateTime
-        .now()
-        .year
-        .toString()).doc(nest.id).collection("egg").doc(egg.id).set(
-        egg.toJson());
-    await firestore.collection('experiments').doc(experiment.id).set(
-        experiment.toJson());
+    await firestore
+        .collection(DateTime.now().year.toString())
+        .doc(nest.id)
+        .collection("egg")
+        .doc(egg.id)
+        .set(egg.toJson());
+    await firestore
+        .collection('experiments')
+        .doc(experiment.id)
+        .set(experiment.toJson());
 
     await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
 
@@ -122,22 +122,20 @@ void main() {
       app: MaterialApp(initialRoute: '/listBirds', routes: {
         '/': (context) => MyHomePage(title: "Nest app", auth: authService),
         '/listBirds': (context) => ListBirds(firestore: firestore),
-            '/editBird': (context) => EditBird(firestore: firestore),
-          }
-      ),
+        '/editBird': (context) => EditBird(firestore: firestore),
+      }),
     );
-
-
   });
 
   testWidgets(
-      "Will load the list of birds from this year and display them in a list",  (WidgetTester tester) async {
-        await tester.pumpWidget(myApp);
-        await tester.pumpAndSettle();
+      "Will load the list of birds from this year and display them in a list",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
 
-        //check if the list of birds is displayed
-        expect(find.byType(ListTile), findsNWidgets(2));
-});
+    //check if the list of birds is displayed
+    expect(find.byType(ListTile), findsNWidgets(2));
+  });
 
   testWidgets("will filter birds by species name", (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
@@ -171,31 +169,31 @@ void main() {
     //tap the close button
     await tester.tap(find.text("Close"));
 
-
     //check if the list of birds is displayed
     expect(find.byType(ListTile), findsNWidgets(1));
   });
 
   testWidgets(
-      "Will load the list of birds from 2022 and display them in a list",  (WidgetTester tester) async {
-      await tester.pumpWidget(myApp);
-      await tester.pumpAndSettle();
-      //find the filter button
-      await tester.tap(find.byIcon(Icons.filter_alt));
-      await tester.pumpAndSettle();
-      //find the year input dropdown
-      await tester.tap(find.text(DateTime.now().year.toString()));
-      await tester.pumpAndSettle();
-        //tap the 2022 year  option
-      await tester.tap(find.text("2022"));
-      await tester.pumpAndSettle();
+      "Will load the list of birds from 2022 and display them in a list",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    //find the filter button
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    //find the year input dropdown
+    await tester.tap(find.text(DateTime.now().year.toString()));
+    await tester.pumpAndSettle();
+    //tap the 2022 year  option
+    await tester.tap(find.text("2022"));
+    await tester.pumpAndSettle();
 
-      //check if the list of birds is displayed
-      expect(find.byType(ListTile), findsNWidgets(1));
-
+    //check if the list of birds is displayed
+    expect(find.byType(ListTile), findsNWidgets(1));
   });
   testWidgets(
-      "Will load the list of birds from 2023 and display them in a list",  (WidgetTester tester) async {
+      "Will load the list of birds from 2023 and display them in a list",
+      (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
     //find the filter button
@@ -210,7 +208,6 @@ void main() {
 
     //check if the list of birds is displayed
     expect(find.byType(ListTile), findsNWidgets(0));
-
   });
 
   testWidgets("can clear all filters", (WidgetTester tester) async {

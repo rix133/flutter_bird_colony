@@ -148,7 +148,7 @@ void main() {
           (tile2.trailing as ElevatedButton)
               .style!
               .backgroundColor!
-              .resolve({})!.value,
+              .resolve({})!.toARGB32(),
           4294902015);
       //the colors are different for tiles so the color is changed
       final ListTile tile =
@@ -157,7 +157,7 @@ void main() {
           (tile.trailing as ElevatedButton)
               .style!
               .backgroundColor!
-              .resolve({})!.value,
+              .resolve({})!.toARGB32(),
           4294906112);
     });
   });

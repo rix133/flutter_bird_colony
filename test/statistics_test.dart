@@ -6,7 +6,6 @@ import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/screens/nest/mapNests.dart';
 import 'package:flutter_bird_colony/screens/statistics.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_test/flutter_test.dart';
 

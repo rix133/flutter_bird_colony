@@ -6,7 +6,6 @@ import 'package:flutter_bird_colony/screens/listMeasures.dart';
 import 'package:flutter_bird_colony/screens/settings/editDefaultSettings.dart';
 import 'package:flutter_bird_colony/screens/settings/listMarkerColorGroups.dart';
 import 'package:flutter_bird_colony/screens/settings/settings.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -69,7 +68,6 @@ void main() {
         .tap(find.widgetWithText(SwitchListTile, 'Auto next band parent'));
     await tester.pumpAndSettle();
 
-
     Finder brm =
         find.widgetWithText(SwitchListTile, 'Observer bias repeated measures');
 
@@ -85,31 +83,30 @@ void main() {
     await tester.pumpAndSettle();
 
     final saveButton = find.byKey(Key("saveButton"));
-        expect(saveButton, findsOneWidget);
+    expect(saveButton, findsOneWidget);
 
-        //ensure visible
-        await tester.ensureVisible(saveButton);
-        await tester.tap(saveButton);
-        await tester.pumpAndSettle();
+    //ensure visible
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
 
-        expect(find.byType(SettingsPage), findsOneWidget);
-      });
+    expect(find.byType(SettingsPage), findsOneWidget);
+  });
 
   testWidgets('when the save button is pressed', (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
     final saveButton = find.byKey(Key("saveButton"));
-        expect(saveButton, findsOneWidget);
+    expect(saveButton, findsOneWidget);
 
-        //ensure visible
-        await tester.ensureVisible(saveButton);
-        await tester.tap(saveButton);
-        await tester.pumpAndSettle();
+    //ensure visible
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
 
-        expect(find.byType(SettingsPage), findsOneWidget);
-      });
-
+    expect(find.byType(SettingsPage), findsOneWidget);
+  });
 
   testWidgets(
       'updates default settings in firestore when save button is pressed',

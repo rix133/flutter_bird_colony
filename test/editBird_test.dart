@@ -10,7 +10,6 @@ import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/screens/bird/editBird.dart';
 import 'package:flutter_bird_colony/screens/homepage.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,7 +18,6 @@ import 'package:provider/provider.dart';
 import 'mocks/mockAuthService.dart';
 import 'mocks/mockLocationService.dart';
 import 'mocks/mockSharedPreferencesService.dart';
-
 
 void main() {
   final authService = MockAuthService();
@@ -71,9 +69,7 @@ void main() {
     description: "Test experiment",
     last_modified: DateTime.now(),
     created: DateTime.now(),
-    year: DateTime
-        .now()
-        .year,
+    year: DateTime.now().year,
     responsible: "Admin",
   );
 
@@ -84,10 +80,7 @@ void main() {
       measures: [Measure.note(value: "test")],
       nest: "234",
       //3 years ago this was the nest
-      nest_year: DateTime
-          .now()
-          .subtract(Duration(days: 360 * 3))
-          .year,
+      nest_year: DateTime.now().subtract(Duration(days: 360 * 3)).year,
       responsible: 'Admin',
       last_modified: DateTime.now().subtract(Duration(days: 360 * 3)),
       species: 'Common gull');
@@ -119,7 +112,6 @@ void main() {
     //AuthService.instance = authService;
     LocationService.instance = locationAccuracy10;
 
-
     await firestore.collection('users').doc(userEmail).set({'isAdmin': false});
   });
 
@@ -131,10 +123,9 @@ void main() {
         onGenerateRoute: (settings) {
           if (settings.name == '/editBird') {
             return MaterialPageRoute(
-              builder: (context) =>
-                  EditBird(
-                    firestore: firestore,
-                  ),
+              builder: (context) => EditBird(
+                firestore: firestore,
+              ),
               settings: RouteSettings(
                 arguments: arguments, // get initial nest from object
               ),
@@ -529,7 +520,6 @@ void main() {
           widget is InputDecorator &&
           widget.decoration.labelText == 'color ring');
 
-
       expect(finder, findsOneWidget);
 
       await tester.enterText(finder, "A1b2");
@@ -817,20 +807,20 @@ void main() {
     testWidgets("can delete bird", (WidgetTester tester) async {
       myApp = getInitApp({"bird": parent});
       await tester.pumpWidget(myApp);
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.delete));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.delete));
+      await tester.pumpAndSettle();
 
-    expect(find.text("Removing item"), findsOneWidget);
+      expect(find.text("Removing item"), findsOneWidget);
 
-    await tester.tap(find.text('Delete'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
 
-    //expect to find the bird in firestore
+      //expect to find the bird in firestore
       var bird = await firestore.collection("Birds").doc("AA1111").get();
       expect(bird.exists, false);
-  });
+    });
 
     testWidgets("can delete chick bird artefacts from egg",
         (WidgetTester tester) async {
@@ -914,19 +904,19 @@ void main() {
       expect(find.text("Removing item"), findsOneWidget);
 
       await tester.tap(find.text('Delete'));
-          await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-          //expect to not find the bird in firestore
-          var bird = await firestore.collection("Birds").doc(parent.band).get();
-          expect(bird.exists, false);
-          //expect the Parent to be removed from the nest
-          Nest fsNest = await firestore
-              .collection(nest.discover_date.year.toString())
-              .doc(nest.id)
-              .get()
-              .then((value) => Nest.fromDocSnapshot(value));
-          expect(fsNest.parents?.length, 0);
-        });
+      //expect to not find the bird in firestore
+      var bird = await firestore.collection("Birds").doc(parent.band).get();
+      expect(bird.exists, false);
+      //expect the Parent to be removed from the nest
+      Nest fsNest = await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .get()
+          .then((value) => Nest.fromDocSnapshot(value));
+      expect(fsNest.parents?.length, 0);
+    });
   });
 
   group("Change Bird Band", () {

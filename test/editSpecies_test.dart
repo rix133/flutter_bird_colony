@@ -5,7 +5,6 @@ import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/screens/homepage.dart';
 import 'package:flutter_bird_colony/screens/settings/editSpecies.dart';
 import 'package:flutter_bird_colony/screens/settings/listSpecies.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';

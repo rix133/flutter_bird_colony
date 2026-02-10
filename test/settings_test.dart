@@ -8,7 +8,6 @@ import 'package:flutter_bird_colony/screens/homepage.dart';
 import 'package:flutter_bird_colony/screens/settings/editDefaultSettings.dart';
 import 'package:flutter_bird_colony/screens/settings/listSpecies.dart';
 import 'package:flutter_bird_colony/screens/settings/settings.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -244,7 +243,8 @@ void main() async {
 
       // Enter email and password
       await tester.enterText(
-          find.widgetWithText(TextField, 'Email'), 'test@example.com');      await tester.enterText(
+          find.widgetWithText(TextField, 'Email'), 'test@example.com');
+      await tester.enterText(
           find.widgetWithText(TextField, 'Password'), 'password123');
 
       // Tap the 'Create new account' button
@@ -352,8 +352,8 @@ void main() async {
       await tester.pumpWidget(myApp);
 
       await tester.pumpAndSettle();
-          expect(find.text('Settings'), findsOneWidget);
-        });
+      expect(find.text('Settings'), findsOneWidget);
+    });
 
     testWidgets("can open colony selection when not logged in",
         (WidgetTester tester) async {
@@ -417,18 +417,18 @@ void main() async {
       await tester.pumpAndSettle();
 
       //go to settings page
-          await tester.tap(find.byIcon(Icons.settings));
-          await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
 
       // Check if the logout button is displayed
       expect(find.text('Logout'), findsOneWidget);
 
       // Check if other buttons are not displayed
-          expect(find.text('Login with Google'), findsNothing);
-          expect(find.text('Login with email'), findsNothing);
-          expect(find.text('Edit default settings'), findsNothing);
-          expect(find.text('Manage species'), findsNothing);
-        });
+      expect(find.text('Login with Google'), findsNothing);
+      expect(find.text('Login with email'), findsNothing);
+      expect(find.text('Edit default settings'), findsNothing);
+      expect(find.text('Manage species'), findsNothing);
+    });
 
     testWidgets('Log out button pressed', (WidgetTester tester) async {
       authService.isLoggedIn = true;
@@ -475,7 +475,7 @@ void main() async {
         (WidgetTester tester) async {
       authService.isLoggedIn = true;
       sharedPreferencesService.isAdmin = false;
-      
+
       // Default year should be current year
       int currentYear = DateTime.now().year;
       expect(sharedPreferencesService.selectedYear, currentYear);
@@ -495,7 +495,7 @@ void main() async {
       int targetYear = currentYear - 1;
       await tester.tap(dropdownFinder);
       await tester.pumpAndSettle();
-      
+
       // Select the target year from the dropdown list
       await tester.tap(find.text(targetYear.toString()).last);
       await tester.pumpAndSettle();
@@ -546,13 +546,13 @@ void main() async {
       await tester.tap(find.byIcon(Icons.settings));
       await tester.pumpAndSettle();
 
-       //find the switchlisttiles and toogle them
-       Finder switchFinder = find.byType(Switch);
-       expect(switchFinder, findsNWidgets(3));
-       for (int i = 0; i < 3; i++) {
-         await tester.tap(switchFinder.at(i));
-         await tester.pumpAndSettle();
-       }
+      //find the switchlisttiles and toogle them
+      Finder switchFinder = find.byType(Switch);
+      expect(switchFinder, findsNWidgets(3));
+      for (int i = 0; i < 3; i++) {
+        await tester.tap(switchFinder.at(i));
+        await tester.pumpAndSettle();
+      }
 
       expect(sharedPreferencesService.autoNextBand, true);
       expect(sharedPreferencesService.autoNextBandParent, true);

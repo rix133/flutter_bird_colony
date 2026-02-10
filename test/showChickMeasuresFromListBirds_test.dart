@@ -6,7 +6,6 @@ import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/screens/bird/editBird.dart';
 import 'package:flutter_bird_colony/screens/bird/listBirds.dart';
 import 'package:flutter_bird_colony/screens/homepage.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'mocks/mockAuthService.dart';

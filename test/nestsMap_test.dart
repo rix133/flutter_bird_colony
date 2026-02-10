@@ -9,7 +9,6 @@ import 'package:flutter_bird_colony/screens/homepage.dart';
 import 'package:flutter_bird_colony/screens/nest/createNest.dart';
 import 'package:flutter_bird_colony/screens/nest/editNest.dart';
 import 'package:flutter_bird_colony/screens/nest/mapNests.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -25,7 +24,8 @@ void main() {
   final sharedPreferencesService = MockSharedPreferencesService();
   final firestore = FakeFirebaseFirestore();
   MockLocationAccuracy10 locationAccuracy10 = MockLocationAccuracy10();
-  CollectionReference nests = firestore.collection(DateTime.now().year.toString());
+  CollectionReference nests =
+      firestore.collection(DateTime.now().year.toString());
   late Widget myApp;
   final userEmail = "test@example.com";
   final Nest nest = Nest(
@@ -85,8 +85,8 @@ void main() {
             );
           } else if (settings.name == '/mapNests') {
             return MaterialPageRoute(
-              builder: (context) => MapNests(
-                firestore: firestore, auth: authService),
+              builder: (context) =>
+                  MapNests(firestore: firestore, auth: authService),
               settings: RouteSettings(
                 arguments: args, // get initial args
               ),
@@ -116,9 +116,7 @@ void main() {
   setUp(() async {
     //reset the database
     await firestore.collection('recent').doc("nest").set({"id": "1"});
-    await nests
-        .doc(nest.id)
-        .set(nest.toJson());
+    await nests.doc(nest.id).set(nest.toJson());
     await nests.doc(nest2.id).set(nest2.toJson());
   });
 
@@ -135,11 +133,12 @@ void main() {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
-    Finder googleMap  = find.byType(GoogleMap);
+    Finder googleMap = find.byType(GoogleMap);
     expect(googleMap, findsOneWidget);
   });
 
-  testWidgets("Widget has 5 floating action buttons", (WidgetTester tester) async {
+  testWidgets("Widget has 5 floating action buttons",
+      (WidgetTester tester) async {
     myApp = getInitApp(null);
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
@@ -149,7 +148,8 @@ void main() {
     expect(fab, findsNWidgets(5));
   });
 
-  testWidgets("tap on add floating action button redirects to nest create", (WidgetTester tester) async {
+  testWidgets("tap on add floating action button redirects to nest create",
+      (WidgetTester tester) async {
     myApp = getInitApp(null);
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
@@ -165,10 +165,10 @@ void main() {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
-
     // Find the FloatingActionButton with the "search" hero tag and tap it
     Finder searchButton = find.byWidgetPredicate(
-          (Widget widget) => widget is FloatingActionButton && widget.heroTag == "search",
+      (Widget widget) =>
+          widget is FloatingActionButton && widget.heroTag == "search",
     );
     await tester.tap(searchButton);
     await tester.pumpAndSettle();

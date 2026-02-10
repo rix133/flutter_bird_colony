@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/screens/experiment/editExperiment.dart';
 import 'package:flutter_bird_colony/screens/experiment/listExperiments.dart';
 import 'package:flutter_bird_colony/screens/homepage.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';

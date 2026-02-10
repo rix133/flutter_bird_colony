@@ -89,7 +89,7 @@ class Experiment implements FirestoreItem {
     return {
       'id': id,
       'name': name,
-      'color': color.value.toString(),
+      'color': color.toARGB32().toString(),
       'measures': measures.map((e) => e.toFormJson()).toList()
     };
   }
@@ -103,7 +103,7 @@ class Experiment implements FirestoreItem {
       'nests': nests,
       'birds': birds,
       'type': type,
-      'color': color.value.toString(),
+      'color': color.toARGB32().toString(),
       'last_modified': last_modified,
       'measures': measures.map((e) => e.toJson()).toList(),
       'created': created
@@ -144,8 +144,8 @@ class Experiment implements FirestoreItem {
                         trailing: IconButton(
                           icon: Icon(Icons.close, color: Colors.redAccent),
                           style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all<Color>(
-                                Colors.white60),
+                            backgroundColor:
+                                WidgetStateProperty.all<Color>(Colors.white60),
                           ),
                           onPressed: () {
                             setState(() {
@@ -171,8 +171,8 @@ class Experiment implements FirestoreItem {
                         trailing: IconButton(
                           icon: Icon(Icons.close, color: Colors.redAccent),
                           style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all<Color>(
-                                Colors.white60),
+                            backgroundColor:
+                                WidgetStateProperty.all<Color>(Colors.white60),
                           ),
                           onPressed: () {
                             setState(() {
@@ -218,7 +218,8 @@ class Experiment implements FirestoreItem {
 
   gotoBird(String band, BuildContext context) {
     return () => {
-          Navigator.pushNamed(context, "/editBird", arguments: {'bird_id': band})
+          Navigator.pushNamed(context, "/editBird",
+              arguments: {'bird_id': band})
         };
   }
 
@@ -318,10 +319,11 @@ class Experiment implements FirestoreItem {
         arguments: {'nest_ids': nests, 'year': year});
   }
 
-  Future<UpdateResult> _updateNestCollection(FirebaseFirestore firestore, List<String>? items,
+  Future<UpdateResult> _updateNestCollection(
+      FirebaseFirestore firestore, List<String>? items,
       {bool delete = false}) async {
-    CollectionReference nestCollection =
-        firestore.collection(yearToNestCollectionName(year ?? DateTime.now().year));
+    CollectionReference nestCollection = firestore
+        .collection(yearToNestCollectionName(year ?? DateTime.now().year));
     if (items != null) {
       Nest n;
       for (String i in items) {
@@ -347,10 +349,10 @@ class Experiment implements FirestoreItem {
     return UpdateResult.saveOK(item: this);
   }
 
-  Future<UpdateResult> _updateBirdsCollection(FirebaseFirestore firestore, List<String>? items,
+  Future<UpdateResult> _updateBirdsCollection(
+      FirebaseFirestore firestore, List<String>? items,
       {bool delete = false}) async {
-    CollectionReference birdCollection =
-        firestore.collection("Birds");
+    CollectionReference birdCollection = firestore.collection("Birds");
     if (items != null) {
       Bird b;
       for (String i in items) {
@@ -380,8 +382,7 @@ class Experiment implements FirestoreItem {
   Future<UpdateResult> delete(FirebaseFirestore firestore,
       {CollectionReference<Object?>? otherItems = null,
       String type = "default"}) {
-    CollectionReference expCollection =
-        firestore.collection('experiments');
+    CollectionReference expCollection = firestore.collection('experiments');
     _updateNestCollection(firestore, previousNests, delete: true);
     _updateBirdsCollection(firestore, previousBirds, delete: true);
 
@@ -393,8 +394,7 @@ class Experiment implements FirestoreItem {
       {CollectionReference<Object?>? otherItems = null,
       bool allowOverwrite = false,
       String type = "default"}) {
-    CollectionReference expCollection =
-        firestore.collection('experiments');
+    CollectionReference expCollection = firestore.collection('experiments');
 
     last_modified = DateTime.now();
     //remove duplicate nests
@@ -417,9 +417,11 @@ class Experiment implements FirestoreItem {
 
     //save the experiment data to nests or birds
     return _updateNestCollection(firestore, nests, delete: false)
-        .then((v) => _updateNestCollection(firestore, deletedNests, delete: true))
+        .then(
+            (v) => _updateNestCollection(firestore, deletedNests, delete: true))
         .then((v) => _updateBirdsCollection(firestore, birds, delete: false))
-        .then((v) => _updateBirdsCollection(firestore, deletedBirds, delete: true))
+        .then((v) =>
+            _updateBirdsCollection(firestore, deletedBirds, delete: true))
         .then((v) => expCollection
             .doc(id)
             .set(toJson())
@@ -547,4 +549,3 @@ Container listExperiments(ExperimentedItem item,
         : row,
   );
 }
-

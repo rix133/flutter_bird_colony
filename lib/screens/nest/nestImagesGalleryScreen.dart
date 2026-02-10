@@ -27,8 +27,7 @@ class _NestImagesGalleryScreenState extends State<NestImagesGalleryScreen> {
         .orderBy('timestamp', descending: true)
         .get();
     return snapshot.docs
-        .map(
-            (doc) => (doc.data() as Map<String, dynamic>)['imageUrl'] as String)
+        .map((doc) => (doc.data())['imageUrl'] as String)
         .toList();
   }
 

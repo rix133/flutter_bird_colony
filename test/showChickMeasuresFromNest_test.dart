@@ -13,7 +13,6 @@ import 'package:flutter_bird_colony/screens/bird/editBird.dart';
 import 'package:flutter_bird_colony/screens/homepage.dart';
 import 'package:flutter_bird_colony/screens/nest/editEgg.dart';
 import 'package:flutter_bird_colony/screens/nest/editNest.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';

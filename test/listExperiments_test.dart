@@ -13,7 +13,6 @@ import 'package:flutter_bird_colony/screens/experiment/editExperiment.dart';
 import 'package:flutter_bird_colony/screens/experiment/listExperiments.dart';
 import 'package:flutter_bird_colony/screens/homepage.dart';
 import 'package:flutter_bird_colony/screens/nest/mapNests.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -163,7 +162,7 @@ void main() {
       await tester.pumpAndSettle();
 
       //check if the list of birds is displayed
-          expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.byType(AlertDialog), findsOneWidget);
 
       //close the dialog
       await tester.tap(find.text("close"));

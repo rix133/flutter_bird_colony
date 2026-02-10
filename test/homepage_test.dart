@@ -4,15 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/homepageButton.dart';
 import 'package:flutter_bird_colony/screens/homepage.dart';
 import 'package:flutter_bird_colony/screens/settings/settings.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'mocks/mockAuthService.dart';
 import 'mocks/mockSharedPreferencesService.dart';
-
-
 
 void main() {
   final authService = MockAuthService();
@@ -24,19 +21,17 @@ void main() {
     FirebaseFirestore firestore = FakeFirebaseFirestore();
     myApp = ChangeNotifierProvider<SharedPreferencesService>(
       create: (_) => sharedPreferencesService,
-      child: MaterialApp(
-          initialRoute: '/',
-          routes: {
+      child: MaterialApp(initialRoute: '/', routes: {
         '/': (context) =>
             MyHomePage(title: "Bird Colony nests", auth: authService),
         '/settings': (context) =>
             SettingsPage(firestore: firestore, auth: authService),
-      }
-      ),
+      }),
     );
   });
 
-  testWidgets('MyHomePage shows home page when user is signed in', (WidgetTester tester) async {
+  testWidgets('MyHomePage shows home page when user is signed in',
+      (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
 
     await tester.pumpAndSettle();
@@ -44,7 +39,8 @@ void main() {
     expect(find.text('Bird Colony nests'), findsOneWidget);
   });
 
-  testWidgets('Settings button is found when user is signed in', (WidgetTester tester) async {
+  testWidgets('Settings button is found when user is signed in',
+      (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
 
     await tester.pumpAndSettle();
@@ -52,7 +48,9 @@ void main() {
     expect(find.byIcon(Icons.settings), findsOneWidget);
   });
 
-  testWidgets('Correct number of HomePageButton widgets are present when user is signed in', (WidgetTester tester) async {
+  testWidgets(
+      'Correct number of HomePageButton widgets are present when user is signed in',
+      (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
 
     await tester.pumpAndSettle();
@@ -60,7 +58,8 @@ void main() {
     expect(find.byType(HomePageButton), findsNWidgets(5));
   });
 
-  testWidgets('User is redirected to settings page when not signed in', (WidgetTester tester) async {
+  testWidgets('User is redirected to settings page when not signed in',
+      (WidgetTester tester) async {
     authService.isLoggedIn = false;
 
     await tester.pumpWidget(myApp);
@@ -68,6 +67,4 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Settings'), findsOneWidget);
   });
-
 }
-
