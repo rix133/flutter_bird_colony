@@ -19,6 +19,13 @@ class EditExperiment extends StatefulWidget {
   State<EditExperiment> createState() => _EditExperimentState();
 }
 
+class _BulkAddResult {
+  final List<String> toAdd;
+  final List<String> invalid;
+
+  _BulkAddResult(this.toAdd, this.invalid);
+}
+
 class _EditExperimentState extends State<EditExperiment> {
   SharedPreferencesService? sps;
   CollectionReference? experiments;
@@ -90,29 +97,34 @@ class _EditExperimentState extends State<EditExperiment> {
           return Text("Loading");
         }
         List<String> items = snapshot.data!.docs.map((doc) => doc.id).toList();
-        return ElevatedButton.icon(
-          icon: Icon(Icons.search),
-          label: Text('Select ${experiment.type}s'),
-          onPressed: () async {
-            final String? selected = await showSearch(
-              context: context,
-              delegate: DataSearch(items, experiment.type),
-            );
-            if (selected != null) {
-              if (selected.isNotEmpty) {
-                setState(() {
-                  if (experiment.type == "nest") {
-                    if (experiment.nests == null) experiment.nests = [];
-                    experiment.nests!.add(selected);
-                  } else if (experiment.type == "bird") {
-                    if (experiment.birds == null) experiment.birds = [];
-                    experiment.birds!.add(selected);
+        return Column(
+          children: [
+            ElevatedButton.icon(
+              icon: Icon(Icons.search),
+              label: Text('Select ${experiment.type}s'),
+              onPressed: () async {
+                final String? selected = await showSearch(
+                  context: context,
+                  delegate: DataSearch(items, experiment.type),
+                );
+                if (selected != null) {
+                  if (selected.isNotEmpty) {
+                    setState(() {
+                      _addItemsToExperiment([selected]);
+                    });
                   }
-                });
-              }
-            }
+                }
 
-          },
+              },
+            ),
+            SizedBox(height: 8),
+            ElevatedButton.icon(
+              key: Key("bulkAdd${experiment.type}Button"),
+              icon: Icon(Icons.playlist_add),
+              label: Text('Bulk add ${experiment.type}s'),
+              onPressed: () => _showBulkAddDialog(items),
+            ),
+          ],
         );
       },
     );
@@ -148,6 +160,179 @@ class _EditExperimentState extends State<EditExperiment> {
     });
   }
 
+  List<String> _parseBulkItems(String raw) {
+    return raw
+        .split(RegExp(r'[\s,;]+'))
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
+
+  void _addItemsToExperiment(List<String> ids) {
+    if (experiment.type == "nest") {
+      experiment.nests ??= [];
+      experiment.nests!.addAll(ids);
+      experiment.nests = experiment.nests!.toSet().toList();
+    } else if (experiment.type == "bird") {
+      experiment.birds ??= [];
+      experiment.birds!.addAll(ids);
+      experiment.birds = experiment.birds!.toSet().toList();
+    }
+  }
+
+  Future<void> _showInvalidItemsDialog(List<String> invalid) async {
+    if (invalid.isEmpty || !mounted) {
+      return;
+    }
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        backgroundColor: Colors.black87,
+        title: Text("Unknown ${experiment.type}s"),
+        content: Text(invalid.join(", ")),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK"),
+          )
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showBulkAddDialog(List<String> items) async {
+    TextEditingController controller = TextEditingController();
+    final result = await showDialog<_BulkAddResult>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.black87,
+          title: Text("Bulk add ${experiment.type}s"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Paste IDs separated by commas, spaces, or new lines."),
+              SizedBox(height: 10),
+              TextField(
+                key: Key("bulkAdd${experiment.type}Field"),
+                controller: controller,
+                minLines: 3,
+                maxLines: 6,
+                decoration: InputDecoration(
+                  hintText: "1, 2, 3",
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              key: Key("confirmBulkAdd${experiment.type}Button"),
+              onPressed: () {
+                List<String> parsed = _parseBulkItems(controller.text);
+                Set<String> itemSet = items.toSet();
+                List<String> toAdd = [];
+                List<String> invalid = [];
+                for (String id in parsed) {
+                  if (itemSet.contains(id)) {
+                    if (!toAdd.contains(id)) {
+                      toAdd.add(id);
+                    }
+                  } else {
+                    invalid.add(id);
+                  }
+                }
+                Navigator.pop(context, _BulkAddResult(toAdd, invalid));
+              },
+              child: Text("Add"),
+            ),
+          ],
+        );
+      },
+    );
+    if (result == null) {
+      return;
+    }
+    if (result.toAdd.isNotEmpty) {
+      setState(() {
+        _addItemsToExperiment(result.toAdd);
+      });
+    }
+    if (result.invalid.isNotEmpty) {
+      await _showInvalidItemsDialog(result.invalid);
+    }
+  }
+
+  Future<void> _copyExperimentDialog() async {
+    if (experiment.id == null) {
+      return;
+    }
+    TextEditingController controller =
+        TextEditingController(text: "${experiment.name} copy");
+    String? newName = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        backgroundColor: Colors.black87,
+        title: Text("Copy experiment"),
+        content: TextField(
+          key: Key("copyExperimentNameField"),
+          controller: controller,
+          decoration: InputDecoration(labelText: "New name"),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            key: Key("confirmCopyExperimentButton"),
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: Text("Create copy"),
+          ),
+        ],
+      ),
+    );
+
+    newName = newName?.trim();
+    if (newName == null || newName.isEmpty || !mounted) {
+      return;
+    }
+
+    Experiment copied = experiment.copy();
+    copied.id = null;
+    copied.name = newName;
+    copied.created = DateTime.now();
+    copied.last_modified = DateTime.now();
+    copied.previousBirds = [];
+    copied.previousNests = [];
+    copied.responsible = sps?.userName ?? copied.responsible;
+
+    final result = await copied.save(widget.firestore, type: copied.type);
+    if (!mounted) {
+      return;
+    }
+    if (!result.success) {
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          backgroundColor: Colors.black87,
+          title: Text("Copy failed"),
+          content: Text(result.message),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("OK"),
+            )
+          ],
+        ),
+      );
+      return;
+    }
+    Navigator.pushNamed(context, '/editExperiment', arguments: copied);
+  }
 
   Form getExperimentForm(BuildContext context) {
     experiment.responsible = sps?.userName ?? "";
@@ -235,6 +420,18 @@ class _EditExperimentState extends State<EditExperiment> {
                 SizedBox(height:15),
                 spsOK ? ListMeasures(measures: experiment.measures,onMeasuresUpdated: measuresUpdated) : Container(),
                 SizedBox(height:30),
+            spsOK && experiment.id != null
+                ? ElevatedButton.icon(
+                    key: Key("copyExperimentButton"),
+                    onPressed: _copyExperimentDialog,
+                    icon: Icon(Icons.content_copy),
+                    label: Text("Copy experiment"),
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(Colors.grey),
+                    ),
+                  )
+                : Container(),
+            spsOK && experiment.id != null ? SizedBox(height: 15) : Container(),
             spsOK
                 ? ModifyingButtons(
                     firestore: widget.firestore,

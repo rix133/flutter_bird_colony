@@ -266,6 +266,35 @@ void main() {
       expect(find.text("Nest ID: 1"), findsOneWidget);
     });
 
+    testWidgets("can bulk add nests to experiment",
+        (WidgetTester tester) async {
+      Experiment bulkExperiment = Experiment(
+          name: "Bulk Experiment",
+          type: "nest",
+          description: "Test experiment",
+          last_modified: DateTime.now(),
+          created: DateTime.now(),
+          year: DateTime.now().year,
+          responsible: "Admin",
+          nests: [],
+          measures: []);
+
+      myApp = getInitApp(bulkExperiment);
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key("bulkAddnestButton")));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+          find.byKey(Key("bulkAddnestField")), "1, 2");
+      await tester.tap(find.byKey(Key("confirmBulkAddnestButton")));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Nest ID: 1"), findsOneWidget);
+      expect(find.text("Nest ID: 2"), findsOneWidget);
+    });
+
     testWidgets('can pick experiment color', (WidgetTester tester) async {
       myApp = getInitApp(experiment);
       await tester.pumpWidget(myApp);
@@ -531,6 +560,30 @@ void main() {
       //expect that the nest has the new experiment
       expect(nest.experiments!.length, 1);
       expect(nest.experiments!.first.name, "test experiment");
+    });
+
+    testWidgets("can copy experiment with new name",
+        (WidgetTester tester) async {
+      myApp = getInitApp(experiment);
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      final copyButton = find.byKey(Key("copyExperimentButton"));
+      await tester.ensureVisible(copyButton);
+      await tester.tap(copyButton);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+          find.byKey(Key("copyExperimentNameField")), "Copied Experiment");
+      await tester.tap(find.byKey(Key("confirmCopyExperimentButton")));
+      await tester.pumpAndSettle();
+
+      QuerySnapshot query = await firestore.collection('experiments').get();
+      List<QueryDocumentSnapshot> docs = query.docs;
+      List<Experiment> experiments =
+          docs.map((e) => Experiment.fromDocSnapshot(e)).toList();
+
+      expect(experiments.any((e) => e.name == "Copied Experiment"), true);
     });
 
     testWidgets("can go to a nest editing", (WidgetTester tester) async {
