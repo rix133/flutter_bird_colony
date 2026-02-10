@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/modifingButtons.dart';
 import 'package:flutter_bird_colony/models/dataSearch.dart';
@@ -394,7 +394,7 @@ class _EditExperimentState extends State<EditExperiment> {
                     padding:
                         EdgeInsets.symmetric(horizontal: 20, vertical: 15)),
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(experiment.color),
+                  backgroundColor: WidgetStateProperty.all(experiment.color),
             ),
           ),
 
@@ -427,7 +427,7 @@ class _EditExperimentState extends State<EditExperiment> {
                     icon: Icon(Icons.content_copy),
                     label: Text("Copy experiment"),
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.grey),
+                      backgroundColor: WidgetStateProperty.all(Colors.grey),
                     ),
                   )
                 : Container(),
@@ -446,3 +446,4 @@ class _EditExperimentState extends State<EditExperiment> {
   }
 
 }
+

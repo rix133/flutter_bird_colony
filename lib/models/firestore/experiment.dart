@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/experimentedItem.dart';
@@ -144,7 +144,7 @@ class Experiment implements FirestoreItem {
                         trailing: IconButton(
                           icon: Icon(Icons.close, color: Colors.redAccent),
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(
+                            backgroundColor: WidgetStateProperty.all<Color>(
                                 Colors.white60),
                           ),
                           onPressed: () {
@@ -171,7 +171,7 @@ class Experiment implements FirestoreItem {
                         trailing: IconButton(
                           icon: Icon(Icons.close, color: Colors.redAccent),
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(
+                            backgroundColor: WidgetStateProperty.all<Color>(
                                 Colors.white60),
                           ),
                           onPressed: () {
@@ -516,7 +516,7 @@ Container listExperiments(ExperimentedItem item,
           onLongPress: onRemove == null ? null : () => onRemove(e),
           child: Text(e.name),
           style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all(e.color),
+            backgroundColor: WidgetStateProperty.all(e.color),
           ),
         );
         return button;
@@ -547,3 +547,4 @@ Container listExperiments(ExperimentedItem item,
         : row,
   );
 }
+

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 //import 'package:flutter_svg/flutter_svg.dart';
 
 SingleChildScrollView listOverviewPageButtons(BuildContext context) {
@@ -19,7 +19,7 @@ SingleChildScrollView listOverviewPageButtons(BuildContext context) {
         ),
         label: Text("Experiments"),
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all(Colors.white60),
+          backgroundColor: WidgetStateProperty.all(Colors.white60),
         )
       ),
       ElevatedButton.icon(
@@ -33,7 +33,7 @@ SingleChildScrollView listOverviewPageButtons(BuildContext context) {
         ),
         label: Text("Nests"),
           style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all(Colors.white60),
+            backgroundColor: WidgetStateProperty.all(Colors.white60),
           )
       ),
       ElevatedButton.icon(
@@ -50,9 +50,10 @@ SingleChildScrollView listOverviewPageButtons(BuildContext context) {
         ),
         label: Text("Birds"),
           style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all(Colors.white60),
+            backgroundColor: WidgetStateProperty.all(Colors.white60),
           )
       ),
     ],
   ));
 }
+

@@ -1,4 +1,4 @@
-import 'package:excel/excel.dart';
+﻿import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_bird_colony/design/filledIconButton.dart';
@@ -11,7 +11,7 @@ class Measure implements Comparable<Measure> {
   String unit = "";
   bool repeated = false;
   bool required = false;
-  String type=  "any";
+  String type = "any";
 
   Measure(
       {required this.name,
@@ -37,7 +37,7 @@ class Measure implements Comparable<Measure> {
         repeated: repeated);
   }
 
-  Measure.note({this.value = ""}){
+  Measure.note({this.value = ""}) {
     this.unit = "";
     this.name = "note";
     this.isNumber = false;
@@ -82,7 +82,7 @@ class Measure implements Comparable<Measure> {
         required: required);
   }
 
-  factory Measure.empty(Measure m){
+  factory Measure.empty(Measure m) {
     return Measure(
         name: m.name,
         value: "",
@@ -118,18 +118,16 @@ class Measure implements Comparable<Measure> {
     };
   }
 
-  List<CellValue> toExcelRow(){
+  List<CellValue> toExcelRow() {
     double? vd = isNumber ? double.tryParse(value) : null;
     return [
       (isNumber && vd != null) ? DoubleCellValue(vd) : TextCellValue(value),
-      DateTimeCellValue.fromDateTime(modified)];
+      DateTimeCellValue.fromDateTime(modified)
+    ];
   }
 
   List<TextCellValue> toExcelRowHeader() {
-    return [
-      TextCellValue(name + "_" + unit),
-      TextCellValue(name + '_time')
-    ];
+    return [TextCellValue(name + "_" + unit), TextCellValue(name + '_time')];
   }
 
   void dispose() {
@@ -142,12 +140,12 @@ class Measure implements Comparable<Measure> {
 
   TextEditingController valueCntr = TextEditingController();
 
-  setValue(String? value){
+  setValue(String? value) {
     this.value = value ?? "";
     this.valueCntr.text = value ?? "";
   }
 
-  Widget createMeasureForm(Function setState){
+  Widget createMeasureForm(Function setState) {
     TextEditingController nameCntr = TextEditingController(text: name);
     TextEditingController unitCntr = TextEditingController(text: unit);
     return SingleChildScrollView(
@@ -176,7 +174,7 @@ class Measure implements Comparable<Measure> {
           ),
           DropdownButtonFormField<String>(
             key: Key("typeMeasureEdit"),
-            value: this.type,
+            initialValue: this.type,
             onChanged: (String? newValue) {
               setState(() {
                 this.type = newValue ?? "any";
@@ -186,7 +184,10 @@ class Measure implements Comparable<Measure> {
                 .map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
-                child: Text(value, style: TextStyle(color: Colors.purple),),
+                child: Text(
+                  value,
+                  style: TextStyle(color: Colors.purple),
+                ),
               );
             }).toList(),
           ),
@@ -222,20 +223,21 @@ class Measure implements Comparable<Measure> {
     );
   }
 
-  Widget getMeasureForm(Function(Measure) onPressed, bool showValue){
+  Widget getMeasureForm(Function(Measure) onPressed, bool showValue) {
     bool hideValue = !showValue;
-    if(name.contains("note")){
+    if (name.contains("note")) {
       hideValue = false;
     }
-    return repeated ? getMeasureFormWithAddButton(onPressed, hideValue) : getSimpleMeasureForm();
+    return repeated
+        ? getMeasureFormWithAddButton(onPressed, hideValue)
+        : getSimpleMeasureForm();
   }
 
-
-  Padding getSimpleMeasureForm(){
+  Padding getSimpleMeasureForm() {
     return Padding(
         padding: EdgeInsets.all(5),
         child: TextFormField(
-          keyboardType: isNumber?TextInputType.number:TextInputType.text,
+          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           controller: valueCntr,
           onChanged: (value) {
             this.value = value;
@@ -250,9 +252,7 @@ class Measure implements Comparable<Measure> {
         ));
   }
 
-
-
-  ListTile getListTile(BuildContext context, onSaved, onRemoved){
+  ListTile getListTile(BuildContext context, onSaved, onRemoved) {
     return ListTile(
       title: Text(name.isEmpty
           ? "undefined"
@@ -264,46 +264,47 @@ class Measure implements Comparable<Measure> {
           (required ? ", required" : "") +
           ")"),
       trailing: ElevatedButton.icon(
-          onPressed:  () => showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              backgroundColor: Colors.black87,
-              title: Text('Edit Measure'),
-              content: StatefulBuilder(  // Add this
-                builder: (BuildContext context, StateSetter alertDialogSetState) {
-                  return createMeasureForm(alertDialogSetState);  // Pass alertDialogSetState here
-                },
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    onRemoved(this);
-                    Navigator.pop(context);
+        onPressed: () => showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                backgroundColor: Colors.black87,
+                title: Text('Edit Measure'),
+                content: StatefulBuilder(
+                  // Add this
+                  builder:
+                      (BuildContext context, StateSetter alertDialogSetState) {
+                    return createMeasureForm(
+                        alertDialogSetState); // Pass alertDialogSetState here
                   },
-                  child: Text('Remove'),
                 ),
-                ElevatedButton(
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      onRemoved(this);
+                      Navigator.pop(context);
+                    },
+                    child: Text('Remove'),
+                  ),
+                  ElevatedButton(
                     key: Key("doneMeasureEditButton"),
                     onPressed: () {
-                    onSaved(this);
-                    Navigator.pop(context);
-                  },
+                      onSaved(this);
+                      Navigator.pop(context);
+                    },
                     child: Text('Done'),
                   ),
-              ],
-            );
-          }
-          ),
+                ],
+              );
+            }),
         icon: Icon(Icons.edit, color: Colors.black),
         label: Text("Edit"),
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
+          backgroundColor: WidgetStateProperty.all<Color>(Colors.white60),
         ),
       ),
     );
   }
-
 
   @override
   int compareTo(Measure other) {
@@ -315,15 +316,15 @@ class Measure implements Comparable<Measure> {
   Widget getMeasureFormWithAddButton(
       Function(Measure) onPressed, bool hideValue) {
     String label = name + (unit == "" ? "" : " (" + unit + ")");
-    if(modified.year == DateTime.now().year && value.isNotEmpty){
+    if (modified.year == DateTime.now().year && value.isNotEmpty) {
       label = label + " " + DateFormat('d MMM yyyy').format(modified);
-    } else if(value.isNotEmpty){
+    } else if (value.isNotEmpty) {
       label = label + " " + DateFormat('d MMM HH:mm').format(modified);
     }
-    if(value.isEmpty){
+    if (value.isEmpty) {
       hideValue = false;
-    } else{
-      if(hideValue){
+    } else {
+      if (hideValue) {
         valueCntr.text = "???";
       }
     }
@@ -332,38 +333,40 @@ class Measure implements Comparable<Measure> {
         padding: EdgeInsets.all(5),
         child: Row(
           children: [
-        Expanded(
-          child: TextFormField(
-            controller: valueCntr,
-            keyboardType: isNumber?TextInputType.number:TextInputType.text,
-            textAlign: TextAlign.center,
-            readOnly: hideValue,
-            onChanged: (value) {
-              hideValue ? null : this.value = value;
-            },
-            decoration: InputDecoration(
-              labelText: label,
-              hintText: value,
+            Expanded(
+              child: TextFormField(
+                controller: valueCntr,
+                keyboardType:
+                    isNumber ? TextInputType.number : TextInputType.text,
+                textAlign: TextAlign.center,
+                readOnly: hideValue,
+                onChanged: (value) {
+                  hideValue ? null : this.value = value;
+                },
+                decoration: InputDecoration(
+                  labelText: label,
+                  hintText: value,
                   fillColor:
                       (required && value.isEmpty) ? Colors.red : Colors.orange,
                   focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: (BorderSide(color: Colors.indigo))),
+                      borderRadius: BorderRadius.circular(25),
+                      borderSide: (BorderSide(color: Colors.indigo))),
+                ),
+              ),
             ),
-          ),
-        ),
-        FilledIconButton(
-          icon: Icons.add,
-          iconColor: Colors.black,
-          backgroundColor: Colors.white60,
-          onPressed: () {
-            Measure newMeasure = Measure.empty(this);
-            onPressed(newMeasure);
-          },
-        )
-      ],
+            FilledIconButton(
+              icon: Icons.add,
+              iconColor: Colors.black,
+              backgroundColor: Colors.white60,
+              onPressed: () {
+                Measure newMeasure = Measure.empty(this);
+                onPressed(newMeasure);
+              },
+            )
+          ],
         ));
   }
+
   factory Measure.fromJson(Map<String, dynamic> json) {
     Measure m = Measure(
         name: json['name'],
@@ -371,7 +374,9 @@ class Measure implements Comparable<Measure> {
         isNumber: json['isNumber'],
         unit: json['unit'],
         type: json['type'] ?? "any",
-        modified: json['modified'] != null ? DateTime.parse(json['modified']) : DateTime.now(),
+        modified: json['modified'] != null
+            ? DateTime.parse(json['modified'])
+            : DateTime.now(),
         repeated: json['repeated'] ?? false,
         required: json['required'] ?? false);
     return m;
@@ -389,7 +394,4 @@ class Measure implements Comparable<Measure> {
         required: json['required'] ?? false);
     return m;
   }
-
 }
-
-

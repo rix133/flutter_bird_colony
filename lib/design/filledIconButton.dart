@@ -12,7 +12,7 @@ class FilledIconButton extends IconButton {
     double iconSize = 24,
     super.onPressed,
   }) : super(
-          icon: Icon(icon, size: iconSize),
+          icon: Icon(icon, size: iconSize, color: iconColor),
           iconSize: iconSize,
           style: ButtonStyle(
             backgroundColor: WidgetStatePropertyAll(backgroundColor),
@@ -32,7 +32,7 @@ class FilledIconButton extends IconButton {
     final bool enabled = onPressed != null;
     final Color bg = enabled
         ? backgroundColor
-        : backgroundColor.withAlpha((backgroundColor.alpha * 0.5).round());
+        : backgroundColor.withAlpha((backgroundColor.a * 0.5).round());
     return Material(
       color: bg,
       shape: const CircleBorder(),

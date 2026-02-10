@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
@@ -173,7 +173,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
               actions: <Widget>[
                 TextButton(
                   style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(Colors.white),
+                    backgroundColor: WidgetStateProperty.all(Colors.white),
                   ),
                   onPressed: () {
                     Navigator.of(context).pop(false);
@@ -182,7 +182,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                 ),
                 TextButton(
                   style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(Colors.white),
+                    backgroundColor: WidgetStateProperty.all(Colors.white),
                   ),
                   onPressed: () {
                     Navigator.of(context).pop(true);
@@ -213,7 +213,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                     key: Key("deleteButton"),
                     style: ButtonStyle(
                         backgroundColor:
-                        MaterialStateProperty.all(
+                        WidgetStateProperty.all(
                             Colors.red[900])),
                     onPressed: (item.id == null)
                         ? null
@@ -252,4 +252,5 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
         onDeleteOK: widget.onDeleteOK);
   }
 }
+
 

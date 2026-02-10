@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/listScreenWidget.dart';
 import 'package:flutter_bird_colony/models/firestore/experiment.dart';
@@ -40,7 +40,7 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
           icon: Icon(Icons.add),
           label: Padding(child:Text("Add Experiment", style: TextStyle(fontSize: 18)), padding: EdgeInsets.all(12)),
           style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.grey)
+              backgroundColor: WidgetStateProperty.all(Colors.grey)
           )
       ),
     );

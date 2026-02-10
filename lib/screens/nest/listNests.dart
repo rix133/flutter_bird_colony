@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/listScreenWidget.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
@@ -69,7 +69,7 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
               child: Text("Show nests", style: TextStyle(fontSize: 18)),
               padding: EdgeInsets.all(12)),
           style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.grey))),
+              backgroundColor: WidgetStateProperty.all(Colors.grey))),
     );
   }
 
@@ -267,4 +267,5 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
     return (FSItemMixin().downloadExcel(items, "nests", widget.firestore));
   }
 }
+
 

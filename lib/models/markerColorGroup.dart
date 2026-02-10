@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/minMaxInput.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
@@ -155,7 +155,7 @@ class MarkerColorGroup {
             child: Text("Pick color"),
             padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15)),
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all(getColor()),
+          backgroundColor: WidgetStateProperty.all(getColor()),
         ),
       ),
     ])));
@@ -206,9 +206,10 @@ class MarkerColorGroup {
         icon: Icon(Icons.edit, color: Colors.black),
         label: Text("Edit"),
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all(getColor()),
+          backgroundColor: WidgetStateProperty.all(getColor()),
         ),
       ),
     );
   }
 }
+

@@ -1,4 +1,4 @@
-// Purpose: List all measures to define, edit or delete them allow to add new ones
+﻿// Purpose: List all measures to define, edit or delete them allow to add new ones
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -77,7 +77,7 @@ class _ListMeasuresState extends State<ListMeasures>{
               child: Text("Add measure", style: TextStyle(fontSize: 18)),
               padding: EdgeInsets.all(12)),
           style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.grey)
+              backgroundColor: WidgetStateProperty.all(Colors.grey)
           )
       ),
     );

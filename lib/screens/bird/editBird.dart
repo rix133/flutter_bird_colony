@@ -1,4 +1,4 @@
-import 'dart:io' show Platform;
+﻿import 'dart:io' show Platform;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -462,7 +462,7 @@ class _EditBirdState extends State<EditBird> {
             actions: [
               TextButton(
                   style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(Colors.white),
+                    backgroundColor: WidgetStateProperty.all(Colors.white),
                   ),
                   onPressed: disableBandChangeButtons
                       ? null
@@ -474,7 +474,7 @@ class _EditBirdState extends State<EditBird> {
               TextButton(
                   style: ButtonStyle(
                     backgroundColor:
-                        MaterialStateProperty.all(Colors.redAccent),
+                        WidgetStateProperty.all(Colors.redAccent),
                   ),
                   key: Key("changeBandButton"),
                   onPressed: disableBandChangeButtons
@@ -624,3 +624,4 @@ class _EditBirdState extends State<EditBird> {
         ));
   }
 }
+

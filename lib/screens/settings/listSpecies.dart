@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
@@ -51,7 +51,7 @@ class _ListSpeciesState extends ListScreenWidgetState<Species> {
               child: Text("Add Species", style: TextStyle(fontSize: 18)),
               padding: EdgeInsets.all(12)),
           style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.grey))),
+              backgroundColor: WidgetStateProperty.all(Colors.grey))),
     );
   }
 
@@ -105,3 +105,4 @@ class _ListSpeciesState extends ListScreenWidgetState<Species> {
 
 
 }
+

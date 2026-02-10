@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/experimentedItem.dart';
 import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
@@ -159,7 +159,7 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
           },
           icon: Icon(Icons.download),
           style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all(Colors.grey))),
+              backgroundColor: WidgetStateProperty.all(Colors.grey))),
     );
   }
 
@@ -236,7 +236,7 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
                   icon: Icon(Icons.filter_alt),
                   label: Padding(child:Text("Filter", style: TextStyle(fontSize: 18)), padding: EdgeInsets.all(12)),
                   style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.grey)
+                      backgroundColor: WidgetStateProperty.all(Colors.grey)
                   )
               ),
             ]),
@@ -275,3 +275,4 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
         )));
   }
 }
+
