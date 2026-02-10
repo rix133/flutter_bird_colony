@@ -12,6 +12,7 @@ import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_bird_colony/design/filledIconButton.dart';
 
 import '../../services/sharedPreferencesService.dart';
 
@@ -453,34 +454,34 @@ class Nest extends ExperimentedItem implements FirestoreItem {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-                icon: Icon(Icons.map, color: Colors.black87),
-                style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all<Color>(
-                        HSVColor.fromAHSV(1, getMarkerColor(groups), 1, 1)
-                            .toColor())),
-                onPressed: disabled
-                    ? null
-                    : () {
-                        Navigator.pushNamed(context, '/mapNests', arguments: {
-                          'nest_ids': [id.toString()],
-                          "year": discover_date.year.toString()
-                        });
-                      }),
+            FilledIconButton(
+              icon: Icons.map,
+              iconColor: Colors.black87,
+              backgroundColor:
+                  HSVColor.fromAHSV(1, getMarkerColor(groups), 1, 1).toColor(),
+              onPressed: disabled
+                  ? null
+                  : () {
+                      Navigator.pushNamed(context, '/mapNests', arguments: {
+                        'nest_ids': [id.toString()],
+                        "year": discover_date.year.toString()
+                      });
+                    },
+            ),
             SizedBox(width: 10),
-            IconButton(
-                icon: Icon(Icons.edit, color: Colors.black87),
-                style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all<Color>(Colors.grey)),
-                onPressed: disabled
-                    ? null
-                    : () {
-                        Navigator.pushNamed(context, '/editNest', arguments: {
-                          "nest": this,
-                          "year": discover_date.year.toString()
-                        });
-                      }),
+            FilledIconButton(
+              icon: Icons.edit,
+              iconColor: Colors.black87,
+              backgroundColor: Colors.grey,
+              onPressed: disabled
+                  ? null
+                  : () {
+                      Navigator.pushNamed(context, '/editNest', arguments: {
+                        "nest": this,
+                        "year": discover_date.year.toString()
+                      });
+                    },
+            ),
           ],
         ),
         onTap: () {

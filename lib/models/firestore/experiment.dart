@@ -7,6 +7,7 @@ import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
 import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:flutter_bird_colony/utils/year.dart';
+import 'package:flutter_bird_colony/design/filledIconButton.dart';
 
 import '../../services/sharedPreferencesService.dart';
 import '../markerColorGroup.dart';
@@ -289,20 +290,18 @@ class Experiment implements FirestoreItem {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-                icon: Icon(Icons.map, color: Colors.black87),
-                style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all<Color>(Colors.grey)),
-                onPressed: () {
-                  showNestMap(context);
-                }),
-            IconButton(
-              icon: Icon(Icons.edit, color: Colors.black),
-              style: ButtonStyle(
-                backgroundColor:
-                    MaterialStateProperty.all<Color>(Colors.white60),
-              ),
+            FilledIconButton(
+              icon: Icons.map,
+              iconColor: Colors.black87,
+              backgroundColor: Colors.grey,
+              onPressed: () {
+                showNestMap(context);
+              },
+            ),
+            FilledIconButton(
+              icon: Icons.edit,
+              iconColor: Colors.black,
+              backgroundColor: Colors.white60,
               onPressed: () {
                 Navigator.pushNamed(context, '/editExperiment',
                     arguments: this);

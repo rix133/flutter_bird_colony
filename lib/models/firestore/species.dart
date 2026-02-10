@@ -7,6 +7,7 @@ import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
 import 'package:flutter_bird_colony/models/markerColorGroup.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/design/filledIconButton.dart';
 
 class Species implements FirestoreItem {
   Species(
@@ -316,11 +317,10 @@ class Species implements FirestoreItem {
                 return getDetailsDialog(context, firestore);
               });
         },
-        trailing: IconButton(
-          icon: Icon(Icons.edit, color: Colors.black),
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
-          ),
+        trailing: FilledIconButton(
+          icon: Icons.edit,
+          iconColor: Colors.black,
+          backgroundColor: Colors.white60,
           onPressed: () {
             Navigator.pushNamed(context, '/editSpecies', arguments: this);
           },

@@ -1,6 +1,7 @@
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_bird_colony/design/filledIconButton.dart';
 
 class Measure implements Comparable<Measure> {
   String name = "";
@@ -351,11 +352,10 @@ class Measure implements Comparable<Measure> {
             ),
           ),
         ),
-        IconButton(
-          icon: Icon(Icons.add, color: Colors.black,),
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all<Color>(Colors.white60),
-          ),
+        FilledIconButton(
+          icon: Icons.add,
+          iconColor: Colors.black,
+          backgroundColor: Colors.white60,
           onPressed: () {
             Measure newMeasure = Measure.empty(this);
             onPressed(newMeasure);

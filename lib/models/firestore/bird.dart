@@ -11,6 +11,7 @@ import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_bird_colony/design/filledIconButton.dart';
 
 import '../markerColorGroup.dart';
 import 'egg.dart';
@@ -162,10 +163,10 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     return ListTile(
       title: Text(name + (color_band != null ? ' ($band)' : "")),
       subtitle: Text(description),
-      trailing: IconButton(
-        icon: Icon(Icons.edit, color: Colors.black87),
-        style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all<Color>(Colors.grey)),
+      trailing: FilledIconButton(
+        icon: Icons.edit,
+        iconColor: Colors.black87,
+        backgroundColor: Colors.grey,
         onPressed: () {
           Navigator.pushNamed(context, '/editBird', arguments: {'bird': this});
         },
