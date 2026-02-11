@@ -233,6 +233,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     }
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     ExperimentedItem eitem = ExperimentedItem.fromJson(json);
+    final String? eggValue = _coerceEggValue(json['egg']);
     Bird nbird = Bird(
       id: snapshot.id,
       ringed_date: (json['ringed_date'] as Timestamp).toDate(),
@@ -240,7 +241,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       band: json["band"] ?? '',
       color_band: json["color_band"] ?? null,
       responsible: json["responsible"] ?? null,
-      egg: json['egg'] ?? null,
+      egg: eggValue,
       species: json['species'] ?? null,
       nest: json['nest'] ?? null,
       nest_year:
@@ -258,6 +259,19 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     //save the original database state at loading
     nbird.prevBird = nbird.copy();
     return nbird;
+  }
+
+  static String? _coerceEggValue(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is String) {
+      return value;
+    }
+    if (value is num) {
+      return value.toString();
+    }
+    return value.toString();
   }
 
   Future<Egg?> getEgg(FirebaseFirestore firestore) async {

@@ -10,6 +10,20 @@ void main() {
   FirebaseFirestore firestore = FakeFirebaseFirestore();
 
   group('Bird instance methods', () {
+    test('should load bird when egg is stored as a number', () async {
+      final docRef = firestore.collection("Birds").doc("BandEggNumeric");
+      await docRef.set({
+        'ringed_date': Timestamp.fromDate(DateTime(2024, 1, 1)),
+        'ringed_as_chick': true,
+        'band': 'BandEggNumeric',
+        'egg': 1,
+        'measures': [],
+      });
+
+      final bird = Bird.fromDocSnapshot(await docRef.get());
+      expect(bird.egg, "1");
+    });
+
     test('should get egg if it exists', () async {
       final bird = Bird(
         band: "AA1234",
