@@ -11,6 +11,8 @@ import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
+import 'package:flutter_bird_colony/design/changelogRestoreDialog.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
@@ -166,6 +168,139 @@ class _SettingsPageState extends State<SettingsPage> {
         : Container();
   }
 
+  Future<Map<String, dynamic>?> _selectRestoreTarget() async {
+    const restoreTypes = ['Bird', 'Nest', 'Experiment'];
+    String selectedType = restoreTypes.first;
+    String id = '';
+    int selectedYear = sps?.selectedYear ?? DateTime.now().year;
+    String? error;
+
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            final needsYear = selectedType == 'Nest';
+            final idLabel = selectedType == 'Bird'
+                ? 'Bird band'
+                : selectedType == 'Nest'
+                    ? 'Nest ID'
+                    : 'Experiment ID';
+
+            return AlertDialog(
+              backgroundColor: Colors.black87,
+              title: Text('Restore from changelog'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButton<String>(
+                      value: selectedType,
+                      items: restoreTypes
+                          .map((type) => DropdownMenuItem<String>(
+                                value: type,
+                                child: Text(type),
+                              ))
+                          .toList(),
+                      onChanged: (String? value) {
+                        if (value == null) return;
+                        setState(() {
+                          selectedType = value;
+                          error = null;
+                        });
+                      },
+                    ),
+                    if (needsYear)
+                      Row(
+                        children: [
+                          const Text('Year: '),
+                          YearDropdown(
+                            selectedYear: selectedYear,
+                            onChanged: (int newValue) {
+                              setState(() {
+                                selectedYear = newValue;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: idLabel,
+                        hintText: 'Enter $idLabel',
+                      ),
+                      onChanged: (value) {
+                        id = value;
+                      },
+                    ),
+                    if (error != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          error ?? '',
+                          style: TextStyle(color: Colors.redAccent),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final trimmedId = id.trim();
+                    if (trimmedId.isEmpty) {
+                      setState(() {
+                        error = 'ID is required.';
+                      });
+                      return;
+                    }
+                    DocumentReference ref;
+                    String title;
+                    if (selectedType == 'Bird') {
+                      ref = widget.firestore
+                          .collection('Birds')
+                          .doc(trimmedId);
+                      title = 'Restore bird $trimmedId';
+                    } else if (selectedType == 'Nest') {
+                      ref = widget.firestore
+                          .collection(yearToNestCollectionName(selectedYear))
+                          .doc(trimmedId);
+                      title = 'Restore nest $trimmedId';
+                    } else {
+                      ref = widget.firestore
+                          .collection('experiments')
+                          .doc(trimmedId);
+                      title = 'Restore experiment $trimmedId';
+                    }
+                    Navigator.pop(context, {'ref': ref, 'title': title});
+                  },
+                  child: const Text('Next',
+                      style: TextStyle(color: Colors.redAccent)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _openRestoreDialog() async {
+    final selection = await _selectRestoreTarget();
+    if (selection == null) return;
+    final DocumentReference ref = selection['ref'] as DocumentReference;
+    final String title = selection['title'] as String;
+    await RestoreFromChangelogDialog.show(
+      context,
+      itemRef: ref,
+      title: title,
+    );
+  }
+
   Widget _getAllowedUsers() {
     return (_isAdmin && !widget.testApp)
         ? Column(
@@ -186,6 +321,23 @@ class _SettingsPageState extends State<SettingsPage> {
                 label: Padding(
                     child: Text('Add user'), padding: EdgeInsets.all(10)),
                 icon: Icon(Icons.add),
+              ),
+            ],
+          )
+        : Container();
+  }
+
+  Widget _getRestoreButton() {
+    return _isAdmin
+        ? Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                onPressed: _openRestoreDialog,
+                label: Padding(
+                    child: Text('Restore from changelog'),
+                    padding: EdgeInsets.all(10)),
+                icon: Icon(Icons.restore),
               ),
             ],
           )
@@ -845,6 +997,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 ...getSettings(_isLoggedIn),
                 SizedBox(height: 20),
                 _getAllowedUsers(),
+                SizedBox(height: 20),
+                _getRestoreButton(),
                 SizedBox(height: 20),
                 _goToEditDefaultSettings(),
                 SizedBox(height: 20),

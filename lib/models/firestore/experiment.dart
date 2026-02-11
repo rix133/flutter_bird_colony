@@ -8,6 +8,8 @@ import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:flutter_bird_colony/design/filledIconButton.dart';
+import 'package:flutter_bird_colony/design/changelogRestoreDialog.dart';
+import 'package:provider/provider.dart';
 
 import '../../services/sharedPreferencesService.dart';
 import '../markerColorGroup.dart';
@@ -224,6 +226,8 @@ class Experiment implements FirestoreItem {
   }
 
   getDetailsDialog(BuildContext context, FirebaseFirestore firestore) {
+    final isAdmin =
+        Provider.of<SharedPreferencesService>(context, listen: false).isAdmin;
     return AlertDialog(
       backgroundColor: Colors.black87,
       title: Text("Experiment Details"),
@@ -259,6 +263,22 @@ class Experiment implements FirestoreItem {
                 this.changeLog(firestore), "experiment", firestore);
           },
         ),
+        if (isAdmin)
+          ElevatedButton.icon(
+            icon: Icon(Icons.restore),
+            label: Text("Restore version"),
+            onPressed: () async {
+              Navigator.pop(context);
+              if (id == null) {
+                return;
+              }
+              await RestoreFromChangelogDialog.show(
+                context,
+                itemRef: firestore.collection('experiments').doc(id),
+                title: "Restore experiment $name",
+              );
+            },
+          ),
       ],
     );
   }

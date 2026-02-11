@@ -9,9 +9,12 @@ import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
 import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
+import 'package:flutter_bird_colony/design/changelogRestoreDialog.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_bird_colony/design/filledIconButton.dart';
+import 'package:provider/provider.dart';
 
 import '../markerColorGroup.dart';
 import 'egg.dart';
@@ -115,6 +118,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       "Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)} $nestString, $species";
 
   getDetailsDialog(BuildContext context, FirebaseFirestore firestore) {
+    final isAdmin =
+        Provider.of<SharedPreferencesService>(context, listen: false).isAdmin;
     return AlertDialog(
       backgroundColor: Colors.black87,
       title: Text("Bird details"),
@@ -154,6 +159,19 @@ class Bird extends ExperimentedItem implements FirestoreItem{
                 this.changeLog(firestore), "bird", firestore);
           },
         ),
+        if (isAdmin)
+          ElevatedButton.icon(
+            icon: Icon(Icons.restore),
+            label: Text("Restore version"),
+            onPressed: () async {
+              Navigator.pop(context);
+              await RestoreFromChangelogDialog.show(
+                context,
+                itemRef: firestore.collection("Birds").doc(band),
+                title: "Restore bird $band",
+              );
+            },
+          ),
       ],
     );
   }

@@ -391,6 +391,7 @@ void main() async {
       expect(find.text('Logout'), findsNothing);
       expect(find.text('Edit default settings'), findsNothing);
       expect(find.text('Manage species'), findsNothing);
+      expect(find.text('Restore from changelog'), findsNothing);
     });
 
     testWidgets('Login with email button pressed', (WidgetTester tester) async {
@@ -428,6 +429,7 @@ void main() async {
       expect(find.text('Login with email'), findsNothing);
       expect(find.text('Edit default settings'), findsNothing);
       expect(find.text('Manage species'), findsNothing);
+      expect(find.text('Restore from changelog'), findsNothing);
     });
 
     testWidgets('Log out button pressed', (WidgetTester tester) async {
@@ -757,6 +759,7 @@ void main() async {
       expect(find.text('Logout'), findsOneWidget);
       expect(find.text('Edit default settings'), findsOneWidget);
       expect(find.text('Manage species'), findsOneWidget);
+      expect(find.text('Restore from changelog'), findsOneWidget);
 
       // Check if other buttons are not displayed
       expect(find.text('Login with Google'), findsNothing);
@@ -774,6 +777,29 @@ void main() async {
       expect(find.text('Logout'), findsOneWidget);
       expect(find.text('Edit default settings'), findsOneWidget);
       expect(find.text('Manage species'), findsOneWidget);
+      expect(find.text('Restore from changelog'), findsOneWidget);
+    });
+
+    testWidgets('Restore dialog validates empty ID',
+        (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = true;
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      final restoreButton = find.text('Restore from changelog');
+      expect(restoreButton, findsOneWidget);
+
+      await tester.ensureVisible(restoreButton);
+      await tester.tap(restoreButton);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ID is required.'), findsOneWidget);
     });
 
     testWidgets('Default settings saving add no extra route to stack',

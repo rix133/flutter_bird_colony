@@ -8,6 +8,8 @@ import 'package:flutter_bird_colony/models/markerColorGroup.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_bird_colony/design/filledIconButton.dart';
+import 'package:flutter_bird_colony/design/changelogRestoreDialog.dart';
+import 'package:provider/provider.dart';
 
 class Species implements FirestoreItem {
   Species(
@@ -269,6 +271,8 @@ class Species implements FirestoreItem {
   }
 
   getDetailsDialog(BuildContext context, FirebaseFirestore firestore) {
+    final isAdmin =
+        Provider.of<SharedPreferencesService>(context, listen: false).isAdmin;
     return AlertDialog(
       title: Text('Species details'),
       content: Column(
@@ -298,6 +302,26 @@ class Species implements FirestoreItem {
                 this.changeLog(firestore), "species", firestore);
           },
         ),
+        if (isAdmin)
+          ElevatedButton.icon(
+            icon: Icon(Icons.restore),
+            label: Text("Restore version"),
+            onPressed: () async {
+              Navigator.pop(context);
+              if (id == null) {
+                return;
+              }
+              await RestoreFromChangelogDialog.show(
+                context,
+                itemRef: firestore
+                    .collection('settings')
+                    .doc('default')
+                    .collection('species')
+                    .doc(id),
+                title: "Restore species $english",
+              );
+            },
+          ),
       ],
     );
   }
@@ -331,20 +355,23 @@ class Species implements FirestoreItem {
 
   @override
   Future<List<Species>> changeLog(FirebaseFirestore firestore) async {
-    return (firestore
+    if (id == null) {
+      return [];
+    }
+    final docRef = firestore
         .collection('settings')
         .doc('default')
         .collection('species')
-        .doc(id)
-        .collection('changeLog')
-        .get()
-        .then((value) {
-      List<Species> speciesList =
-          value.docs.map((e) => Species.fromDocSnapshot(e)).toList();
-      speciesList.sort((a, b) => b.last_modified!.compareTo(
-          a.last_modified!)); // Sort by last_modified in descending order
-      return speciesList;
-    }));
+        .doc(id);
+    QuerySnapshot snapshot = await docRef.collection('changelog').get();
+    if (snapshot.docs.isEmpty) {
+      snapshot = await docRef.collection('changeLog').get();
+    }
+    List<Species> speciesList =
+        snapshot.docs.map((e) => Species.fromDocSnapshot(e)).toList();
+    speciesList.sort(
+        (a, b) => b.last_modified!.compareTo(a.last_modified!));
+    return speciesList;
   }
 }
 

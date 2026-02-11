@@ -163,14 +163,17 @@ class DefaultSettings implements FirestoreItem {
 
   @override
   Future<List<DefaultSettings>> changeLog(FirebaseFirestore firestore) async {
-    return (firestore
-        .collection('settings')
-        .doc(id)
-        .collection('changeLog')
-        .get()
-        .then((value) => value.docs
-            .map((e) => DefaultSettings.fromDocSnapshot(e))
-            .toList()));
+    if (id == null) {
+      return [];
+    }
+    final docRef = firestore.collection('settings').doc(id);
+    QuerySnapshot snapshot = await docRef.collection('changelog').get();
+    if (snapshot.docs.isEmpty) {
+      snapshot = await docRef.collection('changeLog').get();
+    }
+    return snapshot.docs
+        .map((e) => DefaultSettings.fromDocSnapshot(e))
+        .toList();
   }
 
   @override
