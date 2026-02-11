@@ -226,5 +226,29 @@ void main() {
       var species = list.getSp(Species.fromEnglish('Unknown Species'));
       expect(species.english, '');
     });
+
+    test('Get species by name matches english or local', () {
+      var speciesList = [
+        Species(english: 'Common Gull', local: 'Gull Local', latinCode: ''),
+        Species(english: 'European Herring Gull', local: 'Herring Local', latinCode: ''),
+      ];
+      var list = LocalSpeciesList.fromSpeciesList(speciesList);
+
+      var byEnglish = list.getSpeciesByName('common gull');
+      expect(byEnglish.english, 'Common Gull');
+
+      var byLocal = list.getSpeciesByName('herring local');
+      expect(byLocal.english, 'European Herring Gull');
+    });
+
+    test('Get species by name returns fallback when not found', () {
+      var speciesList = [
+        Species(english: 'Common Gull', local: 'Gull Local', latinCode: ''),
+      ];
+      var list = LocalSpeciesList.fromSpeciesList(speciesList);
+      var species = list.getSpeciesByName('Unknown Species');
+      expect(species.english, 'Unknown Species');
+      expect(species.local, '');
+    });
   });
 }

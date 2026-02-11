@@ -12,6 +12,7 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
   bool autoNextBand = false;
   bool autoNextBandParent = false;
   bool showAppBar = true;
+  SpeciesNameLanguage speciesNameLanguage = SpeciesNameLanguage.english;
   LocalSpeciesList speciesList = LocalSpeciesList.fromStringList(["Common gull","Arctic tern"]);
   List<Measure> defaultMeasures = [Measure.note()];
   bool biasedRepeatedMeasures = false;

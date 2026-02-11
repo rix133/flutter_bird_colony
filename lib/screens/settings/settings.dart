@@ -777,6 +777,30 @@ class _SettingsPageState extends State<SettingsPage> {
             SizedBox(height: 10),
             Row(
               children: <Widget>[
+                Text('Species name display:'),
+                SizedBox(width: 10),
+                DropdownButton<SpeciesNameLanguage>(
+                  value: sps?.speciesNameLanguage ??
+                      SpeciesNameLanguage.english,
+                  items: SpeciesNameLanguage.values
+                      .map((SpeciesNameLanguage value) {
+                    return DropdownMenuItem<SpeciesNameLanguage>(
+                      value: value,
+                      child: Text(value.label),
+                    );
+                  }).toList(),
+                  onChanged: (SpeciesNameLanguage? newValue) {
+                    if (newValue == null) return;
+                    setState(() {
+                      sps?.speciesNameLanguage = newValue;
+                    });
+                  },
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Row(
+              children: <Widget>[
                 Text('Auto set guessed metal band for chicks:'),
                 Switch(
                   value: sps?.autoNextBand ?? false,

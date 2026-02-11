@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
+import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
+import 'package:provider/provider.dart';
 
 class SpeciesRawAutocomplete extends StatefulWidget {
   final Function(Species) returnFun;
@@ -29,27 +31,89 @@ class SpeciesRawAutocomplete extends StatefulWidget {
 class _SpeciesRawAutocompleteState extends State<SpeciesRawAutocomplete> {
   final TextEditingController species = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  SpeciesNameLanguage _lastLanguage = SpeciesNameLanguage.english;
 
   @override
   void initState() {
     super.initState();
-    species.text = widget.species.english;
+    species.text = _primaryName(
+        _resolveDisplaySpecies(widget.species),
+        _lastLanguage);
   }
 
   @override
   void didUpdateWidget(SpeciesRawAutocomplete oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.species != oldWidget.species) {
-      species.text = widget.species.english;
+    if (widget.species != oldWidget.species ||
+        widget.speciesList != oldWidget.speciesList) {
+      species.text = _primaryName(
+          _resolveDisplaySpecies(widget.species),
+          _lastLanguage);
     }
   }
 
-  String _displayStringForOption(Species option) => option.english;
+  SharedPreferencesService? _maybeSps(BuildContext context) {
+    try {
+      return Provider.of<SharedPreferencesService>(context, listen: false);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  SpeciesNameLanguage _resolveLanguage(BuildContext context) {
+    final sps = _maybeSps(context);
+    return sps?.speciesNameLanguage ?? SpeciesNameLanguage.english;
+  }
+
+  Species _resolveDisplaySpecies(Species source) {
+    if (source.local.trim().isNotEmpty ||
+        source.english.trim().isEmpty) {
+      return source;
+    }
+    final listMatch = widget.speciesList.getSpecies(source.english);
+    if (listMatch.local.trim().isEmpty) {
+      return source;
+    }
+    return listMatch;
+  }
+
+  String _primaryName(Species option, SpeciesNameLanguage language) {
+    final local = option.local.trim();
+    if (language == SpeciesNameLanguage.local && local.isNotEmpty) {
+      return local;
+    }
+    return option.english.trim();
+  }
+
+  String _secondaryName(Species option, SpeciesNameLanguage language) {
+    final local = option.local.trim();
+    final english = option.english.trim();
+    if (language == SpeciesNameLanguage.local) {
+      if (local.isEmpty || english.isEmpty || english == local) {
+        return '';
+      }
+      return english;
+    }
+    if (local.isEmpty || local == english) {
+      return '';
+    }
+    return local;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final displayLanguage = _resolveLanguage(context);
+    if (displayLanguage != _lastLanguage) {
+      _lastLanguage = displayLanguage;
+      if (!_focusNode.hasFocus) {
+        species.text = _primaryName(
+            _resolveDisplaySpecies(widget.species),
+            displayLanguage);
+      }
+    }
     return RawAutocomplete<Species>(
-      displayStringForOption: _displayStringForOption,
+      displayStringForOption: (option) =>
+          _primaryName(option, displayLanguage),
       focusNode: _focusNode,
       textEditingController: species,
       onSelected: (selected) {
@@ -61,11 +125,19 @@ class _SpeciesRawAutocompleteState extends State<SpeciesRawAutocomplete> {
               padding: EdgeInsets.zero,
               itemBuilder: (context, index) {
                 final option = options.elementAt(index);
+                final primary = _primaryName(option, displayLanguage);
+                final secondary = _secondaryName(option, displayLanguage);
                 return ListTile(
                   title: Text(
-                    option.english.toString(),
+                    primary,
                     textAlign: TextAlign.center,
                   ),
+                  subtitle: secondary.isEmpty
+                      ? null
+                      : Text(
+                          secondary,
+                          textAlign: TextAlign.center,
+                        ),
                   textColor: widget.textColor,
                   contentPadding: EdgeInsets.all(0),
                   visualDensity: VisualDensity.comfortable,
@@ -98,7 +170,8 @@ class _SpeciesRawAutocompleteState extends State<SpeciesRawAutocomplete> {
           onFieldSubmitted: (String value) {
             onFieldSubmitted();
             //search the value in the species list
-            Species species = widget.speciesList.getSpecies(value);
+            Species species =
+                widget.speciesList.getSpeciesByName(value);
 
             if (species.english.isEmpty) {
               showDialog(
@@ -140,12 +213,12 @@ class _SpeciesRawAutocompleteState extends State<SpeciesRawAutocomplete> {
         if (textEditingValue.text == '') {
           return const Iterable<Species>.empty();
         }
+        final query = textEditingValue.text.toLowerCase();
         return widget.speciesList.species.map((Species option) {
           return option;
         }).where((Species option) {
-          return option.english
-              .toLowerCase()
-              .contains(textEditingValue.text.toLowerCase());
+          return option.english.toLowerCase().contains(query) ||
+              option.local.toLowerCase().contains(query);
         });
       },
     );

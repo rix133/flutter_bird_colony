@@ -8,6 +8,19 @@ import 'package:flutter_bird_colony/models/measure.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+enum SpeciesNameLanguage { english, local }
+
+extension SpeciesNameLanguageLabel on SpeciesNameLanguage {
+  String get label {
+    switch (this) {
+      case SpeciesNameLanguage.english:
+        return 'English';
+      case SpeciesNameLanguage.local:
+        return 'Local';
+    }
+  }
+}
+
 class SharedPreferencesService extends ChangeNotifier {
   SharedPreferencesService(this._sharedPreferences);
 
@@ -71,6 +84,20 @@ class SharedPreferencesService extends ChangeNotifier {
 
   set showAppBar(bool value) {
     _sharedPreferences.setBool('showAppBar', value);
+    notifyListeners();
+  }
+
+  SpeciesNameLanguage get speciesNameLanguage {
+    final storedIndex = _sharedPreferences.getInt('speciesNameLanguage') ?? 0;
+    if (storedIndex < 0 ||
+        storedIndex >= SpeciesNameLanguage.values.length) {
+      return SpeciesNameLanguage.english;
+    }
+    return SpeciesNameLanguage.values[storedIndex];
+  }
+
+  set speciesNameLanguage(SpeciesNameLanguage value) {
+    _sharedPreferences.setInt('speciesNameLanguage', value.index);
     notifyListeners();
   }
 

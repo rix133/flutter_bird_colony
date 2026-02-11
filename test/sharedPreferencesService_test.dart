@@ -87,6 +87,18 @@ void main() {
       expect(sharedPreferencesService.showAppBar, true);
     });
 
+    test('speciesNameLanguage should return English if not set', () {
+      expect(sharedPreferencesService.speciesNameLanguage,
+          SpeciesNameLanguage.english);
+    });
+
+    test('speciesNameLanguage should return the set value', () {
+      sharedPreferencesService.speciesNameLanguage =
+          SpeciesNameLanguage.local;
+      expect(sharedPreferencesService.speciesNameLanguage,
+          SpeciesNameLanguage.local);
+    });
+
     test('autoNextBand should return the set value', () {
       sharedPreferencesService.autoNextBand = true;
       expect(sharedPreferencesService.autoNextBand, true);

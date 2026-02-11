@@ -593,6 +593,27 @@ class LocalSpeciesList {
         orElse: () => Species.fromEnglish(english));
   }
 
+  Species getSpeciesByName(String? name) {
+    if (name == null) {
+      return Species.empty();
+    }
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      return Species.empty();
+    }
+    final lower = trimmed.toLowerCase();
+    for (final speciesItem in species) {
+      if (speciesItem.english.toLowerCase() == lower) {
+        return speciesItem;
+      }
+    }
+    for (final speciesItem in species) {
+      if (speciesItem.local.toLowerCase() == lower) {
+        return speciesItem;
+      }
+    }
+    return Species.fromEnglish(trimmed);
+  }
 
 }
 
