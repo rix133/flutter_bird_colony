@@ -108,8 +108,10 @@ class _GalleryViewerScreenState extends State<GalleryViewerScreen> {
           final file = File(filePath);
           await file.create(recursive: true);
           await file.writeAsBytes(response.bodyBytes);
-          await Share.shareXFiles([XFile(filePath)],
-              text: 'Nest Image from app');
+          await SharePlus.instance.share(ShareParams(
+            files: [XFile(filePath)],
+            text: 'Nest Image from app',
+          ));
           await file.delete();
         } else {
           print('Download failed: HTTP ${response.statusCode}');

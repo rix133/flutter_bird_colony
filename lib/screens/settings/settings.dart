@@ -772,26 +772,27 @@ class _SettingsPageState extends State<SettingsPage> {
                   content: SingleChildScrollView(
                     child: StatefulBuilder(
                       builder: (context, setState) {
-                        return ListBody(
-                            children: FirebaseOptionsSelector
-                                .availableOptions.entries
-                                .map((e) => RadioListTile<String>(
-                                      title: Text(e.key),
-                                      value: e.key,
-                                      groupValue: _selectedColony,
-                                      onChanged: (String? newValue) async {
-                                        if (newValue != null) {
-                                          await FirebaseOptionsSelector.select(
-                                              newValue);
-                                          setState(() {
-                                            _selectedColony = newValue;
-                                            _colonyHasChanged = true;
-                                            sps?.colonyName = newValue;
-                                          });
-                                        }
-                                      },
-                                    ))
-                                .toList());
+                        return RadioGroup<String>(
+                          groupValue: _selectedColony,
+                          onChanged: (String? newValue) async {
+                            if (newValue != null) {
+                              await FirebaseOptionsSelector.select(newValue);
+                              setState(() {
+                                _selectedColony = newValue;
+                                _colonyHasChanged = true;
+                                sps?.colonyName = newValue;
+                              });
+                            }
+                          },
+                          child: ListBody(
+                              children: FirebaseOptionsSelector
+                                  .availableOptions.entries
+                                  .map((e) => RadioListTile<String>(
+                                        title: Text(e.key),
+                                        value: e.key,
+                                      ))
+                                  .toList()),
+                        );
                       },
                     ),
                   ),

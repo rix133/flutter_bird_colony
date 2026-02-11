@@ -347,9 +347,11 @@ class FSItemMixin {
           ..createSync(recursive: true)
           ..writeAsBytesSync(encodedExcel);
 
-        await Share.shareXFiles([file],
-            text:
-                'Sharing ${types.join(", ")} file from Bird Colony app. Downloaded on ${DateTime.now().toIso8601String()}');
+        await SharePlus.instance.share(ShareParams(
+          files: [file],
+          text:
+              'Sharing ${types.join(", ")} file from Bird Colony app. Downloaded on ${DateTime.now().toIso8601String()}',
+        ));
         //delete the file from local storage
         saveFile.delete();
         return;
