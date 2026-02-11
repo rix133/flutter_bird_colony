@@ -18,6 +18,38 @@ class _OverwriteNestLocationMapState extends GoogleMapScreenState {
   Nest? _nest;
   GeoPoint? _nestCoordinates;
 
+  void _updateMarkers() {
+    final LatLng currentLatLng =
+        LatLng(coordinates.latitude, coordinates.longitude);
+    if (_nestCoordinates != null) {
+      markers = {
+        Marker(
+          markerId: MarkerId("nestLocation"),
+          position:
+              LatLng(_nestCoordinates!.latitude, _nestCoordinates!.longitude),
+          infoWindow: InfoWindow(title: "Nest ${_nest?.name ?? ""}".trim()),
+        ),
+        Marker(
+          markerId: MarkerId("currentLocation"),
+          position: currentLatLng,
+          infoWindow: InfoWindow(title: "Selected Location"),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+        ),
+      };
+    } else {
+      markers = {
+        Marker(
+          markerId: MarkerId("currentLocation"),
+          position: currentLatLng,
+          infoWindow: InfoWindow(title: "Selected Location"),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+        ),
+      };
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -31,9 +63,31 @@ class _OverwriteNestLocationMapState extends GoogleMapScreenState {
       location
           .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
           .then((value) {
-        updateLocation(value);
+        setState(() {
+          updateLocation(value);
+          _updateMarkers();
+        });
       });
-      setState(() {});
+    });
+  }
+
+  @override
+  void onMapTap(LatLng position) {
+    updateLocation(Position(
+      latitude: position.latitude,
+      longitude: position.longitude,
+      accuracy: 0,
+      timestamp: DateTime.now(),
+      altitude: 0,
+      altitudeAccuracy: 0,
+      heading: 0,
+      headingAccuracy: 0,
+      speed: 0,
+      speedAccuracy: 0,
+    ));
+
+    setState(() {
+      _updateMarkers();
     });
   }
 
@@ -54,37 +108,39 @@ class _OverwriteNestLocationMapState extends GoogleMapScreenState {
     );
   }
 
+  Widget _locationButton() {
+    return FloatingActionButton(
+      heroTag: "RefreshLocation",
+      onPressed: () {
+        location
+            .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+            .then((value) {
+          updateLocation(value);
+          setState(() {
+            _updateMarkers();
+          });
+        });
+        focus.unfocus();
+      },
+      child: const Icon(Icons.my_location),
+    );
+  }
+
+  @override
+  List<Widget> baseFloatingActionButtons() {
+    return [
+      compassButton(),
+      SizedBox(height: 10),
+      _locationButton(),
+      SizedBox(height: 10),
+      // Get the zoom button from parent
+      super.baseFloatingActionButtons()[4],
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final LatLng currentLatLng =
-        LatLng(coordinates.latitude, coordinates.longitude);
-    if (_nestCoordinates != null) {
-      markers = {
-        Marker(
-          markerId: MarkerId("nestLocation"),
-          position:
-              LatLng(_nestCoordinates!.latitude, _nestCoordinates!.longitude),
-          infoWindow: InfoWindow(title: "Nest ${_nest?.name ?? ""}".trim()),
-        ),
-        Marker(
-          markerId: MarkerId("currentLocation"),
-          position: currentLatLng,
-          infoWindow: InfoWindow(title: "Current"),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueAzure),
-        ),
-      };
-    } else {
-      markers = {
-        Marker(
-          markerId: MarkerId("currentLocation"),
-          position: currentLatLng,
-          infoWindow: InfoWindow(title: "Current"),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueAzure),
-        ),
-      };
-    }
+    // Don't recreate markers on every build - they are managed by _updateMarkers()
     return super.build(context);
   }
 }

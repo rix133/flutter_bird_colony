@@ -142,6 +142,11 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
     );
   }
 
+  void onMapTap(LatLng position) {
+    // Override this method in subclasses if you want different behavior
+    // Default implementation does nothing
+  }
+
   GestureDetector lastFloatingButton();
 
   List<Widget> baseFloatingActionButtons() {
@@ -207,6 +212,7 @@ abstract class GoogleMapScreenState extends State<GoogleMapScreen> {
               mapType: mapType,
               zoomControlsEnabled: false,
               initialCameraPosition: camPosCurrent,
+              onTap: onMapTap,
               onCameraMove: (position) {
                 camPosCurrent = position;
               },
