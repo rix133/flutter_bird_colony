@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/icons/my_flutter_app_icons.dart';
+import 'package:flutter_bird_colony/screens/dataFixes.dart';
 import 'package:flutter_bird_colony/screens/bird/listBirds.dart';
 import 'package:flutter_bird_colony/screens/experiment/listExperiments.dart';
 import 'package:flutter_bird_colony/screens/nest/listNests.dart';
@@ -12,7 +13,7 @@ class ListDatas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: Text("Data"),
@@ -29,6 +30,9 @@ class ListDatas extends StatelessWidget {
               Tab(
                   icon: Icon(CustomIcons.bird, color: Colors.amberAccent),
                   text: "Birds"),
+              Tab(
+                  icon: Icon(Icons.build, color: Colors.amberAccent),
+                  text: "Fix"),
             ],
           ),
         ),
@@ -37,6 +41,7 @@ class ListDatas extends StatelessWidget {
             ListExperiments(firestore: firestore,),
             ListNests(firestore: firestore,),
             ListBirds(firestore: firestore,),
+            DataFixes(firestore: firestore,),
           ],
         ),
       ),

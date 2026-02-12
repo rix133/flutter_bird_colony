@@ -25,6 +25,7 @@ class EditBird extends StatefulWidget {
 class _EditBirdState extends State<EditBird> {
   TextEditingController band_letCntr = TextEditingController();
   TextEditingController band_numCntr = TextEditingController();
+  TextEditingController eggNrCntr = TextEditingController();
   SharedPreferencesService? sps;
   Species _species = Species.empty();
   LocalSpeciesList _speciesList = LocalSpeciesList();
@@ -94,6 +95,7 @@ class _EditBirdState extends State<EditBird> {
  dispose() {
    band_letCntr.dispose();
    band_numCntr.dispose();
+   eggNrCntr.dispose();
    _lettersFocus.dispose();
    bird.dispose();
    super.dispose();
@@ -162,6 +164,7 @@ class _EditBirdState extends State<EditBird> {
    _recentMetalBand = sps?.getRecentMetalBand(bird.species ?? "") ?? "";
     nestnr.setValue(bird.nest);
     color_band.setValue(bird.color_band);
+    _syncEggController();
   }
 
   Future<void> handleBird(Map<String, dynamic> map) async {
@@ -186,6 +189,7 @@ class _EditBirdState extends State<EditBird> {
     //ensure that correct nests are referenced
     nests = widget.firestore.collection(
         yearToNestCollectionName(bird.nest_year ?? _activeYear()));
+    _syncEggController();
   }
 
   Future<void> reloadBirdFromFirestore(String id) async {
@@ -196,6 +200,7 @@ class _EditBirdState extends State<EditBird> {
         .then((DocumentSnapshot value) => Bird.fromDocSnapshot(value)).catchError(onSnapshotError);
     ageType = bird.isChick(currentYear: _activeYear()) ? "chick" : "parent";
     bird.addNonExistingExperiments(nest.experiments, ageType);
+    _syncEggController();
   }
 
   Bird onSnapshotError(error) {
@@ -241,6 +246,7 @@ class _EditBirdState extends State<EditBird> {
       experiments: nest.experiments,
     );
     bird.addMissingMeasures(allMeasures, "chick");
+    _syncEggController();
   }
 
   void handleNoBirdNoEgg() {
@@ -256,6 +262,7 @@ class _EditBirdState extends State<EditBird> {
       experiments: nest.experiments,
     );
     bird.addMissingMeasures(allMeasures, ageType);
+    _syncEggController();
   }
 
   void handleNoMap() {
@@ -270,6 +277,7 @@ class _EditBirdState extends State<EditBird> {
       bird.measures.removeWhere((element) => element.name == "age");
     }
     bird.measures.sort();
+    _syncEggController();
   }
 
   Row getMetalBandInput({bool hideNext = false}) {
@@ -428,6 +436,8 @@ class _EditBirdState extends State<EditBird> {
     String cb = color_band.valueCntr.text.toUpperCase();
     bird.nest = nestnr.valueCntr.text;
     bird.color_band = cb.isEmpty ? null : cb;
+    final eggNr = eggNrCntr.text.trim();
+    bird.egg = eggNr.isEmpty ? null : eggNr;
     if (bird.prevBird != null) {
       //the current nest year is changed now as well
       if (bird.nest != bird.prevBird!.nest) {
@@ -435,6 +445,29 @@ class _EditBirdState extends State<EditBird> {
       }
     }
     return bird;
+  }
+
+  void _syncEggController() {
+    if (bird.egg == null) {
+      eggNrCntr.text = "";
+    } else {
+      eggNrCntr.text = bird.egg ?? "";
+    }
+  }
+
+  Widget eggNumberField() {
+    if (!bird.ringed_as_chick) {
+      return Container();
+    }
+    return TextFormField(
+      controller: eggNrCntr,
+      textAlign: TextAlign.center,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: "Egg number",
+        hintText: "Egg number",
+      ),
+    );
   }
 
   changeMetalBand() {
@@ -608,6 +641,8 @@ class _EditBirdState extends State<EditBird> {
                   ModifyingButtons(firestore: widget.firestore, context:context,setState:setState, getItem:getBird, type:ageType, otherItems:nests,
                       silentOverwrite: false,
                       onSaveOK: saveOk, onDeleteOK: deleteOk),
+                  SizedBox(height: 10),
+                  eggNumberField(),
                   SizedBox(height: 10),
                   nestnr.getSimpleMeasureForm(),
                   //show age in years if ringed as chick

@@ -344,7 +344,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     //do this only if any of the relevant fields is changed and there is a nest
     if (nest != prevBird.nest ||
         band != prevBird.band ||
-        color_band != prevBird.color_band) {
+        color_band != prevBird.color_band ||
+        egg != prevBird.egg) {
       if (prevBird.nest != null) {
         UpdateResult ur =
             await prevBird.updateNest(itemCollection, delete: true);

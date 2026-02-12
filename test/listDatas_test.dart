@@ -2,6 +2,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/icons/my_flutter_app_icons.dart';
 import 'package:flutter_bird_colony/screens/bird/listBirds.dart';
+import 'package:flutter_bird_colony/screens/dataFixes.dart';
 import 'package:flutter_bird_colony/screens/experiment/listExperiments.dart';
 import 'package:flutter_bird_colony/screens/listDatas.dart';
 import 'package:flutter_bird_colony/screens/nest/listNests.dart';
@@ -27,7 +28,7 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(myApp);
 
-      expect(find.byType(Tab), findsNWidgets(3));
+      expect(find.byType(Tab), findsNWidgets(4));
     });
 
     testWidgets('renders the correct tab icons and texts',
@@ -41,6 +42,9 @@ void main() {
       expect(find.text('Nests'), findsOneWidget);
 
       expect(find.text('Birds'), findsOneWidget);
+
+      expect(find.byIcon(Icons.build), findsOneWidget);
+      expect(find.text('Fix'), findsOneWidget);
     });
 
     testWidgets('renders the correct default tab view',
@@ -71,6 +75,12 @@ void main() {
       expect(find.byType(ListExperiments), findsNothing);
       expect(find.byType(ListNests), findsNothing);
       expect(find.byType(ListBirds), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.build));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ListBirds), findsNothing);
+      expect(find.byType(DataFixes), findsOneWidget);
     });
   });
 }
