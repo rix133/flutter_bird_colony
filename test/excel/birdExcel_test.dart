@@ -28,6 +28,8 @@ void main() {
       expect((rows[0][10] as TextCellValue).value.text,
           bird.last_modified?.toIso8601String() ?? "");
       expect((rows[0][11] as TextCellValue).value.text, bird.egg ?? "");
+      expect((rows[0][12] as TextCellValue).value.text, bird.rebanded_from ?? "");
+      expect((rows[0][13] as TextCellValue).value.text, bird.rebanded_to ?? "");
     });
 
     test('toExcelRowHeader should return correct headers', () {
@@ -51,6 +53,8 @@ void main() {
       expect(headers[9].value.text, 'ringed_as_chick');
       expect(headers[10].value.text, 'last_modified');
       expect(headers[11].value.text, 'egg');
+      expect(headers[12].value.text, 'rebanded_from');
+      expect(headers[13].value.text, 'rebanded_to');
     });
   });
 }

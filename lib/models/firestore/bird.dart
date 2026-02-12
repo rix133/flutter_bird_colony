@@ -32,6 +32,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   bool ringed_as_chick = true;
   DateTime? last_modified;
   String? egg;
+  String? rebanded_from;
+  String? rebanded_to;
 
   Bird? prevBird;
 
@@ -61,6 +63,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       age: this.age,
       nest: this.nest,
       egg: this.egg,
+      rebanded_from: this.rebanded_from,
+      rebanded_to: this.rebanded_to,
       experiments:
           List<Experiment>.from(this.experiments?.map((e) => e.copy()) ?? []),
       measures: List<Measure>.from(this.measures.map((e) => e.copy())),
@@ -80,6 +84,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     this.age,
     this.nest,
     this.egg,
+    this.rebanded_from,
+    this.rebanded_to,
     List<Experiment>? experiments,
     required List<Measure> measures
   }) : super(experiments: experiments, measures: measures) {
@@ -134,6 +140,10 @@ class Bird extends ExperimentedItem implements FirestoreItem{
           Text("Species: ${species ?? "unknown"}"),
           Text("Responsible: ${responsible ?? "unknown"}"),
           Text("Age: ${age ?? "unknown"}"),
+          if (rebanded_from?.isNotEmpty ?? false)
+            Text("Rebanded from: $rebanded_from"),
+          if (rebanded_to?.isNotEmpty ?? false)
+            Text("Rebanded to: $rebanded_to"),
           Text(
               "Last modified: ${last_modified != null ? DateFormat('d MMM yyyy').format(last_modified!) : "unknown"}"),
           Text("Egg: ${egg ?? "unknown"}"),
@@ -250,6 +260,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
           ? (json['last_modified'] as Timestamp).toDate()
           : null,
       age: json['age'] ?? null,
+      rebanded_from: json['rebanded_from'] ?? null,
+      rebanded_to: json['rebanded_to'] ?? null,
       experiments: eitem.experiments,
       // provide a default value if 'experiments' does not exist
       measures: eitem.measures, // provide a default value if 'measures' does not exist
@@ -327,6 +339,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       'last_modified': last_modified ?? DateTime.now(),
       'age': age,
       'egg': egg,
+      'rebanded_from': rebanded_from,
+      'rebanded_to': rebanded_to,
       'measures': measures.map((Measure e) => e.toJson()).toList(),
     };
   }
@@ -567,18 +581,46 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       CollectionReference<Object?>? otherItems, String type) async {
     CollectionReference birds = firestore.collection("Birds");
     if (prevBird != null && prevBird!.band != band) {
-      return await prevBird!
-          .delete(firestore, otherItems: otherItems, type: type)
-          .then((value) async {
-        if (value.success) {
-          return await _saveBirdToFirestore(birds, otherItems);
-        } else {
-          return value;
-        }
-      });
+      return await _rebandBird(firestore, otherItems);
     } else {
       return await _saveBirdToFirestore(birds, otherItems);
     }
+  }
+
+  Future<UpdateResult> _rebandBird(FirebaseFirestore firestore,
+      CollectionReference<Object?>? otherItems) async {
+    if (prevBird == null) {
+      return UpdateResult.error(message: "Missing previous bird data");
+    }
+    final oldBand = prevBird!.band;
+    rebanded_from = oldBand;
+    rebanded_to = null;
+
+    final CollectionReference birds = firestore.collection("Birds");
+    final result = await _saveBirdToFirestore(birds, otherItems);
+    if (!result.success) {
+      return result;
+    }
+
+    final now = last_modified ?? DateTime.now();
+    final user = responsible ?? prevBird!.responsible ?? "unknown";
+    final Map<String, dynamic> oldUpdate = {
+      'rebanded_to': band,
+      'last_modified': now,
+      'responsible': user,
+    };
+    try {
+      final oldRef = birds.doc(oldBand);
+      await oldRef.set(oldUpdate, SetOptions(merge: true));
+      final oldLog = Map<String, dynamic>.from(prevBird!.toJson())
+        ..addAll(oldUpdate);
+      await oldRef.collection("changelog").doc(now.toString()).set(oldLog);
+    } catch (error) {
+      return UpdateResult.error(
+          message: "Error updating old band record: $error");
+    }
+
+    return result;
   }
 
   @override
@@ -618,7 +660,9 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       TextCellValue('ringed_date'),
       TextCellValue('ringed_as_chick'),
       TextCellValue('last_modified'),
-      TextCellValue('egg')
+      TextCellValue('egg'),
+      TextCellValue('rebanded_from'),
+      TextCellValue('rebanded_to')
     ];
     // Add more headers as per your requirements
 
@@ -648,6 +692,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       BoolCellValue(ringed_as_chick),
       last_modified != null ? DateTimeCellValue.fromDateTime(last_modified!) : TextCellValue(""),
       TextCellValue(egg ?? ""),
+      TextCellValue(rebanded_from ?? ""),
+      TextCellValue(rebanded_to ?? ""),
       // Add more row data as per your requirements
     ];
 
@@ -660,6 +706,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         ringed_date: (json['ringed_date'] as Timestamp).toDate(),
         ringed_as_chick: json['ringed_as_chick'] ?? true,
         band: json['band'],
+        rebanded_from: json['rebanded_from'],
+        rebanded_to: json['rebanded_to'],
         measures: (json['measures'] as List<dynamic>?)
             ?.map((e) => Measure.fromJson(e))
             .toList() ??

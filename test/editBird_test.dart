@@ -1016,7 +1016,7 @@ void main() {
     });
 
     testWidgets(
-        "when a bird band is changed old bird is deleted and new bird is saved",
+        "when a bird band is changed old bird is kept and new bird is saved",
         (WidgetTester tester) async {
       parent = await firestore
           .collection("Birds")
@@ -1044,16 +1044,19 @@ void main() {
       await tester.tap(find.byKey(Key("changeBandButton")));
       await tester.pumpAndSettle();
 
-      //expect the old bird to be deleted
-      var bird = await firestore.collection("Birds").doc(parent.band).get();
-      expect(bird.exists, false);
+      //expect the old bird to be kept and linked
+      var oldBirdSnap =
+          await firestore.collection("Birds").doc(parent.band).get();
+      expect(oldBirdSnap.exists, true);
+      expect(oldBirdSnap.data()!['rebanded_to'], "BB1235");
       //expect the new bird to be saved
-      bird = await firestore.collection("Birds").doc("BB1235").get();
+      var bird = await firestore.collection("Birds").doc("BB1235").get();
       expect(bird.exists, true);
 
       //expect that all other fields are unchanged
       Bird newBird = Bird.fromDocSnapshot(bird);
       expect(newBird.band, "BB1235");
+      expect(newBird.rebanded_from, parent.band);
       expect(newBird.ringed_date, parent.ringed_date,
           reason: "ringed date should not change");
       expect(newBird.ringed_as_chick, parent.ringed_as_chick);
@@ -1166,11 +1169,13 @@ void main() {
       await tester.tap(find.byKey(Key("changeBandButton")));
       await tester.pumpAndSettle();
 
-      //expect the old bird to be deleted
-      var bird = await firestore.collection("Birds").doc(parent.band).get();
-      expect(bird.exists, false);
+      //expect the old bird to be kept and linked
+      var oldBirdSnap =
+          await firestore.collection("Birds").doc(parent.band).get();
+      expect(oldBirdSnap.exists, true);
+      expect(oldBirdSnap.data()!['rebanded_to'], "BB1235");
       //expect the new bird to be saved
-      bird = await firestore.collection("Birds").doc("BB1235").get();
+      var bird = await firestore.collection("Birds").doc("BB1235").get();
       expect(bird.exists, true);
 
       Nest fsNest = await firestore
@@ -1211,11 +1216,12 @@ void main() {
       await tester.tap(find.byKey(Key("changeBandButton")));
       await tester.pumpAndSettle();
 
-      //expect the old bird to be deleted
-      var bird = await firestore.collection("Birds").doc("AA1235").get();
-      expect(bird.exists, false);
+      //expect the old bird to be kept and linked
+      var oldBirdSnap = await firestore.collection("Birds").doc("AA1235").get();
+      expect(oldBirdSnap.exists, true);
+      expect(oldBirdSnap.data()!['rebanded_to'], "BB1235");
       //expect the new bird to be saved
-      bird = await firestore.collection("Birds").doc("BB1235").get();
+      var bird = await firestore.collection("Birds").doc("BB1235").get();
       expect(bird.exists, true);
 
       var oldEgg = await firestore
@@ -1281,11 +1287,12 @@ void main() {
       await tester.tap(find.byKey(Key("changeBandButton")));
       await tester.pumpAndSettle();
 
-      //expect the old bird to be deleted
-      var bird = await firestore.collection("Birds").doc("AA1236").get();
-      expect(bird.exists, false);
+      //expect the old bird to be kept and linked
+      var oldBirdSnap = await firestore.collection("Birds").doc("AA1236").get();
+      expect(oldBirdSnap.exists, true);
+      expect(oldBirdSnap.data()!['rebanded_to'], "BB1236");
       //expect the new bird to be saved
-      bird = await firestore.collection("Birds").doc("BB1236").get();
+      var bird = await firestore.collection("Birds").doc("BB1236").get();
       expect(bird.exists, true);
 
       var oldEgg = await firestore
