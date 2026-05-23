@@ -73,6 +73,14 @@ void main() {
       last_modified: DateTime.now().subtract(Duration(days: 1)),
       status: EggStatus('intact'),
       measures: [Measure.note()]);
+  final Egg deadEgg = Egg(
+      id: "2 egg 1",
+      discover_date: DateTime.now(),
+      responsible: "Admin",
+      ring: null,
+      last_modified: DateTime.now(),
+      status: EggStatus('predated'),
+      measures: [Measure.note()]);
   final Experiment experiment = Experiment(
     id: "1",
     name: "New Experiment",
@@ -134,6 +142,12 @@ void main() {
         .collection("egg")
         .doc(egg.id)
         .set(egg.toJson());
+    await firestore
+        .collection(DateTime.now().year.toString())
+        .doc(nest2.id)
+        .collection("egg")
+        .doc(deadEgg.id)
+        .set(deadEgg.toJson());
     await firestore
         .collection('experiments')
         .doc(experiment.id)
@@ -250,6 +264,25 @@ void main() {
     //check if the list of birds is displayed
     expect(find.byType(ListTile), findsNWidgets(1));
   });
+
+  testWidgets("will filter nests by living eggs", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(2));
+
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key("livingEggsFilter")));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(1));
+    expect(find.text("ID: 1, Common gull"), findsOneWidget);
+    expect(find.text("ID: 2, test"), findsNothing);
+  });
+
   testWidgets("filter by min and max location accuracy",
       (WidgetTester tester) async {
     await tester.pumpWidget(myApp);

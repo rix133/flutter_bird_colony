@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
@@ -13,8 +12,7 @@ import '../models/firestore/bird.dart';
 
 class Statistics extends StatefulWidget {
   final FirebaseFirestore firestore;
-  const Statistics({Key? key, required this.firestore})  : super(key: key);
-
+  const Statistics({Key? key, required this.firestore}) : super(key: key);
 
   @override
   State<Statistics> createState() => _StatisticsState();
@@ -36,18 +34,30 @@ class _StatisticsState extends State<Statistics> {
 
   String username = "";
 
-
   List<DropdownMenuItem<String>> timespans = <DropdownMenuItem<String>>[
-    DropdownMenuItem(child: Text("All", style: TextStyle(color: Colors.deepPurpleAccent)), value: "All" ),
-    DropdownMenuItem(child: Text("Today", style: TextStyle(color: Colors.deepPurpleAccent)), value: "Today")
+    DropdownMenuItem(
+        child: Text("All", style: TextStyle(color: Colors.deepPurpleAccent)),
+        value: "All"),
+    DropdownMenuItem(
+        child: Text("Today", style: TextStyle(color: Colors.deepPurpleAccent)),
+        value: "Today")
   ];
   String dropdownValue = "All";
 
   List<DropdownMenuItem<String>> people = <DropdownMenuItem<String>>[
-    DropdownMenuItem(child: Text("Everybody", style: TextStyle(color: Colors.deepPurpleAccent)), value: "Everybody" ),
-    DropdownMenuItem(child: Text("Me", style: TextStyle(color: Colors.deepPurpleAccent)), value: "Me")
+    DropdownMenuItem(
+        child:
+            Text("Everybody", style: TextStyle(color: Colors.deepPurpleAccent)),
+        value: "Everybody"),
+    DropdownMenuItem(
+        child: Text("Me", style: TextStyle(color: Colors.deepPurpleAccent)),
+        value: "Me")
   ];
   String dropdownValuePeople = "Everybody";
+
+  Widget _tileMaterial(ListTile tile) {
+    return Material(color: Colors.transparent, child: tile);
+  }
 
   @override
   void initState() {
@@ -72,9 +82,9 @@ class _StatisticsState extends State<Statistics> {
   }
 
   _refreshStreams() {
-    _nestsStream = nestsService
-            ?.watchItems(yearToNestCollectionName(_selectedYear)) ??
-        Stream.empty();
+    _nestsStream =
+        nestsService?.watchItems(yearToNestCollectionName(_selectedYear)) ??
+            Stream.empty();
     DateTime startDate = DateTime(_selectedYear);
     DateTime endDate = DateTime(_selectedYear + 1);
 
@@ -89,7 +99,6 @@ class _StatisticsState extends State<Statistics> {
           .where("ringed_date", isGreaterThanOrEqualTo: startDate)
           .where("ringed_date", isLessThan: endDate);
     }
-
   }
 
   Widget buildNestList(List<Nest> nests) {
@@ -100,9 +109,9 @@ class _StatisticsState extends State<Statistics> {
           .toList();
       return ListView(
         children: [
-          ListTile(
+          _tileMaterial(ListTile(
               title: Text("Total nests"),
-              trailing: Text(nests.length.toString())),
+              trailing: Text(nests.length.toString()))),
           ..._speciesList.species
               .map((Species sp) => getNestListTile(sp.english, nests))
               .toList(),
@@ -126,98 +135,105 @@ class _StatisticsState extends State<Statistics> {
             child: Container(
                 color: Theme.of(context).scaffoldBackgroundColor,
                 child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text('Select year:'),
-                Container(width: 8),
-                DropdownButton<int>(
-                  value: _selectedYear,
-                  items: (() {
-                    const startYear = 2022;
-                    final maxYear = DateTime.now().year > _selectedYear
-                        ? DateTime.now().year
-                        : _selectedYear;
-                    final years = maxYear >= startYear
-                        ? List<int>.generate(maxYear - startYear + 1,
-                            (int index) => index + startYear)
-                        : <int>[maxYear];
-                    return years;
-                  })().map((int year) {
-                    return DropdownMenuItem<int>(
-                      value: year,
-                      child: Text(year.toString(), style: TextStyle(color: Colors.deepPurpleAccent)),
-                    );
-                  }).toList(),
-                  onChanged: (int? newValue) {
-                    setState(() {
-                      _selectedYear = newValue!;
-                            _refreshStreams();
-                          });
-                  },
-                )
-              ]),
-             Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text('Select timeframe:'),
-                  Container(width: 8),
-                  DropdownButton<String>(
-                    value: dropdownValue,
-                    items: timespans,
-                    onChanged: (String? newValue) {
-                      //print(newValue);
-                      setState(() {
-                        dropdownValue = newValue!;
-                          _refreshStreams();
-                        });
-                    },
-                  )
-                ],
-              ),
-            Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text('Select user:'),
-                  Container(width: 8),
-                  DropdownButton<String>(
-                    value: dropdownValuePeople,
-                    items: people,
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        dropdownValuePeople = newValue!;
-                            _refreshStreams();
-                          });
-                    },
-                  )]),
-            Expanded(
-                child: StreamBuilder(
-                    stream: _nestsStream,
-                    builder: (context,
-                            AsyncSnapshot<List<Nest>> snapshot_nests) {
-                          List<Nest> nests = nestsService?.items ?? [];
-                          if (snapshot_nests.hasData) {
-                            nests = snapshot_nests.data!;
-                          }
-                          return buildNestList(nests);
-                        })),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-            color: Theme.of(context).scaffoldBackgroundColor,  // Replace with your desired color
-                child: Row(children: [Text("Banding data:")]),
-            ),
-            Expanded(
-                    child: ListView(
                   children: [
-                    getBirdsListTile("Total", birdsQuery),
-                    ..._speciesList.species
-                        .map((Species sp) =>
-                            getBirdsListTile(sp.english, birdsQuery))
-                        .toList(),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Text('Select year:'),
+                          Container(width: 8),
+                          DropdownButton<int>(
+                            value: _selectedYear,
+                            items: (() {
+                              const startYear = 2022;
+                              final maxYear =
+                                  DateTime.now().year > _selectedYear
+                                      ? DateTime.now().year
+                                      : _selectedYear;
+                              final years = maxYear >= startYear
+                                  ? List<int>.generate(maxYear - startYear + 1,
+                                      (int index) => index + startYear)
+                                  : <int>[maxYear];
+                              return years;
+                            })()
+                                .map((int year) {
+                              return DropdownMenuItem<int>(
+                                value: year,
+                                child: Text(year.toString(),
+                                    style: TextStyle(
+                                        color: Colors.deepPurpleAccent)),
+                              );
+                            }).toList(),
+                            onChanged: (int? newValue) {
+                              setState(() {
+                                _selectedYear = newValue!;
+                                _refreshStreams();
+                              });
+                            },
+                          )
+                        ]),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text('Select timeframe:'),
+                        Container(width: 8),
+                        DropdownButton<String>(
+                          value: dropdownValue,
+                          items: timespans,
+                          onChanged: (String? newValue) {
+                            //print(newValue);
+                            setState(() {
+                              dropdownValue = newValue!;
+                              _refreshStreams();
+                            });
+                          },
+                        )
+                      ],
+                    ),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Text('Select user:'),
+                          Container(width: 8),
+                          DropdownButton<String>(
+                            value: dropdownValuePeople,
+                            items: people,
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                dropdownValuePeople = newValue!;
+                                _refreshStreams();
+                              });
+                            },
+                          )
+                        ]),
+                    Expanded(
+                        child: StreamBuilder(
+                            stream: _nestsStream,
+                            builder: (context,
+                                AsyncSnapshot<List<Nest>> snapshot_nests) {
+                              List<Nest> nests = nestsService?.items ?? [];
+                              if (snapshot_nests.hasData) {
+                                nests = snapshot_nests.data!;
+                              }
+                              return buildNestList(nests);
+                            })),
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+                      color: Theme.of(context)
+                          .scaffoldBackgroundColor, // Replace with your desired color
+                      child: Row(children: [Text("Banding data:")]),
+                    ),
+                    Expanded(
+                        child: ListView(
+                      children: [
+                        getBirdsListTile("Total", birdsQuery),
+                        ..._speciesList.species
+                            .map((Species sp) =>
+                                getBirdsListTile(sp.english, birdsQuery))
+                            .toList(),
+                      ],
+                    ))
                   ],
-                ))
-              ],
                 ))));
   }
 
@@ -226,11 +242,11 @@ class _StatisticsState extends State<Statistics> {
   }
 
   Widget getNestListTile(String species, List<Nest> nests) {
-    List<Nest> selectedNests = nests
-        .where((Nest nest) =>
-    nest.species == species)
-        .toList();
-    if(selectedNests.length == 0){return SizedBox.shrink();}
+    List<Nest> selectedNests =
+        nests.where((Nest nest) => nest.species == species).toList();
+    if (selectedNests.length == 0) {
+      return SizedBox.shrink();
+    }
     ListTile list_tile = ListTile(
         leading: IconButton(
             onPressed: () => showNestsonMap(selectedNests),
@@ -239,7 +255,7 @@ class _StatisticsState extends State<Statistics> {
         trailing: Text(selectedNests.length.toString()),
         onTap: () => null);
 
-    return list_tile;
+    return _tileMaterial(list_tile);
   }
 
   Widget getLocalBirdsListTile(String species) {
@@ -272,7 +288,7 @@ class _StatisticsState extends State<Statistics> {
         title: Text(species == "" ? "No species birds" : "$species ringed"),
         trailing: Text(selectedBirds.length.toString()));
 
-    return list_tile;
+    return _tileMaterial(list_tile);
   }
 
   Widget getBirdsListTile(String species, Query? birdsQuery) {
@@ -298,10 +314,10 @@ class _StatisticsState extends State<Statistics> {
             if (count == 0 && species != "Total") {
               return SizedBox.shrink();
             }
-            return ListTile(
+            return _tileMaterial(ListTile(
               title: Text("$species ringed"),
               trailing: Text(count.toString()),
-            );
+            ));
           } else if (snapshot.hasError) {
             return Text('Error: getting $species data');
           } else {

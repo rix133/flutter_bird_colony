@@ -570,6 +570,67 @@ void main() {
       expect(eggs[0].status.toString(), "intact");
       expect(eggs[1].status.toString(), "predated");
     });
+
+    test('hasLivingEgg returns true only when a measurable egg exists',
+        () async {
+      final livingNest = Nest(
+        id: "living-egg-nest",
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now(),
+        accuracy: '12.33m',
+        coordinates: GeoPoint(0, 0),
+        responsible: 'John Doe',
+        measures: [],
+      );
+      final deadNest = Nest(
+        id: "dead-egg-nest",
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now(),
+        accuracy: '12.33m',
+        coordinates: GeoPoint(0, 0),
+        responsible: 'John Doe',
+        measures: [],
+      );
+      final chickOnlyNest = Nest(
+        id: "chick-only-nest",
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now(),
+        accuracy: '12.33m',
+        coordinates: GeoPoint(0, 0),
+        responsible: 'John Doe',
+        measures: [],
+      );
+
+      await Egg(
+        id: "living-egg-nest egg 1",
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now(),
+        status: EggStatus('intact'),
+        responsible: 'John Doe',
+        measures: [],
+      ).save(firestore);
+      await Egg(
+        id: "dead-egg-nest egg 1",
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now(),
+        status: EggStatus('predated'),
+        responsible: 'John Doe',
+        measures: [],
+      ).save(firestore);
+      await Egg(
+        id: "chick-only-nest chick 1",
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now(),
+        status: EggStatus('unknown'),
+        responsible: 'John Doe',
+        measures: [],
+      ).save(firestore);
+
+      expect(await livingNest.hasLivingEgg(firestore), true);
+      expect(await deadNest.hasLivingEgg(firestore), false);
+      expect(await chickOnlyNest.hasLivingEgg(firestore), false);
+    });
+
     group('Nest delete with parents', () {
       Bird bird1 = Bird(
         band: "123",

@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/experimentedItem.dart';
@@ -136,10 +136,9 @@ class Experiment implements FirestoreItem {
       items.addAll(nests
               ?.map((e) => Padding(
                   padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
-                  child: Container(
-                      decoration: BoxDecoration(
-                          color: Colors.white12,
-                          borderRadius: BorderRadius.circular(5)),
+                  child: Material(
+                      color: Colors.white12,
+                      borderRadius: BorderRadius.circular(5),
                       child: ListTile(
                         title: Text('Nest ID: $e'),
                         onTap: gotoNest(e, context),
@@ -163,10 +162,9 @@ class Experiment implements FirestoreItem {
       items.addAll(birds
               ?.map((e) => Padding(
                   padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
-                  child: Container(
-                      decoration: BoxDecoration(
-                          color: Colors.white12,
-                          borderRadius: BorderRadius.circular(5)),
+                  child: Material(
+                      color: Colors.white12,
+                      borderRadius: BorderRadius.circular(5),
                       child: ListTile(
                         title: Text('Bird ID: $e'),
                         onTap: gotoBird(e, context),

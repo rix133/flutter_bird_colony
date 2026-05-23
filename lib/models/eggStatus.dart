@@ -16,8 +16,7 @@ class EggStatus {
         status == "small hole" ||
         status == "medium hole" ||
         status == "big hole" ||
-        status == "crack" ||
-        status == "dead egg");
+        status == "crack");
   }
 
   Color? color() {

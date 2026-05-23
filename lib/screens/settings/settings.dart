@@ -50,7 +50,7 @@ class _SettingsPageState extends State<SettingsPage> {
   SharedPreferencesService? sps;
   Species _defaultSpecies = Species.empty();
   List<MarkerColorGroup> _defaultMarkerColorGroups = [];
-  
+
   void _setStateIfMounted(VoidCallback fn) {
     if (!mounted) return;
     setState(fn);
@@ -92,14 +92,14 @@ class _SettingsPageState extends State<SettingsPage> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return AlertDialog(
-              title: Text('New user', style: TextStyle(color: Colors.black)),
+              title: Text('New user', style: TextStyle(color: Colors.white)),
               content: SingleChildScrollView(
                   child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     key: Key('newUserEmailTextField'),
-                    style: TextStyle(color: Colors.black),
+                    style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                         hintText: 'Email',
                         hintStyle: TextStyle(color: Colors.deepPurpleAccent)),
@@ -116,14 +116,20 @@ class _SettingsPageState extends State<SettingsPage> {
               )),
               actions: [
                 TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.blueGrey,
+                  ),
                   onPressed: () {
                     email = '';
                     Navigator.pop(context, email);
                   },
-                  child: Text('Cancel'),
+                  child: Text('Cancel', style: TextStyle(color: Colors.white)),
                 ),
                 TextButton(
                   key: Key('saveNewUserButton'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.redAccent,
+                  ),
                   onPressed: () async {
                     if (email.isNotEmpty &&
                         !_allowedUsers.contains(email) &&
@@ -140,7 +146,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       });
                     }
                   },
-                  child: Text('Add user'),
+                  child:
+                      Text('Add user', style: TextStyle(color: Colors.white)),
                 ),
               ],
             );
@@ -261,9 +268,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     DocumentReference ref;
                     String title;
                     if (selectedType == 'Bird') {
-                      ref = widget.firestore
-                          .collection('Birds')
-                          .doc(trimmedId);
+                      ref = widget.firestore.collection('Birds').doc(trimmedId);
                       title = 'Restore bird $trimmedId';
                     } else if (selectedType == 'Nest') {
                       ref = widget.firestore
@@ -494,7 +499,6 @@ class _SettingsPageState extends State<SettingsPage> {
       }
     }
   }
-
 
   reset() {
     setState(() {
@@ -780,8 +784,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 Text('Species name display:'),
                 SizedBox(width: 10),
                 DropdownButton<SpeciesNameLanguage>(
-                  value: sps?.speciesNameLanguage ??
-                      SpeciesNameLanguage.english,
+                  value:
+                      sps?.speciesNameLanguage ?? SpeciesNameLanguage.english,
                   items: SpeciesNameLanguage.values
                       .map((SpeciesNameLanguage value) {
                     return DropdownMenuItem<SpeciesNameLanguage>(

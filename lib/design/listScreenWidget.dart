@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/experimentedItem.dart';
 import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
@@ -13,7 +13,12 @@ abstract class ListScreenWidget<T> extends StatefulWidget {
   final String title;
   final IconData icon;
   final FirebaseFirestore firestore;
-  const ListScreenWidget({Key? key, required this.title, required this.icon, required this.firestore}) : super(key: key);
+  const ListScreenWidget(
+      {Key? key,
+      required this.title,
+      required this.icon,
+      required this.firestore})
+      : super(key: key);
 
   @override
   ListScreenWidgetState<T> createState();
@@ -57,7 +62,6 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
     });
   }
 
-
   void clearFilters() {
     final defaultYear = sps?.selectedYear ?? DateTime.now().year;
     setState(() {
@@ -67,21 +71,20 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
     });
     updateYearFilter(defaultYear);
   }
+
   bool filterByExperiments(ExperimentedItem e) {
     if (selectedExperiments == null) return true;
     return e.experiments?.map((e) => e.name).contains(selectedExperiments) ??
         false;
   }
 
-
-
   Widget yearInput(BuildContext context) {
     const startYear = 2022;
     final maxYear =
         DateTime.now().year > selectedYear ? DateTime.now().year : selectedYear;
     final years = maxYear >= startYear
-        ? List<int>.generate(maxYear - startYear + 1,
-            (int index) => index + startYear)
+        ? List<int>.generate(
+            maxYear - startYear + 1, (int index) => index + startYear)
         : <int>[maxYear];
     return DropdownButton<int>(
       value: selectedYear,
@@ -105,7 +108,6 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
   updateYearFilter(int value);
 
-
   Future<void> executeDownload();
 
   Widget getAddButton(BuildContext context);
@@ -116,22 +118,22 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
       return Future.value(true);
     } else {
       return showDialog<bool>(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            backgroundColor: Colors.black87,
-            title: Text("Download"),
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Colors.black87,
+              title: Text("Download"),
               content: Text(
                   "To get selected ${widget.title} to Excel contact an administrator."),
               actions: [
-              ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context, false);
-                  },
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context, false);
+                    },
                     child: Text("OK", style: TextStyle(color: Colors.black))),
               ],
-          );
-        }).then((value) => value ?? false);
+            );
+          }).then((value) => value ?? false);
     }
   }
 
@@ -141,25 +143,31 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
     }
     return Padding(
       padding: const EdgeInsets.all(18.0),
-      child: downloading ? CircularProgressIndicator() : IconButton(
-          onPressed: () {
-            setState(() {
-              downloading = true;
-            });
-            _downloadConfirmationDialog(context).then((bool value) => {
-              if(value){
-                executeDownload().then((value) => setState(() {
-                  downloading = false;
-                })),
-              } else {
+      child: downloading
+          ? CircularProgressIndicator()
+          : IconButton(
+              onPressed: () {
                 setState(() {
-                  downloading = false;
-                })}});
-
-          },
-          icon: Icon(Icons.download),
-          style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.all(Colors.grey))),
+                  downloading = true;
+                });
+                _downloadConfirmationDialog(context).then((bool value) => {
+                      if (value)
+                        {
+                          executeDownload().then((value) => setState(() {
+                                downloading = false;
+                              })),
+                        }
+                      else
+                        {
+                          setState(() {
+                            downloading = false;
+                          })
+                        }
+                    });
+              },
+              icon: Icon(Icons.download),
+              style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(Colors.grey))),
     );
   }
 
@@ -169,7 +177,7 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
   List<FirestoreItem> getFilteredItems(List<FirestoreItem> items);
 
-  ListView listAllItems(BuildContext context, List<FirestoreItem> inputItems) {
+  Widget listAllItems(BuildContext context, List<FirestoreItem> inputItems) {
     // Disable editing when browsing a year different from the app's selected year
     // (unless admin).
     final appYear = sps?.selectedYear ?? DateTime.now().year;
@@ -179,11 +187,12 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
     return ListView.builder(
         itemCount: items.length,
         itemBuilder: (context, index) {
-          return items[index].getListTile(context, widget.firestore,
-              disabled: disabled, groups: sps?.markerColorGroups ?? []);
+          return Material(
+              color: Colors.transparent,
+              child: items[index].getListTile(context, widget.firestore,
+                  disabled: disabled, groups: sps?.markerColorGroups ?? []));
         });
   }
-
 
   Widget experimentInput(BuildContext context) {
     return StreamBuilder<List<Experiment>>(
@@ -213,37 +222,43 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body:Container(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        child: Column(
-          children: [
-            SizedBox(height: 20,),
-            Row(children: [
-              Expanded(child: TextField(
+        body: Container(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 20,
+                ),
+                Row(children: [
+                  Expanded(
+                      child: TextField(
                     key: Key("searchTextField"),
                     controller: searchController,
-                onChanged: (value) {
-                  setState(() {});
-                },
-                decoration: InputDecoration(
-                  labelText: "Search",
-                  hintText: "Search by band or nests",
-                  prefixIcon: Icon(Icons.search),
+                    onChanged: (value) {
+                      setState(() {});
+                    },
+                    decoration: InputDecoration(
+                      labelText: "Search",
+                      hintText: "Search by band or nests",
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                  )),
+                  ElevatedButton.icon(
+                      onPressed: () => openFilterDialog(context),
+                      icon: Icon(Icons.filter_alt),
+                      label: Padding(
+                          child: Text("Filter", style: TextStyle(fontSize: 18)),
+                          padding: EdgeInsets.all(12)),
+                      style: ButtonStyle(
+                          backgroundColor:
+                              WidgetStateProperty.all(Colors.grey))),
+                ]),
+                SizedBox(
+                  height: 20,
                 ),
-              )),
-              ElevatedButton.icon(
-                  onPressed: () => openFilterDialog(context),
-                  icon: Icon(Icons.filter_alt),
-                  label: Padding(child:Text("Filter", style: TextStyle(fontSize: 18)), padding: EdgeInsets.all(12)),
-                  style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.all(Colors.grey)
-                  )
-              ),
-            ]),
-            SizedBox(height: 20,),
-            Expanded(
-                child: StreamBuilder(
-                    stream: stream,
+                Expanded(
+                    child: StreamBuilder(
+                        stream: stream,
                         builder: (context,
                             AsyncSnapshot<List<FirestoreItem>> snapshot) {
                           if (snapshot.hasData) {
@@ -264,15 +279,15 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
                           }
                         })),
                 SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child:Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    getAddButton(context),
-                    getDownloadButton(context, sps)
-                  ],)),
-          ],
-        )));
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        getAddButton(context),
+                        getDownloadButton(context, sps)
+                      ],
+                    )),
+              ],
+            )));
   }
 }
-

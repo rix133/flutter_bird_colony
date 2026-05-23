@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/listScreenWidget.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
@@ -14,12 +14,15 @@ import '../../services/nestsService.dart';
 
 class ListNests extends ListScreenWidget<Nest> {
   const ListNests({Key? key, required FirebaseFirestore firestore})
-      : super(key: key, title: 'nests with eggs', icon: Icons.home, firestore: firestore);
+      : super(
+            key: key,
+            title: 'nests with eggs',
+            icon: Icons.home,
+            firestore: firestore);
 
   @override
   ListScreenWidgetState<Nest> createState() => _ListNestsState();
 }
-
 
 class _ListNestsState extends ListScreenWidgetState<Nest> {
   String? _selectedSpecies;
@@ -31,15 +34,24 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
   int? _maxEggs;
   double? _minLocationAccuracy;
   double? _maxLocationAccuracy;
+  bool _onlyLivingEggs = false;
+  final Map<String, bool> _livingEggFilterCache = {};
+  final Map<String, Future<bool>> _livingEggFilterFutures = {};
 
+  String _livingEggFilterCacheKey(Nest nest) {
+    return "${nest.discover_date.year}/${nest.id ?? nest.name}";
+  }
 
-
-
+  void _clearLivingEggFilterCache() {
+    _livingEggFilterCache.clear();
+    _livingEggFilterFutures.clear();
+  }
 
   @override
   void dispose() {
     super.dispose();
   }
+
   @override
   void initState() {
     collectionName = DateTime.now().year.toString();
@@ -53,12 +65,13 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
       padding: const EdgeInsets.all(18.0),
       child: ElevatedButton.icon(
           key: Key("showFilteredNestButton"),
-          onPressed: () {
+          onPressed: () async {
             // Get the current items at the time the button is pressed
             List<FirestoreItem> currentItems =
-                getFilteredItems(fsService?.items ?? []);
+                await getFilteredItemsAsync(fsService?.items ?? []);
             List<String?> nest_ids =
                 currentItems.map((e) => e.id.toString()).toList();
+            if (!mounted) return;
             Navigator.pushNamed(context, '/mapNests', arguments: {
               'nest_ids': nest_ids,
               "year": selectedYear.toString()
@@ -73,90 +86,116 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
     );
   }
 
-
-
   void openFilterDialog(BuildContext context) {
     showDialog(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
-            backgroundColor: Colors.black87,
-            title: Text("Filter"),
-            content: SingleChildScrollView(child:Column(children: [
-              yearInput(context),
-              experimentInput(context),
-              SpeciesRawAutocomplete(
-                  returnFun: (Species s) {
-                    _selectedSpecies = s.english;
-                    setState(() {});
-                  },
-                  species: Species(english: _selectedSpecies?? "", local: '', latinCode: ''),
-                  speciesList: sps?.speciesList ?? LocalSpeciesList(),
-                  borderColor: Colors.white38,
-                  bgColor: Colors.amberAccent,
-                  labelColor: Colors.grey),
-              MinMaxInput(
-                  label: "First egg age",
-                  minFun: updateMinEggAge,
-                  maxFun: updateMaxEggAge,
-                  min: _minEggAge,
-                  max: _maxEggAge),
-              MinMaxInput(
-                  label: "Nest age",
-                  minFun: updateMinNestAge,
-                  maxFun: updateMaxNestAge,
-                  min: _minNestAge,
-                  max: _maxNestAge),
-              MinMaxInput(
-                  label: "Loc accuracy",
-                  minFun: updateMinLocationAccuracy,
-                  maxFun: updateMaxLocationAccuracy,
-                  min: _minLocationAccuracy,
-                  max: _maxLocationAccuracy),
-            ])),
-            actions: [
-              ElevatedButton(onPressed:
-                  (){
-                Navigator.pop(context);
-                clearFilters();
-              },
-                  child: Text("Clear all")),
-              ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text("Close"))
-            ],
-          );
+          return StatefulBuilder(builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Colors.black87,
+              title: Text("Filter"),
+              content: SingleChildScrollView(
+                  child: Column(children: [
+                yearInput(context),
+                experimentInput(context),
+                SpeciesRawAutocomplete(
+                    returnFun: (Species s) {
+                      _selectedSpecies = s.english;
+                      setState(() {});
+                    },
+                    species: Species(
+                        english: _selectedSpecies ?? "",
+                        local: '',
+                        latinCode: ''),
+                    speciesList: sps?.speciesList ?? LocalSpeciesList(),
+                    borderColor: Colors.white38,
+                    bgColor: Colors.amberAccent,
+                    labelColor: Colors.grey),
+                MinMaxInput(
+                    label: "First egg age",
+                    minFun: updateMinEggAge,
+                    maxFun: updateMaxEggAge,
+                    min: _minEggAge,
+                    max: _maxEggAge),
+                MinMaxInput(
+                    label: "Nest age",
+                    minFun: updateMinNestAge,
+                    maxFun: updateMaxNestAge,
+                    min: _minNestAge,
+                    max: _maxNestAge),
+                MinMaxInput(
+                    label: "Loc accuracy",
+                    minFun: updateMinLocationAccuracy,
+                    maxFun: updateMaxLocationAccuracy,
+                    min: _minLocationAccuracy,
+                    max: _maxLocationAccuracy),
+                Row(
+                  children: [
+                    Checkbox(
+                      key: Key("livingEggsFilter"),
+                      value: _onlyLivingEggs,
+                      onChanged: (bool? value) {
+                        setState(() {
+                          _onlyLivingEggs = value ?? false;
+                          if (_onlyLivingEggs) {
+                            _clearLivingEggFilterCache();
+                          }
+                        });
+                        setDialogState(() {});
+                      },
+                    ),
+                    Expanded(child: Text("Only nests with living eggs")),
+                  ],
+                ),
+              ])),
+              actions: [
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      clearFilters();
+                    },
+                    child: Text("Clear all")),
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text("Close"))
+              ],
+            );
+          });
         });
   }
-
 
   updateMinEggAge(String value) {
     setState(() {
       _minEggAge = double.tryParse(value);
     });
   }
+
   updateMaxEggAge(String value) {
     setState(() {
       _maxEggAge = double.tryParse(value);
     });
   }
+
   updateMinNestAge(String value) {
     setState(() {
       _minNestAge = double.tryParse(value);
     });
   }
+
   updateMaxNestAge(String value) {
     setState(() {
       _maxNestAge = double.tryParse(value);
     });
   }
+
   updateMinLocationAccuracy(String value) {
     setState(() {
       _minLocationAccuracy = double.tryParse(value);
     });
   }
+
   updateMaxLocationAccuracy(String value) {
     setState(() {
       _maxLocationAccuracy = double.tryParse(value);
@@ -165,6 +204,7 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
 
   updateYearFilter(int value) {
     collectionName = yearToNestCollectionName(value);
+    _clearLivingEggFilterCache();
     setState(() {
       stream = fsService?.watchItems(collectionName) ?? Stream.empty();
     });
@@ -180,10 +220,12 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
       _maxEggAge = null;
       _minEggs = null;
       _maxEggs = null;
+      _minLocationAccuracy = null;
+      _maxLocationAccuracy = null;
+      _onlyLivingEggs = false;
+      _clearLivingEggFilterCache();
     });
   }
-
-
 
   bool filterByText(Nest e) {
     return e.name.toLowerCase().contains(searchController.text.toLowerCase()) ||
@@ -197,7 +239,6 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
                 .contains(searchController.text.toLowerCase()))
             : false);
   }
-
 
   bool filterBySpecies(Nest e) {
     if (_selectedSpecies == null) return true;
@@ -214,7 +255,8 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
   }
 
   bool filterByFirstEggAge(Nest e) {
-    if (_minEggAge == null && _maxEggAge == null && e.first_egg == null) return true;
+    if (_minEggAge == null && _maxEggAge == null && e.first_egg == null)
+      return true;
     if (_minEggAge == null && _maxEggAge == null) return true;
     if (e.first_egg == null) return false;
     int timeSinceFirstEgg = DateTime.now().difference(e.first_egg!).inDays;
@@ -226,10 +268,14 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
 
   bool filterByLocationAccuracy(Nest e) {
     if (e.getAccuracy() > 9998) return true;
-    if (_minLocationAccuracy == null && _maxLocationAccuracy == null) return true;
-    if (_minLocationAccuracy == null) return e.getAccuracy() < _maxLocationAccuracy!;
-    if (_maxLocationAccuracy == null) return e.getAccuracy() > _minLocationAccuracy!;
-    return e.getAccuracy() > _minLocationAccuracy! && e.getAccuracy() < _maxLocationAccuracy!;
+    if (_minLocationAccuracy == null && _maxLocationAccuracy == null)
+      return true;
+    if (_minLocationAccuracy == null)
+      return e.getAccuracy() < _maxLocationAccuracy!;
+    if (_maxLocationAccuracy == null)
+      return e.getAccuracy() > _minLocationAccuracy!;
+    return e.getAccuracy() > _minLocationAccuracy! &&
+        e.getAccuracy() < _maxLocationAccuracy!;
   }
 
   Future<bool> filterByEggCount(Nest e) async {
@@ -240,7 +286,26 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
     return eggCount > _minEggs! - 1 && eggCount < _maxEggs! - 1;
   }
 
-  List<Nest> getFilteredItems(List<FirestoreItem> items) {
+  Future<bool> filterByLivingEgg(Nest nest) {
+    if (!_onlyLivingEggs) return Future.value(true);
+
+    String cacheKey = _livingEggFilterCacheKey(nest);
+    if (_livingEggFilterCache.containsKey(cacheKey)) {
+      return Future.value(_livingEggFilterCache[cacheKey]!);
+    }
+
+    return _livingEggFilterFutures.putIfAbsent(cacheKey, () async {
+      try {
+        bool hasLivingEgg = await nest.hasLivingEgg(widget.firestore);
+        _livingEggFilterCache[cacheKey] = hasLivingEgg;
+        return hasLivingEgg;
+      } finally {
+        _livingEggFilterFutures.remove(cacheKey);
+      }
+    });
+  }
+
+  List<Nest> _getBaseFilteredItems(List<FirestoreItem> items) {
     List<Nest> nests = items.map((e) => e as Nest).toList();
 
     nests = nests.where(filterByText).toList();
@@ -249,23 +314,77 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
     nests = nests.where(filterByNestAge).toList();
     nests = nests.where(filterByFirstEggAge).toList();
     nests = nests.where(filterByLocationAccuracy).toList();
+    return nests;
+  }
 
-    /* Filter nests by egg count asynchronously
-    nests = await Future.wait(nests.map((nest) async {
-      if (await filterByEggCount(nest)) {
+  Future<List<Nest>> getFilteredItemsAsync(List<FirestoreItem> items) async {
+    List<Nest> nests = _getBaseFilteredItems(items);
+    if (!_onlyLivingEggs) return nests;
+
+    List<Nest?> filteredNests = await Future.wait(nests.map((nest) async {
+      if (await filterByLivingEgg(nest)) {
         return nest;
-      } else {
-        return null;
       }
-    })).then((list) => list.whereType<Nest>().toList());
-   */
-    return nests.toList();
+      return null;
+    }));
+
+    return filteredNests.whereType<Nest>().toList();
   }
 
   @override
-  Future<void> executeDownload() {
-    return (FSItemMixin().downloadExcel(items, "nests", widget.firestore));
+  List<Nest> getFilteredItems(List<FirestoreItem> items) {
+    List<Nest> nests = _getBaseFilteredItems(items);
+    if (!_onlyLivingEggs) return nests;
+
+    return nests
+        .where((nest) =>
+            _livingEggFilterCache[_livingEggFilterCacheKey(nest)] == true)
+        .toList();
+  }
+
+  Widget _buildNestListView(
+      BuildContext context, List<Nest> nests, bool disabled) {
+    return ListView.builder(
+        itemCount: nests.length,
+        itemBuilder: (context, index) {
+          return Material(
+              color: Colors.transparent,
+              child: nests[index].getListTile(context, widget.firestore,
+                  disabled: disabled, groups: sps?.markerColorGroups ?? []));
+        });
+  }
+
+  @override
+  Widget listAllItems(BuildContext context, List<FirestoreItem> inputItems) {
+    final appYear = sps?.selectedYear ?? DateTime.now().year;
+    bool disabled = selectedYear != appYear && !(sps?.isAdmin ?? false);
+    List<Nest> nests = _getBaseFilteredItems(inputItems);
+
+    if (!_onlyLivingEggs) {
+      return _buildNestListView(context, nests, disabled);
+    }
+
+    return FutureBuilder<List<Nest>>(
+        future: getFilteredItemsAsync(inputItems),
+        builder: (context, AsyncSnapshot<List<Nest>> snapshot) {
+          if (snapshot.hasError) {
+            return Container(
+                padding: EdgeInsets.all(40.0),
+                child: Text("Error loading items"));
+          }
+
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          return _buildNestListView(context, snapshot.data!, disabled);
+        });
+  }
+
+  @override
+  Future<void> executeDownload() async {
+    List<Nest> filteredItems =
+        await getFilteredItemsAsync(fsService?.items ?? []);
+    await FSItemMixin().downloadExcel(filteredItems, "nests", widget.firestore);
   }
 }
-
-
