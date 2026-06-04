@@ -108,6 +108,20 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text("Removing item"), findsOneWidget);
+    final deleteDialog = tester.widget<AlertDialog>(find.byType(AlertDialog));
+    expect(deleteDialog.backgroundColor, Colors.black87);
+    expect(deleteDialog.contentTextStyle?.color, Colors.white);
+    expect(deleteDialog.titleTextStyle?.color, Colors.redAccent);
+
+    final cancelButton =
+        tester.widget<TextButton>(find.widgetWithText(TextButton, 'Cancel'));
+    expect(cancelButton.style?.foregroundColor?.resolve({}), Colors.black87);
+    expect(cancelButton.style?.backgroundColor?.resolve({}), Colors.grey[300]);
+
+    final deleteButton =
+        tester.widget<TextButton>(find.widgetWithText(TextButton, 'Delete'));
+    expect(deleteButton.style?.foregroundColor?.resolve({}), Colors.white);
+    expect(deleteButton.style?.backgroundColor?.resolve({}), Colors.red[800]);
 
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();

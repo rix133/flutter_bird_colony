@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 const Radius radius = Radius.circular(16.0);
 
 final ButtonStyle flatButtonStyle = TextButton.styleFrom(
-  foregroundColor: Colors.black87,
+  foregroundColor: Colors.orangeAccent,
   minimumSize: Size(88, 36),
   padding: EdgeInsets.symmetric(horizontal: 16),
   shape: const RoundedRectangleBorder(
@@ -34,8 +34,10 @@ final ListTileThemeData listTileTheme = ListTileThemeData(
   textColor: Colors.white,
   selectedColor: Colors.red, // color of the text when selected
   selectedTileColor: Colors.grey[700], // color of the tile when selected
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), // shape of the tile
-  contentPadding: EdgeInsets.symmetric(vertical:0, horizontal: 20), // padding inside the tile
+  shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10)), // shape of the tile
+  contentPadding: EdgeInsets.symmetric(
+      vertical: 0, horizontal: 20), // padding inside the tile
   dense: true, // whether to compact the tile's layout
   horizontalTitleGap: 10, // horizontal gap between the leading and title
   minVerticalPadding: 5, // minimum vertical padding in the tile

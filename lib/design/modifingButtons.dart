@@ -1,10 +1,9 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
 import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:provider/provider.dart';
-
 
 class ModifyingButtons extends StatefulWidget {
   final BuildContext context;
@@ -103,6 +102,16 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
     Navigator.pop(context);
   }
 
+  ButtonStyle get _dialogCancelButtonStyle => TextButton.styleFrom(
+        foregroundColor: Colors.black87,
+        backgroundColor: Colors.grey[300],
+      );
+
+  ButtonStyle get _dialogDestructiveButtonStyle => TextButton.styleFrom(
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.red[800],
+      );
+
   Future<void> deleteItem(BuildContext superContext,
       {bool validate = true, bool allowOverwrite = false}) async {
     item = widget.getItem();
@@ -112,16 +121,20 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
       barrierColor: Colors.black,
       context: context,
       builder: (BuildContext context) => AlertDialog(
-        contentTextStyle: TextStyle(color: Colors.black),
-        titleTextStyle: TextStyle(color: Colors.red),
+        backgroundColor: Colors.black87,
+        contentTextStyle: TextStyle(color: Colors.white),
+        titleTextStyle:
+            TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
         title: const Text("Removing item"),
         content: const Text('Are you sure you want to delete this item?'),
         actions: <Widget>[
           TextButton(
+            style: _dialogCancelButtonStyle,
             onPressed: () => Navigator.pop(context, 'Cancel'),
             child: const Text('Cancel'),
           ),
           TextButton(
+            style: _dialogDestructiveButtonStyle,
             onPressed: () async {
               Navigator.pop(context);
               setState(() {
@@ -147,7 +160,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                 }
               }
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -172,22 +185,18 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
               ]),
               actions: <Widget>[
                 TextButton(
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.all(Colors.white),
-                  ),
+                  style: _dialogCancelButtonStyle,
                   onPressed: () {
                     Navigator.of(context).pop(false);
                   },
                   child: const Text('Cancel'),
                 ),
                 TextButton(
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.all(Colors.white),
-                  ),
+                  style: _dialogDestructiveButtonStyle,
                   onPressed: () {
                     Navigator.of(context).pop(true);
                   },
-                  child: Text(btnString, style: TextStyle(color: Colors.red)),
+                  child: Text(btnString),
                 ),
               ],
             ));
@@ -205,7 +214,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
           opacity: _isLoading ? 0.3 : 1, // Dim the UI when loading
           child: AbsorbPointer(
             absorbing: _isLoading, // Disable interaction when loading
-            child:Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -213,8 +222,7 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                     key: Key("deleteButton"),
                     style: ButtonStyle(
                         backgroundColor:
-                        WidgetStateProperty.all(
-                            Colors.red[900])),
+                            WidgetStateProperty.all(Colors.red[900])),
                     onPressed: (item.id == null)
                         ? null
                         : () => deleteItem(superContext),
@@ -232,13 +240,15 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
                       color: Colors.black87,
                       size: 45,
                     ),
-                    label: Text("save")),//save button
+                    label: Text("save")), //save button
               ],
             ),
           ),
         ),
         if (_isLoading)
-          Center(child: CircularProgressIndicator()), // Show loading indicator when loading
+          Center(
+              child:
+                  CircularProgressIndicator()), // Show loading indicator when loading
       ],
     );
   }
@@ -252,5 +262,3 @@ class _ModifyingButtonsState extends State<ModifyingButtons> {
         onDeleteOK: widget.onDeleteOK);
   }
 }
-
-
