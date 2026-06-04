@@ -630,6 +630,59 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets("will add filtered nests to an existing experiment",
+      (WidgetTester tester) async {
+    final filteredExperiment = Experiment(
+      id: "filtered_experiment",
+      name: "Filtered Experiment",
+      description: "Test filtered experiment",
+      last_modified: DateTime.now(),
+      created: DateTime.now(),
+      year: DateTime.now().year,
+      responsible: "Admin",
+      type: "nest",
+      nests: [],
+      measures: [],
+    );
+    await firestore
+        .collection('experiments')
+        .doc(filteredExperiment.id)
+        .set(filteredExperiment.toJson());
+
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), "1");
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(1));
+
+    await tester.longPress(find.byKey(Key("showFilteredNestButton")));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Filtered Experiment"));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Experiment updated"), findsOneWidget);
+    await tester.tap(find.text("OK"));
+    await tester.pumpAndSettle();
+
+    final experimentDoc = await firestore
+        .collection('experiments')
+        .doc(filteredExperiment.id)
+        .get();
+    final updatedExperiment = Experiment.fromDocSnapshot(experimentDoc);
+    expect(updatedExperiment.nests, ["1"]);
+
+    final nestDoc = await firestore
+        .collection(DateTime.now().year.toString())
+        .doc("1")
+        .get();
+    final updatedNest = Nest.fromDocSnapshot(nestDoc);
+    expect(
+        updatedNest.experiments
+            ?.any((experiment) => experiment.id == filteredExperiment.id),
+        true);
+  });
+
   testWidgets("will show alertdialog when listTile is tapped",
       (WidgetTester tester) async {
     await tester.pumpWidget(myApp);

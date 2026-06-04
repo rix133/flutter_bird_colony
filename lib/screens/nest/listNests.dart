@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/listScreenWidget.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
 import 'package:flutter_bird_colony/models/firestore/egg.dart';
+import 'package:flutter_bird_colony/models/firestore/experiment.dart';
 import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
@@ -85,6 +86,7 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
               "year": selectedYear.toString()
             });
           },
+          onLongPress: () => addFilteredNestsToExperiment(context),
           icon: Icon(Icons.map),
           label: Padding(
               child: Text("Show nests", style: TextStyle(fontSize: 18)),
@@ -92,6 +94,101 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
           style: ButtonStyle(
               backgroundColor: WidgetStateProperty.all(Colors.grey))),
     );
+  }
+
+  Future<void> addFilteredNestsToExperiment(BuildContext context) async {
+    List<FirestoreItem> currentItems =
+        await getFilteredItemsAsync(fsService?.items ?? []);
+    List<String> nestIds = currentItems
+        .map((e) => e.id)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty)
+        .toList();
+
+    if (!mounted) return;
+    if (nestIds.isEmpty) {
+      await showDialog(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+                backgroundColor: Colors.black87,
+                title: Text("Add to experiment"),
+                content: Text("No filtered nests to add."),
+                actions: [
+                  ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text("OK"))
+                ],
+              ));
+      return;
+    }
+
+    QuerySnapshot<Object?> snapshot =
+        await widget.firestore.collection('experiments').get();
+    List<Experiment> experiments =
+        snapshot.docs.map((doc) => Experiment.fromDocSnapshot(doc)).where((e) {
+      return e.type == 'nest' && e.year == selectedYear;
+    }).toList();
+    experiments.sort((a, b) => a.name.compareTo(b.name));
+
+    if (!mounted) return;
+    Experiment? selectedExperiment = await showDialog<Experiment>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Colors.black87,
+            title: Text("Add filtered nests to experiment"),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: experiments.isEmpty
+                  ? Text("No nest experiments for $selectedYear.")
+                  : ListView(
+                      shrinkWrap: true,
+                      children: experiments
+                          .map((experiment) => Material(
+                              color: Colors.transparent,
+                              child: ListTile(
+                                key: Key(
+                                    "addFilteredNests_${experiment.id ?? experiment.name}"),
+                                title: Text(experiment.name),
+                                subtitle: Text(
+                                    "${nestIds.length} filtered nests selected"),
+                                onTap: () => Navigator.pop(context, experiment),
+                              )))
+                          .toList(),
+                    ),
+            ),
+            actions: [
+              ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text("Cancel"))
+            ],
+          );
+        });
+
+    if (selectedExperiment == null) return;
+
+    selectedExperiment.nests ??= [];
+    selectedExperiment.nests = {
+      ...selectedExperiment.nests!,
+      ...nestIds,
+    }.toList();
+
+    final result = await selectedExperiment.save(widget.firestore);
+    if (!mounted) return;
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+              backgroundColor: Colors.black87,
+              title:
+                  Text(result.success ? "Experiment updated" : "Update failed"),
+              content: Text(result.success
+                  ? "Added ${nestIds.length} filtered nests to ${selectedExperiment.name}."
+                  : result.message),
+              actions: [
+                ElevatedButton(
+                    onPressed: () => Navigator.pop(context), child: Text("OK"))
+              ],
+            ));
   }
 
   void openFilterDialog(BuildContext context) {
