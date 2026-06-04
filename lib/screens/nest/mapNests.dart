@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/googleMapScreen.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/services/nestsService.dart';
+import 'package:flutter_bird_colony/utils/map_marker_nudger.dart';
 import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
@@ -76,17 +77,31 @@ class _MapNestsState extends GoogleMapScreenState {
       nestsToShow = nestsToShow.where((element) {
         for (String search in searches) {
           if (element.name.toLowerCase() == search.toLowerCase() ||
-              (element.species?.toLowerCase() ?? "").contains(search.toLowerCase()) ||
-              (element.experiments?.any((element) => element.name.toLowerCase().contains(search.toLowerCase())) ?? false)) {
+              (element.species?.toLowerCase() ?? "")
+                  .contains(search.toLowerCase()) ||
+              (element.experiments?.any((element) => element.name
+                      .toLowerCase()
+                      .contains(search.toLowerCase())) ??
+                  false)) {
             return true;
           }
         }
         return false;
       }).toSet();
     }
-    markersToShow.value = nestsToShow
-        .map((e) => e.getMarker(context, true, sps?.markerColorGroups ?? [],
-            selectedYear: sps?.selectedYear, isAdmin: sps?.isAdmin ?? false))
+    final sortedNestsToShow = nestsToShow.toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    final displayPositions = nudgedNestMarkerPositions(sortedNestsToShow);
+
+    markersToShow.value = sortedNestsToShow
+        .map((e) => e.getMarker(
+              context,
+              true,
+              sps?.markerColorGroups ?? [],
+              selectedYear: sps?.selectedYear,
+              isAdmin: sps?.isAdmin ?? false,
+              displayPosition: displayPositions[e.id],
+            ))
         .toSet();
   }
 

@@ -10,6 +10,7 @@ import 'package:flutter_bird_colony/screens/nest/createNest.dart';
 import 'package:flutter_bird_colony/screens/nest/editNest.dart';
 import 'package:flutter_bird_colony/screens/nest/mapNests.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
+import 'package:flutter_bird_colony/utils/map_marker_nudger.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -248,6 +249,36 @@ void main() {
     GoogleMap g = mapFinder.first.evaluate().first.widget as GoogleMap;
 
     expect(g.markers.length, 1);
+  });
+
+  testWidgets("nudges overlapping nest markers within location accuracy",
+      (WidgetTester tester) async {
+    final overlappingNest = nest2.copy();
+    overlappingNest.coordinates = nest.coordinates;
+    await nests.doc(overlappingNest.id).set(overlappingNest.toJson());
+
+    myApp = getInitApp(null);
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    var mapFinder = find.byType(GoogleMap);
+    expect(mapFinder, findsOneWidget);
+
+    final g = mapFinder.first.evaluate().first.widget as GoogleMap;
+    expect(g.markers.length, 2);
+
+    final marker1 =
+        g.markers.firstWhere((marker) => marker.markerId.value == nest.id);
+    final marker2 = g.markers
+        .firstWhere((marker) => marker.markerId.value == overlappingNest.id);
+    final originalPosition =
+        LatLng(nest.coordinates.latitude, nest.coordinates.longitude);
+
+    expect(marker1.position, isNot(marker2.position));
+    expect(latLngDistanceMeters(originalPosition, marker1.position),
+        lessThanOrEqualTo(nest.getAccuracy() + 0.01));
+    expect(latLngDistanceMeters(originalPosition, marker2.position),
+        lessThanOrEqualTo(overlappingNest.getAccuracy() + 0.01));
   });
 
   testWidgets("will go to nest when marker is tapped ",

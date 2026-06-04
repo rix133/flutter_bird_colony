@@ -98,7 +98,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
 
   Marker getMarker(
       BuildContext context, bool visibility, List<MarkerColorGroup> group,
-      {int? selectedYear, bool isAdmin = false}) {
+      {int? selectedYear, bool isAdmin = false, LatLng? displayPosition}) {
     // Disable editing if the nest is from another year (unless admin).
     final effectiveYear = selectedYear ?? DateTime.now().year;
     final bool disabled = !isAdmin && effectiveYear != discover_date.year;
@@ -114,7 +114,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
         markerId: MarkerId(id!),
         //visible: snapshot.data!.docs[i].get("last_modified").toDate().day==today,
         icon: BitmapDescriptor.defaultMarkerWithHue(getMarkerColor(group)),
-        position: LatLng(coordinates.latitude, coordinates.longitude));
+        position: displayPosition ??
+            LatLng(coordinates.latitude, coordinates.longitude));
   }
 
   double getMarkerColor(List<MarkerColorGroup> groups) {
@@ -186,7 +187,6 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     }));
   }
 
-  @override
   factory Nest.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     ExperimentedItem eitem = ExperimentedItem.fromJson(json);
