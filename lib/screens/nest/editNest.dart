@@ -32,7 +32,6 @@ class EditNest extends StatefulWidget {
 }
 
 class _EditNestState extends State<EditNest> {
-
   Species species = Species.empty();
   int new_egg_nr = 1;
   Position? position;
@@ -64,25 +63,26 @@ class _EditNestState extends State<EditNest> {
 
   @override
   void dispose() {
-    if(nest != null){
+    if (nest != null) {
       nest!.dispose();
     }
     super.dispose();
   }
 
   _updateControllers() {
-    if(nest != null) {
+    if (nest != null) {
       species = speciesList.getSpecies(nest!.species);
-      nests = widget.firestore.collection(
-          yearToNestCollectionName(nest!.discover_date.year));
+      nests = widget.firestore
+          .collection(yearToNestCollectionName(nest!.discover_date.year));
       experimentsQuery = widget.firestore
           .collection("experiments")
           .where("year", isEqualTo: nest!.discover_date.year);
-      if(nest!.id != null){
+      if (nest!.id != null) {
         eggCollection = nests?.doc(nest!.id).collection("egg");
       }
       _eggStream = eggCollection?.snapshots() ?? Stream.empty();
-      position = Position(longitude: nest!.coordinates.longitude,
+      position = Position(
+          longitude: nest!.coordinates.longitude,
           latitude: nest!.coordinates.latitude,
           timestamp: nest!.discover_date,
           accuracy: nest!.getAccuracy(),
@@ -93,7 +93,7 @@ class _EditNestState extends State<EditNest> {
           speed: 0.0,
           speedAccuracy: 0.0);
       nest!.addMissingMeasures(sps?.defaultMeasures, "nest");
-      setState(() {   });
+      setState(() {});
     }
   }
 
@@ -106,7 +106,8 @@ class _EditNestState extends State<EditNest> {
       var data = ModalRoute.of(context)?.settings.arguments as Map;
       speciesList = sps?.speciesList ?? LocalSpeciesList();
       final selectedYear = sps?.selectedYear ?? DateTime.now().year;
-      nests = widget.firestore.collection(yearToNestCollectionName(selectedYear));
+      nests =
+          widget.firestore.collection(yearToNestCollectionName(selectedYear));
       experimentsQuery = widget.firestore
           .collection("experiments")
           .where("year", isEqualTo: selectedYear);
@@ -120,54 +121,54 @@ class _EditNestState extends State<EditNest> {
               .where("year", isEqualTo: year);
         }
       }
-      if(data["nest_id"] != null) {
+      if (data["nest_id"] != null) {
         nests?.doc(data["nest_id"]).get().then((value) {
           if (value.exists) {
-              nest = Nest.fromDocSnapshot(value);
-              _updateControllers();
+            nest = Nest.fromDocSnapshot(value);
+            _updateControllers();
           }
         });
       }
-      if(data["nest"] != null){
+      if (data["nest"] != null) {
         nest = data["nest"] as Nest;
         _updateControllers();
       }
-
     });
   }
 
-  Widget locationButton(){
-    if(nest == null || position == null){
+  Widget locationButton() {
+    if (nest == null || position == null) {
       return SizedBox.shrink();
     }
     double accuracyDiff = (position?.accuracy ?? 999999) - _desiredAccuracy;
     Future<void> updateFun() async {
       position = await location.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.best);
-      if((position?.accuracy ?? 999999) < nest!.getAccuracy()){
+      if ((position?.accuracy ?? 999999) < nest!.getAccuracy()) {
         nest!.coordinates = GeoPoint(position!.latitude, position!.longitude);
         nest!.setAccuracy(position!.accuracy);
       }
-      setState(() { });
-    };
+      setState(() {});
+    }
+
+    ;
     return (Padding(
-      padding: const EdgeInsets.all(8.0),
-      child:
-        ElevatedButton.icon(
-        key: Key("nestAccuracyButton"),
-        style: ButtonStyle(
+        padding: const EdgeInsets.all(8.0),
+        child: ElevatedButton.icon(
+            key: Key("nestAccuracyButton"),
+            style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.all(
                     accuracyDiff < 0 ? Colors.green : Colors.red)),
             onPressed: () => updateFun(),
             onLongPress: () => _startOverwriteLocationFlow(),
-        icon: Icon(
-          Icons.my_location,
-          color: Colors.black87,
-          size: 40,
-        ),
-        label: Padding(padding:EdgeInsets.symmetric(vertical: 20),
-        child:Text('~${position!.accuracy.toStringAsFixed(1)}m')))
-    ));
+            icon: Icon(
+              Icons.my_location,
+              color: Colors.black87,
+              size: 40,
+            ),
+            label: Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Text('~${position!.accuracy.toStringAsFixed(1)}m')))));
   }
 
   List<Egg> getEggs() {
@@ -213,11 +214,12 @@ class _EditNestState extends State<EditNest> {
                   return egg!.knownOrder()
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      egg.getButton(context, nest),
-                      SizedBox(height: 5),
-                    ],
-                  ) : SizedBox.shrink();
+                          children: [
+                            egg.getButton(context, nest),
+                            SizedBox(height: 5),
+                          ],
+                        )
+                      : SizedBox.shrink();
                 }).toList(),
                 ..._getAddEggButton(context, snapshot),
               ],
@@ -235,7 +237,8 @@ class _EditNestState extends State<EditNest> {
     if (!snapshot.hasData) {
       return [Text('No data')];
     }
-    List<Egg> eggs = snapshot.data!.docs.map((e) => Egg.fromDocSnapshot(e)).toList();
+    List<Egg> eggs =
+        snapshot.data!.docs.map((e) => Egg.fromDocSnapshot(e)).toList();
     int amount = eggs
         .where((e) =>
             e.ring != null && e.discover_date.year == nest?.discover_date.year)
@@ -250,27 +253,27 @@ class _EditNestState extends State<EditNest> {
         style: TextStyle(fontSize: 10),
       ),
       ElevatedButton.icon(
-          style: ButtonStyle(backgroundColor: WidgetStatePropertyAll(Colors.grey)),
+          style:
+              ButtonStyle(backgroundColor: WidgetStatePropertyAll(Colors.grey)),
           onPressed: () {
-              Egg egg = Egg(
-                  discover_date: discoverDate,
+            Egg egg = Egg(
+                discover_date: discoverDate,
                 responsible: sps?.userName,
                 measures: [],
-                  experiments: nest?.experiments ?? [],
-                  last_modified: DateTime.now(),
+                experiments: nest?.experiments ?? [],
+                last_modified: DateTime.now(),
                 status: EggStatus("intact"),
                 ring: null);
-              if (new_egg_nr == 1) {
-                nest!.first_egg = discoverDate;
-              }
-              String eggID = nest!.name + " egg " + new_egg_nr.toString();
-              eggCollection?.doc(eggID)
-                  .set(egg.toJson())
-                  .whenComplete(() => eggCollection?.doc(eggID)
-                      .collection("changelog")
-                      .doc(DateTime.now().toString())
-                      .set(egg.toJson()));
-
+            if (new_egg_nr == 1) {
+              nest!.first_egg = discoverDate;
+            }
+            String eggID = nest!.name + " egg " + new_egg_nr.toString();
+            eggCollection?.doc(eggID).set(egg.toJson()).whenComplete(() =>
+                eggCollection
+                    ?.doc(eggID)
+                    .collection("changelog")
+                    .doc(DateTime.now().toString())
+                    .set(egg.toJson()));
           },
           icon: Icon(
             Icons.egg,
@@ -303,54 +306,108 @@ class _EditNestState extends State<EditNest> {
       SizedBox(height: 15),
     ];
   }
-  _addNewExperiment() async {
-    String? selectedExperiment;
-    List<String> existingExperiments = nest!.experiments?.map((e) => e.name).toList() ?? [];
-    experimentsQuery?.get().then((value) {
-      List<Experiment> exps = value.docs
-          .map((DocumentSnapshot e) => Experiment.fromDocSnapshot(e))
-          .where((Experiment e) => existingExperiments.contains(e.name) == false)
-          .toList();
-      showDialog(context: context, builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Add new experiment"),
-          backgroundColor: Colors.black87,
-          content: ExperimentDropdown(
-            allExperiments: exps,
-            selectedExperiment: selectedExperiment,
-            onChanged: (String? e) {
-              selectedExperiment = e;
-            },
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("Cancel", style: TextStyle(color: Colors.black)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if(selectedExperiment != null){
-                  Experiment exp = exps.firstWhere((element) => element.name == selectedExperiment);
-                  if(exp.nests == null){
-                    exp.nests = [];
-                  }
-                  exp.nests!.add(nest!.name);
-                  exp.save(widget.firestore).then((v) =>
-                      Navigator.pushNamedAndRemoveUntil(
-                          context, '/editNest', ModalRoute.withName('/findNest'),
-                          arguments: {
-                            "nest_id": nest!.name,
-                            "year": nest!.discover_date.year,
-                          })
-                  );
-                }
-              },
-              child: Text("Add", style: TextStyle(color: Colors.red)),
-            ),],
-        );
-      });
+
+  Future<void> _addNewExperiment() async {
+    if (nest == null || experimentsQuery == null) return;
+
+    String? selectedExperimentName;
+    List<String> existingExperiments =
+        nest!.experiments?.map((e) => e.name).toList() ?? [];
+    QuerySnapshot value = await experimentsQuery!.get();
+    List<Experiment> exps = value.docs
+        .map((DocumentSnapshot e) => Experiment.fromDocSnapshot(e))
+        .where((Experiment e) => existingExperiments.contains(e.name) == false)
+        .toList();
+
+    if (!mounted) return;
+    Experiment? selectedExperiment = await showDialog<Experiment>(
+        context: context,
+        builder: (BuildContext context) {
+          bool isSaving = false;
+          String? errorMessage;
+
+          return StatefulBuilder(builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text("Add new experiment"),
+              backgroundColor: Colors.black87,
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ExperimentDropdown(
+                    allExperiments: exps,
+                    selectedExperiment: selectedExperimentName,
+                    enabled: !isSaving,
+                    onChanged: (String? e) {
+                      setDialogState(() {
+                        selectedExperimentName = e;
+                      });
+                    },
+                  ),
+                  if (errorMessage != null) ...[
+                    SizedBox(height: 12),
+                    Text(errorMessage!,
+                        style: TextStyle(color: Colors.redAccent)),
+                  ],
+                ],
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: isSaving ? null : () => Navigator.pop(context),
+                  child: Text("Cancel", style: TextStyle(color: Colors.black)),
+                ),
+                ElevatedButton(
+                  onPressed: isSaving || selectedExperimentName == null
+                      ? null
+                      : () async {
+                          Experiment experiment = exps.firstWhere((element) =>
+                              element.name == selectedExperimentName);
+                          experiment.nests ??= [];
+                          if (!experiment.nests!.contains(nest!.name)) {
+                            experiment.nests!.add(nest!.name);
+                          }
+
+                          setDialogState(() {
+                            isSaving = true;
+                            errorMessage = null;
+                          });
+
+                          final result =
+                              await experiment.save(widget.firestore);
+                          if (!mounted) return;
+                          if (result.success) {
+                            Navigator.pop(context, experiment);
+                            return;
+                          }
+
+                          setDialogState(() {
+                            isSaving = false;
+                            errorMessage =
+                                "Failed to add experiment: ${result.message}";
+                          });
+                        },
+                  child: isSaving
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text("Add", style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            );
+          });
+        });
+
+    if (selectedExperiment == null) return;
+
+    setState(() {
+      nest!.experiments = nest!.experiments
+              ?.where((e) => selectedExperiment.id != null
+                  ? e.id != selectedExperiment.id
+                  : e.name != selectedExperiment.name)
+              .toList() ??
+          [];
+      nest!.experiments!.add(selectedExperiment);
     });
   }
 
@@ -407,15 +464,13 @@ class _EditNestState extends State<EditNest> {
   }
 
   void addMeasure(Measure m) {
-    if(nest != null){
+    if (nest != null) {
       setState(() {
         nest!.measures.add(m);
         nest!.measures.sort();
       });
     }
-
   }
-
 
   Color _getParentButtonColor() {
     if (_daysSinceFirstEgg() > 10) {
@@ -532,7 +587,8 @@ class _EditNestState extends State<EditNest> {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: Text("Remove", style: TextStyle(color: Colors.redAccent)),
+                child:
+                    Text("Remove", style: TextStyle(color: Colors.redAccent)),
               ),
             ],
           );
@@ -564,10 +620,9 @@ class _EditNestState extends State<EditNest> {
     }
 
     if (expId != null) {
-      widget.firestore
-          .collection('experiments')
-          .doc(expId)
-          .update({'nests': FieldValue.arrayRemove([nest!.name])}).catchError((_) {
+      widget.firestore.collection('experiments').doc(expId).update({
+        'nests': FieldValue.arrayRemove([nest!.name])
+      }).catchError((_) {
         return;
       });
     }
@@ -588,10 +643,10 @@ class _EditNestState extends State<EditNest> {
                 padding: EdgeInsets.fromLTRB(10, 0, 10, 15),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[CircularProgressIndicator()],
+                  children: <Widget>[CircularProgressIndicator()],
+                ),
+              ),
             ),
-          ),
-        ),
           ));
     }
 
@@ -605,47 +660,50 @@ class _EditNestState extends State<EditNest> {
           child: Align(
               alignment: Alignment.topCenter,
               child: SingleChildScrollView(
-              child: Container(
+                  child: Container(
                 padding: EdgeInsets.fromLTRB(10, 0, 10, 15),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                getTitleRow(),
-                listExperiments(nest!,
-                    onRemove: _removeExperimentFromNest,
-                    showRemoveHint: true), //list of experiments
-                SizedBox(height: 15),
-                Row(children:[Expanded(child:SpeciesRawAutocomplete(
-                  speciesList: speciesList,
-                  species: species,
-                  returnFun: (Species s) {
-                    setState(() {
-                      species = speciesList.getSpecies(s.english);
-                    });
-                  },
-                )),
-                  locationButton(),]),
-                SizedBox(height: 15),
-                ...nest!.measures
-                    .map((Measure m) => m.getMeasureForm(
+                  children: <Widget>[
+                    getTitleRow(),
+                    listExperiments(nest!,
+                        onRemove: _removeExperimentFromNest,
+                        showRemoveHint: true), //list of experiments
+                    SizedBox(height: 15),
+                    Row(children: [
+                      Expanded(
+                          child: SpeciesRawAutocomplete(
+                        speciesList: speciesList,
+                        species: species,
+                        returnFun: (Species s) {
+                          setState(() {
+                            species = speciesList.getSpecies(s.english);
+                          });
+                        },
+                      )),
+                      locationButton(),
+                    ]),
+                    SizedBox(height: 15),
+                    ...nest!.measures
+                        .map((Measure m) => m.getMeasureForm(
                             addMeasure, sps?.biasedRepeatedMeasures ?? false))
                         .toList(),
-                SizedBox(height: 15),
-                _getParentsRow(nest!.parents, context),
-                _getEggsStream(_eggStream),
-                SizedBox(height: 30),
-                ModifyingButtons(
-                    firestore: widget.firestore,
-                    context: context,
-                    setState: setState,
-                    getItem: getNest,
-                    type: "modify",
-                    otherItems: null,
-                    silentOverwrite: true,
-                    getOtherItems: getEggs),
-              ],
-            ),
-          ))),
+                    SizedBox(height: 15),
+                    _getParentsRow(nest!.parents, context),
+                    _getEggsStream(_eggStream),
+                    SizedBox(height: 30),
+                    ModifyingButtons(
+                        firestore: widget.firestore,
+                        context: context,
+                        setState: setState,
+                        getItem: getNest,
+                        type: "modify",
+                        otherItems: null,
+                        silentOverwrite: true,
+                        getOtherItems: getEggs),
+                  ],
+                ),
+              ))),
         ));
   }
 }

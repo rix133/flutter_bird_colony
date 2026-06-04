@@ -39,11 +39,22 @@ void main() {
     expect(find.byType(DropdownButton<String>), findsOneWidget);
 
 // Verify the DropdownButton's value is the name of the first experiment
-    DropdownButton<String> dropdownButton = tester.widget(find.byType(DropdownButton<String>));
+    DropdownButton<String> dropdownButton =
+        tester.widget(find.byType(DropdownButton<String>));
     expect(dropdownButton.value, equals(experiments[0].name));
+    expect(dropdownButton.dropdownColor, Colors.amberAccent);
+    expect(dropdownButton.style?.color, Colors.black87);
+    expect(dropdownButton.iconEnabledColor, Colors.black87);
+
+    final dropdownContainer = tester.widget<Container>(find
+        .descendant(
+            of: find.byType(ExperimentDropdown),
+            matching: find.byType(Container))
+        .first);
+    final decoration = dropdownContainer.decoration as BoxDecoration;
+    expect(decoration.color, Colors.amberAccent);
 
 // Verify the DropdownButton has the correct number of items
     expect(dropdownButton.items?.length, equals(experiments.length));
-
   });
 }
