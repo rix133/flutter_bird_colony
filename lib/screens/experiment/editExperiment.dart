@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/modifingButtons.dart';
 import 'package:flutter_bird_colony/models/dataSearch.dart';
@@ -13,7 +13,7 @@ import '../listMeasures.dart';
 
 class EditExperiment extends StatefulWidget {
   final FirebaseFirestore firestore;
-  const EditExperiment({Key? key, required this.firestore})  : super(key: key);
+  const EditExperiment({Key? key, required this.firestore}) : super(key: key);
 
   @override
   State<EditExperiment> createState() => _EditExperimentState();
@@ -45,8 +45,8 @@ class _EditExperimentState extends State<EditExperiment> {
   @override
   void initState() {
     super.initState();
-     experiments = widget.firestore.collection('experiments');
-     birdsCollection = widget.firestore.collection('Birds');
+    experiments = widget.firestore.collection('experiments');
+    birdsCollection = widget.firestore.collection('Birds');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       sps = Provider.of<SharedPreferencesService>(context, listen: false);
       var map = ModalRoute.of(context)?.settings.arguments;
@@ -58,7 +58,7 @@ class _EditExperimentState extends State<EditExperiment> {
       nestsCollection = widget.firestore.collection(
           yearToNestCollectionName(experiment.year ?? DateTime.now().year));
       otherCollection = getOtherItems();
-      setState(() {  });
+      setState(() {});
     });
   }
 
@@ -69,9 +69,15 @@ class _EditExperimentState extends State<EditExperiment> {
   }
 
   List<DropdownMenuItem> types = [
-    DropdownMenuItem(child: Text("Nest",style: TextStyle(color: Colors.deepPurpleAccent)), value: "nest"),
-    DropdownMenuItem(child: Text("Bird",style: TextStyle(color: Colors.deepPurpleAccent)), value: "bird"),
-    DropdownMenuItem(child: Text("Other", style: TextStyle(color: Colors.deepPurpleAccent)), value: "experiment"),
+    DropdownMenuItem(
+        child: Text("Nest", style: TextStyle(color: Colors.deepPurpleAccent)),
+        value: "nest"),
+    DropdownMenuItem(
+        child: Text("Bird", style: TextStyle(color: Colors.deepPurpleAccent)),
+        value: "bird"),
+    DropdownMenuItem(
+        child: Text("Other", style: TextStyle(color: Colors.deepPurpleAccent)),
+        value: "experiment"),
   ];
 
   CollectionReference? getOtherItems() {
@@ -86,7 +92,7 @@ class _EditExperimentState extends State<EditExperiment> {
     }
   }
 
-  Widget selectOtherItems(CollectionReference otherItems){
+  Widget selectOtherItems(CollectionReference otherItems) {
     return StreamBuilder<QuerySnapshot>(
       stream: otherItems.snapshots(),
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -114,7 +120,6 @@ class _EditExperimentState extends State<EditExperiment> {
                     });
                   }
                 }
-
               },
             ),
             SizedBox(height: 8),
@@ -148,6 +153,7 @@ class _EditExperimentState extends State<EditExperiment> {
       ],
     );
   }
+
   Experiment getExperiment() {
     experiment.last_modified = DateTime.now();
     otherCollection = getOtherItems();
@@ -339,67 +345,68 @@ class _EditExperimentState extends State<EditExperiment> {
     CollectionReference? otherItems = getOtherItems();
     return Form(
       child: Padding(
-        padding: const EdgeInsets.all(15.0),
-          child:Column(
-        children: [
-          TextFormField(
+          padding: const EdgeInsets.all(15.0),
+          child: Column(
+            children: [
+              TextFormField(
                 key: Key("experimentNameField"),
                 initialValue: experiment.name,
                 decoration: InputDecoration(labelText: "Name"),
-            onChanged: (String? value) => experiment.name = value!,
-          ),
-          SizedBox(height:5),
-          TextFormField(
-            initialValue: experiment.description,
-            decoration: InputDecoration(labelText: "Description"),
-            onChanged: (String? value) => experiment.description = value!,
-          ),
-          SizedBox(height:15),
-          getDropdownWithLabel("Select type: ", otherItems),
-          SizedBox(height:15),
-          selectOtherItems(otherItems!),
-          SizedBox(height:15),
-          experiment.getItemsList(context, setState),
-          SizedBox(height:15),
-          ElevatedButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
+                onChanged: (String? value) => experiment.name = value!,
+              ),
+              SizedBox(height: 5),
+              TextFormField(
+                key: Key("experimentDescriptionField"),
+                initialValue: experiment.description,
+                decoration: InputDecoration(labelText: "Description"),
+                onChanged: (String? value) => experiment.description = value!,
+              ),
+              SizedBox(height: 15),
+              getDropdownWithLabel("Select type: ", otherItems),
+              SizedBox(height: 15),
+              selectOtherItems(otherItems!),
+              SizedBox(height: 15),
+              experiment.getItemsList(context, setState),
+              SizedBox(height: 15),
+              ElevatedButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
                         backgroundColor: Colors.black87,
                         title: const Text('Pick a color!'),
                         content: SingleChildScrollView(
-                      child: ColorPicker(
-                        pickerColor: experiment.color,
-                        onColorChanged: (Color value) => experiment.color = value,
-                        pickerAreaHeightPercent: 0.8,
-                      ),
-                    ),
-                    actions: <Widget>[
-                      ElevatedButton(
-                        child: const Text('Got it'),
-                        onPressed: () {
-                          setState((){});
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
+                          child: ColorPicker(
+                            pickerColor: experiment.color,
+                            onColorChanged: (Color value) =>
+                                experiment.color = value,
+                            pickerAreaHeightPercent: 0.8,
+                          ),
+                        ),
+                        actions: <Widget>[
+                          ElevatedButton(
+                            child: const Text('Got it'),
+                            onPressed: () {
+                              setState(() {});
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
                   );
                 },
-              );
-            },
                 child: Padding(
                     child: Text("Pick color"),
                     padding:
                         EdgeInsets.symmetric(horizontal: 20, vertical: 15)),
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.all(experiment.color),
-            ),
-          ),
-
-        ],
-      )),
+                ),
+              ),
+            ],
+          )),
     );
   }
 
@@ -414,12 +421,16 @@ class _EditExperimentState extends State<EditExperiment> {
         body: SafeArea(
             child: Container(
           color: Theme.of(context).scaffoldBackgroundColor,
-          child: SingleChildScrollView(child:Column(
-              children: [
-                spsOK ? getExperimentForm(context) : Container(),
-                SizedBox(height:15),
-                spsOK ? ListMeasures(measures: experiment.measures,onMeasuresUpdated: measuresUpdated) : Container(),
-                SizedBox(height:30),
+          child: SingleChildScrollView(
+              child: Column(children: [
+            spsOK ? getExperimentForm(context) : Container(),
+            SizedBox(height: 15),
+            spsOK
+                ? ListMeasures(
+                    measures: experiment.measures,
+                    onMeasuresUpdated: measuresUpdated)
+                : Container(),
+            SizedBox(height: 30),
             spsOK && experiment.id != null
                 ? ElevatedButton.icon(
                     key: Key("copyExperimentButton"),
@@ -444,6 +455,4 @@ class _EditExperimentState extends State<EditExperiment> {
           ])),
         )));
   }
-
 }
-

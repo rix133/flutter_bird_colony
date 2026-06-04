@@ -286,8 +286,7 @@ void main() {
       await tester.tap(find.byKey(Key("bulkAddnestButton")));
       await tester.pumpAndSettle();
 
-      await tester.enterText(
-          find.byKey(Key("bulkAddnestField")), "1, 2");
+      await tester.enterText(find.byKey(Key("bulkAddnestField")), "1, 2");
       await tester.tap(find.byKey(Key("confirmBulkAddnestButton")));
       await tester.pumpAndSettle();
 
@@ -323,27 +322,24 @@ void main() {
       expect(find.byType(ListMeasures), findsOneWidget);
 
       //find children of ListMeasures widget
-          Finder listMeasures = find.byType(ListMeasures);
-          expect(find.descendant(
-              of: listMeasures, matching: find.byType(ListTile)),
-              findsNothing);
+      Finder listMeasures = find.byType(ListMeasures);
+      expect(find.descendant(of: listMeasures, matching: find.byType(ListTile)),
+          findsNothing);
 
       Finder addMeasureButton = find.byKey(Key("addMeasureButton"));
       await tester.ensureVisible(addMeasureButton);
       await tester.tap(addMeasureButton);
       await tester.pumpAndSettle();
 
-      expect(find.descendant(
-              of: listMeasures, matching: find.byType(ListTile)),
-              findsOneWidget);
+      expect(find.descendant(of: listMeasures, matching: find.byType(ListTile)),
+          findsOneWidget);
 
       await tester.tap(find.text("Add measure"));
       await tester.pumpAndSettle();
 
-      expect(find.descendant(
-              of: listMeasures, matching: find.byType(ListTile)),
-              findsNWidgets(2));
-        });
+      expect(find.descendant(of: listMeasures, matching: find.byType(ListTile)),
+          findsNWidgets(2));
+    });
 
     testWidgets('can add new measure to new experiment',
         (WidgetTester tester) async {
@@ -357,27 +353,24 @@ void main() {
       expect(find.byType(ListMeasures), findsOneWidget);
 
       //find children of ListMeasures widget
-          Finder listMeasures = find.byType(ListMeasures);
-          expect(find.descendant(
-              of: listMeasures, matching: find.byType(ListTile)),
-              findsNothing);
+      Finder listMeasures = find.byType(ListMeasures);
+      expect(find.descendant(of: listMeasures, matching: find.byType(ListTile)),
+          findsNothing);
 
       Finder addMeasureButton = find.byKey(Key("addMeasureButton"));
       await tester.ensureVisible(addMeasureButton);
       await tester.tap(addMeasureButton);
       await tester.pumpAndSettle();
 
-      expect(find.descendant(
-              of: listMeasures, matching: find.byType(ListTile)),
-              findsOneWidget);
+      expect(find.descendant(of: listMeasures, matching: find.byType(ListTile)),
+          findsOneWidget);
 
       await tester.tap(find.text("Add measure"));
       await tester.pumpAndSettle();
 
-      expect(find.descendant(
-              of: listMeasures, matching: find.byType(ListTile)),
-              findsNWidgets(2));
-        });
+      expect(find.descendant(of: listMeasures, matching: find.byType(ListTile)),
+          findsNWidgets(2));
+    });
 
     testWidgets("saves experiment measures to firestore",
         (WidgetTester tester) async {
@@ -386,17 +379,17 @@ void main() {
       await tester.pumpAndSettle();
 
       //set the name
-          await tester.enterText(
-              find.byKey(Key("experimentNameField")), "test experiment");
-          await tester.pumpAndSettle();
+      await tester.enterText(
+          find.byKey(Key("experimentNameField")), "test experiment");
+      await tester.pumpAndSettle();
 
       //add a measure
       final addMeasureButton = find.byKey(Key("addMeasureButton"));
       expect(addMeasureButton, findsOneWidget);
 
       await tester.ensureVisible(addMeasureButton);
-          await tester.tap(addMeasureButton);
-          await tester.pumpAndSettle();
+      await tester.tap(addMeasureButton);
+      await tester.pumpAndSettle();
 
       //find the edit button under added measure
       final editButton = find.byIcon(Icons.edit);
@@ -405,7 +398,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(
-              find.byKey(Key("nameMeasureEdit")), "test measure");
+          find.byKey(Key("nameMeasureEdit")), "test measure");
 
       //find the 3 switchListTiles and toggle them
       final switchListTiles = find.byType(SwitchListTile);
@@ -416,15 +409,15 @@ void main() {
       }
 
       await tester.tap(find.byKey(Key("doneMeasureEditButton")));
-          await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
       final saveButton = find.byKey(Key("saveButton"));
       expect(saveButton, findsOneWidget);
 
       //ensure visible
-          await tester.ensureVisible(saveButton);
-          await tester.tap(saveButton);
-          await tester.pumpAndSettle();
+      await tester.ensureVisible(saveButton);
+      await tester.tap(saveButton);
+      await tester.pumpAndSettle();
 
       QuerySnapshot query = await firestore.collection('experiments').get();
       List<QueryDocumentSnapshot> docs = query.docs;
@@ -433,9 +426,8 @@ void main() {
           docs.map((e) => Experiment.fromDocSnapshot(e)).toList();
 
       //get the new experiment
-          Experiment? dfObj =
-          experiments.firstWhere((element) =>
-          element.name == "test experiment");
+      Experiment? dfObj = experiments
+          .firstWhere((element) => element.name == "test experiment");
 
       expect(dfObj.measures.length, 1);
       expect(dfObj.measures[0].name, "test measure");
@@ -454,16 +446,16 @@ void main() {
       await tester.pumpAndSettle();
 
       //find the dropdown
-          Finder dropdown = find.byType(DropdownButton);
-          expect(dropdown, findsOneWidget);
+      Finder dropdown = find.byType(DropdownButton);
+      expect(dropdown, findsOneWidget);
 
       //tap the dropdown
       await tester.tap(dropdown);
       await tester.pumpAndSettle();
 
       //tap the bird option
-          await tester.tap(find.text("Bird"));
-          await tester.pumpAndSettle();
+      await tester.tap(find.text("Bird"));
+      await tester.pumpAndSettle();
 
       //expect that the dropdown value is bird
       expect(find.text("Bird"), findsOneWidget);
@@ -485,6 +477,8 @@ void main() {
       //set the name
       await tester.enterText(
           find.byKey(Key("experimentNameField")), "test experiment");
+      await tester.enterText(find.byKey(Key("experimentDescriptionField")),
+          "saved experiment description");
 
       //find the save button
       Finder saveButton = find.byKey(Key("saveButton"));
@@ -506,6 +500,7 @@ void main() {
           .firstWhere((element) => element.name == "test experiment");
       expect(newExperiment, isNotNull);
       expect(newExperiment.type, "nest");
+      expect(newExperiment.description, "saved experiment description");
       expect(newExperiment.nests!.length, 1);
 
       //get the nest 1
@@ -607,26 +602,26 @@ void main() {
       expect(find.text("New Experiment"), findsOneWidget);
 
       expect(find.text("Nest ID: 2"), findsOneWidget);
-          //search the close button and tap it
-          await tester.tap(find.byIcon(Icons.close));
-          await tester.pumpAndSettle();
+      //search the close button and tap it
+      await tester.tap(find.byIcon(Icons.close));
+      await tester.pumpAndSettle();
 
       expect(find.text("Nest ID: 2"), findsNothing);
 
       //find the save button
-          Finder saveButton = find.byKey(Key("saveButton"));
-          await tester.ensureVisible(saveButton);
-          await tester.tap(saveButton);
+      Finder saveButton = find.byKey(Key("saveButton"));
+      await tester.ensureVisible(saveButton);
+      await tester.tap(saveButton);
 
       //tap the save button
       await tester.tap(saveButton);
       await tester.pumpAndSettle();
 
       //get the experiment 1
-          DocumentSnapshot experimentDoc =
+      DocumentSnapshot experimentDoc =
           await firestore.collection('experiments').doc("1").get();
-          Experiment newExperiment = Experiment.fromDocSnapshot(experimentDoc);
-          expect(newExperiment.nests!.length, 0);
+      Experiment newExperiment = Experiment.fromDocSnapshot(experimentDoc);
+      expect(newExperiment.nests!.length, 0);
 
       //get the nest 2
       DocumentSnapshot nestDoc = await firestore

@@ -100,6 +100,7 @@ class Experiment implements FirestoreItem {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
+      'description': description,
       'responsible': responsible,
       'year': year,
       'nests': nests,

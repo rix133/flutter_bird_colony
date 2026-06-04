@@ -163,6 +163,7 @@ void main() {
 
       //check if the list of birds is displayed
       expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text("Description: Test experiment"), findsOneWidget);
 
       //close the dialog
       await tester.tap(find.text("close"));
@@ -198,7 +199,7 @@ void main() {
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
       expect(find.byType(ListTile), findsNWidgets(1));
-      expect(find.text("New Experiment"), findsOneWidget);
+      expect(find.text("New Experiment - Test experiment"), findsOneWidget);
     });
 
     testWidgets("can add new experiment", (WidgetTester tester) async {
