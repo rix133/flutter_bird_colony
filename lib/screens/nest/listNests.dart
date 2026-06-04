@@ -14,6 +14,15 @@ import 'package:flutter_bird_colony/utils/year.dart';
 import '../../design/minMaxInput.dart';
 import '../../services/nestsService.dart';
 
+enum _FilteredNestExperimentAction { add, remove }
+
+class _FilteredNestExperimentSelection {
+  final Experiment experiment;
+  final _FilteredNestExperimentAction action;
+
+  const _FilteredNestExperimentSelection(this.experiment, this.action);
+}
+
 class ListNests extends ListScreenWidget<Nest> {
   const ListNests({Key? key, required FirebaseFirestore firestore})
       : super(
@@ -131,59 +140,127 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
     experiments.sort((a, b) => a.name.compareTo(b.name));
 
     if (!mounted) return;
-    Experiment? selectedExperiment = await showDialog<Experiment>(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            backgroundColor: Colors.black87,
-            title: Text("Add filtered nests to experiment"),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: experiments.isEmpty
-                  ? Text("No nest experiments for $selectedYear.")
-                  : ListView(
-                      shrinkWrap: true,
-                      children: experiments
-                          .map((experiment) => Material(
-                              color: Colors.transparent,
-                              child: ListTile(
-                                key: Key(
-                                    "addFilteredNests_${experiment.id ?? experiment.name}"),
-                                title: Text(experiment.name),
-                                subtitle: Text(
-                                    "${nestIds.length} filtered nests selected"),
-                                onTap: () => Navigator.pop(context, experiment),
-                              )))
-                          .toList(),
-                    ),
-            ),
-            actions: [
-              ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text("Cancel"))
-            ],
-          );
-        });
+    Experiment? selectedExperiment;
+    _FilteredNestExperimentSelection? selection =
+        await showDialog<_FilteredNestExperimentSelection>(
+            context: context,
+            builder: (BuildContext context) {
+              return StatefulBuilder(builder: (context, setDialogState) {
+                return AlertDialog(
+                  backgroundColor: Colors.black87,
+                  title: Text("Filtered nests and experiment"),
+                  content: SizedBox(
+                    width: double.maxFinite,
+                    child: experiments.isEmpty
+                        ? Text("No nest experiments for $selectedYear.")
+                        : ListView(
+                            shrinkWrap: true,
+                            children: experiments
+                                .map((experiment) => RadioListTile<Experiment>(
+                                      key: Key(
+                                          "addFilteredNests_${experiment.id ?? experiment.name}"),
+                                      title: Text(experiment.name),
+                                      subtitle: Text(
+                                          "${nestIds.length} filtered nests selected"),
+                                      value: experiment,
+                                      groupValue: selectedExperiment,
+                                      onChanged: (Experiment? value) {
+                                        setDialogState(() {
+                                          selectedExperiment = value;
+                                        });
+                                      },
+                                    ))
+                                .toList(),
+                          ),
+                  ),
+                  actions: [
+                    ElevatedButton(
+                        key: Key("addFilteredNestsAddButton"),
+                        onPressed: selectedExperiment == null
+                            ? null
+                            : () => Navigator.pop(
+                                context,
+                                _FilteredNestExperimentSelection(
+                                    selectedExperiment!,
+                                    _FilteredNestExperimentAction.add)),
+                        child: Text("Add")),
+                    ElevatedButton(
+                        key: Key("addFilteredNestsRemoveButton"),
+                        onPressed: selectedExperiment == null
+                            ? null
+                            : () => Navigator.pop(
+                                context,
+                                _FilteredNestExperimentSelection(
+                                    selectedExperiment!,
+                                    _FilteredNestExperimentAction.remove)),
+                        child: Text("Remove")),
+                    ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text("Cancel"))
+                  ],
+                );
+              });
+            });
 
-    if (selectedExperiment == null) return;
+    if (selection == null) return;
 
-    selectedExperiment.nests ??= [];
-    selectedExperiment.nests = {
-      ...selectedExperiment.nests!,
-      ...nestIds,
-    }.toList();
+    final experimentToUpdate = selection.experiment;
+    experimentToUpdate.nests ??= [];
+    Set<String> existingNestIds = experimentToUpdate.nests!.toSet();
+    List<String> changedNestIds;
+    String successMessage;
+    String noChangeMessage;
 
-    final result = await selectedExperiment.save(widget.firestore);
+    if (selection.action == _FilteredNestExperimentAction.add) {
+      changedNestIds =
+          nestIds.where((nestId) => !existingNestIds.contains(nestId)).toList();
+      if (changedNestIds.isNotEmpty) {
+        experimentToUpdate.nests = {
+          ...experimentToUpdate.nests!,
+          ...changedNestIds,
+        }.toList();
+      }
+      successMessage =
+          "Added ${changedNestIds.length} filtered nests to ${experimentToUpdate.name}.";
+      noChangeMessage =
+          "All filtered nests are already in ${experimentToUpdate.name}.";
+    } else {
+      Set<String> filteredNestIds = nestIds.toSet();
+      changedNestIds =
+          nestIds.where((nestId) => existingNestIds.contains(nestId)).toList();
+      if (changedNestIds.isNotEmpty) {
+        experimentToUpdate.nests = experimentToUpdate.nests!
+            .where((nestId) => !filteredNestIds.contains(nestId))
+            .toList();
+      }
+      successMessage =
+          "Removed ${changedNestIds.length} filtered nests from ${experimentToUpdate.name}.";
+      noChangeMessage =
+          "None of the filtered nests are in ${experimentToUpdate.name}.";
+    }
+
+    if (changedNestIds.isEmpty) {
+      await _showFilteredExperimentResult(
+          context, "Experiment unchanged", noChangeMessage);
+      return;
+    }
+
+    final result = await experimentToUpdate.save(widget.firestore);
     if (!mounted) return;
+    await _showFilteredExperimentResult(
+        context,
+        result.success ? "Experiment updated" : "Update failed",
+        result.success ? successMessage : result.message);
+  }
+
+  Future<void> _showFilteredExperimentResult(
+      BuildContext context, String title, String message) async {
     await showDialog(
         context: context,
         builder: (BuildContext context) => AlertDialog(
               backgroundColor: Colors.black87,
-              title:
-                  Text(result.success ? "Experiment updated" : "Update failed"),
-              content: Text(result.success
-                  ? "Added ${nestIds.length} filtered nests to ${selectedExperiment.name}."
-                  : result.message),
+              title: Text(title),
+              content: Text(message),
               actions: [
                 ElevatedButton(
                     onPressed: () => Navigator.pop(context), child: Text("OK"))

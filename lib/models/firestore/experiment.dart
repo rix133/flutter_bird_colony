@@ -290,16 +290,25 @@ class Experiment implements FirestoreItem {
   String get titleString =>
       '$name${description?.isNotEmpty == true ? ' - $description' : ''}';
 
+  String _itemSummary(String label, String countLabel, List<String>? items) {
+    if (items == null || items.isEmpty) return "";
+    if (items.length > 7) return "$label: ${items.length} $countLabel";
+    return "$label: ${items.join(", ")}";
+  }
+
   Widget getListTile(BuildContext context, FirebaseFirestore firestore,
       {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
-    String subtitleNests = hasNests() ? "Nests: " + nests!.join(", ") : "";
-    String subtitleBirds = hasBirds() ? "Birds: " + birds!.join(", ") : "";
+    String subtitleNests = _itemSummary("Nests", "nests", nests);
+    String subtitleBirds = _itemSummary("Birds", "birds", birds);
+    String subtitle = [subtitleNests, subtitleBirds]
+        .where((element) => element.isNotEmpty)
+        .join(" ");
     return Container(
       padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
       child: ListTile(
         title: Text(titleString, style: TextStyle(fontSize: 20)),
-        subtitle: Text(subtitleNests + subtitleBirds,
-            style: TextStyle(color: Colors.grey, fontSize: 12)),
+        subtitle:
+            Text(subtitle, style: TextStyle(color: Colors.grey, fontSize: 12)),
         onTap: () {
           showDialog(
               context: context,

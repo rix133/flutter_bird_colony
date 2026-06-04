@@ -48,7 +48,7 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
 
   setFromDefaultSettings(DefaultSettings defaultSettings) {
     desiredAccuracy = defaultSettings.desiredAccuracy;
-    selectedYear = defaultSettings.selectedYear;
+    selectedYear = DateTime.now().year;
     autoNextBand = defaultSettings.autoNextBand;
     autoNextBandParent = defaultSettings.autoNextBandParent;
     biasedRepeatedMeasures = defaultSettings.biasedRepeatedMeasurements;

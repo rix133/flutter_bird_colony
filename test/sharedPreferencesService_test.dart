@@ -198,10 +198,11 @@ void main() {
     });
 
     test('should set from defaultSettings', () {
+      final currentYear = DateTime.now().year;
       DefaultSettings defaultSettings = DefaultSettings(
           id: 'default',
           desiredAccuracy: 2,
-          selectedYear: 2022,
+          selectedYear: currentYear - 2,
           autoNextBand: true,
           defaultCameraBearing: 272,
           defaultCameraZoom: 15.35,
@@ -214,7 +215,7 @@ void main() {
 
       sharedPreferencesService.setFromDefaultSettings(defaultSettings);
       expect(sharedPreferencesService.desiredAccuracy, 2);
-      expect(sharedPreferencesService.selectedYear, 2022);
+      expect(sharedPreferencesService.selectedYear, currentYear);
       expect(sharedPreferencesService.autoNextBand, true);
       expect(sharedPreferencesService.autoNextBandParent, true);
       expect(sharedPreferencesService.defaultLocation.target.latitude, 11);

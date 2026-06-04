@@ -83,6 +83,45 @@ void main() async {
       expect(find.byType(MyHomePage), findsOneWidget);
     });
 
+    testWidgets('login applies default settings with current app year',
+        (WidgetTester tester) async {
+      final currentYear = DateTime.now().year;
+      sharedPreferencesService.selectedYear = currentYear - 1;
+      await firestore.collection('settings').doc('default').set(
+            DefaultSettings(
+              desiredAccuracy: 4.0,
+              selectedYear: currentYear - 2,
+              autoNextBand: false,
+              defaultCameraBearing: 270,
+              defaultCameraZoom: 16.35,
+              autoNextBandParent: false,
+              defaultLocation: GeoPoint(58.766218, 23.430432),
+              biasedRepeatedMeasurements: false,
+              measures: [],
+              markerColorGroups: [],
+              defaultSpecies:
+                  Species(english: "Common Gull", latinCode: "", local: ""),
+            ).toJson(),
+          );
+
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Email'), 'test@example.com');
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Password'), 'password123');
+
+      await tester.tap(find.text('Login/Register'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MyHomePage), findsOneWidget);
+      expect(sharedPreferencesService.selectedYear, currentYear);
+    });
+
     testWidgets('Enter email and password', (WidgetTester tester) async {
       // Initialize the app
       await tester.pumpWidget(myApp);

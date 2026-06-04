@@ -658,7 +658,12 @@ void main() {
 
     await tester.longPress(find.byKey(Key("showFilteredNestButton")));
     await tester.pumpAndSettle();
+    expect(find.text("Add"), findsOneWidget);
+    expect(find.text("Remove"), findsOneWidget);
+    expect(find.text("Cancel"), findsOneWidget);
     await tester.tap(find.text("Filtered Experiment"));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Add"));
     await tester.pumpAndSettle();
 
     expect(find.text("Experiment updated"), findsOneWidget);
@@ -681,6 +686,102 @@ void main() {
         updatedNest.experiments
             ?.any((experiment) => experiment.id == filteredExperiment.id),
         true);
+  });
+
+  testWidgets(
+      "will not update experiment when filtered nests are already added",
+      (WidgetTester tester) async {
+    final unchangedDate = DateTime(2024, 1, 1);
+    final filteredExperiment = Experiment(
+      id: "filtered_duplicate_experiment",
+      name: "Duplicate Filtered Experiment",
+      description: "Test duplicate filtered experiment",
+      last_modified: unchangedDate,
+      created: unchangedDate,
+      year: DateTime.now().year,
+      responsible: "Admin",
+      type: "nest",
+      nests: ["1"],
+      measures: [],
+    );
+    await firestore
+        .collection('experiments')
+        .doc(filteredExperiment.id)
+        .set(filteredExperiment.toJson());
+
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), "1");
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.byKey(Key("showFilteredNestButton")));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Duplicate Filtered Experiment"));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Add"));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Experiment unchanged"), findsOneWidget);
+    await tester.tap(find.text("OK"));
+    await tester.pumpAndSettle();
+
+    final experimentDoc = await firestore
+        .collection('experiments')
+        .doc(filteredExperiment.id)
+        .get();
+    final updatedExperiment = Experiment.fromDocSnapshot(experimentDoc);
+    expect(updatedExperiment.nests, ["1"]);
+    expect(updatedExperiment.last_modified, unchangedDate);
+  });
+
+  testWidgets("will remove filtered nests from an existing experiment",
+      (WidgetTester tester) async {
+    final filteredExperiment = Experiment(
+      id: "filtered_remove_experiment",
+      name: "Remove Filtered Experiment",
+      description: "Test filtered removal",
+      last_modified: DateTime.now(),
+      created: DateTime.now(),
+      year: DateTime.now().year,
+      responsible: "Admin",
+      type: "nest",
+      nests: ["1", "2"],
+      measures: [],
+    );
+    await filteredExperiment.save(firestore);
+
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), "1");
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.byKey(Key("showFilteredNestButton")));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Remove Filtered Experiment"));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Remove"));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Experiment updated"), findsOneWidget);
+    await tester.tap(find.text("OK"));
+    await tester.pumpAndSettle();
+
+    final experimentDoc = await firestore
+        .collection('experiments')
+        .doc(filteredExperiment.id)
+        .get();
+    final updatedExperiment = Experiment.fromDocSnapshot(experimentDoc);
+    expect(updatedExperiment.nests, ["2"]);
+
+    final nestDoc = await firestore
+        .collection(DateTime.now().year.toString())
+        .doc("1")
+        .get();
+    final updatedNest = Nest.fromDocSnapshot(nestDoc);
+    expect(
+        updatedNest.experiments
+            ?.any((experiment) => experiment.id == filteredExperiment.id),
+        false);
   });
 
   testWidgets("will show alertdialog when listTile is tapped",
