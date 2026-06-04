@@ -73,6 +73,22 @@ void main() {
       last_modified: DateTime.now().subtract(Duration(days: 1)),
       status: EggStatus('intact'),
       measures: [Measure.note()]);
+  final Egg secondEgg = Egg(
+      id: "1 egg 2",
+      discover_date: DateTime.now().subtract(Duration(days: 1)),
+      responsible: "Admin",
+      ring: null,
+      last_modified: DateTime.now().subtract(Duration(days: 1)),
+      status: EggStatus('predated'),
+      measures: [Measure.note()]);
+  final Egg thirdEgg = Egg(
+      id: "1 egg 3",
+      discover_date: DateTime.now().subtract(Duration(days: 1)),
+      responsible: "Admin",
+      ring: null,
+      last_modified: DateTime.now().subtract(Duration(days: 1)),
+      status: EggStatus('missing'),
+      measures: [Measure.note()]);
   final Egg deadEgg = Egg(
       id: "2 egg 1",
       discover_date: DateTime.now(),
@@ -80,6 +96,14 @@ void main() {
       ring: null,
       last_modified: DateTime.now(),
       status: EggStatus('predated'),
+      measures: [Measure.note()]);
+  final Egg chickItem = Egg(
+      id: "2 chick 1",
+      discover_date: DateTime.now(),
+      responsible: "Admin",
+      ring: null,
+      last_modified: DateTime.now(),
+      status: EggStatus('unknown'),
       measures: [Measure.note()]);
   final Experiment experiment = Experiment(
     id: "1",
@@ -144,10 +168,28 @@ void main() {
         .set(egg.toJson());
     await firestore
         .collection(DateTime.now().year.toString())
+        .doc(nest1.id)
+        .collection("egg")
+        .doc(secondEgg.id)
+        .set(secondEgg.toJson());
+    await firestore
+        .collection(DateTime.now().year.toString())
+        .doc(nest1.id)
+        .collection("egg")
+        .doc(thirdEgg.id)
+        .set(thirdEgg.toJson());
+    await firestore
+        .collection(DateTime.now().year.toString())
         .doc(nest2.id)
         .collection("egg")
         .doc(deadEgg.id)
         .set(deadEgg.toJson());
+    await firestore
+        .collection(DateTime.now().year.toString())
+        .doc(nest2.id)
+        .collection("egg")
+        .doc(chickItem.id)
+        .set(chickItem.toJson());
     await firestore
         .collection('experiments')
         .doc(experiment.id)
@@ -281,6 +323,73 @@ void main() {
     expect(find.byType(ListTile), findsNWidgets(1));
     expect(find.text("ID: 1, Common gull"), findsOneWidget);
     expect(find.text("ID: 2, test"), findsNothing);
+  });
+
+  testWidgets("will filter nests by egg count", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(2));
+
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(Key("eggCountFilter")));
+    await tester.tap(find.byKey(Key("eggCountFilter")));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(Key("Egg countMin")));
+    await tester.enterText(find.byKey(Key("Egg countMin")), "2");
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(1));
+    expect(find.text("ID: 1, Common gull"), findsOneWidget);
+    expect(find.text("ID: 2, test"), findsNothing);
+  });
+
+  testWidgets("will combine living egg and egg count filters",
+      (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(2));
+
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key("livingEggsFilter")));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(Key("eggCountFilter")));
+    await tester.tap(find.byKey(Key("eggCountFilter")));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(Key("Egg countMin")));
+    await tester.enterText(find.byKey(Key("Egg countMin")), "2");
+    await tester.enterText(find.byKey(Key("Egg countMax")), "4");
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(1));
+    expect(find.text("ID: 1, Common gull"), findsOneWidget);
+    expect(find.text("ID: 2, test"), findsNothing);
+  });
+
+  testWidgets("will filter nests by chick count", (WidgetTester tester) async {
+    await tester.pumpWidget(myApp);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(2));
+
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(Key("chickCountFilter")));
+    await tester.tap(find.byKey(Key("chickCountFilter")));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(1));
+    expect(find.text("ID: 1, Common gull"), findsNothing);
+    expect(find.text("ID: 2, test"), findsOneWidget);
   });
 
   testWidgets("filter by min and max location accuracy",

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/listScreenWidget.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
+import 'package:flutter_bird_colony/models/firestore/egg.dart';
 import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
@@ -32,19 +33,26 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
   double? _maxEggAge;
   int? _minEggs;
   int? _maxEggs;
+  int? _minChicks;
+  int? _maxChicks;
   double? _minLocationAccuracy;
   double? _maxLocationAccuracy;
   bool _onlyLivingEggs = false;
-  final Map<String, bool> _livingEggFilterCache = {};
-  final Map<String, Future<bool>> _livingEggFilterFutures = {};
+  bool _filterByEggCount = false;
+  bool _filterByChickCount = false;
+  final Map<String, List<Egg>> _nestItemsCache = {};
+  final Map<String, Future<List<Egg>>> _nestItemsFutures = {};
 
-  String _livingEggFilterCacheKey(Nest nest) {
+  String _nestItemsCacheKey(Nest nest) {
     return "${nest.discover_date.year}/${nest.id ?? nest.name}";
   }
 
-  void _clearLivingEggFilterCache() {
-    _livingEggFilterCache.clear();
-    _livingEggFilterFutures.clear();
+  bool get _usesNestItemFilters =>
+      _onlyLivingEggs || _filterByEggCount || _filterByChickCount;
+
+  void _clearNestItemFilterCache() {
+    _nestItemsCache.clear();
+    _nestItemsFutures.clear();
   }
 
   @override
@@ -138,7 +146,7 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
                         setState(() {
                           _onlyLivingEggs = value ?? false;
                           if (_onlyLivingEggs) {
-                            _clearLivingEggFilterCache();
+                            _clearNestItemFilterCache();
                           }
                         });
                         setDialogState(() {});
@@ -147,6 +155,56 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
                     Expanded(child: Text("Only nests with living eggs")),
                   ],
                 ),
+                Row(
+                  children: [
+                    Checkbox(
+                      key: Key("eggCountFilter"),
+                      value: _filterByEggCount,
+                      onChanged: (bool? value) {
+                        setState(() {
+                          _filterByEggCount = value ?? false;
+                          if (_filterByEggCount) {
+                            _clearNestItemFilterCache();
+                          }
+                        });
+                        setDialogState(() {});
+                      },
+                    ),
+                    Expanded(child: Text("Filter by egg count")),
+                  ],
+                ),
+                if (_filterByEggCount)
+                  MinMaxInput(
+                      label: "Egg count",
+                      minFun: updateMinEggCount,
+                      maxFun: updateMaxEggCount,
+                      min: _minEggs?.toDouble(),
+                      max: _maxEggs?.toDouble()),
+                Row(
+                  children: [
+                    Checkbox(
+                      key: Key("chickCountFilter"),
+                      value: _filterByChickCount,
+                      onChanged: (bool? value) {
+                        setState(() {
+                          _filterByChickCount = value ?? false;
+                          if (_filterByChickCount) {
+                            _clearNestItemFilterCache();
+                          }
+                        });
+                        setDialogState(() {});
+                      },
+                    ),
+                    Expanded(child: Text("Filter by chick count")),
+                  ],
+                ),
+                if (_filterByChickCount)
+                  MinMaxInput(
+                      label: "Chick count",
+                      minFun: updateMinChickCount,
+                      maxFun: updateMaxChickCount,
+                      min: _minChicks?.toDouble(),
+                      max: _maxChicks?.toDouble()),
               ])),
               actions: [
                 ElevatedButton(
@@ -202,9 +260,33 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
     });
   }
 
+  updateMinEggCount(String value) {
+    setState(() {
+      _minEggs = int.tryParse(value);
+    });
+  }
+
+  updateMaxEggCount(String value) {
+    setState(() {
+      _maxEggs = int.tryParse(value);
+    });
+  }
+
+  updateMinChickCount(String value) {
+    setState(() {
+      _minChicks = int.tryParse(value);
+    });
+  }
+
+  updateMaxChickCount(String value) {
+    setState(() {
+      _maxChicks = int.tryParse(value);
+    });
+  }
+
   updateYearFilter(int value) {
     collectionName = yearToNestCollectionName(value);
-    _clearLivingEggFilterCache();
+    _clearNestItemFilterCache();
     setState(() {
       stream = fsService?.watchItems(collectionName) ?? Stream.empty();
     });
@@ -220,10 +302,14 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
       _maxEggAge = null;
       _minEggs = null;
       _maxEggs = null;
+      _minChicks = null;
+      _maxChicks = null;
       _minLocationAccuracy = null;
       _maxLocationAccuracy = null;
       _onlyLivingEggs = false;
-      _clearLivingEggFilterCache();
+      _filterByEggCount = false;
+      _filterByChickCount = false;
+      _clearNestItemFilterCache();
     });
   }
 
@@ -278,31 +364,54 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
         e.getAccuracy() < _maxLocationAccuracy!;
   }
 
-  Future<bool> filterByEggCount(Nest e) async {
-    if (_minEggs == null && _maxEggs == null) return true;
-    int? eggCount = await e.eggCount(widget.firestore);
-    if (_minEggs == null) return eggCount < _maxEggs! - 1;
-    if (_maxEggs == null) return eggCount > _minEggs! - 1;
-    return eggCount > _minEggs! - 1 && eggCount < _maxEggs! - 1;
-  }
-
-  Future<bool> filterByLivingEgg(Nest nest) {
-    if (!_onlyLivingEggs) return Future.value(true);
-
-    String cacheKey = _livingEggFilterCacheKey(nest);
-    if (_livingEggFilterCache.containsKey(cacheKey)) {
-      return Future.value(_livingEggFilterCache[cacheKey]!);
+  Future<List<Egg>> _nestItems(Nest nest) {
+    String cacheKey = _nestItemsCacheKey(nest);
+    if (_nestItemsCache.containsKey(cacheKey)) {
+      return Future.value(_nestItemsCache[cacheKey]!);
     }
 
-    return _livingEggFilterFutures.putIfAbsent(cacheKey, () async {
+    return _nestItemsFutures.putIfAbsent(cacheKey, () async {
       try {
-        bool hasLivingEgg = await nest.hasLivingEgg(widget.firestore);
-        _livingEggFilterCache[cacheKey] = hasLivingEgg;
-        return hasLivingEgg;
+        List<Egg> nestItems = await nest.eggs(widget.firestore);
+        _nestItemsCache[cacheKey] = nestItems;
+        return nestItems;
       } finally {
-        _livingEggFilterFutures.remove(cacheKey);
+        _nestItemsFutures.remove(cacheKey);
       }
     });
+  }
+
+  bool _countMatches(bool enabled, int count, int? min, int? max) {
+    if (!enabled) return true;
+    if (min == null && max == null) return count > 0;
+    if (min != null && count < min) return false;
+    if (max != null && count > max) return false;
+    return true;
+  }
+
+  bool _matchesNestItemFilters(List<Egg> nestItems) {
+    if (_onlyLivingEggs &&
+        !nestItems.any((egg) => egg.type() == 'egg' && egg.status.canMeasure)) {
+      return false;
+    }
+
+    int eggCount = nestItems.where((egg) => egg.type() == 'egg').length;
+    if (!_countMatches(_filterByEggCount, eggCount, _minEggs, _maxEggs)) {
+      return false;
+    }
+
+    int chickCount = nestItems.where((egg) => egg.type() == 'chick').length;
+    if (!_countMatches(
+        _filterByChickCount, chickCount, _minChicks, _maxChicks)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<bool> filterByNestItems(Nest nest) async {
+    if (!_usesNestItemFilters) return true;
+    return _matchesNestItemFilters(await _nestItems(nest));
   }
 
   List<Nest> _getBaseFilteredItems(List<FirestoreItem> items) {
@@ -319,10 +428,10 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
 
   Future<List<Nest>> getFilteredItemsAsync(List<FirestoreItem> items) async {
     List<Nest> nests = _getBaseFilteredItems(items);
-    if (!_onlyLivingEggs) return nests;
+    if (!_usesNestItemFilters) return nests;
 
     List<Nest?> filteredNests = await Future.wait(nests.map((nest) async {
-      if (await filterByLivingEgg(nest)) {
+      if (await filterByNestItems(nest)) {
         return nest;
       }
       return null;
@@ -334,12 +443,12 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
   @override
   List<Nest> getFilteredItems(List<FirestoreItem> items) {
     List<Nest> nests = _getBaseFilteredItems(items);
-    if (!_onlyLivingEggs) return nests;
+    if (!_usesNestItemFilters) return nests;
 
-    return nests
-        .where((nest) =>
-            _livingEggFilterCache[_livingEggFilterCacheKey(nest)] == true)
-        .toList();
+    return nests.where((nest) {
+      List<Egg>? nestItems = _nestItemsCache[_nestItemsCacheKey(nest)];
+      return nestItems != null && _matchesNestItemFilters(nestItems);
+    }).toList();
   }
 
   Widget _buildNestListView(
@@ -360,7 +469,7 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
     bool disabled = selectedYear != appYear && !(sps?.isAdmin ?? false);
     List<Nest> nests = _getBaseFilteredItems(inputItems);
 
-    if (!_onlyLivingEggs) {
+    if (!_usesNestItemFilters) {
       return _buildNestListView(context, nests, disabled);
     }
 

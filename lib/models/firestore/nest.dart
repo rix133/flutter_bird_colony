@@ -537,8 +537,16 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   }
 
   Future<int> eggCount(FirebaseFirestore firestore) async {
+    return itemCount(firestore, 'egg');
+  }
+
+  Future<int> chickCount(FirebaseFirestore firestore) async {
+    return itemCount(firestore, 'chick');
+  }
+
+  Future<int> itemCount(FirebaseFirestore firestore, String itemType) async {
     List<Egg> eggs = await this.eggs(firestore);
-    return eggs.where((egg) => egg.type() == 'egg').length;
+    return eggs.where((egg) => egg.type() == itemType).length;
   }
 
   Future<bool> hasLivingEgg(FirebaseFirestore firestore) async {

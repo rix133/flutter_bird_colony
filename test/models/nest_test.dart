@@ -559,6 +559,38 @@ void main() {
       expect(await nest.eggCount(firestore), 2);
     });
 
+    test('chickCount should return correct number of chicks', () async {
+      final chickNest = Nest(
+        id: "chick-count-nest",
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now(),
+        accuracy: '12.33m',
+        coordinates: GeoPoint(0, 0),
+        responsible: 'John Doe',
+        measures: [],
+      );
+      await Egg(
+        id: "chick-count-nest egg 1",
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now(),
+        status: EggStatus('intact'),
+        responsible: 'John Doe',
+        measures: [],
+      ).save(firestore);
+      await Egg(
+        id: "chick-count-nest chick 1",
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now(),
+        status: EggStatus('unknown'),
+        responsible: 'John Doe',
+        measures: [],
+      ).save(firestore);
+
+      expect(await chickNest.eggCount(firestore), 1);
+      expect(await chickNest.chickCount(firestore), 1);
+      expect(await chickNest.itemCount(firestore, 'unknown'), 0);
+    });
+
     test('eggs should return correct list of eggs when id is not null',
         () async {
       await egg1.save(firestore);
