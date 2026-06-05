@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:collection/collection.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/experimentedItem.dart';
@@ -495,13 +494,40 @@ class Experiment implements FirestoreItem {
     return previousItems.where((item) => !itemSet.contains(item)).toList();
   }
 
+  bool _jsonEquals(Object? first, Object? second) {
+    if (first is Map && second is Map) {
+      if (first.length != second.length) {
+        return false;
+      }
+      for (final key in first.keys) {
+        if (!second.containsKey(key) || !_jsonEquals(first[key], second[key])) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    if (first is List && second is List) {
+      if (first.length != second.length) {
+        return false;
+      }
+      for (int i = 0; i < first.length; i++) {
+        if (!_jsonEquals(first[i], second[i])) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    return first == second;
+  }
+
   bool _experimentMarkerChanged() {
     if (_previousSimpleJson.isEmpty) {
       return previousNests.isNotEmpty || previousBirds.isNotEmpty;
     }
 
-    return !const DeepCollectionEquality()
-        .equals(_previousSimpleJson, toSimpleJson());
+    return !_jsonEquals(_previousSimpleJson, toSimpleJson());
   }
 
   void _rememberSavedState() {
