@@ -469,27 +469,31 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   }
 
   ListTile getListTile(BuildContext context, FirebaseFirestore firestore,
-      {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
+      {bool disabled = false,
+      List<MarkerColorGroup> groups = const [],
+      Widget? mapActionOverride}) {
     return ListTile(
         title: Text('ID: $name, $species'),
         subtitle: Text(checkedStr()),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FilledIconButton(
-              icon: Icons.map,
-              iconColor: Colors.black87,
-              backgroundColor:
-                  HSVColor.fromAHSV(1, getMarkerColor(groups), 1, 1).toColor(),
-              onPressed: disabled
-                  ? null
-                  : () {
-                      Navigator.pushNamed(context, '/mapNests', arguments: {
-                        'nest_ids': [id.toString()],
-                        "year": discover_date.year.toString()
-                      });
-                    },
-            ),
+            mapActionOverride ??
+                FilledIconButton(
+                  icon: Icons.map,
+                  iconColor: Colors.black87,
+                  backgroundColor:
+                      HSVColor.fromAHSV(1, getMarkerColor(groups), 1, 1)
+                          .toColor(),
+                  onPressed: disabled
+                      ? null
+                      : () {
+                          Navigator.pushNamed(context, '/mapNests', arguments: {
+                            'nest_ids': [id.toString()],
+                            "year": discover_date.year.toString()
+                          });
+                        },
+                ),
             SizedBox(width: 10),
             FilledIconButton(
               icon: Icons.edit,

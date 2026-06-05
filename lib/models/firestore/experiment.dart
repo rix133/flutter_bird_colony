@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:collection/collection.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/experimentedItem.dart';
@@ -32,6 +33,10 @@ class Experiment implements FirestoreItem {
 
   List<String> previousNests = [];
   List<String> previousBirds = [];
+  Map<String, dynamic> _previousSimpleJson = {};
+  final Map<String, Nest> _loadedNestItems = {};
+  final Set<String> _missingNestItems = {};
+  int? _loadedNestYear;
 
   Experiment copy() {
     return Experiment(
@@ -85,6 +90,7 @@ class Experiment implements FirestoreItem {
     created = (json['created'] as Timestamp).toDate();
     previousBirds = List.from(birds ?? []);
     previousNests = List.from(nests ?? []);
+    _previousSimpleJson = Map<String, dynamic>.from(toSimpleJson());
   }
 
   Map<String, dynamic> toSimpleJson() {
@@ -131,33 +137,112 @@ class Experiment implements FirestoreItem {
     return false;
   }
 
-  Column getItemsList(BuildContext context, Function setState) {
-    List<Padding> items = [];
-    if (hasNests()) {
-      items.addAll(nests
-              ?.map((e) => Padding(
+  Future<Map<String, Nest>> _loadExperimentNests(
+      FirebaseFirestore firestore) async {
+    if (!hasNests()) {
+      _loadedNestItems.clear();
+      _missingNestItems.clear();
+      return {};
+    }
+
+    final currentYear = year ?? DateTime.now().year;
+    if (_loadedNestYear != currentYear) {
+      _loadedNestItems.clear();
+      _missingNestItems.clear();
+      _loadedNestYear = currentYear;
+    }
+
+    final currentIds = nests!.toSet();
+    _loadedNestItems.removeWhere((id, _) => !currentIds.contains(id));
+    _missingNestItems.removeWhere((id) => !currentIds.contains(id));
+
+    final idsToLoad = currentIds
+        .where((nestId) =>
+            !_loadedNestItems.containsKey(nestId) &&
+            !_missingNestItems.contains(nestId))
+        .toList();
+
+    if (idsToLoad.isNotEmpty) {
+      final nestCollection =
+          firestore.collection(yearToNestCollectionName(currentYear));
+      final snapshots = await Future.wait(
+          idsToLoad.map((nestId) => nestCollection.doc(nestId).get()));
+
+      for (final snapshot in snapshots) {
+        if (snapshot.exists) {
+          _loadedNestItems[snapshot.id] = Nest.fromDocSnapshot(snapshot);
+        } else {
+          _missingNestItems.add(snapshot.id);
+        }
+      }
+    }
+
+    return Map<String, Nest>.unmodifiable(_loadedNestItems);
+  }
+
+  Widget _removeNestButton(String nestId, Function setState) {
+    return FilledIconButton(
+      key: Key("removeNestFromExperiment_$nestId"),
+      icon: Icons.close,
+      iconColor: Colors.white,
+      backgroundColor: Colors.redAccent,
+      onPressed: () {
+        setState(() {
+          nests!.remove(nestId);
+        });
+      },
+    );
+  }
+
+  Widget _nestItemsList(BuildContext context, FirebaseFirestore firestore,
+      Function setState, List<MarkerColorGroup> groups) {
+    return FutureBuilder<Map<String, Nest>>(
+        future: _loadExperimentNests(firestore),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Text("Error loading nests");
+          }
+
+          if (!snapshot.hasData) {
+            return Padding(
+                padding: EdgeInsets.symmetric(vertical: 10),
+                child: CircularProgressIndicator());
+          }
+
+          final nestMap = snapshot.data ?? {};
+          return Column(
+              children: (nests ?? []).map((nestId) {
+            final nest = nestMap[nestId];
+            if (nest == null) {
+              return Padding(
                   padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
                   child: Material(
-                      color: Colors.white12,
-                      borderRadius: BorderRadius.circular(5),
+                      color: Colors.transparent,
                       child: ListTile(
-                        title: Text('Nest ID: $e'),
-                        onTap: gotoNest(e, context),
-                        trailing: IconButton(
-                          icon: Icon(Icons.close, color: Colors.redAccent),
-                          style: ButtonStyle(
-                            backgroundColor:
-                                WidgetStateProperty.all<Color>(Colors.white60),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              nests!.remove(e);
-                            });
-                          },
-                        ),
-                      ))))
-              .toList() ??
-          []);
+                        title: Text('Nest ID: $nestId'),
+                        subtitle: Text("Nest not found"),
+                        trailing: _removeNestButton(nestId, setState),
+                      )));
+            }
+
+            return Padding(
+                padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
+                child: Material(
+                    color: Colors.transparent,
+                    child: nest.getListTile(context, firestore,
+                        groups: groups,
+                        mapActionOverride:
+                            _removeNestButton(nestId, setState))));
+          }).toList());
+        });
+  }
+
+  Widget getItemsList(
+      BuildContext context, FirebaseFirestore firestore, Function setState,
+      {List<MarkerColorGroup> groups = const []}) {
+    List<Widget> items = [];
+    if (hasNests()) {
+      items.add(_nestItemsList(context, firestore, setState, groups));
     }
     if (hasBirds()) {
       items.addAll(birds
@@ -353,25 +438,22 @@ class Experiment implements FirestoreItem {
     CollectionReference nestCollection = firestore
         .collection(yearToNestCollectionName(year ?? DateTime.now().year));
     if (items != null) {
-      Nest n;
       for (String i in items) {
-        await nestCollection.doc(i).get().then((DocumentSnapshot value) => {
-              if (value.exists)
-                {
-                  n = Nest.fromDocSnapshot(value),
-                  n.experiments = n.experiments
-                      ?.where((element) => element.id != id)
-                      .toList(),
-                  if (!delete)
-                    {
-                      n.experiments?.add(this),
-                    },
-                  nestCollection.doc(i).update({
-                    'experiments':
-                        n.experiments?.map((e) => e.toSimpleJson()).toList()
-                  })
-                }
-            });
+        final doc = nestCollection.doc(i);
+        final value = await doc.get();
+        if (!value.exists) {
+          continue;
+        }
+
+        Nest n = Nest.fromDocSnapshot(value);
+        n.experiments =
+            n.experiments?.where((element) => element.id != id).toList();
+        if (!delete) {
+          n.experiments?.add(this);
+        }
+        await doc.update({
+          'experiments': n.experiments?.map((e) => e.toSimpleJson()).toList()
+        });
       }
     }
     return UpdateResult.saveOK(item: this);
@@ -382,28 +464,50 @@ class Experiment implements FirestoreItem {
       {bool delete = false}) async {
     CollectionReference birdCollection = firestore.collection("Birds");
     if (items != null) {
-      Bird b;
       for (String i in items) {
-        await birdCollection.doc(i).get().then((DocumentSnapshot value) => {
-              if (value.exists)
-                {
-                  b = Bird.fromDocSnapshot(value),
-                  b.experiments = b.experiments
-                      ?.where((element) => element.id != id)
-                      .toList(),
-                  if (!delete)
-                    {
-                      b.experiments?.add(this),
-                    },
-                  birdCollection.doc(i).update({
-                    'experiments':
-                        b.experiments?.map((e) => e.toSimpleJson()).toList()
-                  })
-                }
-            });
+        final doc = birdCollection.doc(i);
+        final value = await doc.get();
+        if (!value.exists) {
+          continue;
+        }
+
+        Bird b = Bird.fromDocSnapshot(value);
+        b.experiments =
+            b.experiments?.where((element) => element.id != id).toList();
+        if (!delete) {
+          b.experiments?.add(this);
+        }
+        await doc.update({
+          'experiments': b.experiments?.map((e) => e.toSimpleJson()).toList()
+        });
       }
     }
     return UpdateResult.saveOK(item: this);
+  }
+
+  List<String> _addedItems(List<String> previousItems, List<String> items) {
+    final previousSet = previousItems.toSet();
+    return items.where((item) => !previousSet.contains(item)).toList();
+  }
+
+  List<String> _deletedItems(List<String> previousItems, List<String> items) {
+    final itemSet = items.toSet();
+    return previousItems.where((item) => !itemSet.contains(item)).toList();
+  }
+
+  bool _experimentMarkerChanged() {
+    if (_previousSimpleJson.isEmpty) {
+      return previousNests.isNotEmpty || previousBirds.isNotEmpty;
+    }
+
+    return !const DeepCollectionEquality()
+        .equals(_previousSimpleJson, toSimpleJson());
+  }
+
+  void _rememberSavedState() {
+    previousNests = List.from(nests ?? []);
+    previousBirds = List.from(birds ?? []);
+    _previousSimpleJson = Map<String, dynamic>.from(toSimpleJson());
   }
 
   @override
@@ -425,18 +529,19 @@ class Experiment implements FirestoreItem {
     CollectionReference expCollection = firestore.collection('experiments');
 
     last_modified = DateTime.now();
+    nests ??= [];
+    birds ??= [];
     //remove duplicate nests
-    if (nests != null) {
-      nests = nests!.toSet().toList();
-    }
-    if (birds != null) {
-      birds = birds!.toSet().toList();
-    }
-    //get items that are missing from otherdata but exist in previousOtherItems
-    List<String> deletedNests =
-        previousNests.where((element) => !nests!.contains(element)).toList();
-    List<String> deletedBirds =
-        previousBirds.where((element) => !birds!.contains(element)).toList();
+    nests = nests!.toSet().toList();
+    birds = birds!.toSet().toList();
+
+    final addedNests = _addedItems(previousNests, nests!);
+    final addedBirds = _addedItems(previousBirds, birds!);
+    final deletedNests = _deletedItems(previousNests, nests!);
+    final deletedBirds = _deletedItems(previousBirds, birds!);
+    final markerChanged = _experimentMarkerChanged();
+    final nestsToUpdate = markerChanged ? nests! : addedNests;
+    final birdsToUpdate = markerChanged ? birds! : addedBirds;
 
     if (id == null) {
       created = DateTime.now();
@@ -444,17 +549,22 @@ class Experiment implements FirestoreItem {
     }
 
     //save the experiment data to nests or birds
-    return _updateNestCollection(firestore, nests, delete: false)
+    return _updateNestCollection(firestore, nestsToUpdate, delete: false)
         .then(
             (v) => _updateNestCollection(firestore, deletedNests, delete: true))
-        .then((v) => _updateBirdsCollection(firestore, birds, delete: false))
+        .then((v) =>
+            _updateBirdsCollection(firestore, birdsToUpdate, delete: false))
         .then((v) =>
             _updateBirdsCollection(firestore, deletedBirds, delete: true))
         .then((v) => expCollection
-            .doc(id)
-            .set(toJson())
-            .then((value) => FSItemMixin().saveChangeLog(this, expCollection))
-            .then((value) => UpdateResult.saveOK(item: this)))
+                .doc(id)
+                .set(toJson())
+                .then(
+                    (value) => FSItemMixin().saveChangeLog(this, expCollection))
+                .then((value) {
+              _rememberSavedState();
+              return UpdateResult.saveOK(item: this);
+            }))
         .catchError(
             (onError) => UpdateResult.error(message: onError.toString()));
   }

@@ -366,7 +366,8 @@ class _EditExperimentState extends State<EditExperiment> {
               SizedBox(height: 15),
               selectOtherItems(otherItems!),
               SizedBox(height: 15),
-              experiment.getItemsList(context, setState),
+              experiment.getItemsList(context, widget.firestore, setState,
+                  groups: sps?.markerColorGroups ?? []),
               SizedBox(height: 15),
               ElevatedButton(
                 onPressed: () {

@@ -362,9 +362,12 @@ class _EditNestState extends State<EditNest> {
                           Experiment experiment = exps.firstWhere((element) =>
                               element.name == selectedExperimentName);
                           experiment.nests ??= [];
-                          if (!experiment.nests!.contains(nest!.name)) {
-                            experiment.nests!.add(nest!.name);
+                          if (experiment.nests!.contains(nest!.name)) {
+                            Navigator.pop(context, experiment);
+                            return;
                           }
+
+                          experiment.nests!.add(nest!.name);
 
                           setDialogState(() {
                             isSaving = true;

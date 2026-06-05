@@ -263,7 +263,8 @@ void main() {
       await tester.tap(find.byType(ListTile).first);
       await tester.pumpAndSettle();
 
-      expect(find.text("Nest ID: 1"), findsOneWidget);
+      expect(find.text("ID: 1, Common gull"), findsOneWidget);
+      expect(find.byKey(Key("removeNestFromExperiment_1")), findsOneWidget);
     });
 
     testWidgets("can bulk add nests to experiment",
@@ -290,8 +291,8 @@ void main() {
       await tester.tap(find.byKey(Key("confirmBulkAddnestButton")));
       await tester.pumpAndSettle();
 
-      expect(find.text("Nest ID: 1"), findsOneWidget);
-      expect(find.text("Nest ID: 2"), findsOneWidget);
+      expect(find.text("ID: 1, Common gull"), findsOneWidget);
+      expect(find.text("ID: 2, test"), findsOneWidget);
     });
 
     testWidgets('can pick experiment color', (WidgetTester tester) async {
@@ -586,8 +587,7 @@ void main() {
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
 
-      //find the first listTile and tap it
-      await tester.tap(find.byType(ListTile).first);
+      await tester.tap(find.byIcon(Icons.edit).first);
       await tester.pumpAndSettle();
 
       expect(find.byType(EditNest), findsOneWidget);
@@ -601,12 +601,11 @@ void main() {
       //searhctext new Experiment
       expect(find.text("New Experiment"), findsOneWidget);
 
-      expect(find.text("Nest ID: 2"), findsOneWidget);
-      //search the close button and tap it
-      await tester.tap(find.byIcon(Icons.close));
+      expect(find.text("ID: 2, test"), findsOneWidget);
+      await tester.tap(find.byKey(Key("removeNestFromExperiment_2")));
       await tester.pumpAndSettle();
 
-      expect(find.text("Nest ID: 2"), findsNothing);
+      expect(find.text("ID: 2, test"), findsNothing);
 
       //find the save button
       Finder saveButton = find.byKey(Key("saveButton"));
