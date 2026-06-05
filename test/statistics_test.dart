@@ -7,6 +7,7 @@ import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/screens/nest/mapNests.dart';
 import 'package:flutter_bird_colony/screens/statistics.dart';
 import 'package:flutter_bird_colony/services/locationService.dart';
+import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'mocks/mockAuthService.dart';
@@ -78,6 +79,24 @@ void main() {
       species: 'Common gull');
 
   late TestApp myApp;
+
+  TestApp getStatisticsApp(
+      FakeFirebaseFirestore firestore, MockSharedPreferencesService sps) {
+    return TestApp(
+      firestore: firestore,
+      sps: sps,
+      app: MaterialApp(initialRoute: '/statistics', routes: {
+        '/statistics': (context) => Statistics(firestore: firestore),
+        '/mapNests': (context) =>
+            MapNests(firestore: firestore, auth: authService),
+      }),
+    );
+  }
+
+  DateTime dayOffset(int days) {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day).add(Duration(days: days));
+  }
 
   setUpAll(() async {
     //AuthService.instance = authService;
@@ -282,5 +301,109 @@ void main() {
 
     // Verify that the Map screen is displayed
     expect(find.byType(MapNests), findsOneWidget);
+  });
+
+  testWidgets('Statistics can filter yesterday and show narrowed bird items',
+      (WidgetTester tester) async {
+    final localFirestore = FakeFirebaseFirestore();
+    final localSps = MockSharedPreferencesService();
+    localSps.speciesList = LocalSpeciesList.fromStringList(["Common gull"]);
+    final yesterday = dayOffset(-1);
+    final today = dayOffset(0);
+
+    await localFirestore.collection('Birds').doc('YEST1').set(Bird(
+          ringed_date: yesterday,
+          band: 'YEST1',
+          ringed_as_chick: true,
+          measures: [],
+          responsible: 'Test User',
+          species: 'Common gull',
+        ).toJson());
+    await localFirestore.collection('Birds').doc('TODAY1').set(Bird(
+          ringed_date: today,
+          band: 'TODAY1',
+          ringed_as_chick: true,
+          measures: [],
+          responsible: 'Test User',
+          species: 'Common gull',
+        ).toJson());
+
+    await tester.pumpWidget(getStatisticsApp(localFirestore, localSps));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(DropdownButton<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Yesterday').last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(DropdownButton<String>).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Me').last);
+    await tester.pumpAndSettle();
+
+    final totalRingedTile = find.widgetWithText(ListTile, 'Total ringed');
+    expect(find.descendant(of: totalRingedTile, matching: find.text('1')),
+        findsOneWidget);
+
+    await tester.longPress(totalRingedTile);
+    await tester.pumpAndSettle();
+
+    expect(find.text('YEST1'), findsOneWidget);
+    expect(find.text('TODAY1'), findsNothing);
+  });
+
+  testWidgets(
+      'Statistics text filter narrows nests and broad total long press is blocked',
+      (WidgetTester tester) async {
+    final localFirestore = FakeFirebaseFirestore();
+    final localSps = MockSharedPreferencesService();
+    localSps.speciesList = LocalSpeciesList.fromStringList(["Common gull"]);
+    final year = DateTime.now().year;
+    final collection =
+        localFirestore.collection(yearToNestCollectionName(year));
+
+    await collection.doc('YN1').set(Nest(
+          id: 'YN1',
+          coordinates: GeoPoint(0, 0),
+          accuracy: '3m',
+          last_modified: dayOffset(-1),
+          discover_date: DateTime(year, 5, 1),
+          responsible: 'Test User',
+          species: 'Common gull',
+          measures: [],
+        ).toJson());
+    await collection.doc('OTHER1').set(Nest(
+          id: 'OTHER1',
+          coordinates: GeoPoint(0, 0),
+          accuracy: '3m',
+          last_modified: dayOffset(-1),
+          discover_date: DateTime(year, 5, 1),
+          responsible: 'Test User',
+          species: 'Common gull',
+          measures: [],
+        ).toJson());
+
+    await tester.pumpWidget(getStatisticsApp(localFirestore, localSps));
+    await tester.pumpAndSettle();
+
+    final totalNestsTile = find.widgetWithText(ListTile, 'Total nests');
+    await tester.longPress(totalNestsTile);
+    await tester.pumpAndSettle();
+    expect(find.text('Narrow filters first'), findsOneWidget);
+
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(Key("statisticsNameFilterField")), 'YN1');
+    await tester.pumpAndSettle();
+
+    expect(find.descendant(of: totalNestsTile, matching: find.text('1')),
+        findsOneWidget);
+
+    await tester.longPress(totalNestsTile);
+    await tester.pumpAndSettle();
+
+    expect(find.text('ID: YN1, Common gull'), findsOneWidget);
+    expect(find.text('ID: OTHER1, Common gull'), findsNothing);
   });
 }

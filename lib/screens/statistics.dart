@@ -19,8 +19,10 @@ class Statistics extends StatefulWidget {
 }
 
 class _StatisticsState extends State<Statistics> {
-  var today = DateTime.now().toIso8601String().split("T")[0];
   int _selectedYear = DateTime.now().year;
+  final TextEditingController _textFilterController = TextEditingController();
+  final TextEditingController _lastDaysController =
+      TextEditingController(text: "7");
   SharedPreferencesService? sps;
   LocalSpeciesList _speciesList = LocalSpeciesList();
 
@@ -40,7 +42,15 @@ class _StatisticsState extends State<Statistics> {
         value: "All"),
     DropdownMenuItem(
         child: Text("Today", style: TextStyle(color: Colors.deepPurpleAccent)),
-        value: "Today")
+        value: "Today"),
+    DropdownMenuItem(
+        child:
+            Text("Yesterday", style: TextStyle(color: Colors.deepPurpleAccent)),
+        value: "Yesterday"),
+    DropdownMenuItem(
+        child: Text("Last X days",
+            style: TextStyle(color: Colors.deepPurpleAccent)),
+        value: "Last X days")
   ];
   String dropdownValue = "All";
 
@@ -78,40 +88,113 @@ class _StatisticsState extends State<Statistics> {
 
   @override
   void dispose() {
+    _textFilterController.dispose();
+    _lastDaysController.dispose();
     super.dispose();
   }
+
+  DateTime _dateOnly(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+
+  int get _lastDays {
+    final parsed = int.tryParse(_lastDaysController.text);
+    if (parsed == null || parsed < 1) {
+      return 1;
+    }
+    return parsed;
+  }
+
+  DateTimeRange _birdDateRange() {
+    final today = _dateOnly(DateTime.now());
+    if (dropdownValue == "Today") {
+      return DateTimeRange(start: today, end: today.add(Duration(days: 1)));
+    }
+    if (dropdownValue == "Yesterday") {
+      final yesterday = today.subtract(Duration(days: 1));
+      return DateTimeRange(start: yesterday, end: today);
+    }
+    if (dropdownValue == "Last X days") {
+      return DateTimeRange(
+          start: today.subtract(Duration(days: _lastDays - 1)),
+          end: today.add(Duration(days: 1)));
+    }
+    return DateTimeRange(
+        start: DateTime(_selectedYear), end: DateTime(_selectedYear + 1));
+  }
+
+  DateTimeRange? _narrowDateRange() {
+    if (dropdownValue == "All") {
+      return null;
+    }
+    return _birdDateRange();
+  }
+
+  String get _textFilter => _textFilterController.text.trim().toLowerCase();
 
   _refreshStreams() {
     _nestsStream =
         nestsService?.watchItems(yearToNestCollectionName(_selectedYear)) ??
             Stream.empty();
-    DateTime startDate = DateTime(_selectedYear);
-    DateTime endDate = DateTime(_selectedYear + 1);
+    DateTimeRange range = _birdDateRange();
 
     if (birdsCollection != null) {
-      if (dropdownValue == "Today") {
-        // from 00:00 to 00:00
-        startDate = DateTime(
-            DateTime.now().year, DateTime.now().month, DateTime.now().day);
-        endDate = startDate.add(Duration(days: 1)); // Midnight next day
-      }
       birdsQuery = birdsCollection!
-          .where("ringed_date", isGreaterThanOrEqualTo: startDate)
-          .where("ringed_date", isLessThan: endDate);
+          .where("ringed_date", isGreaterThanOrEqualTo: range.start)
+          .where("ringed_date", isLessThan: range.end);
     }
+  }
+
+  bool _matchesDate(DateTime date) {
+    final range = _narrowDateRange();
+    if (range == null) {
+      return true;
+    }
+    final dateOnly = _dateOnly(date);
+    return !dateOnly.isBefore(range.start) && dateOnly.isBefore(range.end);
+  }
+
+  bool _matchesNestText(Nest nest) {
+    if (_textFilter.isEmpty) {
+      return true;
+    }
+    return [
+      nest.id ?? "",
+      nest.name,
+      nest.species ?? "",
+      nest.responsible ?? "",
+    ].any((value) => value.toLowerCase().contains(_textFilter));
+  }
+
+  bool _matchesBirdText(Bird bird) {
+    if (_textFilter.isEmpty) {
+      return true;
+    }
+    return [
+      bird.band,
+      bird.color_band ?? "",
+      bird.species ?? "",
+      bird.responsible ?? "",
+      bird.nest ?? "",
+    ].any((value) => value.toLowerCase().contains(_textFilter));
   }
 
   Widget buildNestList(List<Nest> nests) {
     if (nests.length != 0) {
-      nests = nests.where((Nest n) => n.timeSpan(dropdownValue)).toList();
+      nests = nests
+          .where((Nest n) => _matchesDate(n.last_modified ?? n.discover_date))
+          .toList();
       nests = nests
           .where((Nest n) => n.people(dropdownValuePeople, username))
           .toList();
+      nests = nests.where(_matchesNestText).toList();
       return ListView(
         children: [
           _tileMaterial(ListTile(
               title: Text("Total nests"),
-              trailing: Text(nests.length.toString()))),
+              trailing: Text(nests.length.toString()),
+              onLongPress: () =>
+                  _showNestsIfAllowed("Total nests", nests, isTotal: true))),
           ..._speciesList.species
               .map((Species sp) => getNestListTile(sp.english, nests))
               .toList(),
@@ -189,6 +272,22 @@ class _StatisticsState extends State<Statistics> {
                         )
                       ],
                     ),
+                    if (dropdownValue == "Last X days")
+                      Padding(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                        child: TextField(
+                          key: Key("statisticsLastDaysField"),
+                          controller: _lastDaysController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(labelText: "Days"),
+                          onChanged: (value) {
+                            setState(() {
+                              _refreshStreams();
+                            });
+                          },
+                        ),
+                      ),
                     Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
@@ -205,6 +304,21 @@ class _StatisticsState extends State<Statistics> {
                             },
                           )
                         ]),
+                    Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                      child: TextField(
+                        key: Key("statisticsNameFilterField"),
+                        controller: _textFilterController,
+                        decoration: InputDecoration(
+                          labelText: "Name filter",
+                          prefixIcon: Icon(Icons.search),
+                        ),
+                        onChanged: (value) {
+                          setState(() {});
+                        },
+                      ),
+                    ),
                     Expanded(
                         child: StreamBuilder(
                             stream: _nestsStream,
@@ -253,12 +367,15 @@ class _StatisticsState extends State<Statistics> {
             icon: Icon(Icons.map)),
         title: Text(species == "" ? "No species nests" : "$species nests"),
         trailing: Text(selectedNests.length.toString()),
+        onLongPress: () => _showNestsIfAllowed(
+            species == "" ? "No species nests" : "$species nests",
+            selectedNests),
         onTap: () => null);
 
     return _tileMaterial(list_tile);
   }
 
-  Widget getLocalBirdsListTile(String species) {
+  List<Bird> _filterLocalBirds(String species) {
     List<Bird> selectedBirds = birdsService!.items;
     if (species != "Total") {
       selectedBirds =
@@ -269,24 +386,30 @@ class _StatisticsState extends State<Statistics> {
         .where((Bird bird) => bird.ringed_date.year == _selectedYear)
         .toList();
 
-    if (dropdownValue == "Today") {
-      selectedBirds = selectedBirds
-          .where((Bird bird) =>
-              bird.ringed_date.toIso8601String().split("T")[0] == today)
-          .toList();
-    }
+    selectedBirds = selectedBirds
+        .where((Bird bird) => _matchesDate(bird.ringed_date))
+        .toList();
 
     if (dropdownValuePeople == "Me") {
       selectedBirds = selectedBirds
           .where((Bird bird) => bird.responsible == username)
           .toList();
     }
+    selectedBirds = selectedBirds.where(_matchesBirdText).toList();
+    return selectedBirds;
+  }
+
+  Widget getLocalBirdsListTile(String species) {
+    List<Bird> selectedBirds = _filterLocalBirds(species);
     if (selectedBirds.length == 0 && species != "Total") {
       return SizedBox.shrink();
     }
     ListTile list_tile = ListTile(
         title: Text(species == "" ? "No species birds" : "$species ringed"),
-        trailing: Text(selectedBirds.length.toString()));
+        trailing: Text(selectedBirds.length.toString()),
+        onLongPress: () => _showBirdsIfAllowed(
+            species == "" ? "No species birds" : "$species ringed", species,
+            localBirds: selectedBirds));
 
     return _tileMaterial(list_tile);
   }
@@ -305,6 +428,36 @@ class _StatisticsState extends State<Statistics> {
         birdsQuery = birdsQuery?.where("responsible", isEqualTo: username);
       }
 
+      if (_textFilter.isNotEmpty) {
+        return FutureBuilder<QuerySnapshot<Object?>>(
+          future: birdsQuery?.get(),
+          builder: (BuildContext context,
+              AsyncSnapshot<QuerySnapshot<Object?>> snapshot) {
+            if (snapshot.hasData) {
+              List<Bird> birds = snapshot.data!.docs
+                  .map((doc) => Bird.fromDocSnapshot(doc))
+                  .where(_matchesBirdText)
+                  .toList();
+              int count = birds.length;
+              if (count == 0 && species != "Total") {
+                return SizedBox.shrink();
+              }
+              return _tileMaterial(ListTile(
+                title: Text("$species ringed"),
+                trailing: Text(count.toString()),
+                onLongPress: () => _showBirdsIfAllowed(
+                    "$species ringed", species,
+                    localBirds: birds),
+              ));
+            } else if (snapshot.hasError) {
+              return Text('Error: getting $species data');
+            } else {
+              return SizedBox.shrink();
+            }
+          },
+        );
+      }
+
       return FutureBuilder<AggregateQuerySnapshot>(
         future: birdsQuery?.count().get(),
         builder: (BuildContext context,
@@ -317,6 +470,8 @@ class _StatisticsState extends State<Statistics> {
             return _tileMaterial(ListTile(
               title: Text("$species ringed"),
               trailing: Text(count.toString()),
+              onLongPress: () => _showBirdsIfAllowed("$species ringed", species,
+                  birdsQuery: birdsQuery),
             ));
           } else if (snapshot.hasError) {
             return Text('Error: getting $species data');
@@ -326,6 +481,114 @@ class _StatisticsState extends State<Statistics> {
         },
       );
     }
+  }
+
+  bool _isBroadTotalSelection({required bool isTotal}) {
+    return isTotal &&
+        dropdownValue == "All" &&
+        dropdownValuePeople == "Everybody" &&
+        _textFilter.isEmpty;
+  }
+
+  Future<void> _showNarrowFilterDialog() async {
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+              backgroundColor: Colors.black87,
+              title: Text("Narrow filters first"),
+              content: Text(
+                  "Use a date, user, text, or species filter before opening all items."),
+              actions: [
+                ElevatedButton(
+                    onPressed: () => Navigator.pop(context), child: Text("OK"))
+              ],
+            ));
+  }
+
+  Future<void> _showNestsIfAllowed(String title, List<Nest> nests,
+      {bool isTotal = false}) async {
+    if (_isBroadTotalSelection(isTotal: isTotal)) {
+      await _showNarrowFilterDialog();
+      return;
+    }
+    await _showNestsDialog(title, nests);
+  }
+
+  Future<void> _showNestsDialog(String title, List<Nest> nests) async {
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+              backgroundColor: Colors.black87,
+              title: Text(title),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 400,
+                child: nests.isEmpty
+                    ? Center(child: Text("No nests"))
+                    : ListView(
+                        children: nests
+                            .map((nest) => Material(
+                                color: Colors.transparent,
+                                child: nest.getListTile(
+                                    context, widget.firestore,
+                                    groups: sps?.markerColorGroups ?? [])))
+                            .toList(),
+                      ),
+              ),
+              actions: [
+                ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text("Close"))
+              ],
+            ));
+  }
+
+  Future<void> _showBirdsIfAllowed(String title, String species,
+      {List<Bird>? localBirds, Query? birdsQuery}) async {
+    if (_isBroadTotalSelection(isTotal: species == "Total")) {
+      await _showNarrowFilterDialog();
+      return;
+    }
+
+    List<Bird> birds = localBirds ?? [];
+    if (localBirds == null && birdsQuery != null) {
+      final snapshot = await birdsQuery.get();
+      birds = snapshot.docs
+          .map((doc) => Bird.fromDocSnapshot(doc))
+          .where(_matchesBirdText)
+          .toList();
+    }
+    if (!mounted) return;
+    await _showBirdsDialog(title, birds);
+  }
+
+  Future<void> _showBirdsDialog(String title, List<Bird> birds) async {
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+              backgroundColor: Colors.black87,
+              title: Text(title),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 400,
+                child: birds.isEmpty
+                    ? Center(child: Text("No birds"))
+                    : ListView(
+                        children: birds
+                            .map((bird) => Material(
+                                color: Colors.transparent,
+                                child: bird.getListTile(
+                                    context, widget.firestore,
+                                    groups: sps?.markerColorGroups ?? [])))
+                            .toList(),
+                      ),
+              ),
+              actions: [
+                ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text("Close"))
+              ],
+            ));
   }
 
   void showNestsonMap(List<Nest> nests) {
