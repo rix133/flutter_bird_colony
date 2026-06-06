@@ -587,10 +587,53 @@ void main() {
 
     await tester.pumpAndSettle();
     expect(find.byType(ListTile), findsNWidgets(2));
+    expect(find.text("(long press for experiments)"), findsOneWidget);
 
     // Tap the showFilteredNestButton button
     await tester.tap(find.byKey(Key("showFilteredNestButton")));
     await tester.pumpAndSettle();
+  });
+
+  testWidgets("uses default experiment filter for nests",
+      (WidgetTester tester) async {
+    final localFirestore = FakeFirebaseFirestore();
+    final localSps = MockSharedPreferencesService();
+    final filteredNest = nest1.copy();
+    filteredNest.id = 'filtered_nest';
+    final otherNest = nest2.copy();
+    otherNest.id = 'other_nest';
+    await localFirestore
+        .collection(DateTime.now().year.toString())
+        .doc(filteredNest.id)
+        .set(filteredNest.toJson());
+    await localFirestore
+        .collection(DateTime.now().year.toString())
+        .doc(otherNest.id)
+        .set(otherNest.toJson());
+    final defaultExperiment = Experiment(
+      id: 'default_nest_experiment',
+      name: 'Default Nest Experiment',
+      description: 'Default data filter',
+      last_modified: DateTime.now(),
+      created: DateTime.now(),
+      year: DateTime.now().year,
+      responsible: 'Admin',
+      type: 'nest',
+      nests: [filteredNest.id!],
+      measures: [],
+    );
+    await defaultExperiment.save(localFirestore);
+    localSps.defaultDataExperiment = defaultExperiment.id!;
+
+    await tester.pumpWidget(TestApp(
+      firestore: localFirestore,
+      sps: localSps,
+      app: MaterialApp(home: ListNests(firestore: localFirestore)),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('filtered_nest'), findsOneWidget);
+    expect(find.textContaining('other_nest'), findsNothing);
   });
 
   testWidgets("will show only filtered nests on the map",

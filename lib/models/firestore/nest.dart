@@ -393,6 +393,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
       'coordinates': coordinates,
       'completed': completed,
       'experiments': experiments?.map((e) => e.toSimpleJson()).toList(),
+      'experimentIds':
+          experiments?.map((e) => e.id).whereType<String>().toList(),
       'species': species,
       'parents': parents?.map((e) => e.toSimpleJson()).toList(),
       'measures': measures.map((e) => e.toJson()).toList(),

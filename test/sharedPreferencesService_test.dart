@@ -93,8 +93,7 @@ void main() {
     });
 
     test('speciesNameLanguage should return the set value', () {
-      sharedPreferencesService.speciesNameLanguage =
-          SpeciesNameLanguage.local;
+      sharedPreferencesService.speciesNameLanguage = SpeciesNameLanguage.local;
       expect(sharedPreferencesService.speciesNameLanguage,
           SpeciesNameLanguage.local);
     });
@@ -211,6 +210,7 @@ void main() {
           biasedRepeatedMeasurements: true,
           defaultSpecies: Species(english: 'test', local: '', latinCode: ''),
           markerColorGroups: [MarkerColorGroup.magenta('test')],
+          defaultDataExperiment: 'experiment-1',
           measures: [Measure.note()]);
 
       sharedPreferencesService.setFromDefaultSettings(defaultSettings);
@@ -228,6 +228,7 @@ void main() {
       expect(sharedPreferencesService.defaultMeasures[0].name, 'note');
       expect(sharedPreferencesService.markerColorGroups.length, 1);
       expect(sharedPreferencesService.markerColorGroups[0].species, 'test');
+      expect(sharedPreferencesService.defaultDataExperiment, 'experiment-1');
     });
   });
 }

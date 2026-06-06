@@ -3,6 +3,7 @@ import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
 import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
+import 'package:flutter_bird_colony/models/firestore/experiment.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
 import 'package:flutter_bird_colony/models/markerColorGroup.dart';
@@ -28,6 +29,7 @@ class DefaultSettings implements FirestoreItem {
   DateTime? last_modified;
   Species defaultSpecies;
   List<MarkerColorGroup> markerColorGroups = [];
+  String? defaultDataExperiment;
 
   @override
   String? responsible;
@@ -45,7 +47,8 @@ class DefaultSettings implements FirestoreItem {
       required this.defaultCameraBearing,
       required this.measures,
       required this.markerColorGroups,
-      this.responsible});
+      this.responsible,
+      this.defaultDataExperiment});
 
   DefaultSettings copy() {
     return DefaultSettings(
@@ -61,7 +64,8 @@ class DefaultSettings implements FirestoreItem {
         defaultSpecies: defaultSpecies.copy(),
         measures: measures.map((e) => e.copy()).toList(),
         markerColorGroups: markerColorGroups.map((e) => e.copy()).toList(),
-        responsible: responsible);
+        responsible: responsible,
+        defaultDataExperiment: defaultDataExperiment);
   }
 
   @override
@@ -78,7 +82,8 @@ class DefaultSettings implements FirestoreItem {
       'defaultSpecies': defaultSpecies.toJson(),
       'measures': measures.map((e) => e.toFormJson()).toList(),
       'responsible': responsible ?? '',
-      'markerColorGroups': markerColorGroups.map((e) => e.toJson()).toList()
+      'markerColorGroups': markerColorGroups.map((e) => e.toJson()).toList(),
+      'defaultDataExperiment': defaultDataExperiment ?? ''
     };
   }
 
@@ -116,8 +121,10 @@ class DefaultSettings implements FirestoreItem {
         autoNextBand: json['autoNextBand'],
         autoNextBandParent: json['autoNextBandParent'],
         defaultLocation: json['defaultLocation'],
-        defaultCameraZoom: (json['defaultCameraZoom'] as num?)?.toDouble() ?? 16.35,
-        defaultCameraBearing: (json['defaultCameraBearing'] as num?)?.toDouble() ?? 270.0,
+        defaultCameraZoom:
+            (json['defaultCameraZoom'] as num?)?.toDouble() ?? 16.35,
+        defaultCameraBearing:
+            (json['defaultCameraBearing'] as num?)?.toDouble() ?? 270.0,
         biasedRepeatedMeasurements: json['biasedRepeatedMeasurements'],
         measures: json['measures'] == null
             ? []
@@ -130,7 +137,8 @@ class DefaultSettings implements FirestoreItem {
             : (json['markerColorGroups'] as List<dynamic>)
                 .map((e) => MarkerColorGroup.fromJson(e))
                 .toList(),
-        responsible: json['responsible']);
+        responsible: json['responsible'],
+        defaultDataExperiment: json['defaultDataExperiment']);
   }
 
   @override
@@ -206,8 +214,57 @@ class DefaultSettings implements FirestoreItem {
     ]);
   }
 
-  List<Widget> getDefaultSettingsForm(AuthService authService,
-      BuildContext context, Function setState, SharedPreferencesService? sps) {
+  Widget _defaultDataExperimentInput(
+      FirebaseFirestore firestore, Function setState) {
+    return FutureBuilder<QuerySnapshot<Object?>>(
+        future: firestore.collection('experiments').get(),
+        builder: (context, snapshot) {
+          List<Experiment> experiments = [];
+          if (snapshot.hasData) {
+            experiments =
+                snapshot.data!.docs.map(Experiment.fromDocSnapshot).toList();
+            experiments.sort((a, b) => a.name.compareTo(b.name));
+          }
+
+          final experimentIds = experiments
+              .map((experiment) => experiment.id)
+              .whereType<String>();
+          final selectedValue = experimentIds.contains(defaultDataExperiment)
+              ? defaultDataExperiment
+              : null;
+
+          return DropdownButton<String?>(
+            key: Key("defaultDataExperimentDropdown"),
+            value: selectedValue,
+            isExpanded: true,
+            items: [
+              DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text("No default data experiment",
+                      style: TextStyle(color: Colors.deepPurpleAccent))),
+              ...experiments.map((experiment) => DropdownMenuItem<String?>(
+                    value: experiment.id,
+                    child: Text(
+                        "${experiment.name}${experiment.year != null ? " (${experiment.year})" : ""}",
+                        style: TextStyle(color: Colors.deepPurpleAccent)),
+                  ))
+            ],
+            onChanged: snapshot.hasData
+                ? (String? value) {
+                    defaultDataExperiment = value ?? '';
+                    setState(() {});
+                  }
+                : null,
+          );
+        });
+  }
+
+  List<Widget> getDefaultSettingsForm(
+      AuthService authService,
+      BuildContext context,
+      Function setState,
+      SharedPreferencesService? sps,
+      FirebaseFirestore firestore) {
     return ([
       SizedBox(height: 10),
       SpeciesRawAutocomplete(
@@ -235,6 +292,9 @@ class DefaultSettings implements FirestoreItem {
           setState(() {});
         },
       ),
+      SizedBox(height: 10),
+      Text("Default data experiment"),
+      _defaultDataExperimentInput(firestore, setState),
       SizedBox(height: 10),
       Text('Selected year $selectedYear'),
       Slider(

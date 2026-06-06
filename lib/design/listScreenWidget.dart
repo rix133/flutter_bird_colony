@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/experimentedItem.dart';
@@ -26,10 +28,11 @@ abstract class ListScreenWidget<T> extends StatefulWidget {
 
 abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
   int selectedYear = DateTime.now().year;
-  String? selectedExperiments;
+  String? selectedExperimentId;
   Stream<List<FirestoreItem>> stream = Stream.empty();
   ExperimentsService? experimentsService;
   Stream<List<Experiment>> experimentStream = Stream.empty();
+  StreamSubscription<List<Experiment>>? _experimentSubscription;
   TextEditingController searchController = TextEditingController();
   bool downloading = false;
   String collectionName = "";
@@ -39,8 +42,13 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
   List<FirestoreItem> get items => getFilteredItems(fsService?.items ?? []);
 
+  bool get supportsExperimentFilter => true;
+
+  String? get experimentFilterType => null;
+
   @override
   void dispose() {
+    _experimentSubscription?.cancel();
     super.dispose();
     searchController.dispose();
   }
@@ -53,10 +61,26 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
       experimentsService =
           Provider.of<ExperimentsService>(context, listen: false);
       selectedYear = sps?.selectedYear ?? selectedYear;
+      if (supportsExperimentFilter) {
+        final defaultExperiment = sps?.defaultDataExperiment ?? '';
+        selectedExperimentId =
+            defaultExperiment.isEmpty ? null : defaultExperiment;
+      }
       updateYearFilter(selectedYear);
-      stream = fsService?.watchItems(collectionName) ?? Stream.empty();
-      experimentStream =
-          experimentsService?.watchItems("experiments") ?? Stream.empty();
+      if (supportsExperimentFilter) {
+        experimentStream =
+            experimentsService?.watchItems("experiments") ?? Stream.empty();
+        _experimentSubscription = experimentStream.listen((experiments) {
+          _clearUnavailableExperimentSelection(experiments);
+          _refreshDataStream();
+          if (mounted) {
+            setState(() {});
+          }
+        });
+      }
+      if (!supportsExperimentFilter || selectedExperimentId == null) {
+        _refreshDataStream();
+      }
 
       setState(() {});
     });
@@ -66,16 +90,88 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
     final defaultYear = sps?.selectedYear ?? DateTime.now().year;
     setState(() {
       selectedYear = defaultYear;
-      selectedExperiments = null;
+      selectedExperimentId = null;
       searchController.clear();
     });
     updateYearFilter(defaultYear);
+    _refreshDataStream();
   }
 
   bool filterByExperiments(ExperimentedItem e) {
-    if (selectedExperiments == null) return true;
-    return e.experiments?.map((e) => e.name).contains(selectedExperiments) ??
+    if (selectedExperimentId == null) return true;
+    final selectedExperiment = _selectedExperiment();
+    return e.experiments?.any((experiment) =>
+            experiment.id == selectedExperimentId ||
+            experiment.name == selectedExperimentId ||
+            (selectedExperiment != null &&
+                experiment.name == selectedExperiment.name)) ??
         false;
+  }
+
+  List<Experiment> _availableExperiments(List<Experiment> experiments) {
+    return experiments.where((experiment) {
+      final typeMatches = experimentFilterType == null ||
+          experiment.type == experimentFilterType;
+      final yearMatches =
+          experiment.year == null || experiment.year == selectedYear;
+      return typeMatches && yearMatches;
+    }).toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+  }
+
+  void _clearUnavailableExperimentSelection(List<Experiment> experiments) {
+    if (!supportsExperimentFilter || selectedExperimentId == null) {
+      return;
+    }
+    if (!_availableExperiments(experiments)
+        .any((experiment) => experiment.id == selectedExperimentId)) {
+      selectedExperimentId = null;
+    }
+  }
+
+  Experiment? _selectedExperiment() {
+    if (selectedExperimentId == null) {
+      return null;
+    }
+    for (final experiment
+        in _availableExperiments(experimentsService?.items ?? [])) {
+      if (experiment.id == selectedExperimentId ||
+          experiment.name == selectedExperimentId) {
+        return experiment;
+      }
+    }
+    return null;
+  }
+
+  Query<Map<String, dynamic>> _baseDataQuery() {
+    return widget.firestore.collection(collectionName);
+  }
+
+  List<Query<Map<String, dynamic>>> _dataQueries() {
+    Query<Map<String, dynamic>> query = _baseDataQuery();
+    final selectedExperiment = _selectedExperiment();
+    if (supportsExperimentFilter && selectedExperiment != null) {
+      final queries = <Query<Map<String, dynamic>>>[];
+      final experimentId = selectedExperiment.id;
+      if (experimentId != null && experimentId.isNotEmpty) {
+        queries.add(query.where('experimentIds', arrayContains: experimentId));
+      }
+      queries.add(query.where('experiments',
+          arrayContains: selectedExperiment.toSimpleJson()));
+      return queries;
+    }
+    return [query];
+  }
+
+  void _refreshDataStream() {
+    if (collectionName.isEmpty || fsService == null) {
+      stream = Stream.empty();
+      return;
+    }
+    final selectedExperiment = _selectedExperiment();
+    final key =
+        "$collectionName|experiment:${selectedExperiment?.id ?? selectedExperiment?.name ?? 'all'}|${selectedExperiment?.toSimpleJson().toString() ?? ''}";
+    stream = fsService?.watchQueries(key, _dataQueries()) ?? Stream.empty();
   }
 
   Widget yearInput(BuildContext context) {
@@ -100,6 +196,8 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
         setState(() {
           selectedYear = newValue ?? selectedYear;
           updateYearFilter(selectedYear);
+          _clearUnavailableExperimentSelection(experimentsService?.items ?? []);
+          _refreshDataStream();
           Navigator.pop(context);
         });
       },
@@ -199,19 +297,33 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
       stream: experimentStream,
       builder: (context, snapshot) {
         if (!snapshot.hasData) return Container();
-        return DropdownButton<String>(
-          value: selectedExperiments,
+        final experiments = _availableExperiments(snapshot.data!);
+        final selectedValue = experiments
+                .any((experiment) => experiment.id == selectedExperimentId)
+            ? selectedExperimentId
+            : null;
+        return DropdownButton<String?>(
+          key: Key("dataExperimentFilterDropdown"),
+          value: selectedValue,
+          isExpanded: true,
           style: TextStyle(color: Colors.deepPurpleAccent),
-          items: snapshot.data!.map((Experiment e) {
-            return DropdownMenuItem<String>(
-              value: e.name,
-              child: Text(e.name,
-                  style: TextStyle(color: Colors.deepPurpleAccent)),
-            );
-          }).toList(),
+          items: [
+            DropdownMenuItem<String?>(
+                value: null,
+                child: Text("No experiment filter",
+                    style: TextStyle(color: Colors.deepPurpleAccent))),
+            ...experiments.map((Experiment e) {
+              return DropdownMenuItem<String?>(
+                value: e.id,
+                child: Text(e.name,
+                    style: TextStyle(color: Colors.deepPurpleAccent)),
+              );
+            })
+          ],
           onChanged: (String? newValue) {
             setState(() {
-              selectedExperiments = newValue;
+              selectedExperimentId = newValue;
+              _refreshDataStream();
             });
           },
         );

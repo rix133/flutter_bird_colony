@@ -137,6 +137,50 @@ void main() {
     expect(find.byType(ListTile), findsNWidgets(2));
   });
 
+  testWidgets("uses default experiment filter for birds",
+      (WidgetTester tester) async {
+    final localFirestore = FakeFirebaseFirestore();
+    final localSps = MockSharedPreferencesService();
+    final filteredBird = chick.copy();
+    filteredBird.band = 'FF1234';
+    filteredBird.id = 'FF1234';
+    final otherBird = tern.copy();
+    otherBird.band = 'OO1234';
+    otherBird.id = 'OO1234';
+    await localFirestore
+        .collection('Birds')
+        .doc(filteredBird.band)
+        .set(filteredBird.toJson());
+    await localFirestore
+        .collection('Birds')
+        .doc(otherBird.band)
+        .set(otherBird.toJson());
+    final defaultExperiment = Experiment(
+      id: 'default_bird_experiment',
+      name: 'Default Bird Experiment',
+      description: 'Default data filter',
+      last_modified: DateTime.now(),
+      created: DateTime.now(),
+      year: DateTime.now().year,
+      responsible: 'Admin',
+      type: 'bird',
+      birds: [filteredBird.band],
+      measures: [],
+    );
+    await defaultExperiment.save(localFirestore);
+    localSps.defaultDataExperiment = defaultExperiment.id!;
+
+    await tester.pumpWidget(TestApp(
+      firestore: localFirestore,
+      sps: localSps,
+      app: MaterialApp(home: ListBirds(firestore: localFirestore)),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('FF1234'), findsOneWidget);
+    expect(find.text('OO1234'), findsNothing);
+  });
+
   testWidgets("will filter birds by species name", (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();

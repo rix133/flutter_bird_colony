@@ -26,7 +26,8 @@ class SharedPreferencesService extends ChangeNotifier {
 
   final SharedPreferences _sharedPreferences;
 
-  String get settingsType => _sharedPreferences.getString('settingsType') ?? 'default';
+  String get settingsType =>
+      _sharedPreferences.getString('settingsType') ?? 'default';
 
   String get colonyName =>
       _sharedPreferences.getString('colonyName') ?? 'testing';
@@ -55,21 +56,31 @@ class SharedPreferencesService extends ChangeNotifier {
     notifyListeners();
   }
 
-
-  double get desiredAccuracy => _sharedPreferences.getDouble('desiredAccuracy') ?? 4;
+  double get desiredAccuracy =>
+      _sharedPreferences.getDouble('desiredAccuracy') ?? 4;
 
   set desiredAccuracy(double value) {
     _sharedPreferences.setDouble('desiredAccuracy', value);
     notifyListeners();
   }
 
-  int get selectedYear => _sharedPreferences.getInt('selectedYear') ?? DateTime.now().year;
+  int get selectedYear =>
+      _sharedPreferences.getInt('selectedYear') ?? DateTime.now().year;
 
   // this is a workaround for legacy DB
-  String get selectedYearString => selectedYear == 2022 ? 'Nest' : selectedYear.toString();
+  String get selectedYearString =>
+      selectedYear == 2022 ? 'Nest' : selectedYear.toString();
 
   set selectedYear(int value) {
     _sharedPreferences.setInt('selectedYear', value);
+    notifyListeners();
+  }
+
+  String get defaultDataExperiment =>
+      _sharedPreferences.getString('defaultDataExperiment') ?? '';
+
+  set defaultDataExperiment(String value) {
+    _sharedPreferences.setString('defaultDataExperiment', value);
     notifyListeners();
   }
 
@@ -89,8 +100,7 @@ class SharedPreferencesService extends ChangeNotifier {
 
   SpeciesNameLanguage get speciesNameLanguage {
     final storedIndex = _sharedPreferences.getInt('speciesNameLanguage') ?? 0;
-    if (storedIndex < 0 ||
-        storedIndex >= SpeciesNameLanguage.values.length) {
+    if (storedIndex < 0 || storedIndex >= SpeciesNameLanguage.values.length) {
       return SpeciesNameLanguage.english;
     }
     return SpeciesNameLanguage.values[storedIndex];
@@ -115,7 +125,8 @@ class SharedPreferencesService extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool get autoNextBandParent => _sharedPreferences.getBool('autoNextBandParent') ?? false;
+  bool get autoNextBandParent =>
+      _sharedPreferences.getBool('autoNextBandParent') ?? false;
 
   set autoNextBandParent(bool value) {
     _sharedPreferences.setBool('autoNextBandParent', value);
@@ -130,20 +141,24 @@ class SharedPreferencesService extends ChangeNotifier {
   }
 
   List<Measure> get defaultMeasures {
-    List<String> measureJsonList = _sharedPreferences.getStringList('defaultMeasures') ?? [];
-    return measureJsonList.map((e) => Measure.fromFormJson(jsonDecode(e))).toList();
+    List<String> measureJsonList =
+        _sharedPreferences.getStringList('defaultMeasures') ?? [];
+    return measureJsonList
+        .map((e) => Measure.fromFormJson(jsonDecode(e)))
+        .toList();
   }
 
   set defaultMeasures(List<Measure> value) {
-    List<String> measureJsonList = value.map((e) => jsonEncode(e.toFormJson())).toList();
+    List<String> measureJsonList =
+        value.map((e) => jsonEncode(e.toFormJson())).toList();
     _sharedPreferences.setStringList('defaultMeasures', measureJsonList);
     notifyListeners();
   }
 
-
   void setRecentBand(String speciesEng, String value) {
-
-    String bandGroup = speciesList.species.firstWhere((species) => species.english == speciesEng).getBandLetters();
+    String bandGroup = speciesList.species
+        .firstWhere((species) => species.english == speciesEng)
+        .getBandLetters();
     //print('Setting recent band for $speciesEng to $value');
     //print('Band group is $bandGroup');
     // Save the band for the species to SharedPreferences
@@ -152,7 +167,9 @@ class SharedPreferencesService extends ChangeNotifier {
   }
 
   String getRecentMetalBand(String speciesEng) {
-    String bandGroup = speciesList.species.firstWhere((species) => species.english == speciesEng).getBandLetters();
+    String bandGroup = speciesList.species
+        .firstWhere((species) => species.english == speciesEng)
+        .getBandLetters();
 
     // Retrieve the band for the species from SharedPreferences
     return _sharedPreferences.getString(bandGroup) ?? bandGroup;
@@ -165,7 +182,8 @@ class SharedPreferencesService extends ChangeNotifier {
     notifyListeners();
   }
 
-  String get defaultSpecies => _sharedPreferences.getString('defaultSpecies') ?? 'Common Gull';
+  String get defaultSpecies =>
+      _sharedPreferences.getString('defaultSpecies') ?? 'Common Gull';
 
   set defaultSpecies(String value) {
     _sharedPreferences.setString('defaultSpecies', value);
@@ -183,14 +201,15 @@ class SharedPreferencesService extends ChangeNotifier {
     }
   }
 
-
   set speciesList(LocalSpeciesList value) {
-    List<String> speciesJsonList = value.species.map((e) => jsonEncode(e.toJson())).toList();
+    List<String> speciesJsonList =
+        value.species.map((e) => jsonEncode(e.toJson())).toList();
     _sharedPreferences.setStringList('defaultSpeciesList', speciesJsonList);
     notifyListeners();
   }
 
-  bool get biasedRepeatedMeasures => _sharedPreferences.getBool('biasedRepeatedMeasures') ?? false;
+  bool get biasedRepeatedMeasures =>
+      _sharedPreferences.getBool('biasedRepeatedMeasures') ?? false;
 
   set biasedRepeatedMeasures(bool value) {
     _sharedPreferences.setBool('biasedRepeatedMeasures', value);
@@ -248,6 +267,7 @@ class SharedPreferencesService extends ChangeNotifier {
     defaultLocation = defaultSettings.getCameraPosition();
     defaultMeasures = defaultSettings.measures;
     markerColorGroups = defaultSettings.markerColorGroups;
+    defaultDataExperiment = defaultSettings.defaultDataExperiment ?? '';
     notifyListeners();
   }
 }

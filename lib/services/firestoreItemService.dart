@@ -15,8 +15,10 @@ abstract class FirestoreItemService<T extends FirestoreItem>
   FirestoreItemService(this._firestore);
 
   StreamController<List<T>>? _controller;
-  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _subscription;
+  final List<StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>
+      _subscriptions = [];
   String? currentCollectionName;
+  String? currentQueryKey;
 
   List<String> multiCollection = [];
 
@@ -35,25 +37,67 @@ abstract class FirestoreItemService<T extends FirestoreItem>
   T convertToFirestoreItem(DocumentSnapshot<Map<String, dynamic>> doc);
 
   Stream<List<T>> watchItems(String collectionName) {
-    if (_controller == null || currentCollectionName != collectionName) {
-      currentCollectionName = collectionName;
+    currentCollectionName = collectionName;
+    return watchQuery(collectionName, _collection());
+  }
+
+  Stream<List<T>> watchQuery(
+      String queryKey, Query<Map<String, dynamic>> query) {
+    return watchQueries(queryKey, [query]);
+  }
+
+  Stream<List<T>> watchQueries(
+      String queryKey, List<Query<Map<String, dynamic>>> queries) {
+    if (_controller == null || currentQueryKey != queryKey) {
+      currentQueryKey = queryKey;
+      _latestSnapshot = null;
+      for (final subscription in _subscriptions) {
+        subscription.cancel();
+      }
+      _subscriptions.clear();
+      _controller?.close();
       _controller = StreamController<List<T>>.broadcast();
-      _subscription = _collection().snapshots().listen((snapshot) {
-        _latestSnapshot =
-            snapshot.docs.map((doc) => convertToFirestoreItem(doc)).toList();
-        if (!_controller!.isClosed) {
-          _controller!.sink.add(_latestSnapshot!);
+      final controller = _controller!;
+      final queryItems = List<List<T>>.generate(queries.length, (_) => []);
+
+      void emitLatestSnapshot() {
+        final byId = <String, T>{};
+        final withoutId = <T>[];
+        for (final items in queryItems) {
+          for (final item in items) {
+            final id = item.id;
+            if (id == null || id.isEmpty) {
+              withoutId.add(item);
+            } else {
+              byId[id] = item;
+            }
+          }
         }
-      });
+        _latestSnapshot = [...byId.values, ...withoutId];
+        if (!controller.isClosed) {
+          controller.sink.add(_latestSnapshot!);
+        }
+      }
+
+      for (int i = 0; i < queries.length; i++) {
+        final index = i;
+        _subscriptions.add(queries[index].snapshots().listen((snapshot) {
+          queryItems[index] =
+              snapshot.docs.map((doc) => convertToFirestoreItem(doc)).toList();
+          emitLatestSnapshot();
+        }));
+      }
     }
     return _controller!.stream;
   }
 
   @override
   void dispose() {
-    _subscription?.cancel();
+    for (final subscription in _subscriptions) {
+      subscription.cancel();
+    }
+    _subscriptions.clear();
     _controller?.close();
     super.dispose();
   }
-
 }

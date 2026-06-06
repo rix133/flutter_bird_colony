@@ -19,7 +19,7 @@ import 'package:provider/provider.dart';
 import '../markerColorGroup.dart';
 import 'egg.dart';
 
-class Bird extends ExperimentedItem implements FirestoreItem{
+class Bird extends ExperimentedItem implements FirestoreItem {
   String? id;
   String? nest;
   int? nest_year;
@@ -43,8 +43,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   @override
   String get itemName => "bird";
 
-  String get current_nest =>
-      nest ?? "";
+  String get current_nest => nest ?? "";
 
   @override
   DateTime get created_date => ringed_date;
@@ -71,27 +70,26 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     );
   }
 
-  Bird({
-    this.id,
-    required this.ringed_date,
-    required this.band,
-    required this.ringed_as_chick,
-    this.color_band,
-    this.responsible,
-    this.nest_year,
-    this.species,
-    this.last_modified,
-    this.age,
-    this.nest,
-    this.egg,
-    this.rebanded_from,
-    this.rebanded_to,
-    List<Experiment>? experiments,
-    required List<Measure> measures
-  }) : super(experiments: experiments, measures: measures) {
+  Bird(
+      {this.id,
+      required this.ringed_date,
+      required this.band,
+      required this.ringed_as_chick,
+      this.color_band,
+      this.responsible,
+      this.nest_year,
+      this.species,
+      this.last_modified,
+      this.age,
+      this.nest,
+      this.egg,
+      this.rebanded_from,
+      this.rebanded_to,
+      List<Experiment>? experiments,
+      required List<Measure> measures})
+      : super(experiments: experiments, measures: measures) {
     updateMeasuresFromExperiments(isChick() ? "chick" : "parent");
   }
-  
 
   String getType() {
     return isChick() ? "chick" : "parent";
@@ -225,7 +223,6 @@ class Bird extends ExperimentedItem implements FirestoreItem{
     }));
   }
 
-
   bool people(String range, String me) {
     if (range == "Everybody") {
       return (true);
@@ -238,7 +235,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
 
   @override
   factory Bird.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
-    if(snapshot.data() == null) {
+    if (snapshot.data() == null) {
       throw Exception("Document does not exist");
     }
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
@@ -264,7 +261,8 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       rebanded_to: json['rebanded_to'] ?? null,
       experiments: eitem.experiments,
       // provide a default value if 'experiments' does not exist
-      measures: eitem.measures, // provide a default value if 'measures' does not exist
+      measures: eitem
+          .measures, // provide a default value if 'measures' does not exist
     );
     //add measures from experiments to the bird
     nbird.updateMeasuresFromExperiments(nbird.isChick() ? "chick" : "parent");
@@ -335,7 +333,10 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       'species': species,
       'nest': nest,
       'nest_year': nest_year,
-      'experiments': experiments?.map((Experiment e) => e.toSimpleJson()).toList(),
+      'experiments':
+          experiments?.map((Experiment e) => e.toSimpleJson()).toList(),
+      'experimentIds':
+          experiments?.map((Experiment e) => e.id).whereType<String>().toList(),
       'last_modified': last_modified ?? DateTime.now(),
       'age': age,
       'egg': egg,
@@ -371,10 +372,10 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       }
     }
     return UpdateResult.saveOK(item: this);
-
   }
 
-  Future<UpdateResult> _saveBirdToFirestore(CollectionReference birds, CollectionReference? nestsItemCollection) async {
+  Future<UpdateResult> _saveBirdToFirestore(CollectionReference birds,
+      CollectionReference? nestsItemCollection) async {
     //remove empty measures
     measures.removeWhere((element) => element.value.isEmpty);
     // the modified date is assigned at write time
@@ -403,13 +404,20 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       }
     }
     last_modified = DateTime.now();
-    return(birds.doc(band).set(toJson()).then((value) => _saveToChangelog(birds)).then((value) => UpdateResult.saveOK(item: this))
+    return (birds
+        .doc(band)
+        .set(toJson())
+        .then((value) => _saveToChangelog(birds))
+        .then((value) => UpdateResult.saveOK(item: this))
         .catchError((error) => UpdateResult.error(message: error.toString())));
-
   }
 
   Future<void> _saveToChangelog(CollectionReference birds) async {
-    await birds.doc(band).collection("changelog").doc(last_modified.toString()).set(toJson());
+    await birds
+        .doc(band)
+        .collection("changelog")
+        .doc(last_modified.toString())
+        .set(toJson());
   }
 
   Future<UpdateResult> updateNest(CollectionReference nestsItemCollection,
@@ -430,7 +438,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       {bool delete = false}) async {
     try {
       Nest? nestObj = await nestsItemCollection.doc(nest).get().then((value) {
-        if(!value.exists) {
+        if (!value.exists) {
           return null;
         }
         return Nest.fromDocSnapshot(value);
@@ -439,24 +447,31 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         return UpdateResult.error(message: "Nest: $nest not found");
       }
       //search and replace the nest parents with the new one by band if exists, then by color band
-      if(nestObj.parents != null) {
-        bool hasBand = nestObj.parents!.any((element) => element.band == band && band.isNotEmpty);
-        bool hasColorBand = nestObj.parents!.any((element) => element.color_band == color_band && (color_band?.isNotEmpty ?? false));
-        if(hasBand || hasColorBand) {
-          nestObj.parents!.removeWhere((element) => (element.band == band && band.isNotEmpty) || (element.color_band == color_band && (color_band?.isNotEmpty ?? false)));
+      if (nestObj.parents != null) {
+        bool hasBand = nestObj.parents!
+            .any((element) => element.band == band && band.isNotEmpty);
+        bool hasColorBand = nestObj.parents!.any((element) =>
+            element.color_band == color_band &&
+            (color_band?.isNotEmpty ?? false));
+        if (hasBand || hasColorBand) {
+          nestObj.parents!.removeWhere((element) =>
+              (element.band == band && band.isNotEmpty) ||
+              (element.color_band == color_band &&
+                  (color_band?.isNotEmpty ?? false)));
         }
         //add the new parent
-        if(delete == false) {
+        if (delete == false) {
           nestObj.parents!.add(this);
         }
       } else {
-        if(delete == false) {
+        if (delete == false) {
           nestObj.parents = [this];
         }
       }
       // update the nest with the new parents
-      return(await nestsItemCollection.doc(nest).update({'parents': nestObj.parents!.map((e) => e.toSimpleJson()).toList()}).then((value) => UpdateResult.saveOK(item: this))
-      );
+      return (await nestsItemCollection.doc(nest).update({
+        'parents': nestObj.parents!.map((e) => e.toSimpleJson()).toList()
+      }).then((value) => UpdateResult.saveOK(item: this)));
     } catch (error) {
       return UpdateResult.error(message: "Error updating nest parents");
     }
@@ -504,7 +519,9 @@ class Bird extends ExperimentedItem implements FirestoreItem{
   }
 
   int ageInYears() {
-    return ringed_as_chick ? (DateTime.now().year - ringed_date.year) : int.tryParse(age ?? "") ?? 0;
+    return ringed_as_chick
+        ? (DateTime.now().year - ringed_date.year)
+        : int.tryParse(age ?? "") ?? 0;
   }
 
   int ageInDays() {
@@ -512,7 +529,6 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         ? (DateTime.now().difference(ringed_date).inDays)
         : 0;
   }
-
 
   @override
   Future<UpdateResult> save(FirebaseFirestore firestore,
@@ -538,8 +554,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         return UpdateResult.error(
             message: "Can't save bird without metal band");
       }
-      CollectionReference birds =
-          firestore.collection("Birds");
+      CollectionReference birds = firestore.collection("Birds");
 
       //allow silent overwrites if the bird is saved before
       // and the band and nest have not changed
@@ -634,7 +649,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
 
     CollectionReference items = firestore.collection("Birds");
     //check if the item exists if misssing return early
-    UpdateResult ur = await items.doc(id).get().then((doc)  {
+    UpdateResult ur = await items.doc(id).get().then((doc) {
       if (!doc.exists) {
         return UpdateResult.deleteOK(item: this);
       }
@@ -688,9 +703,14 @@ class Bird extends ExperimentedItem implements FirestoreItem{
       IntCellValue(ageInYears()),
       TextCellValue(responsible ?? ""),
       TextCellValue(species ?? ""),
-      DateCellValue(year: ringed_date.year, month: ringed_date.month, day: ringed_date.day),
+      DateCellValue(
+          year: ringed_date.year,
+          month: ringed_date.month,
+          day: ringed_date.day),
       BoolCellValue(ringed_as_chick),
-      last_modified != null ? DateTimeCellValue.fromDateTime(last_modified!) : TextCellValue(""),
+      last_modified != null
+          ? DateTimeCellValue.fromDateTime(last_modified!)
+          : TextCellValue(""),
       TextCellValue(egg ?? ""),
       TextCellValue(rebanded_from ?? ""),
       TextCellValue(rebanded_to ?? ""),
@@ -701,6 +721,7 @@ class Bird extends ExperimentedItem implements FirestoreItem{
 
     return rows;
   }
+
   factory Bird.fromJson(Map<String, dynamic> json) {
     return Bird(
         ringed_date: (json['ringed_date'] as Timestamp).toDate(),
@@ -709,11 +730,9 @@ class Bird extends ExperimentedItem implements FirestoreItem{
         rebanded_from: json['rebanded_from'],
         rebanded_to: json['rebanded_to'],
         measures: (json['measures'] as List<dynamic>?)
-            ?.map((e) => Measure.fromJson(e))
-            .toList() ??
+                ?.map((e) => Measure.fromJson(e))
+                .toList() ??
             [],
         color_band: json['color_band']);
   }
-
 }
-

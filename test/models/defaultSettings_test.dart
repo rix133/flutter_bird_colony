@@ -27,6 +27,7 @@ void main() {
         measures: [],
         markerColorGroups: [],
         defaultSpecies: Species(english: 'Test', latinCode: 'T', local: 'Test'),
+        defaultDataExperiment: 'experiment-1',
       );
 
       await settings.save(mockFirestore, type: 'custom');
@@ -44,6 +45,7 @@ void main() {
       expect(savedSettings.measures, []);
       expect(savedSettings.defaultSpecies.english, 'Test');
       expect(savedSettings.markerColorGroups, []);
+      expect(savedSettings.defaultDataExperiment, 'experiment-1');
     });
 
     test('saves and reads instance to firestore with marker colors', () async {
@@ -92,6 +94,7 @@ void main() {
         measures: [],
         defaultSpecies: Species(english: 'Test', latinCode: 'T', local: 'Test'),
         markerColorGroups: [],
+        defaultDataExperiment: 'experiment-1',
       );
 
       final copy = settings.copy();
@@ -106,6 +109,7 @@ void main() {
           copy.biasedRepeatedMeasurements, settings.biasedRepeatedMeasurements);
       expect(copy.defaultSpecies.english, settings.defaultSpecies.english);
       expect(copy.markerColorGroups, isEmpty);
+      expect(copy.defaultDataExperiment, 'experiment-1');
     });
 
     test('copy should return a new instance with the same list items', () {

@@ -6,20 +6,23 @@ import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mockito/mockito.dart';
 
-class MockSharedPreferencesService extends Mock implements SharedPreferencesService {
+class MockSharedPreferencesService extends Mock
+    implements SharedPreferencesService {
   bool isAdmin = false;
   bool isLoggedIn = false;
   bool autoNextBand = false;
   bool autoNextBandParent = false;
   bool showAppBar = true;
   SpeciesNameLanguage speciesNameLanguage = SpeciesNameLanguage.english;
-  LocalSpeciesList speciesList = LocalSpeciesList.fromStringList(["Common gull","Arctic tern"]);
+  LocalSpeciesList speciesList =
+      LocalSpeciesList.fromStringList(["Common gull", "Arctic tern"]);
   List<Measure> defaultMeasures = [Measure.note()];
   bool biasedRepeatedMeasures = false;
   MapType mapType = MapType.satellite;
   String defaultSpecies = "Common Gull";
   String settingsType = "default";
   int selectedYear = DateTime.now().year;
+  String defaultDataExperiment = "";
   List<MarkerColorGroup> markerColorGroups = [];
   double desiredAccuracy = 4.0;
 
@@ -56,6 +59,7 @@ class MockSharedPreferencesService extends Mock implements SharedPreferencesServ
     defaultLocation = defaultSettings.getCameraPosition();
     defaultMeasures = defaultSettings.measures;
     markerColorGroups = defaultSettings.markerColorGroups;
+    defaultDataExperiment = defaultSettings.defaultDataExperiment ?? '';
   }
 
   // Add other properties and methods as needed

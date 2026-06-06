@@ -53,6 +53,9 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
   final Map<String, List<Egg>> _nestItemsCache = {};
   final Map<String, Future<List<Egg>>> _nestItemsFutures = {};
 
+  @override
+  String? get experimentFilterType => "nest";
+
   String _nestItemsCacheKey(Nest nest) {
     return "${nest.discover_date.year}/${nest.id ?? nest.name}";
   }
@@ -98,7 +101,11 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
           onLongPress: () => addFilteredNestsToExperiment(context),
           icon: Icon(Icons.map),
           label: Padding(
-              child: Text("Show nests", style: TextStyle(fontSize: 18)),
+              child: Column(children: [
+                Text("Show nests", style: TextStyle(fontSize: 18)),
+                Text("(long press for experiments)",
+                    style: TextStyle(fontSize: 10))
+              ]),
               padding: EdgeInsets.all(12)),
           style: ButtonStyle(
               backgroundColor: WidgetStateProperty.all(Colors.grey))),
@@ -461,9 +468,6 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
   updateYearFilter(int value) {
     collectionName = yearToNestCollectionName(value);
     _clearNestItemFilterCache();
-    setState(() {
-      stream = fsService?.watchItems(collectionName) ?? Stream.empty();
-    });
   }
 
   void clearFilters() {

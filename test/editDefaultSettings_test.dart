@@ -2,6 +2,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
 import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
+import 'package:flutter_bird_colony/models/firestore/experiment.dart';
 import 'package:flutter_bird_colony/screens/listMeasures.dart';
 import 'package:flutter_bird_colony/screens/settings/editDefaultSettings.dart';
 import 'package:flutter_bird_colony/screens/settings/listMarkerColorGroups.dart';
@@ -156,6 +157,54 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(sharedPreferencesService.desiredAccuracy, 5.2);
+  });
+
+  testWidgets('saves selected default data experiment',
+      (WidgetTester tester) async {
+    final localFirestore = FakeFirebaseFirestore();
+    final localSps = MockSharedPreferencesService();
+    final defaultExperiment = Experiment(
+      id: 'default_data_experiment',
+      name: 'Default Data Experiment',
+      description: 'Default data filter',
+      last_modified: DateTime.now(),
+      created: DateTime.now(),
+      year: DateTime.now().year,
+      responsible: 'Admin',
+      type: 'nest',
+      nests: [],
+      measures: [],
+    );
+    await defaultExperiment.save(localFirestore);
+
+    await tester.pumpWidget(ChangeNotifierProvider<SharedPreferencesService>(
+        create: (_) => localSps,
+        child: MaterialApp(
+            home: EditDefaultSettings(
+                firestore: localFirestore, auth: authService),
+            routes: {'/settings': (context) => Container()})));
+    await tester.pumpAndSettle();
+
+    final dropdown = find.byKey(Key('defaultDataExperimentDropdown'));
+    await tester.ensureVisible(dropdown);
+    await tester.tap(dropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(
+        find.text('Default Data Experiment (${DateTime.now().year})').last);
+    await tester.pumpAndSettle();
+
+    final saveButton = find.byKey(Key("saveButton"));
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    final savedSettings = await localFirestore
+        .collection('settings')
+        .doc('default')
+        .get()
+        .then((value) => DefaultSettings.fromDocSnapshot(value));
+    expect(savedSettings.defaultDataExperiment, defaultExperiment.id);
+    expect(localSps.defaultDataExperiment, defaultExperiment.id);
   });
 
   testWidgets("saves default settings to firestore",

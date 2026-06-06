@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/firestore/bird.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
@@ -11,16 +11,23 @@ import '../../models/firestoreItemMixin.dart';
 import '../../services/birdsService.dart';
 
 class ListBirds extends ListScreenWidget<Bird> {
-  const ListBirds({Key? key, required FirebaseFirestore firestore})  : super(key: key, title: 'birds', icon: Icons.nat_sharp, firestore: firestore);
+  const ListBirds({Key? key, required FirebaseFirestore firestore})
+      : super(
+            key: key,
+            title: 'birds',
+            icon: Icons.nat_sharp,
+            firestore: firestore);
 
   @override
   ListScreenWidgetState<Bird> createState() => _ListBirdsState();
 }
 
 class _ListBirdsState extends ListScreenWidgetState<Bird> {
-
   String? _selectedSpecies;
   int? _selectedAge;
+
+  @override
+  String? get experimentFilterType => "bird";
 
   @override
   void initState() {
@@ -29,8 +36,7 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
     super.initState();
   }
 
-
-    @override
+  @override
   void dispose() {
     super.dispose();
   }
@@ -47,60 +53,58 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
               child: Text("Add adult", style: TextStyle(fontSize: 18)),
               padding: EdgeInsets.all(12)),
           style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.all(Colors.grey)
-          )
-      ),
+              backgroundColor: WidgetStateProperty.all(Colors.grey))),
     );
   }
 
-
-
-  void openFilterDialog(BuildContext context){
-     showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              backgroundColor: Colors.black87,
-              title: Text("Filter"),
-              content: SingleChildScrollView(child:Column(
-                children: [
-                yearInput(context),
-                  experimentInput(context),
-                  SpeciesRawAutocomplete(
-                      returnFun: (Species s) {
-                        _selectedSpecies = s.english;
-                        setState(() {});
-                      },
-                      species: Species(english: _selectedSpecies?? "", local: '', latinCode: ''),
-                      speciesList: sps?.speciesList ?? LocalSpeciesList(),
-                      borderColor: Colors.white38,
-                      bgColor: Colors.amberAccent,
-                      labelColor: Colors.grey),
-                 ])),
-              actions: [
-                ElevatedButton(onPressed:
-                  (){
+  void openFilterDialog(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Colors.black87,
+            title: Text("Filter"),
+            content: SingleChildScrollView(
+                child: Column(children: [
+              yearInput(context),
+              experimentInput(context),
+              SpeciesRawAutocomplete(
+                  returnFun: (Species s) {
+                    _selectedSpecies = s.english;
+                    setState(() {});
+                  },
+                  species: Species(
+                      english: _selectedSpecies ?? "",
+                      local: '',
+                      latinCode: ''),
+                  speciesList: sps?.speciesList ?? LocalSpeciesList(),
+                  borderColor: Colors.white38,
+                  bgColor: Colors.amberAccent,
+                  labelColor: Colors.grey),
+            ])),
+            actions: [
+              ElevatedButton(
+                  onPressed: () {
                     Navigator.pop(context);
                     clearFilters();
                   },
-                    child: Text("Clear all")),
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text("Close"))
-              ],
-            );
-          });
+                  child: Text("Clear all")),
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text("Close"))
+            ],
+          );
+        });
   }
 
   bool filterByYear(Bird e) {
     return e.nest_year == selectedYear || e.ringed_date.year == selectedYear;
   }
+
   updateYearFilter(int value) {
-    setState(() {
-      selectedYear = value;
-    });
+    selectedYear = value;
   }
 
   @override
@@ -114,15 +118,20 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
 
   bool filterByText(Bird e) {
     return e.band.toLowerCase().contains(searchController.text.toLowerCase()) ||
-        (e.color_band != null ? e.color_band!.toLowerCase().contains(searchController.text.toLowerCase()) : false);
+        (e.color_band != null
+            ? e.color_band!
+                .toLowerCase()
+                .contains(searchController.text.toLowerCase())
+            : false);
   }
 
   bool filterBySpecies(Bird e) {
-    if(_selectedSpecies == null) return true;
+    if (_selectedSpecies == null) return true;
     return e.species == _selectedSpecies;
   }
+
   bool filterByAge(Bird e) {
-    if(_selectedAge == null) return true;
+    if (_selectedAge == null) return true;
     return e.ageInYears() == _selectedAge;
   }
 
@@ -142,6 +151,4 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
 
     return birds;
   }
-
 }
-

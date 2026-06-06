@@ -450,8 +450,12 @@ class Experiment implements FirestoreItem {
         if (!delete) {
           n.experiments?.add(this);
         }
+        final updatedExperiments = n.experiments ?? [];
         await doc.update({
-          'experiments': n.experiments?.map((e) => e.toSimpleJson()).toList()
+          'experiments':
+              updatedExperiments.map((e) => e.toSimpleJson()).toList(),
+          'experimentIds':
+              updatedExperiments.map((e) => e.id).whereType<String>().toList()
         });
       }
     }
@@ -476,8 +480,12 @@ class Experiment implements FirestoreItem {
         if (!delete) {
           b.experiments?.add(this);
         }
+        final updatedExperiments = b.experiments ?? [];
         await doc.update({
-          'experiments': b.experiments?.map((e) => e.toSimpleJson()).toList()
+          'experiments':
+              updatedExperiments.map((e) => e.toSimpleJson()).toList(),
+          'experimentIds':
+              updatedExperiments.map((e) => e.id).whereType<String>().toList()
         });
       }
     }

@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/listScreenWidget.dart';
 import 'package:flutter_bird_colony/models/firestore/experiment.dart';
@@ -9,7 +9,12 @@ import '../../models/firestore/firestoreItem.dart';
 import '../../services/experimentsService.dart';
 
 class ListExperiments extends ListScreenWidget<Experiment> {
-  const ListExperiments({Key? key, required FirebaseFirestore firestore}) : super(key: key, title: 'experiments with nests and eggs', icon: Icons.science, firestore: firestore);
+  const ListExperiments({Key? key, required FirebaseFirestore firestore})
+      : super(
+            key: key,
+            title: 'experiments with nests and eggs',
+            icon: Icons.science,
+            firestore: firestore);
 
   @override
   ListScreenWidgetState<Experiment> createState() => _ListExperimentsState();
@@ -17,6 +22,9 @@ class ListExperiments extends ListScreenWidget<Experiment> {
 
 class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
   CollectionReference? collection;
+
+  @override
+  bool get supportsExperimentFilter => false;
 
   @override
   void dispose() {
@@ -38,11 +46,11 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
             Navigator.pushNamed(context, '/editExperiment');
           },
           icon: Icon(Icons.add),
-          label: Padding(child:Text("Add Experiment", style: TextStyle(fontSize: 18)), padding: EdgeInsets.all(12)),
+          label: Padding(
+              child: Text("Add Experiment", style: TextStyle(fontSize: 18)),
+              padding: EdgeInsets.all(12)),
           style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.all(Colors.grey)
-          )
-      ),
+              backgroundColor: WidgetStateProperty.all(Colors.grey))),
     );
   }
 
@@ -50,32 +58,31 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
   Future<void> executeDownload() {
     //get how many different year experiments are requested
     Set<int?> totalYears = items.map((e) => (e as Experiment).year).toSet();
-      DateTime? start = totalYears.isNotEmpty ? DateTime(totalYears.first!) : null;
-      return (FSItemMixin()
-          .downloadExcel(items, "experiments", widget.firestore, start: start));
-
+    DateTime? start =
+        totalYears.isNotEmpty ? DateTime(totalYears.first!) : null;
+    return (FSItemMixin()
+        .downloadExcel(items, "experiments", widget.firestore, start: start));
   }
 
   bool filterByText(Experiment e) {
     return e.name.toLowerCase().contains(searchController.text.toLowerCase()) ||
         e.measures.any((element) =>
-        !element.isNumber &&
+            !element.isNumber &&
             element.value.toLowerCase().contains(
                 searchController.text.toLowerCase())) || // search note texts
         (e.nests != null
-            ? e.nests!.any((element) => element.toLowerCase()
-            .contains(searchController.text.toLowerCase()))
+            ? e.nests!.any((element) => element
+                .toLowerCase()
+                .contains(searchController.text.toLowerCase()))
             : false);
   }
-
 
   bool filterByYear(Experiment e) {
     return e.year == selectedYear;
   }
+
   updateYearFilter(int value) {
-    setState(() {
-      selectedYear = value;
-    });
+    selectedYear = value;
   }
 
   getFilteredItems(List<FirestoreItem> items) {
@@ -85,17 +92,17 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
     return exps;
   }
 
-  void openFilterDialog(BuildContext context){
+  void openFilterDialog(BuildContext context) {
     showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             backgroundColor: Colors.black87,
             title: Text("Filter"),
-            content: SingleChildScrollView(child:Column(
-                children: [
-                  yearInput(context),
-                ])),
+            content: SingleChildScrollView(
+                child: Column(children: [
+              yearInput(context),
+            ])),
             actions: [
               ElevatedButton(
                   onPressed: () {
@@ -106,6 +113,4 @@ class _ListExperimentsState extends ListScreenWidgetState<Experiment> {
           );
         });
   }
-
-
 }

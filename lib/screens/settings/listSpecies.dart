@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
@@ -10,15 +10,22 @@ import '../../models/firestore/firestoreItem.dart';
 import '../../services/speciesService.dart';
 
 class ListSpecies extends ListScreenWidget<Species> {
-  const ListSpecies({Key? key, required FirebaseFirestore firestore})  : super(key: key, title: 'species', icon: Icons.nat_rounded, firestore: firestore);
+  const ListSpecies({Key? key, required FirebaseFirestore firestore})
+      : super(
+            key: key,
+            title: 'species',
+            icon: Icons.nat_rounded,
+            firestore: firestore);
 
   @override
   ListScreenWidgetState<Species> createState() => _ListSpeciesState();
 }
 
 class _ListSpeciesState extends ListScreenWidgetState<Species> {
-
   List<Species> species = [];
+
+  @override
+  bool get supportsExperimentFilter => false;
 
   @override
   void initState() {
@@ -37,7 +44,6 @@ class _ListSpeciesState extends ListScreenWidgetState<Species> {
   void dispose() {
     super.dispose();
   }
-
 
   getAddButton(BuildContext context) {
     return Padding(
@@ -62,14 +68,15 @@ class _ListSpeciesState extends ListScreenWidgetState<Species> {
 
   @override
   bool filterByText(Species item) {
-    if(searchController.text.isEmpty) return true;
-    return ((item.latin ?? "").toLowerCase().contains(searchController.text.toLowerCase()) ||
-        item.english.toLowerCase().contains(searchController.text.toLowerCase()) ||
-        item.local.toLowerCase().contains(searchController.text.toLowerCase())
-    );
+    if (searchController.text.isEmpty) return true;
+    return ((item.latin ?? "")
+            .toLowerCase()
+            .contains(searchController.text.toLowerCase()) ||
+        item.english
+            .toLowerCase()
+            .contains(searchController.text.toLowerCase()) ||
+        item.local.toLowerCase().contains(searchController.text.toLowerCase()));
   }
-
-
 
   @override
   void openFilterDialog(BuildContext context) {
@@ -102,7 +109,4 @@ class _ListSpeciesState extends ListScreenWidgetState<Species> {
     species = species.where(filterByText).toList();
     return species;
   }
-
-
 }
-
