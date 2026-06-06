@@ -133,7 +133,7 @@ class _GalleryViewerScreenState extends State<GalleryViewerScreen> {
       if (response.statusCode == 200) {
         final blob = html.Blob([response.bodyBytes]);
         final blobUrl = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: blobUrl)
+        html.AnchorElement(href: blobUrl)
           ..setAttribute('download', filename)
           ..click();
         html.Url.revokeObjectUrl(blobUrl);

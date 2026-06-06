@@ -1,5 +1,5 @@
 import 'package:firebase_core/firebase_core.dart'
-    show Firebase, FirebaseOptions, FirebaseApp, defaultFirebaseAppName;
+    show Firebase, FirebaseOptions, FirebaseApp;
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,7 +31,8 @@ class FirebaseOptionsSelector {
   static Future<String> getCurrentSelection() async {
     final prefs = await SharedPreferences.getInstance();
     final value = prefs.getString(_storageKey);
-    return availableOptions.keys.firstWhere((element) => element == value, orElse: () => 'testing');
+    return availableOptions.keys
+        .firstWhere((element) => element == value, orElse: () => 'testing');
   }
 
   /// Shortcut to use [FirebaseOptionsBanner] as the builder for [MaterialApp]
@@ -57,6 +58,6 @@ class FirebaseOptionsBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      return child;
+    return child;
   }
 }

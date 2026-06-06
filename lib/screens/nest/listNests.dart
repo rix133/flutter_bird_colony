@@ -160,24 +160,27 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
                     width: double.maxFinite,
                     child: experiments.isEmpty
                         ? Text("No nest experiments for $selectedYear.")
-                        : ListView(
-                            shrinkWrap: true,
-                            children: experiments
-                                .map((experiment) => RadioListTile<Experiment>(
-                                      key: Key(
-                                          "addFilteredNests_${experiment.id ?? experiment.name}"),
-                                      title: Text(experiment.name),
-                                      subtitle: Text(
-                                          "${nestIds.length} filtered nests selected"),
-                                      value: experiment,
-                                      groupValue: selectedExperiment,
-                                      onChanged: (Experiment? value) {
-                                        setDialogState(() {
-                                          selectedExperiment = value;
-                                        });
-                                      },
-                                    ))
-                                .toList(),
+                        : RadioGroup<Experiment>(
+                            groupValue: selectedExperiment,
+                            onChanged: (Experiment? value) {
+                              setDialogState(() {
+                                selectedExperiment = value;
+                              });
+                            },
+                            child: ListView(
+                              shrinkWrap: true,
+                              children: experiments
+                                  .map(
+                                      (experiment) => RadioListTile<Experiment>(
+                                            key: Key(
+                                                "addFilteredNests_${experiment.id ?? experiment.name}"),
+                                            title: Text(experiment.name),
+                                            subtitle: Text(
+                                                "${nestIds.length} filtered nests selected"),
+                                            value: experiment,
+                                          ))
+                                  .toList(),
+                            ),
                           ),
                   ),
                   actions: [

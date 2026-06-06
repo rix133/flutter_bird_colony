@@ -108,7 +108,6 @@ class DefaultSettings implements FirestoreItem {
     defaultCameraBearing = cameraPosition.bearing;
   }
 
-  @override
   factory DefaultSettings.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     Species? defaultSpecies = json['defaultSpecies'] == null

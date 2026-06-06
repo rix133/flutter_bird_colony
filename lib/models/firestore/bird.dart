@@ -233,7 +233,6 @@ class Bird extends ExperimentedItem implements FirestoreItem {
     return false;
   }
 
-  @override
   factory Bird.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     if (snapshot.data() == null) {
       throw Exception("Document does not exist");

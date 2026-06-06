@@ -24,15 +24,16 @@ class Egg extends ExperimentedItem implements FirestoreItem {
   DateTime? last_modified;
   List<Object>? changelogs;
 
-  Egg({this.id,
-    required this.discover_date,
-    required this.responsible,
-    required this.status,
+  Egg(
+      {this.id,
+      required this.discover_date,
+      required this.responsible,
+      required this.status,
       this.last_modified,
       this.ring,
-    List<Experiment>? experiments,
-    required List<Measure> measures
-  }) : super(experiments: experiments, measures: measures) {
+      List<Experiment>? experiments,
+      required List<Measure> measures})
+      : super(experiments: experiments, measures: measures) {
     updateMeasuresFromExperiments("egg");
   }
 
@@ -97,7 +98,6 @@ class Egg extends ExperimentedItem implements FirestoreItem {
 
   bool get hatched => status.hasHatched();
 
-  @override
   factory Egg.fromDocSnapshot(DocumentSnapshot<Object?> snapshot) {
     Map<String, dynamic> json = snapshot.data() as Map<String, dynamic>;
     ExperimentedItem eitem = ExperimentedItem.fromJson(json);
@@ -106,31 +106,48 @@ class Egg extends ExperimentedItem implements FirestoreItem {
         discover_date: (json['discover_date'] as Timestamp).toDate(),
         responsible: json["responsible"],
         ring: json['ring'],
-        last_modified: (json['last_modified'] as Timestamp? ?? Timestamp.fromMillisecondsSinceEpoch(0)).toDate(),
+        last_modified: (json['last_modified'] as Timestamp? ??
+                Timestamp.fromMillisecondsSinceEpoch(0))
+            .toDate(),
         status: EggStatus(json['status'] ?? "intact"),
         experiments: eitem.experiments,
-        measures: eitem.measures
-    );
+        measures: eitem.measures);
     it.updateMeasuresFromExperiments("egg");
     return it;
   }
 
   @override
-  Future <UpdateResult> save(FirebaseFirestore firestore, {CollectionReference<Object?>? otherItems = null, bool allowOverwrite = false, type = "default"}) async {
+  Future<UpdateResult> save(FirebaseFirestore firestore,
+      {CollectionReference<Object?>? otherItems = null,
+      bool allowOverwrite = false,
+      type = "default"}) async {
     String? nestId = getNest();
-    if(nestId == null){
+    if (nestId == null) {
       return UpdateResult.error(message: "No nest found");
-    } else{
+    } else {
       last_modified = DateTime.now();
       //remove empty measures
       measures.removeWhere((element) => element.value.isEmpty);
 
-      CollectionReference<Object?> eggCollection =  firestore.collection(yearToNestCollectionName(discover_date.year)).doc(nestId).collection("egg");
-      if(id == null){
-        id = nestId + " egg " + (await eggCollection.get()).docs.length.toString();
-        eggCollection.doc(id).set(toJson()).then((value) => FSItemMixin().saveChangeLog(this, eggCollection)).catchError((e) => UpdateResult.error(message: e.toString()));
+      CollectionReference<Object?> eggCollection = firestore
+          .collection(yearToNestCollectionName(discover_date.year))
+          .doc(nestId)
+          .collection("egg");
+      if (id == null) {
+        id = nestId +
+            " egg " +
+            (await eggCollection.get()).docs.length.toString();
+        eggCollection
+            .doc(id)
+            .set(toJson())
+            .then((value) => FSItemMixin().saveChangeLog(this, eggCollection))
+            .catchError((e) => UpdateResult.error(message: e.toString()));
       } else {
-      return( eggCollection.doc(id).set(toJson()).then((value) => FSItemMixin().saveChangeLog(this, eggCollection)).catchError((e) => UpdateResult.error(message: e.toString())));
+        return (eggCollection
+            .doc(id)
+            .set(toJson())
+            .then((value) => FSItemMixin().saveChangeLog(this, eggCollection))
+            .catchError((e) => UpdateResult.error(message: e.toString())));
       }
     }
     return UpdateResult.error(message: "Unexpected input!");
@@ -141,12 +158,19 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       {CollectionReference<Object?>? otherItems = null,
       type = "default"}) async {
     String? nestId = getNest();
-    if(nestId == null){
+    if (nestId == null) {
       return UpdateResult.error(message: "No nest found");
-    } else{
-      CollectionReference<Object?> eggCollection =  firestore.collection(yearToNestCollectionName(discover_date.year)).doc(nestId).collection("egg");
-      if(id != null){
-        return eggCollection.doc(id).delete().then((value) => UpdateResult.deleteOK(item:this)).catchError((e) => UpdateResult.error(message: e.toString()));
+    } else {
+      CollectionReference<Object?> eggCollection = firestore
+          .collection(yearToNestCollectionName(discover_date.year))
+          .doc(nestId)
+          .collection("egg");
+      if (id != null) {
+        return eggCollection
+            .doc(id)
+            .delete()
+            .then((value) => UpdateResult.deleteOK(item: this))
+            .catchError((e) => UpdateResult.error(message: e.toString()));
       } else {
         return UpdateResult.deleteOK(item: this);
       }
@@ -167,7 +191,11 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       TextCellValue('experiments')
     ];
     Map<String, List<Measure>> measuresMap = getMeasuresMap();
-    List<TextCellValue> measureItems = measuresMap.map((key, value) => MapEntry(key, value.first.toExcelRowHeader())).values.expand((e) => e).toList();
+    List<TextCellValue> measureItems = measuresMap
+        .map((key, value) => MapEntry(key, value.first.toExcelRowHeader()))
+        .values
+        .expand((e) => e)
+        .toList();
 
     return [...baseItems, ...measureItems];
   }
@@ -179,30 +207,34 @@ class Egg extends ExperimentedItem implements FirestoreItem {
       TextCellValue(getNest() ?? ""),
       TextCellValue(getNr() ?? ""),
       TextCellValue(type() ?? ""),
-      DateCellValue(year: discover_date.year, month: discover_date.month, day: discover_date.day),
+      DateCellValue(
+          year: discover_date.year,
+          month: discover_date.month,
+          day: discover_date.day),
       TextCellValue(responsible ?? ""),
-      last_modified != null ? DateTimeCellValue.fromDateTime(last_modified!) : TextCellValue(""),
+      last_modified != null
+          ? DateTimeCellValue.fromDateTime(last_modified!)
+          : TextCellValue(""),
       TextCellValue(ring ?? ""),
       TextCellValue(status.toString()),
-      TextCellValue(experiments?.map((e) => e.name).join(";\r") ?? ""), // Convert experiments to string
+      TextCellValue(experiments?.map((e) => e.name).join(";\r") ??
+          ""), // Convert experiments to string
     ];
     List<List<CellValue>> rows = addMeasuresToRow(baseItems);
     return rows;
   }
 
-  String? getNest(){
-    return(id?.split(" ")[0] ?? null);
+  String? getNest() {
+    return (id?.split(" ")[0] ?? null);
   }
 
-  String? getNr(){
-    return(id?.split(" ")[2] ?? null);
+  String? getNr() {
+    return (id?.split(" ")[2] ?? null);
   }
 
-  String statusText(){
-    String txt = "Egg " +
-        (getNr() ?? "?") +
-        " $status";
-    if(ring != null){
+  String statusText() {
+    String txt = "Egg " + (getNr() ?? "?") + " $status";
+    if (ring != null) {
       txt += "/$ring";
     }
     int dayDiff = DateTime.now().difference(discover_date).inDays;
@@ -213,8 +245,7 @@ class Egg extends ExperimentedItem implements FirestoreItem {
     return txt;
   }
 
-
-  ElevatedButton getButton(BuildContext context, Nest? nest){
+  ElevatedButton getButton(BuildContext context, Nest? nest) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(backgroundColor: status.color()),
       child: Text(statusText()),
@@ -236,12 +267,11 @@ class Egg extends ExperimentedItem implements FirestoreItem {
     );
   }
 
-  bool knownOrder(){
+  bool knownOrder() {
     return id?.contains("egg") ?? false;
-
   }
 
-  String? type(){
+  String? type() {
     List<String>? items = id?.split(" ");
     if (items != null && items.length > 2) {
       return items[1];
