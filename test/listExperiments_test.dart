@@ -163,6 +163,7 @@ void main() {
 
       //check if the list of birds is displayed
       expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.byType(SelectionArea), findsOneWidget);
       expect(find.text("Description: Test experiment"), findsOneWidget);
 
       //close the dialog
@@ -321,6 +322,268 @@ void main() {
       await tester.enterText(find.byType(TextField), "New");
       await tester.pumpAndSettle();
       expect(find.byType(ListTile), findsOneWidget);
+    });
+  });
+
+  group('Bulk nest checked actions', () {
+    testWidgets("can mark and unmark experiment nests checked today",
+        (WidgetTester tester) async {
+      final localFirestore = FakeFirebaseFirestore();
+      final localSps = MockSharedPreferencesService();
+      localSps.isAdmin = true;
+      final year = DateTime.now().year;
+      final oldDate = DateTime.now().subtract(Duration(days: 5));
+      final bulkExperiment = Experiment(
+        id: "bulk_exp",
+        name: "Bulk check experiment",
+        description: "Nest check subset",
+        last_modified: oldDate,
+        created: oldDate,
+        year: year,
+        nests: ["bulk1", "bulk2", "missing"],
+        responsible: "Admin",
+      );
+      final bulkNest1 = Nest(
+        id: "bulk1",
+        coordinates: GeoPoint(0, 0),
+        accuracy: "3.22m",
+        last_modified: oldDate,
+        discover_date: oldDate,
+        responsible: "Admin",
+        species: "Common gull",
+        remark: "keep remark",
+        measures: [Measure.note()],
+      );
+      final bulkNest2 = Nest(
+        id: "bulk2",
+        coordinates: GeoPoint(0, 0),
+        accuracy: "1.22m",
+        last_modified: oldDate,
+        discover_date: oldDate,
+        responsible: "Admin",
+        species: "Common gull",
+        measures: [Measure.note()],
+      );
+
+      await localFirestore
+          .collection(year.toString())
+          .doc(bulkNest1.id)
+          .set(bulkNest1.toJson());
+      await localFirestore
+          .collection(year.toString())
+          .doc(bulkNest2.id)
+          .set(bulkNest2.toJson());
+      await localFirestore
+          .collection('experiments')
+          .doc(bulkExperiment.id)
+          .set(bulkExperiment.toJson());
+
+      final app = TestApp(
+        firestore: localFirestore,
+        sps: localSps,
+        app: MaterialApp(initialRoute: '/listExperiments', routes: {
+          '/listExperiments': (context) =>
+              ListExperiments(firestore: localFirestore),
+          '/editExperiment': (context) =>
+              EditExperiment(firestore: localFirestore),
+          '/mapNests': (context) =>
+              MapNests(firestore: localFirestore, auth: authService),
+        }),
+      );
+
+      await tester.pumpWidget(app);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key("markExperimentNestsChecked_bulk_exp")));
+      await tester.pumpAndSettle();
+      expect(find.text("Mark nests checked today?"), findsOneWidget);
+      expect(
+          find.textContaining("without changing their real last modified date"),
+          findsOneWidget);
+
+      await tester.tap(find.text("Mark checked"));
+      await tester.pumpAndSettle();
+
+      Nest markedNest1 = Nest.fromDocSnapshot(await localFirestore
+          .collection(year.toString())
+          .doc(bulkNest1.id)
+          .get());
+      Nest markedNest2 = Nest.fromDocSnapshot(await localFirestore
+          .collection(year.toString())
+          .doc(bulkNest2.id)
+          .get());
+      final markedNest1Data = (await localFirestore
+              .collection(year.toString())
+              .doc(bulkNest1.id)
+              .get())
+          .data()!;
+
+      expect(markedNest1.checkedToday(), true);
+      expect(markedNest2.checkedToday(), true);
+      expect(markedNest1.last_modified, oldDate);
+      expect(markedNest2.last_modified, oldDate);
+      expect(markedNest1.bulk_checked, isNotNull);
+      expect(markedNest2.bulk_checked, isNotNull);
+      expect(markedNest1.bulk_checked_dates, hasLength(1));
+      expect(markedNest2.bulk_checked_dates, hasLength(1));
+      expect(markedNest1.bulk_checked_dates.single, markedNest1.bulk_checked);
+      expect(markedNest2.bulk_checked_dates.single, markedNest2.bulk_checked);
+      expect(markedNest1Data["remark"], "keep remark");
+      expect(find.text("Marked 2 nests checked today"), findsOneWidget);
+
+      await tester
+          .tap(find.byKey(Key("uncheckExperimentNestsChecked_bulk_exp")));
+      await tester.pumpAndSettle();
+      expect(find.text("Uncheck nests today?"), findsOneWidget);
+      expect(
+          find.textContaining("without changing their real last modified date"),
+          findsOneWidget);
+
+      await tester.tap(find.text("Uncheck"));
+      await tester.pumpAndSettle();
+
+      final uncheckedNest1 = Nest.fromDocSnapshot(await localFirestore
+          .collection(year.toString())
+          .doc(bulkNest1.id)
+          .get());
+      final uncheckedNest2 = Nest.fromDocSnapshot(await localFirestore
+          .collection(year.toString())
+          .doc(bulkNest2.id)
+          .get());
+
+      expect(uncheckedNest1.checkedToday(), false);
+      expect(uncheckedNest2.checkedToday(), false);
+      expect(uncheckedNest1.last_modified, oldDate);
+      expect(uncheckedNest2.last_modified, oldDate);
+      expect(uncheckedNest1.bulk_checked, isNull);
+      expect(uncheckedNest2.bulk_checked, isNull);
+      expect(uncheckedNest1.bulk_checked_dates, hasLength(1));
+      expect(uncheckedNest2.bulk_checked_dates, hasLength(1));
+      expect(find.text("Unchecked 2 nests for today"), findsOneWidget);
+    });
+
+    testWidgets("bulk nest checked action can be cancelled",
+        (WidgetTester tester) async {
+      final localFirestore = FakeFirebaseFirestore();
+      final localSps = MockSharedPreferencesService();
+      localSps.isAdmin = true;
+      final year = DateTime.now().year;
+      final oldDate = DateTime.now().subtract(Duration(days: 5));
+      final bulkExperiment = Experiment(
+        id: "cancel_bulk_exp",
+        name: "Cancel bulk experiment",
+        last_modified: oldDate,
+        created: oldDate,
+        year: year,
+        nests: ["cancel_bulk1"],
+      );
+      final bulkNest = Nest(
+        id: "cancel_bulk1",
+        coordinates: GeoPoint(0, 0),
+        accuracy: "3.22m",
+        last_modified: oldDate,
+        discover_date: oldDate,
+        responsible: "Admin",
+        species: "Common gull",
+        measures: [Measure.note()],
+      );
+
+      await localFirestore
+          .collection(year.toString())
+          .doc(bulkNest.id)
+          .set(bulkNest.toJson());
+      await localFirestore
+          .collection('experiments')
+          .doc(bulkExperiment.id)
+          .set(bulkExperiment.toJson());
+
+      final app = TestApp(
+        firestore: localFirestore,
+        sps: localSps,
+        app: MaterialApp(initialRoute: '/listExperiments', routes: {
+          '/listExperiments': (context) =>
+              ListExperiments(firestore: localFirestore),
+          '/editExperiment': (context) =>
+              EditExperiment(firestore: localFirestore),
+          '/mapNests': (context) =>
+              MapNests(firestore: localFirestore, auth: authService),
+        }),
+      );
+
+      await tester.pumpWidget(app);
+      await tester.pumpAndSettle();
+
+      await tester
+          .tap(find.byKey(Key("markExperimentNestsChecked_cancel_bulk_exp")));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Cancel"));
+      await tester.pumpAndSettle();
+
+      final unchangedNest = Nest.fromDocSnapshot(await localFirestore
+          .collection(year.toString())
+          .doc(bulkNest.id)
+          .get());
+      expect(unchangedNest.checkedToday(), false);
+      expect(unchangedNest.last_modified, oldDate);
+      expect(unchangedNest.bulk_checked, isNull);
+      expect(unchangedNest.bulk_checked_dates, isEmpty);
+    });
+
+    testWidgets("bulk nest checked buttons are hidden for non-admin users",
+        (WidgetTester tester) async {
+      final localFirestore = FakeFirebaseFirestore();
+      final localSps = MockSharedPreferencesService();
+      final year = DateTime.now().year;
+      final oldDate = DateTime.now().subtract(Duration(days: 5));
+      final bulkExperiment = Experiment(
+        id: "non_admin_bulk_exp",
+        name: "Non-admin bulk experiment",
+        last_modified: oldDate,
+        created: oldDate,
+        year: year,
+        nests: ["non_admin_bulk1"],
+      );
+      final bulkNest = Nest(
+        id: "non_admin_bulk1",
+        coordinates: GeoPoint(0, 0),
+        accuracy: "3.22m",
+        last_modified: oldDate,
+        discover_date: oldDate,
+        responsible: "Admin",
+        species: "Common gull",
+        measures: [Measure.note()],
+      );
+
+      await localFirestore
+          .collection(year.toString())
+          .doc(bulkNest.id)
+          .set(bulkNest.toJson());
+      await localFirestore
+          .collection('experiments')
+          .doc(bulkExperiment.id)
+          .set(bulkExperiment.toJson());
+
+      final app = TestApp(
+        firestore: localFirestore,
+        sps: localSps,
+        app: MaterialApp(initialRoute: '/listExperiments', routes: {
+          '/listExperiments': (context) =>
+              ListExperiments(firestore: localFirestore),
+          '/editExperiment': (context) =>
+              EditExperiment(firestore: localFirestore),
+          '/mapNests': (context) =>
+              MapNests(firestore: localFirestore, auth: authService),
+        }),
+      );
+
+      await tester.pumpWidget(app);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(Key("markExperimentNestsChecked_non_admin_bulk_exp")),
+          findsNothing);
+      expect(
+          find.byKey(Key("uncheckExperimentNestsChecked_non_admin_bulk_exp")),
+          findsNothing);
     });
   });
 

@@ -315,6 +315,7 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.filter_alt));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(Key("livingEggsFilter")));
     await tester.tap(find.byKey(Key("livingEggsFilter")));
     await tester.pumpAndSettle();
     await tester.tap(find.text("Close"));
@@ -356,6 +357,7 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.filter_alt));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(Key("livingEggsFilter")));
     await tester.tap(find.byKey(Key("livingEggsFilter")));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(Key("eggCountFilter")));
@@ -390,6 +392,116 @@ void main() {
     expect(find.byType(ListTile), findsNWidgets(1));
     expect(find.text("ID: 1, Common gull"), findsNothing);
     expect(find.text("ID: 2, test"), findsOneWidget);
+  });
+
+  testWidgets("chick count filter includes nests where all eggs hatched",
+      (WidgetTester tester) async {
+    final localFirestore = FakeFirebaseFirestore();
+    final localSps = MockSharedPreferencesService();
+    final year = DateTime.now().year.toString();
+    final hatchedOnlyNest = Nest(
+      id: "hatched_only",
+      coordinates: GeoPoint(0, 0),
+      accuracy: "1.00m",
+      last_modified: DateTime.now(),
+      discover_date: DateTime.now(),
+      responsible: "Admin",
+      species: "Common gull",
+      measures: [Measure.note()],
+    );
+    final chickDocumentNest = Nest(
+      id: "chick_document",
+      coordinates: GeoPoint(0, 0),
+      accuracy: "1.00m",
+      last_modified: DateTime.now(),
+      discover_date: DateTime.now(),
+      responsible: "Admin",
+      species: "Common gull",
+      measures: [Measure.note()],
+    );
+    final eggOnlyNest = Nest(
+      id: "egg_only",
+      coordinates: GeoPoint(0, 0),
+      accuracy: "1.00m",
+      last_modified: DateTime.now(),
+      discover_date: DateTime.now(),
+      responsible: "Admin",
+      species: "Common gull",
+      measures: [Measure.note()],
+    );
+
+    await localFirestore
+        .collection(year)
+        .doc(hatchedOnlyNest.id)
+        .set(hatchedOnlyNest.toJson());
+    await localFirestore
+        .collection(year)
+        .doc(chickDocumentNest.id)
+        .set(chickDocumentNest.toJson());
+    await localFirestore
+        .collection(year)
+        .doc(eggOnlyNest.id)
+        .set(eggOnlyNest.toJson());
+    await localFirestore
+        .collection(year)
+        .doc(hatchedOnlyNest.id)
+        .collection("egg")
+        .doc("hatched_only egg 1")
+        .set(Egg(
+          id: "hatched_only egg 1",
+          discover_date: DateTime.now(),
+          responsible: "Admin",
+          last_modified: DateTime.now(),
+          status: EggStatus("hatched"),
+          measures: [Measure.note()],
+        ).toJson());
+    await localFirestore
+        .collection(year)
+        .doc(chickDocumentNest.id)
+        .collection("egg")
+        .doc("chick_document chick 1")
+        .set(Egg(
+          id: "chick_document chick 1",
+          discover_date: DateTime.now(),
+          responsible: "Admin",
+          last_modified: DateTime.now(),
+          status: EggStatus("unknown"),
+          measures: [Measure.note()],
+        ).toJson());
+    await localFirestore
+        .collection(year)
+        .doc(eggOnlyNest.id)
+        .collection("egg")
+        .doc("egg_only egg 1")
+        .set(Egg(
+          id: "egg_only egg 1",
+          discover_date: DateTime.now(),
+          responsible: "Admin",
+          last_modified: DateTime.now(),
+          status: EggStatus("intact"),
+          measures: [Measure.note()],
+        ).toJson());
+
+    await tester.pumpWidget(TestApp(
+      firestore: localFirestore,
+      sps: localSps,
+      app: MaterialApp(home: ListNests(firestore: localFirestore)),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ListTile), findsNWidgets(3));
+
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(Key("chickCountFilter")));
+    await tester.tap(find.byKey(Key("chickCountFilter")));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
+
+    expect(find.text("ID: hatched_only, Common gull"), findsOneWidget);
+    expect(find.text("ID: chick_document, Common gull"), findsOneWidget);
+    expect(find.text("ID: egg_only, Common gull"), findsNothing);
   });
 
   testWidgets("filter by min and max location accuracy",
@@ -602,6 +714,21 @@ void main() {
     filteredNest.id = 'filtered_nest';
     final otherNest = nest2.copy();
     otherNest.id = 'other_nest';
+    final staleNest = nest2.copy();
+    staleNest.id = 'stale_nest';
+    staleNest.experiments = [
+      Experiment(
+        id: 'default_nest_experiment',
+        name: 'Default Nest Experiment',
+        last_modified: DateTime.now(),
+        created: DateTime.now(),
+        year: DateTime.now().year,
+        type: 'nest',
+        measures: [],
+      )
+    ];
+    final staleNestJson = staleNest.toJson();
+    staleNestJson['experimentIds'] = ['default_nest_experiment'];
     await localFirestore
         .collection(DateTime.now().year.toString())
         .doc(filteredNest.id)
@@ -610,6 +737,10 @@ void main() {
         .collection(DateTime.now().year.toString())
         .doc(otherNest.id)
         .set(otherNest.toJson());
+    await localFirestore
+        .collection(DateTime.now().year.toString())
+        .doc(staleNest.id)
+        .set(staleNestJson);
     final defaultExperiment = Experiment(
       id: 'default_nest_experiment',
       name: 'Default Nest Experiment',
@@ -622,7 +753,33 @@ void main() {
       nests: [filteredNest.id!],
       measures: [],
     );
+    final otherExperiment = Experiment(
+      id: 'other_nest_experiment',
+      name: 'Other Nest Experiment',
+      description: 'Alternative data filter',
+      last_modified: DateTime.now(),
+      created: DateTime.now(),
+      year: DateTime.now().year,
+      responsible: 'Admin',
+      type: 'nest',
+      nests: [otherNest.id!],
+      measures: [],
+    );
+    final oldYearExperiment = Experiment(
+      id: 'old_year_nest_experiment',
+      name: 'Old Year Nest Experiment',
+      description: 'Should not be loaded for the selected year',
+      last_modified: DateTime.now(),
+      created: DateTime.now(),
+      year: DateTime.now().year - 1,
+      responsible: 'Admin',
+      type: 'nest',
+      nests: [otherNest.id!],
+      measures: [],
+    );
     await defaultExperiment.save(localFirestore);
+    await otherExperiment.save(localFirestore);
+    await oldYearExperiment.save(localFirestore);
     localSps.defaultDataExperiment = defaultExperiment.id!;
 
     await tester.pumpWidget(TestApp(
@@ -634,6 +791,21 @@ void main() {
 
     expect(find.textContaining('filtered_nest'), findsOneWidget);
     expect(find.textContaining('other_nest'), findsNothing);
+    expect(find.textContaining('stale_nest'), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    expect(find.text("Experiment filter"), findsOneWidget);
+    await tester.tap(find.byKey(Key("dataExperimentFilterDropdown")));
+    await tester.pumpAndSettle();
+    expect(find.text("Old Year Nest Experiment"), findsNothing);
+    await tester.tap(find.text("Other Nest Experiment").last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('filtered_nest'), findsNothing);
+    expect(find.textContaining('other_nest'), findsOneWidget);
   });
 
   testWidgets("will show only filtered nests on the map",
@@ -687,10 +859,26 @@ void main() {
       nests: [],
       measures: [],
     );
+    final oldYearExperiment = Experiment(
+      id: "old_year_filtered_experiment",
+      name: "Old Year Filtered Experiment",
+      description: "Should not be available for the selected year",
+      last_modified: DateTime.now(),
+      created: DateTime.now(),
+      year: DateTime.now().year - 1,
+      responsible: "Admin",
+      type: "nest",
+      nests: [],
+      measures: [],
+    );
     await firestore
         .collection('experiments')
         .doc(filteredExperiment.id)
         .set(filteredExperiment.toJson());
+    await firestore
+        .collection('experiments')
+        .doc(oldYearExperiment.id)
+        .set(oldYearExperiment.toJson());
 
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
@@ -704,6 +892,10 @@ void main() {
     expect(find.text("Add"), findsOneWidget);
     expect(find.text("Remove"), findsOneWidget);
     expect(find.text("Cancel"), findsOneWidget);
+    expect(find.text("1 filtered nests selected"), findsWidgets);
+    expect(find.byKey(Key("copyFilteredNestIdsButton")), findsOneWidget);
+    expect(find.byType(SelectableText), findsNothing);
+    expect(find.text("Old Year Filtered Experiment"), findsNothing);
     await tester.tap(find.text("Filtered Experiment"));
     await tester.pumpAndSettle();
     await tester.tap(find.text("Add"));
@@ -800,7 +992,11 @@ void main() {
 
     await tester.longPress(find.byKey(Key("showFilteredNestButton")));
     await tester.pumpAndSettle();
-    await tester.tap(find.text("Remove Filtered Experiment"));
+    final removeExperimentOption =
+        find.byKey(Key("addFilteredNests_filtered_remove_experiment"));
+    await tester.scrollUntilVisible(removeExperimentOption, 100,
+        scrollable: find.byType(Scrollable).last);
+    await tester.tap(removeExperimentOption);
     await tester.pumpAndSettle();
     await tester.tap(find.text("Remove"));
     await tester.pumpAndSettle();
@@ -837,6 +1033,7 @@ void main() {
 
     //check if the list of birds is displayed
     expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.byType(SelectionArea), findsOneWidget);
 
     //expect the downloadChangelog button key to be present
     expect(find.byKey(Key("downloadChangelog")), findsOneWidget);

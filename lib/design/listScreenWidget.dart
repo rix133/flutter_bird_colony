@@ -46,6 +46,12 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
   String? get experimentFilterType => null;
 
+  bool get shouldLoadData => true;
+
+  String get dataLoadBlockedMessage => "loading items...";
+
+  String get dataQueryKeySuffix => "";
+
   @override
   void dispose() {
     _experimentSubscription?.cancel();
@@ -68,15 +74,7 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
       }
       updateYearFilter(selectedYear);
       if (supportsExperimentFilter) {
-        experimentStream =
-            experimentsService?.watchItems("experiments") ?? Stream.empty();
-        _experimentSubscription = experimentStream.listen((experiments) {
-          _clearUnavailableExperimentSelection(experiments);
-          _refreshDataStream();
-          if (mounted) {
-            setState(() {});
-          }
-        });
+        _listenToExperimentStream();
       }
       if (!supportsExperimentFilter || selectedExperimentId == null) {
         _refreshDataStream();
@@ -94,6 +92,13 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
       searchController.clear();
     });
     updateYearFilter(defaultYear);
+    if (supportsExperimentFilter) {
+      _listenToExperimentStream();
+    }
+    _refreshDataStream();
+  }
+
+  void refreshDataStream() {
     _refreshDataStream();
   }
 
@@ -112,11 +117,39 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
     return experiments.where((experiment) {
       final typeMatches = experimentFilterType == null ||
           experiment.type == experimentFilterType;
-      final yearMatches =
-          experiment.year == null || experiment.year == selectedYear;
+      final yearMatches = experiment.year == selectedYear;
       return typeMatches && yearMatches;
     }).toList()
       ..sort((a, b) => a.name.compareTo(b.name));
+  }
+
+  Query<Map<String, dynamic>> _experimentsQuery() {
+    return widget.firestore
+        .collection("experiments")
+        .where("year", isEqualTo: selectedYear);
+  }
+
+  void _refreshExperimentStream() {
+    if (!supportsExperimentFilter) {
+      experimentStream = Stream.empty();
+      return;
+    }
+    final key = "experiments|year:$selectedYear";
+    experimentStream =
+        experimentsService?.watchQuery(key, _experimentsQuery()) ??
+            Stream.empty();
+  }
+
+  void _listenToExperimentStream() {
+    _experimentSubscription?.cancel();
+    _refreshExperimentStream();
+    _experimentSubscription = experimentStream.listen((experiments) {
+      _clearUnavailableExperimentSelection(experiments);
+      _refreshDataStream();
+      if (mounted) {
+        setState(() {});
+      }
+    });
   }
 
   void _clearUnavailableExperimentSelection(List<Experiment> experiments) {
@@ -143,24 +176,48 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
     return null;
   }
 
-  Query<Map<String, dynamic>> _baseDataQuery() {
+  Experiment? get activeExperimentFilter => _selectedExperiment();
+
+  Query<Map<String, dynamic>> baseDataQuery() {
     return widget.firestore.collection(collectionName);
   }
 
   List<Query<Map<String, dynamic>>> _dataQueries() {
-    Query<Map<String, dynamic>> query = _baseDataQuery();
+    Query<Map<String, dynamic>> query = baseDataQuery();
     final selectedExperiment = _selectedExperiment();
     if (supportsExperimentFilter && selectedExperiment != null) {
-      final queries = <Query<Map<String, dynamic>>>[];
-      final experimentId = selectedExperiment.id;
-      if (experimentId != null && experimentId.isNotEmpty) {
-        queries.add(query.where('experimentIds', arrayContains: experimentId));
+      final itemIds = _selectedExperimentItemIds(selectedExperiment);
+      if (itemIds.isEmpty) {
+        return [query.where(FieldPath.documentId, isEqualTo: "__empty__")];
       }
-      queries.add(query.where('experiments',
-          arrayContains: selectedExperiment.toSimpleJson()));
-      return queries;
+      return _chunked(itemIds, 10)
+          .map((ids) => query.where(FieldPath.documentId, whereIn: ids))
+          .toList();
     }
     return [query];
+  }
+
+  List<String> _selectedExperimentItemIds(Experiment experiment) {
+    if (experimentFilterType == "nest") {
+      return _uniqueSortedIds(experiment.nests ?? const <String>[]);
+    }
+    if (experimentFilterType == "bird") {
+      return _uniqueSortedIds(experiment.birds ?? const <String>[]);
+    }
+    return const <String>[];
+  }
+
+  List<String> _uniqueSortedIds(List<String> ids) {
+    return ids.where((id) => id.isNotEmpty).toSet().toList()..sort();
+  }
+
+  List<List<String>> _chunked(List<String> ids, int chunkSize) {
+    final chunks = <List<String>>[];
+    for (int i = 0; i < ids.length; i += chunkSize) {
+      final end = i + chunkSize > ids.length ? ids.length : i + chunkSize;
+      chunks.add(ids.sublist(i, end));
+    }
+    return chunks;
   }
 
   void _refreshDataStream() {
@@ -168,9 +225,16 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
       stream = Stream.empty();
       return;
     }
+    if (!shouldLoadData) {
+      stream = Stream.empty();
+      return;
+    }
     final selectedExperiment = _selectedExperiment();
+    final selectedItemIds = selectedExperiment == null
+        ? const <String>[]
+        : _selectedExperimentItemIds(selectedExperiment);
     final key =
-        "$collectionName|experiment:${selectedExperiment?.id ?? selectedExperiment?.name ?? 'all'}|${selectedExperiment?.toSimpleJson().toString() ?? ''}";
+        "$collectionName|year:$selectedYear|experiment:${selectedExperiment?.id ?? selectedExperiment?.name ?? 'all'}|items:${selectedItemIds.join('|')}|$dataQueryKeySuffix";
     stream = fsService?.watchQueries(key, _dataQueries()) ?? Stream.empty();
   }
 
@@ -196,7 +260,7 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
         setState(() {
           selectedYear = newValue ?? selectedYear;
           updateYearFilter(selectedYear);
-          _clearUnavailableExperimentSelection(experimentsService?.items ?? []);
+          _listenToExperimentStream();
           _refreshDataStream();
           Navigator.pop(context);
         });
@@ -296,36 +360,43 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
     return StreamBuilder<List<Experiment>>(
       stream: experimentStream,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return Container();
-        final experiments = _availableExperiments(snapshot.data!);
+        final experimentItems =
+            snapshot.data ?? experimentsService?.items ?? const <Experiment>[];
+        final experiments = _availableExperiments(experimentItems);
         final selectedValue = experiments
                 .any((experiment) => experiment.id == selectedExperimentId)
             ? selectedExperimentId
             : null;
-        return DropdownButton<String?>(
-          key: Key("dataExperimentFilterDropdown"),
-          value: selectedValue,
-          isExpanded: true,
-          style: TextStyle(color: Colors.deepPurpleAccent),
-          items: [
-            DropdownMenuItem<String?>(
-                value: null,
-                child: Text("No experiment filter",
-                    style: TextStyle(color: Colors.deepPurpleAccent))),
-            ...experiments.map((Experiment e) {
-              return DropdownMenuItem<String?>(
-                value: e.id,
-                child: Text(e.name,
-                    style: TextStyle(color: Colors.deepPurpleAccent)),
-              );
-            })
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Experiment filter"),
+            DropdownButton<String?>(
+              key: Key("dataExperimentFilterDropdown"),
+              value: selectedValue,
+              isExpanded: true,
+              style: TextStyle(color: Colors.deepPurpleAccent),
+              items: [
+                DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text("No experiment filter",
+                        style: TextStyle(color: Colors.deepPurpleAccent))),
+                ...experiments.map((Experiment e) {
+                  return DropdownMenuItem<String?>(
+                    value: e.id,
+                    child: Text(e.name,
+                        style: TextStyle(color: Colors.deepPurpleAccent)),
+                  );
+                })
+              ],
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedExperimentId = newValue;
+                  _refreshDataStream();
+                });
+              },
+            ),
           ],
-          onChanged: (String? newValue) {
-            setState(() {
-              selectedExperimentId = newValue;
-              _refreshDataStream();
-            });
-          },
         );
       },
     );
@@ -369,27 +440,33 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
                   height: 20,
                 ),
                 Expanded(
-                    child: StreamBuilder(
-                        stream: stream,
-                        builder: (context,
-                            AsyncSnapshot<List<FirestoreItem>> snapshot) {
-                          if (snapshot.hasData) {
-                            return (listAllItems(context, snapshot.data!));
-                          } else if (snapshot.hasError) {
-                            return Container(
-                                padding: EdgeInsets.all(40.0),
-                                child: Text("Error loading items"));
-                          } else {
-                            if (fsService?.items.length == 0) {
-                              return Container(
-                                  padding: EdgeInsets.all(40.0),
-                                  child: Text("loading items..."));
-                            } else {
-                              return listAllItems(
-                                  context, fsService?.items ?? []);
-                            }
-                          }
-                        })),
+                    child: shouldLoadData
+                        ? StreamBuilder(
+                            stream: stream,
+                            builder: (context,
+                                AsyncSnapshot<List<FirestoreItem>> snapshot) {
+                              if (snapshot.hasData) {
+                                return (listAllItems(context, snapshot.data!));
+                              } else if (snapshot.hasError) {
+                                return Container(
+                                    padding: EdgeInsets.all(40.0),
+                                    child: Text("Error loading items"));
+                              } else {
+                                if (fsService?.items.length == 0) {
+                                  return Container(
+                                      padding: EdgeInsets.all(40.0),
+                                      child: Text("loading items..."));
+                                } else {
+                                  return listAllItems(
+                                      context, fsService?.items ?? []);
+                                }
+                              }
+                            })
+                        : Container(
+                            padding: EdgeInsets.all(40.0),
+                            alignment: Alignment.topCenter,
+                            child: Text(dataLoadBlockedMessage),
+                          )),
                 SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(

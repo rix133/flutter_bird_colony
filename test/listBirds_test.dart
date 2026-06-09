@@ -128,13 +128,14 @@ void main() {
   });
 
   testWidgets(
-      "Will load the list of birds from this year and display them in a list",
+      "shows a species prompt instead of loading all birds without a bird experiment",
       (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
-    //check if the list of birds is displayed
-    expect(find.byType(ListTile), findsNWidgets(2));
+    expect(find.text("Select a species or bird experiment to show birds."),
+        findsOneWidget);
+    expect(find.byType(ListTile), findsNothing);
   });
 
   testWidgets("uses default experiment filter for birds",
@@ -147,6 +148,20 @@ void main() {
     final otherBird = tern.copy();
     otherBird.band = 'OO1234';
     otherBird.id = 'OO1234';
+    final staleBird = tern.copy();
+    staleBird.band = 'SS1234';
+    staleBird.id = 'SS1234';
+    staleBird.experiments = [
+      Experiment(
+        id: 'default_bird_experiment',
+        name: 'Default Bird Experiment',
+        last_modified: DateTime.now(),
+        created: DateTime.now(),
+        year: DateTime.now().year,
+        type: 'bird',
+        measures: [],
+      )
+    ];
     await localFirestore
         .collection('Birds')
         .doc(filteredBird.band)
@@ -155,6 +170,10 @@ void main() {
         .collection('Birds')
         .doc(otherBird.band)
         .set(otherBird.toJson());
+    await localFirestore
+        .collection('Birds')
+        .doc(staleBird.band)
+        .set(staleBird.toJson());
     final defaultExperiment = Experiment(
       id: 'default_bird_experiment',
       name: 'Default Bird Experiment',
@@ -167,7 +186,33 @@ void main() {
       birds: [filteredBird.band],
       measures: [],
     );
+    final otherExperiment = Experiment(
+      id: 'other_bird_experiment',
+      name: 'Other Bird Experiment',
+      description: 'Alternative data filter',
+      last_modified: DateTime.now(),
+      created: DateTime.now(),
+      year: DateTime.now().year,
+      responsible: 'Admin',
+      type: 'bird',
+      birds: [otherBird.band],
+      measures: [],
+    );
+    final oldYearExperiment = Experiment(
+      id: 'old_year_bird_experiment',
+      name: 'Old Year Bird Experiment',
+      description: 'Should not be loaded for the selected year',
+      last_modified: DateTime.now(),
+      created: DateTime.now(),
+      year: DateTime.now().year - 1,
+      responsible: 'Admin',
+      type: 'bird',
+      birds: [otherBird.band],
+      measures: [],
+    );
     await defaultExperiment.save(localFirestore);
+    await otherExperiment.save(localFirestore);
+    await oldYearExperiment.save(localFirestore);
     localSps.defaultDataExperiment = defaultExperiment.id!;
 
     await tester.pumpWidget(TestApp(
@@ -179,13 +224,29 @@ void main() {
 
     expect(find.text('FF1234'), findsOneWidget);
     expect(find.text('OO1234'), findsNothing);
+    expect(find.text('SS1234'), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    expect(find.text("Experiment filter"), findsOneWidget);
+    await tester.tap(find.byKey(Key("dataExperimentFilterDropdown")));
+    await tester.pumpAndSettle();
+    expect(find.text("Old Year Bird Experiment"), findsNothing);
+    await tester.tap(find.text("Other Bird Experiment").last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
+
+    expect(find.text('FF1234'), findsNothing);
+    expect(find.text('OO1234'), findsOneWidget);
   });
 
   testWidgets("will filter birds by species name", (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
 
-    expect(find.byType(ListTile), findsNWidgets(2));
+    expect(find.text("Select a species or bird experiment to show birds."),
+        findsOneWidget);
     //find the filter button
     await tester.tap(find.byIcon(Icons.filter_alt));
     await tester.pumpAndSettle();
@@ -212,13 +273,16 @@ void main() {
 
     //tap the close button
     await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
 
     //check if the list of birds is displayed
     expect(find.byType(ListTile), findsNWidgets(1));
+    expect(find.text("AA1235"), findsOneWidget);
+    expect(find.text("AA1234"), findsNothing);
   });
 
   testWidgets(
-      "Will load the list of birds from 2022 and display them in a list",
+      "Will load selected species birds from 2022 and display them in a list",
       (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
@@ -232,11 +296,29 @@ void main() {
     await tester.tap(find.text("2022"));
     await tester.pumpAndSettle();
 
+    expect(find.text("Select a species or bird experiment to show birds."),
+        findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    Finder speciesRawAutocompleteFinder = find.byType(SpeciesRawAutocomplete);
+    Finder textFieldFinder = find.descendant(
+      of: speciesRawAutocompleteFinder,
+      matching: find.byType(TextField),
+    );
+    await tester.enterText(textFieldFinder, "Common gull");
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(ListTile).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
+
     //check if the list of birds is displayed
     expect(find.byType(ListTile), findsNWidgets(1));
+    expect(find.text("AA1234"), findsOneWidget);
   });
   testWidgets(
-      "Will load the list of birds from 2023 and display them in a list",
+      "Will load selected species birds from 2023 and display no matches",
       (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
@@ -248,6 +330,20 @@ void main() {
     await tester.pumpAndSettle();
     //tap the 2022 year  option
     await tester.tap(find.text("2023"));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    Finder speciesRawAutocompleteFinder = find.byType(SpeciesRawAutocomplete);
+    Finder textFieldFinder = find.descendant(
+      of: speciesRawAutocompleteFinder,
+      matching: find.byType(TextField),
+    );
+    await tester.enterText(textFieldFinder, "Common gull");
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(ListTile).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Close"));
     await tester.pumpAndSettle();
 
     //check if the list of birds is displayed
@@ -291,20 +387,36 @@ void main() {
     await tester.tap(find.text("Clear all"));
     await tester.pumpAndSettle();
 
-    //check if the list of birds is displayed
-    expect(find.byType(ListTile), findsNWidgets(2));
+    expect(find.text("Select a species or bird experiment to show birds."),
+        findsOneWidget);
+    expect(find.byType(ListTile), findsNothing);
   });
 
   testWidgets("will show alertdialog when listTile is tapped",
       (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
-    //find the search input
+
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    Finder speciesRawAutocompleteFinder = find.byType(SpeciesRawAutocomplete);
+    Finder textFieldFinder = find.descendant(
+      of: speciesRawAutocompleteFinder,
+      matching: find.byType(TextField),
+    );
+    await tester.enterText(textFieldFinder, "Common gull");
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(ListTile).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
+
     await tester.tap(find.byType(ListTile).first);
     await tester.pumpAndSettle();
 
     //check if the list of birds is displayed
     expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.byType(SelectionArea), findsOneWidget);
 
     //expect the downloadChangelog button key to be present
     expect(find.byKey(Key("downloadChangelog")), findsOneWidget);

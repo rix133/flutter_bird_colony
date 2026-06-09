@@ -98,4 +98,14 @@ class MockSharedPreferences extends Fake implements SharedPreferences {
 
     return Future.value(true);
   }
+
+  @override
+  bool containsKey(String key) {
+    for (int i = 0; i < s.length; i++) {
+      if (s[i].containsKey(key)) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

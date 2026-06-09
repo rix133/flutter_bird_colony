@@ -61,6 +61,17 @@ void main() {
       expect(sharedPreferencesService.selectedYear, 2023);
     });
 
+    test('defaultDataExperiment tracks explicitly saved empty preference', () {
+      expect(sharedPreferencesService.defaultDataExperiment, '');
+      expect(
+          sharedPreferencesService.hasDefaultDataExperimentPreference, false);
+
+      sharedPreferencesService.defaultDataExperiment = '';
+
+      expect(sharedPreferencesService.defaultDataExperiment, '');
+      expect(sharedPreferencesService.hasDefaultDataExperimentPreference, true);
+    });
+
     test('isLoggedIn should return false if not set', () {
       expect(sharedPreferencesService.isLoggedIn, false);
     });
@@ -201,7 +212,6 @@ void main() {
       DefaultSettings defaultSettings = DefaultSettings(
           id: 'default',
           desiredAccuracy: 2,
-          selectedYear: currentYear - 2,
           autoNextBand: true,
           defaultCameraBearing: 272,
           defaultCameraZoom: 15.35,

@@ -1,5 +1,6 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
 import 'package:flutter_bird_colony/models/firestore/bird.dart';
 import 'package:flutter_bird_colony/models/firestore/experiment.dart';
 import 'package:flutter_bird_colony/models/measure.dart';
@@ -91,10 +92,29 @@ void main() {
     await firestore.collection("Birds").doc(chick.band).set(chick.toJson());
   });
 
+  Future<void> showCommonGullBirds(WidgetTester tester) async {
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+
+    final speciesRawAutocompleteFinder = find.byType(SpeciesRawAutocomplete);
+    final textFieldFinder = find.descendant(
+      of: speciesRawAutocompleteFinder,
+      matching: find.byType(TextField),
+    );
+
+    await tester.enterText(textFieldFinder, "Common gull");
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(ListTile).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
+  }
+
   testWidgets("Will navigate to chick if edit button is pressed",
       (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
+    await showCommonGullBirds(tester);
 
     //check if the list of birds is displayed
     expect(find.byType(ListTile), findsNWidgets(1));
@@ -109,6 +129,7 @@ void main() {
       (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
+    await showCommonGullBirds(tester);
 
     //check if the list of birds is displayed
     expect(find.byType(ListTile), findsNWidgets(1));
@@ -130,6 +151,7 @@ void main() {
     sharedPreferencesService.defaultMeasures = [m2];
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();
+    await showCommonGullBirds(tester);
 
     //check if the list of birds is displayed
     expect(find.byType(ListTile), findsNWidgets(1));

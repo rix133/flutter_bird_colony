@@ -258,6 +258,20 @@ void main() {
       expect(nest.getMarkerColor(markerColorGroup), BitmapDescriptor.hueGreen);
     });
 
+    test('should return hueGreen when bulk_checked is today', () {
+      final nest = Nest(
+        discover_date: DateTime.now().subtract(Duration(days: 5)),
+        last_modified: DateTime.now().subtract(Duration(days: 5)),
+        bulk_checked: DateTime.now(),
+        accuracy: 'high',
+        coordinates: GeoPoint(0, 0),
+        responsible: 'John Doe',
+        measures: [],
+      );
+
+      expect(nest.getMarkerColor(markerColorGroup), BitmapDescriptor.hueGreen);
+    });
+
     test(
         'should return hueMagenta when dayDiff is between 10 and 35 and not checked today',
         () {
@@ -417,6 +431,36 @@ void main() {
 
       expect(nest.checkedToday(), false);
     });
+
+    test('should use latest of last_modified and bulk_checked', () {
+      final nest = Nest(
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now().subtract(Duration(days: 5)),
+        bulk_checked: DateTime.now(),
+        accuracy: 'high',
+        coordinates: GeoPoint(0, 0),
+        responsible: 'John Doe',
+        measures: [],
+      );
+
+      expect(nest.checkedToday(), true);
+      expect(nest.latestCheckDate(), nest.bulk_checked);
+    });
+
+    test('should fall back to last_modified when bulk_checked is cleared', () {
+      final nest = Nest(
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now().subtract(Duration(days: 5)),
+        bulk_checked: null,
+        accuracy: 'high',
+        coordinates: GeoPoint(0, 0),
+        responsible: 'John Doe',
+        measures: [],
+      );
+
+      expect(nest.checkedToday(), false);
+      expect(nest.latestCheckDate(), nest.last_modified);
+    });
   });
 
   group("basic getters", () {
@@ -476,6 +520,35 @@ void main() {
       var result = await nest.save(firestore);
       expect(result.success, false);
       expect(result.message, 'Nest name can\'t be empty');
+    });
+
+    test('Nest bulk check dates round trip through Firestore', () async {
+      final firstBulkCheck = DateTime(2024, 5, 1, 10, 15);
+      final secondBulkCheck = DateTime(2024, 5, 2, 11, 30);
+      final nest = Nest(
+        id: 'bulk-date-nest',
+        discover_date: DateTime(2024, 5, 1),
+        last_modified: DateTime(2024, 5, 1),
+        bulk_checked: secondBulkCheck,
+        bulk_checked_dates: [firstBulkCheck, secondBulkCheck],
+        accuracy: 'high',
+        coordinates: GeoPoint(0, 0),
+        responsible: 'Responsible Person',
+        measures: [],
+      );
+
+      await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .set(nest.toJson());
+
+      final loaded = Nest.fromDocSnapshot(await firestore
+          .collection(nest.discover_date.year.toString())
+          .doc(nest.id)
+          .get());
+
+      expect(loaded.bulk_checked, secondBulkCheck);
+      expect(loaded.bulk_checked_dates, [firstBulkCheck, secondBulkCheck]);
     });
 
     test('Nest save with non-empty name', () async {
@@ -585,9 +658,17 @@ void main() {
         responsible: 'John Doe',
         measures: [],
       ).save(firestore);
+      await Egg(
+        id: "chick-count-nest egg 2",
+        discover_date: DateTime.now(),
+        last_modified: DateTime.now(),
+        status: EggStatus('hatched'),
+        responsible: 'John Doe',
+        measures: [],
+      ).save(firestore);
 
-      expect(await chickNest.eggCount(firestore), 1);
-      expect(await chickNest.chickCount(firestore), 1);
+      expect(await chickNest.eggCount(firestore), 2);
+      expect(await chickNest.chickCount(firestore), 2);
       expect(await chickNest.itemCount(firestore, 'unknown'), 0);
     });
 

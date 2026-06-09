@@ -6,6 +6,7 @@ import 'package:flutter_bird_colony/services/birdsService.dart';
 import 'package:flutter_bird_colony/services/nestsService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
 import 'package:flutter_bird_colony/utils/year.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../models/firestore/bird.dart';
@@ -61,7 +62,10 @@ class _StatisticsState extends State<Statistics> {
         value: "Everybody"),
     DropdownMenuItem(
         child: Text("Me", style: TextStyle(color: Colors.deepPurpleAccent)),
-        value: "Me")
+        value: "Me"),
+    DropdownMenuItem(
+        child: Text("Person", style: TextStyle(color: Colors.deepPurpleAccent)),
+        value: "Person")
   ];
   String dropdownValuePeople = "Everybody";
 
@@ -130,7 +134,9 @@ class _StatisticsState extends State<Statistics> {
     return _birdDateRange();
   }
 
-  String get _textFilter => _textFilterController.text.trim().toLowerCase();
+  String get _personFilter => dropdownValuePeople == "Person"
+      ? _textFilterController.text.trim().toLowerCase()
+      : "";
 
   _refreshStreams() {
     _nestsStream =
@@ -154,29 +160,14 @@ class _StatisticsState extends State<Statistics> {
     return !dateOnly.isBefore(range.start) && dateOnly.isBefore(range.end);
   }
 
-  bool _matchesNestText(Nest nest) {
-    if (_textFilter.isEmpty) {
+  bool _matchesSelectedPerson(String? responsible) {
+    if (dropdownValuePeople == "Me") {
+      return responsible == username;
+    }
+    if (_personFilter.isEmpty) {
       return true;
     }
-    return [
-      nest.id ?? "",
-      nest.name,
-      nest.species ?? "",
-      nest.responsible ?? "",
-    ].any((value) => value.toLowerCase().contains(_textFilter));
-  }
-
-  bool _matchesBirdText(Bird bird) {
-    if (_textFilter.isEmpty) {
-      return true;
-    }
-    return [
-      bird.band,
-      bird.color_band ?? "",
-      bird.species ?? "",
-      bird.responsible ?? "",
-      bird.nest ?? "",
-    ].any((value) => value.toLowerCase().contains(_textFilter));
+    return (responsible ?? "").toLowerCase().contains(_personFilter);
   }
 
   Widget buildNestList(List<Nest> nests) {
@@ -185,9 +176,8 @@ class _StatisticsState extends State<Statistics> {
           .where((Nest n) => _matchesDate(n.last_modified ?? n.discover_date))
           .toList();
       nests = nests
-          .where((Nest n) => n.people(dropdownValuePeople, username))
+          .where((Nest n) => _matchesSelectedPerson(n.responsible))
           .toList();
-      nests = nests.where(_matchesNestText).toList();
       return ListView(
         children: [
           _tileMaterial(ListTile(
@@ -299,26 +289,30 @@ class _StatisticsState extends State<Statistics> {
                             onChanged: (String? newValue) {
                               setState(() {
                                 dropdownValuePeople = newValue!;
+                                if (dropdownValuePeople != "Person") {
+                                  _textFilterController.clear();
+                                }
                                 _refreshStreams();
                               });
                             },
                           )
                         ]),
-                    Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                      child: TextField(
-                        key: Key("statisticsNameFilterField"),
-                        controller: _textFilterController,
-                        decoration: InputDecoration(
-                          labelText: "Name filter",
-                          prefixIcon: Icon(Icons.search),
+                    if (dropdownValuePeople == "Person")
+                      Padding(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                        child: TextField(
+                          key: Key("statisticsNameFilterField"),
+                          controller: _textFilterController,
+                          decoration: InputDecoration(
+                            labelText: "Person name filter",
+                            prefixIcon: Icon(Icons.search),
+                          ),
+                          onChanged: (value) {
+                            setState(() {});
+                          },
                         ),
-                        onChanged: (value) {
-                          setState(() {});
-                        },
                       ),
-                    ),
                     Expanded(
                         child: StreamBuilder(
                             stream: _nestsStream,
@@ -390,12 +384,9 @@ class _StatisticsState extends State<Statistics> {
         .where((Bird bird) => _matchesDate(bird.ringed_date))
         .toList();
 
-    if (dropdownValuePeople == "Me") {
-      selectedBirds = selectedBirds
-          .where((Bird bird) => bird.responsible == username)
-          .toList();
-    }
-    selectedBirds = selectedBirds.where(_matchesBirdText).toList();
+    selectedBirds = selectedBirds
+        .where((Bird bird) => _matchesSelectedPerson(bird.responsible))
+        .toList();
     return selectedBirds;
   }
 
@@ -428,7 +419,7 @@ class _StatisticsState extends State<Statistics> {
         birdsQuery = birdsQuery?.where("responsible", isEqualTo: username);
       }
 
-      if (_textFilter.isNotEmpty) {
+      if (_personFilter.isNotEmpty) {
         return FutureBuilder<QuerySnapshot<Object?>>(
           future: birdsQuery?.get(),
           builder: (BuildContext context,
@@ -436,7 +427,7 @@ class _StatisticsState extends State<Statistics> {
             if (snapshot.hasData) {
               List<Bird> birds = snapshot.data!.docs
                   .map((doc) => Bird.fromDocSnapshot(doc))
-                  .where(_matchesBirdText)
+                  .where((bird) => _matchesSelectedPerson(bird.responsible))
                   .toList();
               int count = birds.length;
               if (count == 0 && species != "Total") {
@@ -484,10 +475,9 @@ class _StatisticsState extends State<Statistics> {
   }
 
   bool _isBroadTotalSelection({required bool isTotal}) {
-    return isTotal &&
-        dropdownValue == "All" &&
-        dropdownValuePeople == "Everybody" &&
-        _textFilter.isEmpty;
+    final hasUserFilter =
+        dropdownValuePeople == "Me" || _personFilter.isNotEmpty;
+    return isTotal && dropdownValue == "All" && !hasUserFilter;
   }
 
   Future<void> _showNarrowFilterDialog() async {
@@ -497,7 +487,7 @@ class _StatisticsState extends State<Statistics> {
               backgroundColor: Colors.black87,
               title: Text("Narrow filters first"),
               content: Text(
-                  "Use a date, user, text, or species filter before opening all items."),
+                  "Use a date, user, person name, or species filter before opening all items."),
               actions: [
                 ElevatedButton(
                     onPressed: () => Navigator.pop(context), child: Text("OK"))
@@ -515,6 +505,8 @@ class _StatisticsState extends State<Statistics> {
   }
 
   Future<void> _showNestsDialog(String title, List<Nest> nests) async {
+    final idsText = _copyableIdsText(
+        nests.map((nest) => nest.id ?? nest.name).where((id) => id.isNotEmpty));
     await showDialog(
         context: context,
         builder: (BuildContext context) => AlertDialog(
@@ -525,17 +517,38 @@ class _StatisticsState extends State<Statistics> {
                 height: 400,
                 child: nests.isEmpty
                     ? Center(child: Text("No nests"))
-                    : ListView(
-                        children: nests
-                            .map((nest) => Material(
-                                color: Colors.transparent,
-                                child: nest.getListTile(
-                                    context, widget.firestore,
-                                    groups: sps?.markerColorGroups ?? [])))
-                            .toList(),
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("${nests.length} nests"),
+                          SizedBox(height: 8),
+                          SizedBox(
+                            height: 90,
+                            child: SingleChildScrollView(
+                                child: SelectableText(idsText)),
+                          ),
+                          Divider(),
+                          Expanded(
+                            child: ListView(
+                              children: nests
+                                  .map((nest) => Material(
+                                      color: Colors.transparent,
+                                      child: nest.getListTile(
+                                          context, widget.firestore,
+                                          groups:
+                                              sps?.markerColorGroups ?? [])))
+                                  .toList(),
+                            ),
+                          ),
+                        ],
                       ),
               ),
               actions: [
+                ElevatedButton(
+                    key: Key("copyStatisticsNestIdsButton"),
+                    onPressed: () =>
+                        Clipboard.setData(ClipboardData(text: idsText)),
+                    child: Text("Copy IDs")),
                 ElevatedButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text("Close"))
@@ -555,7 +568,7 @@ class _StatisticsState extends State<Statistics> {
       final snapshot = await birdsQuery.get();
       birds = snapshot.docs
           .map((doc) => Bird.fromDocSnapshot(doc))
-          .where(_matchesBirdText)
+          .where((bird) => _matchesSelectedPerson(bird.responsible))
           .toList();
     }
     if (!mounted) return;
@@ -563,6 +576,7 @@ class _StatisticsState extends State<Statistics> {
   }
 
   Future<void> _showBirdsDialog(String title, List<Bird> birds) async {
+    final idsText = _copyableIdsText(birds.map((bird) => bird.id ?? bird.band));
     await showDialog(
         context: context,
         builder: (BuildContext context) => AlertDialog(
@@ -573,22 +587,48 @@ class _StatisticsState extends State<Statistics> {
                 height: 400,
                 child: birds.isEmpty
                     ? Center(child: Text("No birds"))
-                    : ListView(
-                        children: birds
-                            .map((bird) => Material(
-                                color: Colors.transparent,
-                                child: bird.getListTile(
-                                    context, widget.firestore,
-                                    groups: sps?.markerColorGroups ?? [])))
-                            .toList(),
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("${birds.length} birds"),
+                          SizedBox(height: 8),
+                          SizedBox(
+                            height: 90,
+                            child: SingleChildScrollView(
+                                child: SelectableText(idsText)),
+                          ),
+                          Divider(),
+                          Expanded(
+                            child: ListView(
+                              children: birds
+                                  .map((bird) => Material(
+                                      color: Colors.transparent,
+                                      child: bird.getListTile(
+                                          context, widget.firestore,
+                                          groups:
+                                              sps?.markerColorGroups ?? [])))
+                                  .toList(),
+                            ),
+                          ),
+                        ],
                       ),
               ),
               actions: [
+                ElevatedButton(
+                    key: Key("copyStatisticsBirdIdsButton"),
+                    onPressed: () =>
+                        Clipboard.setData(ClipboardData(text: idsText)),
+                    child: Text("Copy IDs")),
                 ElevatedButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text("Close"))
               ],
             ));
+  }
+
+  String _copyableIdsText(Iterable<String> ids) {
+    final sortedIds = ids.where((id) => id.isNotEmpty).toSet().toList()..sort();
+    return sortedIds.join("\n");
   }
 
   void showNestsonMap(List<Nest> nests) {

@@ -27,7 +27,6 @@ class _EditDefaultSettingsState extends State<EditDefaultSettings> {
   String type = "default";
   DefaultSettings defaultSettings = DefaultSettings(
     desiredAccuracy: 4,
-    selectedYear: DateTime.now().year,
     autoNextBand: false,
     autoNextBandParent: false,
     defaultLocation: GeoPoint(58.766218, 23.430432),

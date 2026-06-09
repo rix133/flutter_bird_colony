@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
 import 'package:flutter_bird_colony/design/yearDropdown.dart';
 import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
+import 'package:flutter_bird_colony/models/firestore/experiment.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/sharedPreferencesService.dart';
@@ -510,12 +511,18 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
-  _setDefaultSettings() {
+  _setDefaultSettings({bool resetDefaultDataExperiment = false}) {
     widget.firestore.collection('settings').doc('default').get().then((value) {
       if (value.exists) {
+        final existingDefaultDataExperiment = sps?.defaultDataExperiment ?? '';
+        final hasExistingDefaultDataExperiment =
+            sps?.hasDefaultDataExperimentPreference ?? false;
         DefaultSettings defaultSettings =
             DefaultSettings.fromDocSnapshot(value);
         sps?.setFromDefaultSettings(defaultSettings);
+        if (!resetDefaultDataExperiment && hasExistingDefaultDataExperiment) {
+          sps?.defaultDataExperiment = existingDefaultDataExperiment;
+        }
         _setStateIfMounted(() {
           _defaultSpecies = sps!.speciesList.getSpecies(sps!.defaultSpecies);
           _defaultMarkerColorGroups = sps!.markerColorGroups;
@@ -663,6 +670,63 @@ class _SettingsPageState extends State<SettingsPage> {
         : Container();
   }
 
+  Widget _defaultDataExperimentSelector() {
+    final selectedYear = sps?.selectedYear ?? DateTime.now().year;
+    return FutureBuilder<QuerySnapshot<Object?>>(
+        future: widget.firestore
+            .collection('experiments')
+            .where('year', isEqualTo: selectedYear)
+            .get(),
+        builder: (context, snapshot) {
+          List<Experiment> experiments = [];
+          if (snapshot.hasData) {
+            experiments = snapshot.data!.docs
+                .map((doc) => Experiment.fromDocSnapshot(doc))
+                .toList();
+            experiments.sort((a, b) => a.name.compareTo(b.name));
+          }
+
+          final selectedExperimentId = sps?.defaultDataExperiment ?? '';
+          final selectedValue = experiments
+                  .any((experiment) => experiment.id == selectedExperimentId)
+              ? selectedExperimentId
+              : null;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text('Default data experiment:'),
+              DropdownButton<String?>(
+                key: Key('settingsDefaultDataExperimentDropdown'),
+                value: selectedValue,
+                isExpanded: true,
+                style: TextStyle(color: Colors.deepPurpleAccent),
+                items: [
+                  DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('No default data experiment',
+                        style: TextStyle(color: Colors.deepPurpleAccent)),
+                  ),
+                  ...experiments.map((experiment) => DropdownMenuItem<String?>(
+                        value: experiment.id,
+                        child: Text(
+                            "${experiment.name}${experiment.year != null ? " (${experiment.year})" : ""}",
+                            style: TextStyle(color: Colors.deepPurpleAccent)),
+                      )),
+                ],
+                onChanged: snapshot.hasData
+                    ? (String? value) {
+                        setState(() {
+                          sps?.defaultDataExperiment = value ?? '';
+                        });
+                      }
+                    : null,
+              ),
+            ],
+          );
+        });
+  }
+
   _logout() async {
     await widget.auth.googleSignOut().then((value) => widget.auth.signOut());
     reset();
@@ -764,6 +828,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
+            SizedBox(height: 10),
+            _defaultDataExperimentSelector(),
             SizedBox(height: 10),
             Row(
               children: <Widget>[
@@ -890,7 +956,7 @@ class _SettingsPageState extends State<SettingsPage> {
             //reset all settings button
             ElevatedButton.icon(
               onPressed: () {
-                _setDefaultSettings();
+                _setDefaultSettings(resetDefaultDataExperiment: true);
               },
               label: Padding(
                   child: Text('Reset all settings'),

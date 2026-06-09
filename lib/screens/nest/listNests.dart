@@ -8,6 +8,7 @@ import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_bird_colony/utils/year.dart';
 
@@ -120,6 +121,7 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
         .whereType<String>()
         .where((id) => id.isNotEmpty)
         .toList();
+    final nestIdsText = _copyableIdsText(nestIds);
 
     if (!mounted) return;
     if (nestIds.isEmpty) {
@@ -138,11 +140,13 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
       return;
     }
 
-    QuerySnapshot<Object?> snapshot =
-        await widget.firestore.collection('experiments').get();
+    QuerySnapshot<Object?> snapshot = await widget.firestore
+        .collection('experiments')
+        .where('year', isEqualTo: selectedYear)
+        .get();
     List<Experiment> experiments =
         snapshot.docs.map((doc) => Experiment.fromDocSnapshot(doc)).where((e) {
-      return e.type == 'nest' && e.year == selectedYear;
+      return e.type == 'nest';
     }).toList();
     experiments.sort((a, b) => a.name.compareTo(b.name));
 
@@ -158,32 +162,46 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
                   title: Text("Filtered nests and experiment"),
                   content: SizedBox(
                     width: double.maxFinite,
-                    child: experiments.isEmpty
-                        ? Text("No nest experiments for $selectedYear.")
-                        : RadioGroup<Experiment>(
-                            groupValue: selectedExperiment,
-                            onChanged: (Experiment? value) {
-                              setDialogState(() {
-                                selectedExperiment = value;
-                              });
-                            },
-                            child: ListView(
-                              shrinkWrap: true,
-                              children: experiments
-                                  .map(
-                                      (experiment) => RadioListTile<Experiment>(
-                                            key: Key(
-                                                "addFilteredNests_${experiment.id ?? experiment.name}"),
-                                            title: Text(experiment.name),
-                                            subtitle: Text(
-                                                "${nestIds.length} filtered nests selected"),
-                                            value: experiment,
-                                          ))
-                                  .toList(),
-                            ),
-                          ),
+                    height: 300,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("${nestIds.length} filtered nests selected"),
+                        SizedBox(height: 8),
+                        Expanded(
+                          child: experiments.isEmpty
+                              ? Text("No nest experiments for $selectedYear.")
+                              : RadioGroup<Experiment>(
+                                  groupValue: selectedExperiment,
+                                  onChanged: (Experiment? value) {
+                                    setDialogState(() {
+                                      selectedExperiment = value;
+                                    });
+                                  },
+                                  child: ListView(
+                                    children: experiments
+                                        .map((experiment) =>
+                                            RadioListTile<Experiment>(
+                                              key: Key(
+                                                  "addFilteredNests_${experiment.id ?? experiment.name}"),
+                                              title: Text(experiment.name),
+                                              subtitle: Text(
+                                                  "${nestIds.length} filtered nests selected"),
+                                              value: experiment,
+                                            ))
+                                        .toList(),
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
                   ),
                   actions: [
+                    ElevatedButton(
+                        key: Key("copyFilteredNestIdsButton"),
+                        onPressed: () =>
+                            Clipboard.setData(ClipboardData(text: nestIdsText)),
+                        child: Text("Copy IDs")),
                     ElevatedButton(
                         key: Key("addFilteredNestsAddButton"),
                         onPressed: selectedExperiment == null
@@ -408,6 +426,11 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
         });
   }
 
+  String _copyableIdsText(List<String> ids) {
+    final sortedIds = ids.toSet().toList()..sort();
+    return sortedIds.join("\n");
+  }
+
   updateMinEggAge(String value) {
     setState(() {
       _minEggAge = double.tryParse(value);
@@ -581,13 +604,17 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
       return false;
     }
 
-    int chickCount = nestItems.where((egg) => egg.type() == 'chick').length;
+    int chickCount = nestItems.where(_isChickItem).length;
     if (!_countMatches(
         _filterByChickCount, chickCount, _minChicks, _maxChicks)) {
       return false;
     }
 
     return true;
+  }
+
+  bool _isChickItem(Egg egg) {
+    return egg.type() == 'chick' || egg.status.hasHatched();
   }
 
   Future<bool> filterByNestItems(Nest nest) async {

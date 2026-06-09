@@ -9,12 +9,15 @@ import 'package:flutter_bird_colony/models/updateResult.dart';
 import 'package:flutter_bird_colony/utils/year.dart';
 import 'package:flutter_bird_colony/design/filledIconButton.dart';
 import 'package:flutter_bird_colony/design/changelogRestoreDialog.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/sharedPreferencesService.dart';
 import '../markerColorGroup.dart';
 import 'bird.dart';
 import 'nest.dart';
+
+enum _NestQuickAction { markChecked, uncheck, complete, clearCompleted }
 
 class Experiment implements FirestoreItem {
   String? id;
@@ -136,6 +139,15 @@ class Experiment implements FirestoreItem {
     return false;
   }
 
+  bool _isAdmin(BuildContext context) {
+    try {
+      return Provider.of<SharedPreferencesService>(context, listen: false)
+          .isAdmin;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<Map<String, Nest>> _loadExperimentNests(
       FirebaseFirestore firestore) async {
     if (!hasNests()) {
@@ -193,6 +205,28 @@ class Experiment implements FirestoreItem {
     );
   }
 
+  Widget _nestRowActions(BuildContext context, FirebaseFirestore firestore,
+      Nest nest, String nestId, Function setState) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Tooltip(
+          message: "Nest quick actions",
+          child: FilledIconButton(
+            key: Key("experimentNestQuickActions_$nestId"),
+            icon: Icons.more_vert,
+            iconColor: Colors.black,
+            backgroundColor: Colors.orangeAccent,
+            onPressed: () => _handleNestQuickAction(
+                context, firestore, nest, nestId, setState),
+          ),
+        ),
+        SizedBox(width: 8),
+        _removeNestButton(nestId, setState),
+      ],
+    );
+  }
+
   Widget _nestItemsList(BuildContext context, FirebaseFirestore firestore,
       Function setState, List<MarkerColorGroup> groups) {
     return FutureBuilder<Map<String, Nest>>(
@@ -230,10 +264,203 @@ class Experiment implements FirestoreItem {
                     color: Colors.transparent,
                     child: nest.getListTile(context, firestore,
                         groups: groups,
-                        mapActionOverride:
-                            _removeNestButton(nestId, setState))));
+                        mapActionOverride: _nestRowActions(
+                            context, firestore, nest, nestId, setState))));
           }).toList());
         });
+  }
+
+  Future<UpdateResult> setExperimentNestCheckedForToday(
+      FirebaseFirestore firestore, String nestId,
+      {required bool checked, DateTime? checkedAt}) async {
+    if (nestId.isEmpty) {
+      return UpdateResult.error(message: "Nest ID is empty");
+    }
+
+    final effectiveCheckedAt = checkedAt ?? DateTime.now();
+    final nestCollection = firestore
+        .collection(yearToNestCollectionName(year ?? DateTime.now().year));
+
+    try {
+      await nestCollection.doc(nestId).update(checked
+          ? {
+              'bulk_checked': effectiveCheckedAt,
+              'bulk_checked_dates': FieldValue.arrayUnion([effectiveCheckedAt])
+            }
+          : {'bulk_checked': FieldValue.delete()});
+    } catch (error) {
+      return UpdateResult.error(message: error.toString());
+    }
+
+    return UpdateResult.saveOK(item: this)
+      ..message = checked
+          ? "Marked nest $nestId checked today"
+          : "Unchecked nest $nestId for today";
+  }
+
+  Future<UpdateResult> setExperimentNestCompleted(
+      FirebaseFirestore firestore, String nestId,
+      {required bool completed}) async {
+    if (nestId.isEmpty) {
+      return UpdateResult.error(message: "Nest ID is empty");
+    }
+
+    final nestCollection = firestore
+        .collection(yearToNestCollectionName(year ?? DateTime.now().year));
+
+    try {
+      await nestCollection.doc(nestId).update({'completed': completed});
+    } catch (error) {
+      return UpdateResult.error(message: error.toString());
+    }
+
+    return UpdateResult.saveOK(item: this)
+      ..message = completed
+          ? "Marked nest $nestId completed"
+          : "Cleared completed for nest $nestId";
+  }
+
+  Future<_NestQuickAction?> _showNestQuickActionsDialog(
+      BuildContext context, Nest nest, String nestId) {
+    Widget actionButton({
+      required Key key,
+      required IconData icon,
+      required String label,
+      required Color color,
+      required _NestQuickAction action,
+    }) {
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          key: key,
+          icon: Icon(icon),
+          label: Text(label),
+          onPressed: () => Navigator.pop(context, action),
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.all(color),
+            foregroundColor: WidgetStateProperty.all(Colors.black87),
+          ),
+        ),
+      );
+    }
+
+    return showDialog<_NestQuickAction>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        backgroundColor: Colors.black87,
+        title: Text("Nest $nestId actions"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+                "Checked: ${nest.checkedStr().isEmpty ? "not today" : nest.checkedStr()}"),
+            Text("Completed: ${nest.completed ?? false}"),
+            SizedBox(height: 12),
+            actionButton(
+              key: Key("quickMarkNestChecked_$nestId"),
+              icon: Icons.check_circle,
+              label: "Mark checked today",
+              color: Colors.greenAccent,
+              action: _NestQuickAction.markChecked,
+            ),
+            actionButton(
+              key: Key("quickUncheckNest_$nestId"),
+              icon: Icons.undo,
+              label: "Uncheck today",
+              color: Colors.orangeAccent,
+              action: _NestQuickAction.uncheck,
+            ),
+            actionButton(
+              key: Key("quickCompleteNest_$nestId"),
+              icon: Icons.done_all,
+              label: "Mark completed",
+              color: Colors.lightBlueAccent,
+              action: _NestQuickAction.complete,
+            ),
+            actionButton(
+              key: Key("quickClearCompletedNest_$nestId"),
+              icon: Icons.remove_done,
+              label: "Clear completed",
+              color: Colors.grey,
+              action: _NestQuickAction.clearCompleted,
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleNestQuickAction(
+      BuildContext context,
+      FirebaseFirestore firestore,
+      Nest nest,
+      String nestId,
+      Function setState) async {
+    final action = await _showNestQuickActionsDialog(context, nest, nestId);
+    if (action == null || !context.mounted) {
+      return;
+    }
+
+    UpdateResult result;
+    DateTime? checkedAt;
+    switch (action) {
+      case _NestQuickAction.markChecked:
+        checkedAt = DateTime.now();
+        result = await setExperimentNestCheckedForToday(firestore, nestId,
+            checked: true, checkedAt: checkedAt);
+        break;
+      case _NestQuickAction.uncheck:
+        result = await setExperimentNestCheckedForToday(firestore, nestId,
+            checked: false);
+        break;
+      case _NestQuickAction.complete:
+        result = await setExperimentNestCompleted(firestore, nestId,
+            completed: true);
+        break;
+      case _NestQuickAction.clearCompleted:
+        result = await setExperimentNestCompleted(firestore, nestId,
+            completed: false);
+        break;
+    }
+
+    if (!context.mounted) {
+      return;
+    }
+
+    if (result.success) {
+      setState(() {
+        switch (action) {
+          case _NestQuickAction.markChecked:
+            nest.bulk_checked = checkedAt;
+            nest.bulk_checked_dates = [...nest.bulk_checked_dates, checkedAt!];
+            break;
+          case _NestQuickAction.uncheck:
+            nest.bulk_checked = null;
+            break;
+          case _NestQuickAction.complete:
+            nest.completed = true;
+            break;
+          case _NestQuickAction.clearCompleted:
+            nest.completed = false;
+            break;
+        }
+        _loadedNestItems[nestId] = nest;
+      });
+    }
+
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(
+        content: Text(result.success
+            ? result.message
+            : "Update failed: ${result.message}"),
+      ));
   }
 
   Widget getItemsList(
@@ -241,9 +468,13 @@ class Experiment implements FirestoreItem {
       {List<MarkerColorGroup> groups = const []}) {
     List<Widget> items = [];
     if (hasNests()) {
+      items.add(_copyableIdsButton(context, "nest", nests ?? const <String>[],
+          Key("copyExperimentNestIdsButton")));
       items.add(_nestItemsList(context, firestore, setState, groups));
     }
     if (hasBirds()) {
+      items.add(_copyableIdsButton(context, "bird", birds ?? const <String>[],
+          Key("copyExperimentBirdIdsButton")));
       items.addAll(birds
               ?.map((e) => Padding(
                   padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
@@ -272,6 +503,57 @@ class Experiment implements FirestoreItem {
     return Column(
       children: items,
     );
+  }
+
+  Widget _copyableIdsButton(
+      BuildContext context, String itemType, List<String> ids, Key key) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        children: [
+          Text("${ids.length} ${itemType}s"),
+          SizedBox(width: 10),
+          ElevatedButton.icon(
+            key: key,
+            icon: Icon(Icons.copy),
+            label: Text("Copy ${itemType} IDs"),
+            onPressed: () => _showCopyableIdsDialog(context, itemType, ids),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showCopyableIdsDialog(
+      BuildContext context, String itemType, List<String> ids) async {
+    final idsText = _copyableIdsText(ids);
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+              backgroundColor: Colors.black87,
+              title: Text("${ids.length} ${itemType}s"),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 300,
+                child: SingleChildScrollView(
+                    child:
+                        SelectableText(idsText.isEmpty ? "No IDs" : idsText)),
+              ),
+              actions: [
+                ElevatedButton(
+                    onPressed: () =>
+                        Clipboard.setData(ClipboardData(text: idsText)),
+                    child: Text("Copy IDs")),
+                ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text("Close"))
+              ],
+            ));
+  }
+
+  String _copyableIdsText(List<String> ids) {
+    final sortedIds = ids.toSet().toList()..sort();
+    return sortedIds.join("\n");
   }
 
   @override
@@ -314,19 +596,21 @@ class Experiment implements FirestoreItem {
     return AlertDialog(
       backgroundColor: Colors.black87,
       title: Text("Experiment Details"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text("Name: $name"),
-          Text("Description: ${description ?? ""}"),
-          Text("Responsible: ${responsible ?? ""}"),
-          Text("Year: ${year ?? ""}"),
-          Text("Type: $type"),
-          Text("Last Modified: ${last_modified?.toIso8601String() ?? ""}"),
-          Text("Created: ${created?.toIso8601String() ?? ""}"),
-          Text("Nests: ${nests?.join(", ") ?? ""}"),
-          Text("Birds: ${birds?.join(", ") ?? ""}"),
-        ],
+      content: SelectionArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Name: $name"),
+            Text("Description: ${description ?? ""}"),
+            Text("Responsible: ${responsible ?? ""}"),
+            Text("Year: ${year ?? ""}"),
+            Text("Type: $type"),
+            Text("Last Modified: ${last_modified?.toIso8601String() ?? ""}"),
+            Text("Created: ${created?.toIso8601String() ?? ""}"),
+            Text("Nests: ${nests?.join(", ") ?? ""}"),
+            Text("Birds: ${birds?.join(", ") ?? ""}"),
+          ],
+        ),
       ),
       actions: [
         ElevatedButton(
@@ -381,8 +665,48 @@ class Experiment implements FirestoreItem {
     return "$label: ${items.join(", ")}";
   }
 
+  Future<UpdateResult> setExperimentNestsCheckedForToday(
+      FirebaseFirestore firestore,
+      {required bool checked}) async {
+    final nestIds =
+        (nests ?? []).where((nestId) => nestId.isNotEmpty).toSet().toList();
+    if (nestIds.isEmpty) {
+      return UpdateResult.error(message: "Experiment has no nests");
+    }
+
+    final nestCollection = firestore
+        .collection(yearToNestCollectionName(year ?? DateTime.now().year));
+    int updated = 0;
+    final checkedAt = DateTime.now();
+
+    for (final nestId in nestIds) {
+      try {
+        await nestCollection.doc(nestId).update(checked
+            ? {
+                'bulk_checked': checkedAt,
+                'bulk_checked_dates': FieldValue.arrayUnion([checkedAt])
+              }
+            : {'bulk_checked': FieldValue.delete()});
+        updated++;
+      } catch (_) {
+        // Ignore stale experiment references so one missing nest does not block
+        // the rest of the experiment from being marked.
+      }
+    }
+
+    if (updated == 0) {
+      return UpdateResult.error(message: "No matching nest documents found");
+    }
+
+    return UpdateResult.saveOK(item: this)
+      ..message = checked
+          ? "Marked $updated nests checked today"
+          : "Unchecked $updated nests for today";
+  }
+
   Widget getListTile(BuildContext context, FirebaseFirestore firestore,
       {bool disabled = false, List<MarkerColorGroup> groups = const []}) {
+    final isAdmin = _isAdmin(context);
     String subtitleNests = _itemSummary("Nests", "nests", nests);
     String subtitleBirds = _itemSummary("Birds", "birds", birds);
     String subtitle = [subtitleNests, subtitleBirds]
@@ -391,6 +715,10 @@ class Experiment implements FirestoreItem {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
       child: ListTile(
+        leading: isAdmin && hasNests()
+            ? _ExperimentNestCheckedButtons(
+                experiment: this, firestore: firestore, disabled: disabled)
+            : null,
         title: Text(titleString, style: TextStyle(fontSize: 20)),
         subtitle:
             Text(subtitle, style: TextStyle(color: Colors.grey, fontSize: 12)),
@@ -662,6 +990,156 @@ class Experiment implements FirestoreItem {
       rows.add(baseItems);
     }
     return rows;
+  }
+}
+
+class _ExperimentNestCheckedButtons extends StatefulWidget {
+  final Experiment experiment;
+  final FirebaseFirestore firestore;
+  final bool disabled;
+
+  const _ExperimentNestCheckedButtons(
+      {required this.experiment,
+      required this.firestore,
+      required this.disabled});
+
+  @override
+  State<_ExperimentNestCheckedButtons> createState() =>
+      _ExperimentNestCheckedButtonsState();
+}
+
+class _ExperimentNestCheckedButtonsState
+    extends State<_ExperimentNestCheckedButtons> {
+  bool _markingChecked = false;
+  bool _unchecking = false;
+
+  bool get _busy => _markingChecked || _unchecking;
+
+  Future<bool> _confirmBulkChange(bool checked) async {
+    final nestCount = widget.experiment.nests?.toSet().length ?? 0;
+    final title =
+        checked ? "Mark nests checked today?" : "Uncheck nests today?";
+    final action = checked ? "Mark checked" : "Uncheck";
+    final result = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor: Colors.black87,
+            title: Text(title),
+            content: Text(checked
+                ? "This will mark $nestCount nests in ${widget.experiment.name} checked today without changing their real last modified date."
+                : "This will clear the bulk checked date for $nestCount nests in ${widget.experiment.name} without changing their real last modified date."),
+            actions: [
+              ElevatedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text("Cancel")),
+              ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(action)),
+            ],
+          );
+        });
+    return result ?? false;
+  }
+
+  Future<void> _bulkChange(bool checked) async {
+    final confirmed = await _confirmBulkChange(checked);
+    if (!confirmed || !mounted) {
+      return;
+    }
+
+    setState(() {
+      if (checked) {
+        _markingChecked = true;
+      } else {
+        _unchecking = true;
+      }
+    });
+
+    final result = await widget.experiment
+        .setExperimentNestsCheckedForToday(widget.firestore, checked: checked);
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _markingChecked = false;
+      _unchecking = false;
+    });
+
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(
+        content: Text(result.success
+            ? result.message
+            : "Update failed: ${result.message}"),
+      ));
+  }
+
+  Widget _progressButton(Color backgroundColor) {
+    return Material(
+      color: backgroundColor.withAlpha((backgroundColor.a * 0.5).round()),
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Center(
+            child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2))),
+      ),
+    );
+  }
+
+  Widget _markButton() {
+    const backgroundColor = Colors.greenAccent;
+    if (_markingChecked) {
+      return _progressButton(backgroundColor);
+    }
+    return Tooltip(
+      message: "Mark experiment nests checked today",
+      child: FilledIconButton(
+        key: Key("markExperimentNestsChecked_${widget.experiment.id}"),
+        icon: Icons.check_circle,
+        iconColor: Colors.black87,
+        backgroundColor: backgroundColor,
+        onPressed: widget.disabled || _busy ? null : () => _bulkChange(true),
+      ),
+    );
+  }
+
+  Widget _uncheckButton() {
+    const backgroundColor = Colors.orangeAccent;
+    if (_unchecking) {
+      return _progressButton(backgroundColor);
+    }
+    return Tooltip(
+      message: "Uncheck experiment nests today",
+      child: FilledIconButton(
+        key: Key("uncheckExperimentNestsChecked_${widget.experiment.id}"),
+        icon: Icons.undo,
+        iconColor: Colors.black87,
+        backgroundColor: backgroundColor,
+        onPressed: widget.disabled || _busy ? null : () => _bulkChange(false),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 100,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _markButton(),
+          SizedBox(width: 4),
+          _uncheckButton(),
+        ],
+      ),
+    );
   }
 }
 

@@ -28,6 +28,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   bool? completed;
   DateTime discover_date;
   DateTime? last_modified;
+  DateTime? bulk_checked;
+  List<DateTime> bulk_checked_dates = [];
   DateTime? first_egg;
   List<Bird>? parents = [];
 
@@ -44,6 +46,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
         id: id,
         discover_date: discover_date,
         last_modified: last_modified,
+        bulk_checked: bulk_checked,
+        bulk_checked_dates: List.from(bulk_checked_dates),
         accuracy: accuracy,
         coordinates: coordinates,
         responsible: responsible,
@@ -60,6 +64,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
       {this.id,
       required this.discover_date,
       required this.last_modified,
+      this.bulk_checked,
+      List<DateTime>? bulk_checked_dates,
       required this.accuracy,
       required this.coordinates,
       required this.responsible,
@@ -70,8 +76,30 @@ class Nest extends ExperimentedItem implements FirestoreItem {
       this.parents,
       List<Experiment>? experiments,
       required List<Measure> measures})
-      : super(experiments: experiments, measures: measures) {
+      : bulk_checked_dates = bulk_checked_dates ?? [],
+        super(experiments: experiments, measures: measures) {
     updateMeasuresFromExperiments("nest");
+  }
+
+  static DateTime? _dateTimeFromJson(Object? value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    return null;
+  }
+
+  static List<DateTime> _dateTimeListFromJson(Object? value) {
+    if (value is! Iterable) {
+      return [];
+    }
+    return value.map(_dateTimeFromJson).whereType<DateTime>().toList();
+  }
+
+  String _dateOnly(DateTime date) {
+    return date.toIso8601String().split("T")[0];
   }
 
   bool timeSpan(String range) {
@@ -165,8 +193,18 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     return results;
   }
 
+  DateTime? latestCheckDate() {
+    if (last_modified == null) {
+      return bulk_checked;
+    }
+    if (bulk_checked == null) {
+      return last_modified;
+    }
+    return bulk_checked!.isAfter(last_modified!) ? bulk_checked : last_modified;
+  }
+
   checkedToday() {
-    return last_modified?.toIso8601String().split("T")[0] ==
+    return latestCheckDate()?.toIso8601String().split("T")[0] ==
         DateTime.now().toIso8601String().split("T")[0];
   }
 
@@ -197,6 +235,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
           (json['discover_date'] as Timestamp? ?? Timestamp(0, 0)).toDate(),
       last_modified:
           (json['last_modified'] as Timestamp? ?? Timestamp(0, 0)).toDate(),
+      bulk_checked: _dateTimeFromJson(json['bulk_checked']),
+      bulk_checked_dates: _dateTimeListFromJson(json['bulk_checked_dates']),
       accuracy: json['accuracy'] as String? ?? '',
       remark: json["remark"],
       first_egg: json['first_egg'] != null
@@ -386,6 +426,8 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     return {
       'discover_date': discover_date,
       'last_modified': last_modified,
+      'bulk_checked': bulk_checked,
+      'bulk_checked_dates': bulk_checked_dates,
       'accuracy': accuracy,
       'first_egg': first_egg,
       'remark': remark,
@@ -407,29 +449,37 @@ class Nest extends ExperimentedItem implements FirestoreItem {
     return AlertDialog(
       backgroundColor: Colors.black87,
       title: Text("Nest details"),
-      content: SingleChildScrollView(
-          child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text("Accuracy: $accuracy"),
-          Text(
-              "Coordinates: ${coordinates.latitude}, ${coordinates.longitude}"),
-          Text("Species: $species"),
-          Text(
-              "Discover date: ${discover_date.toIso8601String().split("T")[0]}"),
-          Text("Responsible: $responsible"),
-          Text(
-              "Last modified: ${last_modified?.toIso8601String().split("T")[0]}"),
-          Text("Completed: ${completed ?? false}"),
-          Text(
-              "First egg: ${first_egg?.toIso8601String().split("T")[0] ?? ""}"),
-          Text("${checkedStr()}"),
-          Text(
-              "Experiments: ${experiments?.map((e) => e.name).join(", ") ?? ""}"),
-          Text("Parents: ${parents?.map((p) => p.name).join(", ") ?? ""}"),
-          Text("Measures: ${measures.map((e) => e.name).join(", ")}"),
-        ],
-      )),
+      content: SelectionArea(
+        child: SingleChildScrollView(
+            child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Accuracy: $accuracy"),
+            Text(
+                "Coordinates: ${coordinates.latitude}, ${coordinates.longitude}"),
+            Text("Species: $species"),
+            Text(
+                "Discover date: ${discover_date.toIso8601String().split("T")[0]}"),
+            Text("Responsible: $responsible"),
+            Text(
+                "Last modified: ${last_modified?.toIso8601String().split("T")[0]}"),
+            Text(
+                "Bulk checked: ${bulk_checked?.toIso8601String().split("T")[0] ?? ""}"),
+            Text("Bulk check count: ${bulk_checked_dates.length}"),
+            if (bulk_checked_dates.isNotEmpty)
+              Text(
+                  "Bulk check dates: ${bulk_checked_dates.map(_dateOnly).join(", ")}"),
+            Text("Completed: ${completed ?? false}"),
+            Text(
+                "First egg: ${first_egg?.toIso8601String().split("T")[0] ?? ""}"),
+            Text("${checkedStr()}"),
+            Text(
+                "Experiments: ${experiments?.map((e) => e.name).join(", ") ?? ""}"),
+            Text("Parents: ${parents?.map((p) => p.name).join(", ") ?? ""}"),
+            Text("Measures: ${measures.map((e) => e.name).join(", ")}"),
+          ],
+        )),
+      ),
       actions: [
         ElevatedButton(
           onPressed: () {
@@ -527,7 +577,7 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   }
 
   Duration chekedAgo() {
-    return DateTime.now().difference(last_modified ?? DateTime.now());
+    return DateTime.now().difference(latestCheckDate() ?? DateTime.now());
   }
 
   String checkedStr() {
@@ -547,7 +597,10 @@ class Nest extends ExperimentedItem implements FirestoreItem {
   }
 
   Future<int> chickCount(FirebaseFirestore firestore) async {
-    return itemCount(firestore, 'chick');
+    List<Egg> eggs = await this.eggs(firestore);
+    return eggs
+        .where((egg) => egg.type() == 'chick' || egg.status.hasHatched())
+        .length;
   }
 
   Future<int> itemCount(FirebaseFirestore firestore, String itemType) async {

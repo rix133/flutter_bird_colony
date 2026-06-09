@@ -127,29 +127,31 @@ class Bird extends ExperimentedItem implements FirestoreItem {
     return AlertDialog(
       backgroundColor: Colors.black87,
       title: Text("Bird details"),
-      content: SingleChildScrollView(
-          child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text("Band: $band"),
-          Text("Color band: ${color_band ?? "unknown"}"),
-          Text("Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)}"),
-          Text("Nest: ${nest ?? "unknown"}"),
-          Text("Species: ${species ?? "unknown"}"),
-          Text("Responsible: ${responsible ?? "unknown"}"),
-          Text("Age: ${age ?? "unknown"}"),
-          if (rebanded_from?.isNotEmpty ?? false)
-            Text("Rebanded from: $rebanded_from"),
-          if (rebanded_to?.isNotEmpty ?? false)
-            Text("Rebanded to: $rebanded_to"),
-          Text(
-              "Last modified: ${last_modified != null ? DateFormat('d MMM yyyy').format(last_modified!) : "unknown"}"),
-          Text("Egg: ${egg ?? "unknown"}"),
-          Text(
-              "Experiments: ${experiments?.map((e) => e.name).join(", ") ?? "unknown"}"),
-          Text("Measures: ${measures.map((e) => e.name).join(", ")}"),
-        ],
-      )),
+      content: SelectionArea(
+        child: SingleChildScrollView(
+            child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Band: $band"),
+            Text("Color band: ${color_band ?? "unknown"}"),
+            Text("Ringed: ${DateFormat('d MMM yyyy').format(ringed_date)}"),
+            Text("Nest: ${nest ?? "unknown"}"),
+            Text("Species: ${species ?? "unknown"}"),
+            Text("Responsible: ${responsible ?? "unknown"}"),
+            Text("Age: ${age ?? "unknown"}"),
+            if (rebanded_from?.isNotEmpty ?? false)
+              Text("Rebanded from: $rebanded_from"),
+            if (rebanded_to?.isNotEmpty ?? false)
+              Text("Rebanded to: $rebanded_to"),
+            Text(
+                "Last modified: ${last_modified != null ? DateFormat('d MMM yyyy').format(last_modified!) : "unknown"}"),
+            Text("Egg: ${egg ?? "unknown"}"),
+            Text(
+                "Experiments: ${experiments?.map((e) => e.name).join(", ") ?? "unknown"}"),
+            Text("Measures: ${measures.map((e) => e.name).join(", ")}"),
+          ],
+        )),
+      ),
       actions: [
         ElevatedButton(
             onPressed: () {

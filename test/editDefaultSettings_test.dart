@@ -40,7 +40,6 @@ void main() {
 
     expect(find.byType(ListMeasures), findsOneWidget);
     expect(find.text("Desired accuracy (m)"), findsOneWidget);
-    expect(find.byType(Slider), findsOneWidget);
     expect(find.byType(SpeciesRawAutocomplete), findsOneWidget);
     expect(find.byType(ListMarkerColorGroups), findsOneWidget);
   });
@@ -54,10 +53,6 @@ void main() {
     await tester.enterText(find.byKey(Key('desiredAccuracy')), '6.0');
     await tester.pumpAndSettle();
     expect(find.text('6.0'), findsOneWidget);
-
-    // Change selectedYear
-    await tester.drag(find.byType(Slider), Offset(50.0, 0.0));
-    await tester.pumpAndSettle();
 
     // Toggle autoNextBand
     await tester
@@ -138,7 +133,6 @@ void main() {
         .get()
         .then((value) => DefaultSettings.fromDocSnapshot(value));
     expect(ds.desiredAccuracy, 3.2);
-    expect(ds.selectedYear, DateTime.now().year);
   });
   testWidgets(
       'updates default settings in sharedPrefrencesService when save button is pressed',
@@ -175,7 +169,20 @@ void main() {
       nests: [],
       measures: [],
     );
+    final oldYearExperiment = Experiment(
+      id: 'old_year_default_data_experiment',
+      name: 'Old Year Default Data Experiment',
+      description: 'Should not be shown for current default year',
+      last_modified: DateTime.now(),
+      created: DateTime.now(),
+      year: DateTime.now().year - 1,
+      responsible: 'Admin',
+      type: 'nest',
+      nests: [],
+      measures: [],
+    );
     await defaultExperiment.save(localFirestore);
+    await oldYearExperiment.save(localFirestore);
 
     await tester.pumpWidget(ChangeNotifierProvider<SharedPreferencesService>(
         create: (_) => localSps,
@@ -189,6 +196,7 @@ void main() {
     await tester.ensureVisible(dropdown);
     await tester.tap(dropdown);
     await tester.pumpAndSettle();
+    expect(find.text('Old Year Default Data Experiment'), findsNothing);
     await tester.tap(
         find.text('Default Data Experiment (${DateTime.now().year})').last);
     await tester.pumpAndSettle();
@@ -275,7 +283,6 @@ void main() {
         .then((value) => DefaultSettings.fromDocSnapshot(value));
 
     expect(dfObj.desiredAccuracy, 3.2);
-    expect(dfObj.selectedYear, DateTime.now().year);
     expect(dfObj.autoNextBand, false);
     expect(dfObj.autoNextBandParent, false);
     expect(dfObj.measures.length, 2);

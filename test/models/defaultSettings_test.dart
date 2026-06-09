@@ -17,7 +17,7 @@ void main() {
     test('saves instance to firestore', () async {
       final settings = DefaultSettings(
         desiredAccuracy: 5.0,
-        selectedYear: 2022,
+
         autoNextBand: true,
         defaultCameraBearing: 270,
         defaultCameraZoom: 16.35,
@@ -36,7 +36,6 @@ void main() {
           await mockFirestore.collection('settings').doc('custom').get());
 
       expect(savedSettings.desiredAccuracy, 5.0);
-      expect(savedSettings.selectedYear, 2022);
       expect(savedSettings.autoNextBand, true);
       expect(savedSettings.autoNextBandParent, true);
       expect(savedSettings.defaultLocation, GeoPoint(58.766218, 23.430432));
@@ -51,7 +50,7 @@ void main() {
     test('saves and reads instance to firestore with marker colors', () async {
       final settings = DefaultSettings(
         desiredAccuracy: 5.0,
-        selectedYear: 2022,
+
         autoNextBand: true,
         defaultCameraBearing: 270,
         defaultCameraZoom: 16.35,
@@ -69,7 +68,6 @@ void main() {
           await mockFirestore.collection('settings').doc('custom').get());
 
       expect(savedSettings.desiredAccuracy, 5.0);
-      expect(savedSettings.selectedYear, 2022);
       expect(savedSettings.autoNextBand, true);
       expect(savedSettings.autoNextBandParent, true);
       expect(savedSettings.defaultLocation, GeoPoint(58.766218, 23.430432));
@@ -84,7 +82,7 @@ void main() {
     test('copy should return a new instance with the same properties', () {
       final settings = DefaultSettings(
         desiredAccuracy: 5.0,
-        selectedYear: 2022,
+
         autoNextBand: true,
         defaultCameraBearing: 270,
         defaultCameraZoom: 16.35,
@@ -101,7 +99,6 @@ void main() {
 
       expect(copy, isNot(same(settings)));
       expect(copy.desiredAccuracy, settings.desiredAccuracy);
-      expect(copy.selectedYear, settings.selectedYear);
       expect(copy.autoNextBand, settings.autoNextBand);
       expect(copy.autoNextBandParent, settings.autoNextBandParent);
       expect(copy.defaultLocation, settings.defaultLocation);
@@ -115,7 +112,7 @@ void main() {
     test('copy should return a new instance with the same list items', () {
       final settings = DefaultSettings(
         desiredAccuracy: 5.0,
-        selectedYear: 2022,
+
         autoNextBand: true,
         autoNextBandParent: true,
         defaultCameraBearing: 270,
@@ -138,7 +135,7 @@ void main() {
       final settings = DefaultSettings(
         id: 'test',
         desiredAccuracy: 5.0,
-        selectedYear: 2022,
+
         autoNextBand: true,
         defaultCameraBearing: 270,
         defaultCameraZoom: 16.35,
@@ -160,7 +157,7 @@ void main() {
       final settings = DefaultSettings(
         id: null,
         desiredAccuracy: 5.0,
-        selectedYear: 2022,
+
         autoNextBand: true,
         autoNextBandParent: true,
         defaultCameraBearing: 270,

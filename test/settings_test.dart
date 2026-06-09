@@ -3,6 +3,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/design/speciesRawAutocomplete.dart';
 import 'package:flutter_bird_colony/models/firestore/defaultSettings.dart';
+import 'package:flutter_bird_colony/models/firestore/experiment.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
 import 'package:flutter_bird_colony/screens/homepage.dart';
 import 'package:flutter_bird_colony/screens/settings/editDefaultSettings.dart';
@@ -90,7 +91,6 @@ void main() async {
       await firestore.collection('settings').doc('default').set(
             DefaultSettings(
               desiredAccuracy: 4.0,
-              selectedYear: currentYear - 2,
               autoNextBand: false,
               defaultCameraBearing: 270,
               defaultCameraZoom: 16.35,
@@ -120,6 +120,44 @@ void main() async {
 
       expect(find.byType(MyHomePage), findsOneWidget);
       expect(sharedPreferencesService.selectedYear, currentYear);
+    });
+
+    testWidgets('login preserves cleared default data experiment',
+        (WidgetTester tester) async {
+      sharedPreferencesService.defaultDataExperiment = "";
+      await firestore.collection('settings').doc('default').set(
+            DefaultSettings(
+              desiredAccuracy: 4.0,
+              autoNextBand: false,
+              defaultCameraBearing: 270,
+              defaultCameraZoom: 16.35,
+              autoNextBandParent: false,
+              defaultLocation: GeoPoint(58.766218, 23.430432),
+              biasedRepeatedMeasurements: false,
+              measures: [],
+              markerColorGroups: [],
+              defaultSpecies:
+                  Species(english: "Common Gull", latinCode: "", local: ""),
+              defaultDataExperiment: "global_default_experiment",
+            ).toJson(),
+          );
+
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key('loginWithEmailButton')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Email'), 'test@example.com');
+      await tester.enterText(
+          find.widgetWithText(TextField, 'Password'), 'password123');
+
+      await tester.tap(find.text('Login/Register'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MyHomePage), findsOneWidget);
+      expect(sharedPreferencesService.defaultDataExperiment, "");
     });
 
     testWidgets('Enter email and password', (WidgetTester tester) async {
@@ -573,6 +611,66 @@ void main() async {
       expect(sharedPreferencesService.mapType, MapType.normal);
     });
 
+    testWidgets("normal user can select default data experiment",
+        (WidgetTester tester) async {
+      authService.isLoggedIn = true;
+      sharedPreferencesService.isAdmin = false;
+      sharedPreferencesService.selectedYear = DateTime.now().year;
+      sharedPreferencesService.defaultDataExperiment = "";
+      final experiment = Experiment(
+        id: "normal_user_default_experiment",
+        name: "Normal User Default Experiment",
+        description: "Selectable by normal users",
+        last_modified: DateTime.now(),
+        created: DateTime.now(),
+        year: DateTime.now().year,
+        responsible: "Admin",
+        type: "nest",
+        nests: [],
+        measures: [],
+      );
+      final oldYearExperiment = Experiment(
+        id: "normal_user_old_year_default_experiment",
+        name: "Normal User Old Year Experiment",
+        description: "Should not be shown for current app year",
+        last_modified: DateTime.now(),
+        created: DateTime.now(),
+        year: DateTime.now().year - 1,
+        responsible: "Admin",
+        type: "nest",
+        nests: [],
+        measures: [],
+      );
+      await firestore
+          .collection('experiments')
+          .doc(experiment.id)
+          .set(experiment.toJson());
+      await firestore
+          .collection('experiments')
+          .doc(oldYearExperiment.id)
+          .set(oldYearExperiment.toJson());
+
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.settings));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Edit default settings'), findsNothing);
+      final dropdown = find.byKey(Key('settingsDefaultDataExperimentDropdown'));
+      expect(dropdown, findsOneWidget);
+      await tester.ensureVisible(dropdown);
+      await tester.tap(dropdown);
+      await tester.pumpAndSettle();
+      expect(find.text('Normal User Old Year Experiment'), findsNothing);
+      await tester.tap(find
+          .text('Normal User Default Experiment (${DateTime.now().year})')
+          .last);
+      await tester.pumpAndSettle();
+
+      expect(sharedPreferencesService.defaultDataExperiment, experiment.id);
+    });
+
     testWidgets("default settings are changed", (WidgetTester tester) async {
       authService.isLoggedIn = true;
       sharedPreferencesService.isAdmin = false;
@@ -688,7 +786,6 @@ void main() async {
       //save the default settings to firestore
       await firestore.collection('settings').doc("default").set(DefaultSettings(
             desiredAccuracy: 4.0,
-            selectedYear: DateTime.now().year,
             autoNextBand: false,
             defaultCameraBearing: 270,
             defaultCameraZoom: 16.35,

@@ -22,7 +22,8 @@ class MockSharedPreferencesService extends Mock
   String defaultSpecies = "Common Gull";
   String settingsType = "default";
   int selectedYear = DateTime.now().year;
-  String defaultDataExperiment = "";
+  String _defaultDataExperiment = "";
+  bool hasDefaultDataExperimentPreference = false;
   List<MarkerColorGroup> markerColorGroups = [];
   double desiredAccuracy = 4.0;
 
@@ -49,6 +50,16 @@ class MockSharedPreferencesService extends Mock
   @override
   set defaultLocation(CameraPosition value) => _mockCameraPosition = value;
 
+  @override
+  String get defaultDataExperiment => _defaultDataExperiment;
+
+  @override
+  set defaultDataExperiment(String value) {
+    _defaultDataExperiment = value;
+    hasDefaultDataExperimentPreference = true;
+  }
+
+  @override
   setFromDefaultSettings(DefaultSettings defaultSettings) {
     desiredAccuracy = defaultSettings.desiredAccuracy;
     selectedYear = DateTime.now().year;
@@ -60,6 +71,14 @@ class MockSharedPreferencesService extends Mock
     defaultMeasures = defaultSettings.measures;
     markerColorGroups = defaultSettings.markerColorGroups;
     defaultDataExperiment = defaultSettings.defaultDataExperiment ?? '';
+  }
+
+  @override
+  void clearAll() {
+    isAdmin = false;
+    isLoggedIn = false;
+    _defaultDataExperiment = "";
+    hasDefaultDataExperimentPreference = false;
   }
 
   // Add other properties and methods as needed

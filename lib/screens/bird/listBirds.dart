@@ -30,6 +30,31 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
   String? get experimentFilterType => "bird";
 
   @override
+  bool get shouldLoadData =>
+      activeExperimentFilter != null || (_selectedSpecies?.isNotEmpty ?? false);
+
+  @override
+  String get dataLoadBlockedMessage =>
+      "Select a species or bird experiment to show birds.";
+
+  @override
+  String get dataQueryKeySuffix => "species:${_selectedSpecies ?? ''}";
+
+  @override
+  Query<Map<String, dynamic>> baseDataQuery() {
+    Query<Map<String, dynamic>> query = super.baseDataQuery();
+    if (activeExperimentFilter == null &&
+        (_selectedSpecies?.isNotEmpty ?? false)) {
+      query = query
+          .where("species", isEqualTo: _selectedSpecies)
+          .where("ringed_date",
+              isGreaterThanOrEqualTo: DateTime(selectedYear, 1, 1))
+          .where("ringed_date", isLessThan: DateTime(selectedYear + 1, 1, 1));
+    }
+    return query;
+  }
+
+  @override
   void initState() {
     collectionName = "Birds";
     fsService = Provider.of<BirdsService>(context, listen: false);
@@ -71,6 +96,7 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
               SpeciesRawAutocomplete(
                   returnFun: (Species s) {
                     _selectedSpecies = s.english;
+                    refreshDataStream();
                     setState(() {});
                   },
                   species: Species(
@@ -114,6 +140,7 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
       _selectedSpecies = null;
       _selectedAge = null;
     });
+    refreshDataStream();
   }
 
   bool filterByText(Bird e) {

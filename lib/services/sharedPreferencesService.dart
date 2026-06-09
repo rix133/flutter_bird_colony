@@ -79,6 +79,9 @@ class SharedPreferencesService extends ChangeNotifier {
   String get defaultDataExperiment =>
       _sharedPreferences.getString('defaultDataExperiment') ?? '';
 
+  bool get hasDefaultDataExperimentPreference =>
+      _sharedPreferences.containsKey('defaultDataExperiment');
+
   set defaultDataExperiment(String value) {
     _sharedPreferences.setString('defaultDataExperiment', value);
     notifyListeners();

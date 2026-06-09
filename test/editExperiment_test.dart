@@ -196,6 +196,7 @@ void main() {
     });
 
     setUp(() async {
+      sharedPreferencesService.isAdmin = false;
       experiment = Experiment(
           id: "1",
           name: "New Experiment",
@@ -265,6 +266,8 @@ void main() {
 
       expect(find.text("ID: 1, Common gull"), findsOneWidget);
       expect(find.byKey(Key("removeNestFromExperiment_1")), findsOneWidget);
+      expect(find.byKey(Key("experimentNestQuickActions_1")), findsOneWidget);
+      expect(find.byKey(Key("copyExperimentNestIdsButton")), findsOneWidget);
     });
 
     testWidgets("can bulk add nests to experiment",
@@ -295,6 +298,108 @@ void main() {
       expect(find.text("ID: 2, test"), findsOneWidget);
     });
 
+    testWidgets("can update one experiment nest from edit experiment",
+        (WidgetTester tester) async {
+      final oldDate = DateTime.now().subtract(Duration(days: 5));
+      final untouchedNest = nest1.copy();
+      untouchedNest.last_modified = oldDate;
+      untouchedNest.bulk_checked = null;
+      untouchedNest.bulk_checked_dates = [];
+      untouchedNest.completed = false;
+      nest2.last_modified = oldDate;
+      nest2.bulk_checked = null;
+      nest2.bulk_checked_dates = [];
+      nest2.completed = false;
+      experiment.nests = ["1", "2"];
+      await firestore
+          .collection(untouchedNest.discover_date.year.toString())
+          .doc(untouchedNest.id)
+          .set(untouchedNest.toJson());
+      await firestore
+          .collection(nest2.discover_date.year.toString())
+          .doc(nest2.id)
+          .set(nest2.toJson());
+
+      myApp = getInitApp(experiment);
+      await tester.pumpWidget(myApp);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(Key("editExperimentMarkNestsCheckedButton")),
+          findsNothing);
+      expect(find.byKey(Key("editExperimentUncheckNestsButton")), findsNothing);
+
+      final quickActions = find.byKey(Key("experimentNestQuickActions_2"));
+      await tester.ensureVisible(quickActions);
+      await tester.tap(quickActions);
+      await tester.pumpAndSettle();
+
+      expect(find.text("Nest 2 actions"), findsOneWidget);
+      await tester.tap(find.byKey(Key("quickMarkNestChecked_2")));
+      await tester.pumpAndSettle();
+
+      Nest markedNest2 = Nest.fromDocSnapshot(await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest2.id)
+          .get());
+      Nest unchangedNest1 = Nest.fromDocSnapshot(await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(untouchedNest.id)
+          .get());
+      expect(markedNest2.checkedToday(), true);
+      expect(markedNest2.last_modified, oldDate);
+      expect(markedNest2.bulk_checked, isNotNull);
+      expect(markedNest2.bulk_checked_dates, hasLength(1));
+      expect(markedNest2.bulk_checked_dates.single, markedNest2.bulk_checked);
+      expect(unchangedNest1.checkedToday(), false);
+      expect(unchangedNest1.bulk_checked, isNull);
+      expect(unchangedNest1.bulk_checked_dates, isEmpty);
+      expect(find.text("Marked nest 2 checked today"), findsOneWidget);
+
+      await tester.ensureVisible(quickActions);
+      await tester.tap(quickActions);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key("quickUncheckNest_2")));
+      await tester.pumpAndSettle();
+
+      Nest uncheckedNest = Nest.fromDocSnapshot(await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest2.id)
+          .get());
+      expect(uncheckedNest.checkedToday(), false);
+      expect(uncheckedNest.last_modified, oldDate);
+      expect(uncheckedNest.bulk_checked, isNull);
+      expect(uncheckedNest.bulk_checked_dates, hasLength(1));
+
+      await tester.ensureVisible(quickActions);
+      await tester.tap(quickActions);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key("quickCompleteNest_2")));
+      await tester.pumpAndSettle();
+
+      Nest completedNest = Nest.fromDocSnapshot(await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest2.id)
+          .get());
+      expect(completedNest.completed, true);
+      expect(completedNest.last_modified, oldDate);
+
+      await tester.ensureVisible(quickActions);
+      await tester.tap(quickActions);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(Key("quickClearCompletedNest_2")));
+      await tester.pumpAndSettle();
+
+      Nest reopenedNest = Nest.fromDocSnapshot(await firestore
+          .collection(DateTime.now().year.toString())
+          .doc(nest2.id)
+          .get());
+      expect(reopenedNest.completed, false);
+      expect(reopenedNest.last_modified, oldDate);
+    });
+
     testWidgets('can pick experiment color', (WidgetTester tester) async {
       myApp = getInitApp(experiment);
       await tester.pumpWidget(myApp);
@@ -303,7 +408,9 @@ void main() {
       expect(find.text("New Experiment"), findsOneWidget);
 
       //search button and tap it
-      await tester.tap(find.text("Pick color"));
+      final pickColorButton = find.text("Pick color");
+      await tester.ensureVisible(pickColorButton);
+      await tester.tap(pickColorButton);
       await tester.pumpAndSettle();
 
       // tap Got it
@@ -587,7 +694,9 @@ void main() {
       await tester.pumpWidget(myApp);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.edit).first);
+      final editNestButton = find.byIcon(Icons.edit).first;
+      await tester.ensureVisible(editNestButton);
+      await tester.tap(editNestButton);
       await tester.pumpAndSettle();
 
       expect(find.byType(EditNest), findsOneWidget);
@@ -602,7 +711,9 @@ void main() {
       expect(find.text("New Experiment"), findsOneWidget);
 
       expect(find.text("ID: 2, test"), findsOneWidget);
-      await tester.tap(find.byKey(Key("removeNestFromExperiment_2")));
+      final removeNestButton = find.byKey(Key("removeNestFromExperiment_2"));
+      await tester.ensureVisible(removeNestButton);
+      await tester.tap(removeNestButton);
       await tester.pumpAndSettle();
 
       expect(find.text("ID: 2, test"), findsNothing);

@@ -173,6 +173,7 @@ void main() {
 
     // Verify initial selected user
     expect(find.text('Everybody'), findsOneWidget);
+    expect(find.byKey(Key("statisticsNameFilterField")), findsNothing);
 
     // Tap on the dropdown button to select a different user
     await tester.tap(find.byType(DropdownButton<String>).last);
@@ -182,6 +183,14 @@ void main() {
 
     // Verify that the selected user has been updated
     expect(find.text('Me'), findsOneWidget);
+    expect(find.byKey(Key("statisticsNameFilterField")), findsNothing);
+
+    await tester.tap(find.byType(DropdownButton<String>).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Person').last);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(Key("statisticsNameFilterField")), findsOneWidget);
   });
 
   testWidgets('Statistics widget should display correct nest statistics',
@@ -348,12 +357,13 @@ void main() {
     await tester.longPress(totalRingedTile);
     await tester.pumpAndSettle();
 
-    expect(find.text('YEST1'), findsOneWidget);
+    expect(find.byKey(Key("copyStatisticsBirdIdsButton")), findsOneWidget);
+    expect(find.text('YEST1'), findsWidgets);
     expect(find.text('TODAY1'), findsNothing);
   });
 
   testWidgets(
-      'Statistics text filter narrows nests and broad total long press is blocked',
+      'Statistics person filter narrows nests and broad total long press is blocked',
       (WidgetTester tester) async {
     final localFirestore = FakeFirebaseFirestore();
     final localSps = MockSharedPreferencesService();
@@ -368,7 +378,7 @@ void main() {
           accuracy: '3m',
           last_modified: dayOffset(-1),
           discover_date: DateTime(year, 5, 1),
-          responsible: 'Test User',
+          responsible: 'Other User',
           species: 'Common gull',
           measures: [],
         ).toJson());
@@ -394,7 +404,21 @@ void main() {
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
 
+    expect(find.byKey(Key("statisticsNameFilterField")), findsNothing);
+    await tester.tap(find.byType(DropdownButton<String>).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Person').last);
+    await tester.pumpAndSettle();
+    expect(find.byKey(Key("statisticsNameFilterField")), findsOneWidget);
+
     await tester.enterText(find.byKey(Key("statisticsNameFilterField")), 'YN1');
+    await tester.pumpAndSettle();
+
+    expect(find.descendant(of: totalNestsTile, matching: find.text('0')),
+        findsOneWidget);
+
+    await tester.enterText(
+        find.byKey(Key("statisticsNameFilterField")), 'Test User');
     await tester.pumpAndSettle();
 
     expect(find.descendant(of: totalNestsTile, matching: find.text('1')),
@@ -403,7 +427,9 @@ void main() {
     await tester.longPress(totalNestsTile);
     await tester.pumpAndSettle();
 
-    expect(find.text('ID: YN1, Common gull'), findsOneWidget);
-    expect(find.text('ID: OTHER1, Common gull'), findsNothing);
+    expect(find.byKey(Key("copyStatisticsNestIdsButton")), findsOneWidget);
+    expect(find.text('1 nests'), findsOneWidget);
+    expect(find.text('ID: OTHER1, Common gull'), findsOneWidget);
+    expect(find.text('ID: YN1, Common gull'), findsNothing);
   });
 }

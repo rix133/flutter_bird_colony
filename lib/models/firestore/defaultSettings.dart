@@ -18,7 +18,6 @@ import '../../screens/settings/editDefaultMap.dart';
 class DefaultSettings implements FirestoreItem {
   String? id;
   double desiredAccuracy;
-  int selectedYear;
   bool autoNextBand;
   bool autoNextBandParent;
   GeoPoint defaultLocation;
@@ -37,7 +36,6 @@ class DefaultSettings implements FirestoreItem {
   DefaultSettings(
       {this.id,
       required this.desiredAccuracy,
-      required this.selectedYear,
       required this.autoNextBand,
       required this.autoNextBandParent,
       required this.defaultLocation,
@@ -54,7 +52,6 @@ class DefaultSettings implements FirestoreItem {
     return DefaultSettings(
         id: id,
         desiredAccuracy: desiredAccuracy,
-        selectedYear: selectedYear,
         autoNextBand: autoNextBand,
         autoNextBandParent: autoNextBandParent,
         defaultLocation: defaultLocation,
@@ -72,7 +69,6 @@ class DefaultSettings implements FirestoreItem {
   Map<String, dynamic> toJson() {
     return {
       'desiredAccuracy': desiredAccuracy,
-      'selectedYear': selectedYear,
       'autoNextBand': autoNextBand,
       'autoNextBandParent': autoNextBandParent,
       'defaultLocation': defaultLocation,
@@ -116,7 +112,6 @@ class DefaultSettings implements FirestoreItem {
     return DefaultSettings(
         id: snapshot.id,
         desiredAccuracy: (json['desiredAccuracy'] as num?)?.toDouble() ?? 4.0,
-        selectedYear: json['selectedYear'],
         autoNextBand: json['autoNextBand'],
         autoNextBandParent: json['autoNextBandParent'],
         defaultLocation: json['defaultLocation'],
@@ -187,7 +182,6 @@ class DefaultSettings implements FirestoreItem {
   List<TextCellValue> toExcelRowHeader() {
     return [
       TextCellValue('Desired accuracy'),
-      TextCellValue('Selected year'),
       TextCellValue('Auto next band'),
       TextCellValue('Auto next band parent'),
       TextCellValue('Default location'),
@@ -202,7 +196,6 @@ class DefaultSettings implements FirestoreItem {
     return Future.value([
       [
         TextCellValue(desiredAccuracy.toString()),
-        TextCellValue(selectedYear.toString()),
         TextCellValue(autoNextBand.toString()),
         TextCellValue(autoNextBandParent.toString()),
         TextCellValue(defaultLocation.toString()),
@@ -216,7 +209,10 @@ class DefaultSettings implements FirestoreItem {
   Widget _defaultDataExperimentInput(
       FirebaseFirestore firestore, Function setState) {
     return FutureBuilder<QuerySnapshot<Object?>>(
-        future: firestore.collection('experiments').get(),
+        future: firestore
+            .collection('experiments')
+            .where('year', isEqualTo: DateTime.now().year)
+            .get(),
         builder: (context, snapshot) {
           List<Experiment> experiments = [];
           if (snapshot.hasData) {
@@ -294,20 +290,6 @@ class DefaultSettings implements FirestoreItem {
       SizedBox(height: 10),
       Text("Default data experiment"),
       _defaultDataExperimentInput(firestore, setState),
-      SizedBox(height: 10),
-      Text('Selected year $selectedYear'),
-      Slider(
-        value: selectedYear.toDouble(),
-        onChanged: (double value) {
-          setState(() {
-            selectedYear = value.toInt();
-          });
-        },
-        min: DateTime.now().year.toDouble() - 4,
-        max: DateTime.now().year.toDouble(),
-        divisions: 5,
-        label: selectedYear.toString(),
-      ),
       SizedBox(height: 10),
       SwitchListTile(
         title: const Text('Auto next band chick'),
