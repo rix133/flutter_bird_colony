@@ -1,10 +1,10 @@
 //backend selection items
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter_bird_colony/models/firebaseOptionsSelector.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bird_colony/models/firebaseOptionsSelector.dart';
 import 'package:flutter_bird_colony/screens/bird/editBird.dart';
 import 'package:flutter_bird_colony/screens/bird/listBirds.dart';
 import 'package:flutter_bird_colony/screens/experiment/editExperiment.dart';
@@ -19,16 +19,17 @@ import 'package:flutter_bird_colony/screens/settings/editDefaultSettings.dart';
 import 'package:flutter_bird_colony/screens/settings/listSpecies.dart';
 import 'package:flutter_bird_colony/screens/settings/settings.dart';
 import 'package:flutter_bird_colony/screens/statistics.dart';
+import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:flutter_bird_colony/services/birdsService.dart';
 import 'package:flutter_bird_colony/services/experimentsService.dart';
 import 'package:flutter_bird_colony/services/speciesService.dart';
-import 'package:flutter_bird_colony/services/authService.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'design/styles.dart';
 import 'firebase_options_default.dart' as manageBirdColony;
 import 'firebase_options_kakrarahu.dart' as kakrarahuColony;
+import 'firebase_options_lagrits.dart' as lagritsColony;
 import 'firebase_options_redsquirrel.dart' as redSquirrelColony;
 import 'screens/listDatas.dart';
 import 'screens/nest/mapCreateNest.dart';
@@ -51,6 +52,7 @@ void main() async {
     "testing": manageBirdColony.DefaultFirebaseOptions.currentPlatform,
     "Kakrarahu": kakrarahuColony.DefaultFirebaseOptions.currentPlatform,
     "RedSquirrel": redSquirrelColony.DefaultFirebaseOptions.currentPlatform,
+    "Lagrits": lagritsColony.DefaultFirebaseOptions.currentPlatform,
   });
   appName = await FirebaseOptionsSelector.getCurrentSelection();
 
