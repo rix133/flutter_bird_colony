@@ -581,6 +581,7 @@ void main() {
 
     // Verify that the button is in the screen.
     expect(downloadButton, findsOneWidget);
+    expect(find.byKey(Key("downloadAllYearButton")), findsNothing);
 
     // Tap the download button.
     await tester.tap(downloadButton);
@@ -596,6 +597,117 @@ void main() {
     //chekc that alert dialog is gone
     expect(find.byType(AlertDialog), findsNothing);
   });
+
+  testWidgets(
+      "admin full-year nests download includes every species from the legacy year collection",
+      (WidgetTester tester) async {
+    final localFirestore = FakeFirebaseFirestore();
+    final localSps = MockSharedPreferencesService()
+      ..isAdmin = true
+      ..selectedYear = 2022;
+    final legacyGull = Nest(
+      id: "legacy_gull",
+      coordinates: GeoPoint(0, 0),
+      accuracy: "3m",
+      last_modified: DateTime(2022, 5, 1),
+      discover_date: DateTime(2022, 5, 1),
+      responsible: "Admin",
+      species: "Common gull",
+      measures: [Measure.note()],
+    );
+    final legacyTern = Nest(
+      id: "legacy_tern",
+      coordinates: GeoPoint(0, 0),
+      accuracy: "3m",
+      last_modified: DateTime(2022, 5, 2),
+      discover_date: DateTime(2022, 5, 2),
+      responsible: "Admin",
+      species: "Arctic tern",
+      measures: [Measure.note()],
+    );
+    final otherYearNest = Nest(
+      id: "other_year",
+      coordinates: GeoPoint(0, 0),
+      accuracy: "3m",
+      last_modified: DateTime(2023, 5, 1),
+      discover_date: DateTime(2023, 5, 1),
+      responsible: "Admin",
+      species: "Common gull",
+      measures: [Measure.note()],
+    );
+    await localFirestore
+        .collection("Nest")
+        .doc(legacyGull.id)
+        .set(legacyGull.toJson());
+    await localFirestore
+        .collection("Nest")
+        .doc(legacyTern.id)
+        .set(legacyTern.toJson());
+    await localFirestore
+        .collection("2023")
+        .doc(otherYearNest.id)
+        .set(otherYearNest.toJson());
+
+    List<String> downloadedNestIds = [];
+    List<String?> downloadedSpecies = [];
+    String? downloadedType;
+    await tester.pumpWidget(TestApp(
+      firestore: localFirestore,
+      sps: localSps,
+      app: MaterialApp(
+        home: ListNests(
+          firestore: localFirestore,
+          excelDownloadCallback: (items, type, firestore) async {
+            final nests = items.cast<Nest>();
+            downloadedNestIds = nests.map((nest) => nest.id!).toList();
+            downloadedSpecies = nests.map((nest) => nest.species).toList();
+            downloadedType = type;
+          },
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(Key("downloadAllYearButton")), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    final speciesField = find.descendant(
+      of: find.byType(SpeciesRawAutocomplete),
+      matching: find.byType(TextField),
+    );
+    await tester.enterText(speciesField, "Common gull");
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(ListTile).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
+    expect(find.byType(ListTile), findsOneWidget);
+
+    await tester.tap(find.byKey(Key("downloadAllYearButton")));
+    await tester.pumpAndSettle();
+    expect(
+        find.byKey(Key("allYearDownloadConfirmationDialog")), findsOneWidget);
+    final confirmationDialog =
+        find.byKey(Key("allYearDownloadConfirmationDialog"));
+    expect(
+        find.descendant(
+            of: confirmationDialog, matching: find.textContaining("2022")),
+        findsOneWidget);
+    expect(
+        find.descendant(
+            of: confirmationDialog,
+            matching: find.textContaining("every species")),
+        findsOneWidget);
+    await tester.tap(find.byKey(Key("confirmAllYearDownloadButton")));
+    await tester.pumpAndSettle();
+
+    expect(downloadedType, "nests");
+    expect(downloadedNestIds, ["legacy_gull", "legacy_tern"]);
+    expect(downloadedSpecies.toSet(), {"Common gull", "Arctic tern"});
+    expect(find.byKey(Key("downloadAllYearButton")), findsOneWidget);
+    expect(find.byKey(Key("allYearDownloadProgress")), findsNothing);
+  });
+
   testWidgets("can clear some filters", (WidgetTester tester) async {
     await tester.pumpWidget(myApp);
     await tester.pumpAndSettle();

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bird_colony/models/experimentedItem.dart';
 import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
+import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
 import 'package:flutter_bird_colony/services/experimentsService.dart';
 import 'package:flutter_bird_colony/services/firestoreItemService.dart';
 import 'package:provider/provider.dart';
@@ -11,15 +12,20 @@ import 'package:provider/provider.dart';
 import '../models/firestore/experiment.dart';
 import '../services/sharedPreferencesService.dart';
 
+typedef ExcelDownloadCallback = Future<void> Function(
+    List<FirestoreItem> items, String type, FirebaseFirestore firestore);
+
 abstract class ListScreenWidget<T> extends StatefulWidget {
   final String title;
   final IconData icon;
   final FirebaseFirestore firestore;
+  final ExcelDownloadCallback? excelDownloadCallback;
   const ListScreenWidget(
       {Key? key,
       required this.title,
       required this.icon,
-      required this.firestore})
+      required this.firestore,
+      this.excelDownloadCallback})
       : super(key: key);
 
   @override
@@ -35,6 +41,7 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
   StreamSubscription<List<Experiment>>? _experimentSubscription;
   TextEditingController searchController = TextEditingController();
   bool downloading = false;
+  bool downloadingAllYear = false;
   String collectionName = "";
   FirestoreItemService? fsService;
 
@@ -47,6 +54,10 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
   String? get experimentFilterType => null;
 
   bool get shouldLoadData => true;
+
+  bool get supportsAllYearDownload => false;
+
+  String get allYearDownloadType => widget.title;
 
   String get dataLoadBlockedMessage => "loading items...";
 
@@ -272,6 +283,25 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
 
   Future<void> executeDownload();
 
+  Future<List<FirestoreItem>> loadAllItemsForSelectedYear() {
+    throw UnsupportedError(
+        "${widget.runtimeType} does not support full-year downloads.");
+  }
+
+  Future<void> exportToExcel(List<FirestoreItem> items, String type) async {
+    final callback = widget.excelDownloadCallback;
+    if (callback != null) {
+      await callback(items, type, widget.firestore);
+      return;
+    }
+    await FSItemMixin().downloadExcel(items, type, widget.firestore);
+  }
+
+  Future<void> executeAllYearDownload() async {
+    final allItems = await loadAllItemsForSelectedYear();
+    await exportToExcel(allItems, allYearDownloadType);
+  }
+
   Widget getAddButton(BuildContext context);
 
   Future<bool> _downloadConfirmationDialog(BuildContext context) {
@@ -330,6 +360,97 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
               icon: Icon(Icons.download),
               style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.all(Colors.grey))),
+    );
+  }
+
+  Future<bool> _allYearDownloadConfirmationDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          key: Key("allYearDownloadConfirmationDialog"),
+          backgroundColor: Colors.black87,
+          title: Text("Download all ${widget.title}"),
+          content: Text(
+              "Download all ${widget.title} for $selectedYear? This ignores the current filters and includes every species. It can take several minutes."),
+          actions: [
+            ElevatedButton(
+                key: Key("cancelAllYearDownloadButton"),
+                onPressed: () => Navigator.pop(context, false),
+                child: Text("Cancel")),
+            ElevatedButton(
+                key: Key("confirmAllYearDownloadButton"),
+                onPressed: () => Navigator.pop(context, true),
+                child: Text("Download all")),
+          ],
+        );
+      },
+    ).then((value) => value ?? false);
+  }
+
+  Future<void> _downloadAllYear(BuildContext context) async {
+    final confirmed = await _allYearDownloadConfirmationDialog(context);
+    if (!confirmed || !mounted) return;
+
+    setState(() {
+      downloadingAllYear = true;
+    });
+
+    Object? downloadError;
+    try {
+      await executeAllYearDownload();
+    } catch (error) {
+      downloadError = error;
+    } finally {
+      if (mounted) {
+        setState(() {
+          downloadingAllYear = false;
+        });
+      }
+    }
+
+    if (downloadError != null && mounted) {
+      await showDialog<void>(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          key: Key("allYearDownloadErrorDialog"),
+          backgroundColor: Colors.black87,
+          title: Text("Download failed"),
+          content: Text("The full-year download could not be created."),
+          actions: [
+            ElevatedButton(
+                onPressed: () => Navigator.pop(context), child: Text("OK")),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget getAllYearDownloadButton(BuildContext context) {
+    if (!supportsAllYearDownload || !(sps?.isAdmin ?? false)) {
+      return SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(18.0),
+      child: downloadingAllYear
+          ? SizedBox(
+              key: Key("allYearDownloadProgress"),
+              width: 48,
+              height: 48,
+              child: CircularProgressIndicator())
+          : ElevatedButton.icon(
+              key: Key("downloadAllYearButton"),
+              onPressed: () => _downloadAllYear(context),
+              icon: Icon(Icons.cloud_download),
+              label: Padding(
+                padding: EdgeInsets.all(12),
+                child: Text("Download all $selectedYear",
+                    style: TextStyle(fontSize: 18)),
+              ),
+              style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(Colors.grey)),
+            ),
     );
   }
 
@@ -467,15 +588,18 @@ abstract class ListScreenWidgetState<T> extends State<ListScreenWidget<T>> {
                             alignment: Alignment.topCenter,
                             child: Text(dataLoadBlockedMessage),
                           )),
-                SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        getAddButton(context),
-                        getDownloadButton(context, sps)
-                      ],
-                    )),
+                SafeArea(
+                  top: false,
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      getAddButton(context),
+                      getDownloadButton(context, sps),
+                      getAllYearDownloadButton(context),
+                    ],
+                  ),
+                ),
               ],
             )));
   }

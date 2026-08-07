@@ -7,7 +7,6 @@ import 'package:flutter_bird_colony/models/firestore/experiment.dart';
 import 'package:flutter_bird_colony/models/firestore/firestoreItem.dart';
 import 'package:flutter_bird_colony/models/firestore/nest.dart';
 import 'package:flutter_bird_colony/models/firestore/species.dart';
-import 'package:flutter_bird_colony/models/firestoreItemMixin.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_bird_colony/utils/year.dart';
@@ -25,12 +24,16 @@ class _FilteredNestExperimentSelection {
 }
 
 class ListNests extends ListScreenWidget<Nest> {
-  const ListNests({Key? key, required FirebaseFirestore firestore})
+  const ListNests(
+      {Key? key,
+      required FirebaseFirestore firestore,
+      ExcelDownloadCallback? excelDownloadCallback})
       : super(
             key: key,
             title: 'nests with eggs',
             icon: Icons.home,
-            firestore: firestore);
+            firestore: firestore,
+            excelDownloadCallback: excelDownloadCallback);
 
   @override
   ListScreenWidgetState<Nest> createState() => _ListNestsState();
@@ -56,6 +59,12 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
 
   @override
   String? get experimentFilterType => "nest";
+
+  @override
+  bool get supportsAllYearDownload => true;
+
+  @override
+  String get allYearDownloadType => "nests";
 
   String _nestItemsCacheKey(Nest nest) {
     return "${nest.discover_date.year}/${nest.id ?? nest.name}";
@@ -702,6 +711,18 @@ class _ListNestsState extends ListScreenWidgetState<Nest> {
   Future<void> executeDownload() async {
     List<Nest> filteredItems =
         await getFilteredItemsAsync(fsService?.items ?? []);
-    await FSItemMixin().downloadExcel(filteredItems, "nests", widget.firestore);
+    await exportToExcel(filteredItems, "nests");
+  }
+
+  @override
+  Future<List<FirestoreItem>> loadAllItemsForSelectedYear() async {
+    final snapshot = await widget.firestore
+        .collection(yearToNestCollectionName(selectedYear))
+        .get();
+    final allNests = snapshot.docs
+        .map((document) => Nest.fromDocSnapshot(document))
+        .toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
+    return allNests;
   }
 }

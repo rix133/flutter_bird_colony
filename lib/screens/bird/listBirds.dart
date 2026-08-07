@@ -7,16 +7,19 @@ import 'package:provider/provider.dart';
 import '../../design/listScreenWidget.dart';
 import '../../design/speciesRawAutocomplete.dart';
 import '../../models/firestore/firestoreItem.dart';
-import '../../models/firestoreItemMixin.dart';
 import '../../services/birdsService.dart';
 
 class ListBirds extends ListScreenWidget<Bird> {
-  const ListBirds({Key? key, required FirebaseFirestore firestore})
+  const ListBirds(
+      {Key? key,
+      required FirebaseFirestore firestore,
+      ExcelDownloadCallback? excelDownloadCallback})
       : super(
             key: key,
             title: 'birds',
             icon: Icons.nat_sharp,
-            firestore: firestore);
+            firestore: firestore,
+            excelDownloadCallback: excelDownloadCallback);
 
   @override
   ListScreenWidgetState<Bird> createState() => _ListBirdsState();
@@ -32,6 +35,12 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
   @override
   bool get shouldLoadData =>
       activeExperimentFilter != null || (_selectedSpecies?.isNotEmpty ?? false);
+
+  @override
+  bool get supportsAllYearDownload => true;
+
+  @override
+  String get allYearDownloadType => "birds";
 
   @override
   String get dataLoadBlockedMessage =>
@@ -164,7 +173,32 @@ class _ListBirdsState extends ListScreenWidgetState<Bird> {
 
   @override
   Future<void> executeDownload() {
-    return (FSItemMixin().downloadExcel(items, "birds", widget.firestore));
+    return exportToExcel(items, "birds");
+  }
+
+  @override
+  Future<List<FirestoreItem>> loadAllItemsForSelectedYear() async {
+    final birds = widget.firestore.collection("Birds");
+    final start = DateTime(selectedYear, 1, 1);
+    final end = DateTime(selectedYear + 1, 1, 1);
+    final snapshots = await Future.wait([
+      birds
+          .where("ringed_date", isGreaterThanOrEqualTo: start)
+          .where("ringed_date", isLessThan: end)
+          .get(),
+      birds.where("nest_year", isEqualTo: selectedYear).get(),
+    ]);
+
+    final birdsById = <String, Bird>{};
+    for (final snapshot in snapshots) {
+      for (final document in snapshot.docs) {
+        birdsById[document.id] = Bird.fromDocSnapshot(document);
+      }
+    }
+
+    final allBirds = birdsById.values.toList()
+      ..sort((a, b) => a.band.compareTo(b.band));
+    return allBirds;
   }
 
   List<Bird> getFilteredItems(List<FirestoreItem> items) {

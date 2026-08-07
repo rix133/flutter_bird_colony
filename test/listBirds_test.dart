@@ -136,6 +136,188 @@ void main() {
     expect(find.text("Select a species or bird experiment to show birds."),
         findsOneWidget);
     expect(find.byType(ListTile), findsNothing);
+    expect(find.byKey(Key("downloadAllYearButton")), findsNothing);
+  });
+
+  testWidgets("admin can cancel the full-year birds download",
+      (WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(Size(360, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final localFirestore = FakeFirebaseFirestore();
+    final localSps = MockSharedPreferencesService()..isAdmin = true;
+    var downloadCount = 0;
+
+    await tester.pumpWidget(TestApp(
+      firestore: localFirestore,
+      sps: localSps,
+      app: MaterialApp(
+        home: ListBirds(
+          firestore: localFirestore,
+          excelDownloadCallback: (items, type, firestore) async {
+            downloadCount++;
+          },
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(Key("downloadAllYearButton")), findsOneWidget);
+    await tester.tap(find.byKey(Key("downloadAllYearButton")));
+    await tester.pumpAndSettle();
+
+    expect(
+        find.byKey(Key("allYearDownloadConfirmationDialog")), findsOneWidget);
+    final confirmationDialog =
+        find.byKey(Key("allYearDownloadConfirmationDialog"));
+    expect(
+        find.descendant(
+            of: confirmationDialog,
+            matching: find.textContaining(localSps.selectedYear.toString())),
+        findsOneWidget);
+    expect(
+        find.descendant(
+            of: confirmationDialog,
+            matching: find.textContaining("several minutes")),
+        findsOneWidget);
+
+    await tester.tap(find.byKey(Key("cancelAllYearDownloadButton")));
+    await tester.pumpAndSettle();
+
+    expect(downloadCount, 0);
+    expect(find.byKey(Key("allYearDownloadConfirmationDialog")), findsNothing);
+    expect(find.byKey(Key("downloadAllYearButton")), findsOneWidget);
+    expect(find.byKey(Key("allYearDownloadProgress")), findsNothing);
+  });
+
+  testWidgets("full-year birds download recovers from export errors",
+      (WidgetTester tester) async {
+    final localFirestore = FakeFirebaseFirestore();
+    final localSps = MockSharedPreferencesService()..isAdmin = true;
+
+    await tester.pumpWidget(TestApp(
+      firestore: localFirestore,
+      sps: localSps,
+      app: MaterialApp(
+        home: ListBirds(
+          firestore: localFirestore,
+          excelDownloadCallback: (items, type, firestore) async {
+            throw StateError("test export failure");
+          },
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(Key("downloadAllYearButton")));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key("confirmAllYearDownloadButton")));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(Key("allYearDownloadProgress")), findsNothing);
+    expect(find.byKey(Key("allYearDownloadErrorDialog")), findsOneWidget);
+    await tester.tap(find.text("OK"));
+    await tester.pumpAndSettle();
+    expect(find.byKey(Key("downloadAllYearButton")), findsOneWidget);
+  });
+
+  testWidgets(
+      "admin full-year birds download includes every species and deduplicates year matches",
+      (WidgetTester tester) async {
+    final localFirestore = FakeFirebaseFirestore();
+    final localSps = MockSharedPreferencesService()..isAdmin = true;
+    final year = localSps.selectedYear;
+    final currentGull = Bird(
+        ringed_date: DateTime(year, 6, 1),
+        band: "AG0001",
+        ringed_as_chick: true,
+        measures: [Measure.note()],
+        nest_year: year,
+        responsible: "Admin",
+        last_modified: DateTime(year, 6, 1),
+        species: "Common gull");
+    final currentTern = Bird(
+        ringed_date: DateTime(year, 6, 2),
+        band: "AT0002",
+        ringed_as_chick: true,
+        measures: [Measure.note()],
+        nest_year: year,
+        responsible: "Admin",
+        last_modified: DateTime(year, 6, 2),
+        species: "Common tern");
+    final currentNestYear = Bird(
+        ringed_date: DateTime(year - 1, 6, 3),
+        band: "NY0003",
+        ringed_as_chick: true,
+        measures: [Measure.note()],
+        nest_year: year,
+        responsible: "Admin",
+        last_modified: DateTime(year - 1, 6, 3),
+        species: "Arctic tern");
+    final previousYear = Bird(
+        ringed_date: DateTime(year - 1, 6, 4),
+        band: "PY0004",
+        ringed_as_chick: true,
+        measures: [Measure.note()],
+        nest_year: year - 1,
+        responsible: "Admin",
+        last_modified: DateTime(year - 1, 6, 4),
+        species: "Common gull");
+    for (final bird in [
+      currentGull,
+      currentTern,
+      currentNestYear,
+      previousYear
+    ]) {
+      await localFirestore
+          .collection("Birds")
+          .doc(bird.band)
+          .set(bird.toJson());
+    }
+
+    List<String> downloadedBands = [];
+    String? downloadedType;
+    await tester.pumpWidget(TestApp(
+      firestore: localFirestore,
+      sps: localSps,
+      app: MaterialApp(
+        home: ListBirds(
+          firestore: localFirestore,
+          excelDownloadCallback: (items, type, firestore) async {
+            downloadedBands = items.map((item) => (item as Bird).band).toList();
+            downloadedType = type;
+          },
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text("Select a species or bird experiment to show birds."),
+        findsOneWidget);
+    await tester.tap(find.byIcon(Icons.filter_alt));
+    await tester.pumpAndSettle();
+    final speciesField = find.descendant(
+      of: find.byType(SpeciesRawAutocomplete),
+      matching: find.byType(TextField),
+    );
+    await tester.enterText(speciesField, "Common gull");
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(ListTile).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Close"));
+    await tester.pumpAndSettle();
+    expect(find.text("AG0001"), findsOneWidget);
+    expect(find.text("AT0002"), findsNothing);
+
+    await tester.tap(find.byKey(Key("downloadAllYearButton")));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key("confirmAllYearDownloadButton")));
+    await tester.pumpAndSettle();
+
+    expect(downloadedType, "birds");
+    expect(downloadedBands, ["AG0001", "AT0002", "NY0003"]);
+    expect(downloadedBands.toSet().length, downloadedBands.length);
+    expect(find.byKey(Key("downloadAllYearButton")), findsOneWidget);
+    expect(find.byKey(Key("allYearDownloadProgress")), findsNothing);
   });
 
   testWidgets("uses default experiment filter for birds",
